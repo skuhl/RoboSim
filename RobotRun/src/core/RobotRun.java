@@ -13,19 +13,10 @@ import enums.CoordFrame;
 import enums.ExecState;
 import enums.ExecType;
 import enums.ScreenMode;
-import enums.ScreenType;
 import enums.WindowTab;
-import expression.AtomicExpression;
 import expression.Expression;
 import expression.ExpressionElement;
 import expression.Operand;
-import expression.OperandBool;
-import expression.OperandDReg;
-import expression.OperandFloat;
-import expression.OperandGeneric;
-import expression.OperandIOReg;
-import expression.OperandPReg;
-import expression.OperandPRegIdx;
 import expression.Operator;
 import expression.RobotPoint;
 import frame.Frame;
@@ -39,7 +30,6 @@ import geom.MyPShape;
 import geom.Part;
 import geom.Point;
 import geom.RMatrix;
-import geom.RQuaternion;
 import geom.RRay;
 import geom.RShape;
 import geom.Triangle;
@@ -56,7 +46,6 @@ import processing.core.PVector;
 import processing.event.MouseEvent;
 import processing.opengl.PGraphicsOpenGL;
 import programming.CallInstruction;
-import programming.CamMoveToObject;
 import programming.FrameInstruction;
 import programming.IOInstruction;
 import programming.IfStatement;
@@ -76,11 +65,15 @@ import regs.PositionRegister;
 import regs.Register;
 import robot.RoboticArm;
 import screen.Screen;
-import screen.ScreenState;
+import screen.content_disp.ScreenNavProgInstructions;
+import screen.content_disp.ScreenNavPrograms;
+import screen.teach_frame.ST_ScreenTeachPoints;
+import screen.teach_frame.ScreenTeach4Pt;
+import screen.teach_frame.ScreenTeach6Pt;
+import screen.text_entry.ST_ScreenTextEntry;
 import ui.Camera;
 import ui.DisplayLine;
 import ui.KeyCodeMap;
-import ui.MenuScroll;
 import window.WGUI;
 
 /**
@@ -89,32 +82,7 @@ import window.WGUI;
  * @author Vincent Druckte, Joshua Hooker, and James Walker
  */
 public class RobotRun extends PApplet {
-
-	/* A set of letters, used by the pendant function keys, when the users is
-	 * inputing a text entry. */
-	private static final char[][] LETTERS;
-	private static final int ITEMS_TO_SHOW;
-	private static final int NUM_ENTRY_LEN;
-	private static final int TEXT_ENTRY_LEN;
 	private static RobotRun instance;
-
-	/**
-	 * Initialize all static fields
-	 */
-	static {
-		LETTERS = new char[][] {
-			{ 'a', 'b', 'c', 'd', 'e', 'f' }, 
-			{ 'g', 'h', 'i', 'j', 'k', 'l' },
-			{ 'm', 'n', 'o', 'p', 'q', 'r' }, 
-			{ 's', 't', 'u', 'v', 'w', 'x' }, 
-			{ 'y', 'z', '_', '@', '*', '.' }
-		};
-
-		ITEMS_TO_SHOW = 8;
-		NUM_ENTRY_LEN = 9;
-		TEXT_ENTRY_LEN = 16;
-		instance = null;
-	}
 	
 	/**
 	 * Returns the instance of this PApplet
@@ -157,13 +125,9 @@ public class RobotRun extends PApplet {
 
 	private WGUI UI;
 	private KeyCodeMap keyCodeMap;
-
-	private ScreenMode mode;
-	private MenuScroll contents;
-	private MenuScroll options;
 	private Screen curScreen;
 
-	public Stack<ScreenState> screenStates;
+	public Stack<Screen> screenStack;
 	public ArrayList<Macro> macros = new ArrayList<>();
 	public Macro[] macroKeyBinds = new Macro[7];
 	public Macro macroEdit;
@@ -177,11 +141,6 @@ public class RobotRun extends PApplet {
 	 * A temporary storage string for user input in the pendant window.
 	 */
 	private StringBuilder workingText;
-	
-	/**
-	 * Used with rendering of workingText.
-	 */
-	private String workingTextSuffix;
 
 	/**
 	 * Index of the current frame (Tool or User) selecting when in the Frame
@@ -205,15 +164,6 @@ public class RobotRun extends PApplet {
 	 * are close enough to the robot's current position.
 	 */
 	private HashMap<Integer, Boolean> mInstRobotAt;
-
-	/**
-	 * Used for comment name input. The user can cycle through the six states
-	 * for each function button in this mode:
-	 *
-	 * F1 -> A-F/a-f F2 -> G-L/g-l F3 -> M-R/m-r F4 -> S-X/s-x F5 -> Y-Z/y-z,
-	 * _, @, *, .
-	 */
-	private int[] letterStates;
 	
 	/**
 	 * Defines a set of tool tip positions that are drawn to form a trace of
@@ -306,116 +256,7 @@ public class RobotRun extends PApplet {
 	 * in either the content or options menu.
 	 */
 	public void arrow_dn() {
-		if(curScreen != null) {
-			curScreen.actionDn();
-			updatePendantScreen();
-			return;
-		}
-		
-		switch (mode) {
-		case NAV_PROGRAMS:
-			contents.moveDown(isShift());
-
-			Fields.debug("line=%d col=%d TRS=%d\n",	contents.getLineIdx(),
-					contents.getColumnIdx(), contents.getRenderStart());
-			break;
-		case NAV_PROG_INSTR:
-		case SELECT_COMMENT:
-		case SELECT_CUT_COPY:
-		case SELECT_INSTR_DELETE:
-			if (!isProgExec()) {
-				// Lock movement when a program is running
-				Instruction i = getActiveInstruction();
-				int prevIdx = getSelectedIdx();
-				setActiveInstIdx(contents.moveDown(isShift()));
-				int curLine = getSelectedLine();
-
-				// special case for select statement column navigation
-				if ((i instanceof SelectStatement || i instanceof MotionInstruction) && curLine == 1) {
-					if (prevIdx >= 3) {
-						contents.setSelectedColumnIdx(prevIdx - 3);
-					} else {
-						contents.setSelectedColumnIdx(0);
-					}
-				}
-
-				Fields.debug("line=%d col=%d inst=%d TRS=%d\n",
-						contents.getLineIdx(), contents.getColumnIdx(),
-						getActiveInstIdx(),
-						contents.getRenderStart());
-			}
-			break;
-		case NAV_DREGS:
-		case NAV_PREGS:
-		case NAV_TOOL_FRAMES:
-		case NAV_USER_FRAMES:
-		case NAV_MACROS:
-		case NAV_MF_MACROS:
-		case NAV_MAIN_MENU:
-		case NAV_DATA:
-		case SET_MACRO_PROG:
-		case NAV_IOREGS:
-			contents.moveDown(shift);
-			
-			Fields.debug("line=%d col=%d TRS=%d\n",
-					contents.getLineIdx(), contents.getColumnIdx(),
-					contents.getRenderStart());
-			break;
-		case NAV_INSTR_MENU:
-		case SELECT_FRAME_MODE:
-		case SELECT_INSTR_INSERT:
-		case SELECT_IO_INSTR_REG:
-		case SELECT_FRAME_INSTR_TYPE:
-		case SELECT_REG_STMT:
-		case SELECT_COND_STMT:
-		case SELECT_JMP_LBL:
-		case SELECT_PASTE_OPT:
-		case TFRAME_DETAIL:
-		case UFRAME_DETAIL:
-		case TEACH_3PT_USER:
-		case TEACH_3PT_TOOL:
-		case TEACH_4PT:
-		case TEACH_6PT:
-		case SWAP_PT_TYPE:
-		case SET_MINST_TYPE:
-		case SET_MINST_REG_TYPE:
-		case SET_MINST_CREG_TYPE:
-		case SET_MINST_OFF_TYPE:
-		case SET_MINST_OBJ:
-		case SET_MACRO_TYPE:
-		case SET_MACRO_BINDING:
-		case SET_FRAME_INSTR_TYPE:
-		case SET_REG_EXPR_TYPE:
-		case SET_IF_STMT_ACT:
-		case SET_SELECT_STMT_ACT:
-		case SET_SELECT_STMT_ARG:
-		case SET_EXPR_ARG:
-		case SET_BOOL_EXPR_ARG:
-		case SET_EXPR_OP:
-		case SET_IO_INSTR_STATE:
-		case SET_CALL_PROG:
-		case SET_DEF_TOOLTIP:
-			options.moveDown(false);
-			break;
-		case ACTIVE_FRAMES:
-			updateActiveFramesDisplay();
-			workingText = new StringBuilder(Integer.toString(activeRobot.getActiveUserIdx() + 1));
-
-			contents.moveDown(false);
-			break;
-		default:
-			if (mode.getType() == ScreenType.TYPE_TEXT_ENTRY) {
-				options.moveDown(false);
-				// Reset function key states
-				for (int idx = 0; idx < letterStates.length; ++idx) {
-					letterStates[idx] = 0;
-				}
-
-			} else if (mode.getType() == ScreenType.TYPE_POINT_ENTRY) {
-				contents.moveDown(false);
-			}
-		}
-
+		curScreen.actionDn();
 		updatePendantScreen();
 	}
 
@@ -427,44 +268,7 @@ public class RobotRun extends PApplet {
 	 * either the content or options menu.
 	 */
 	public void arrow_lt() {
-		if(curScreen != null) {
-			curScreen.actionLt();
-			updatePendantScreen();
-			return;
-		}
-		
-		switch (mode) {
-		case NAV_PROG_INSTR:
-			if (!isProgExec()) {
-				// Lock movement when a program is running
-				contents.moveLeft();
-			}
-			break;
-		case NAV_DREGS:
-		case NAV_MACROS:
-		case NAV_PREGS:
-			contents.setSelectedColumnIdx(max(0, contents.getColumnIdx() - 1));
-			break;
-		case SELECT_IO_INSTR_REG:
-			options.setSelectedColumnIdx(max(1, options.getColumnIdx() - 1));
-			break;
-		default:
-			if (mode.getType() == ScreenType.TYPE_TEXT_ENTRY) {
-				contents.setSelectedColumnIdx(max(0, contents.getColumnIdx() - 1));
-				// Reset function key states
-				for (int idx = 0; idx < letterStates.length; ++idx) {
-					letterStates[idx] = 0;
-				}
-
-			} else if (mode.getType() == ScreenType.TYPE_POINT_ENTRY) {
-				contents.setSelectedColumnIdx(Math.max(1, contents.getColumnIdx() - 1));
-
-			} else if (mode.getType() == ScreenType.TYPE_EXPR_EDIT) {
-				contents.setSelectedColumnIdx(
-						contents.getColumnIdx() - ((contents.getColumnIdx() - 4 >= options.size()) ? 4 : 0));
-			}
-		}
-
+		curScreen.actionLt();
 		updatePendantScreen();
 	}
 	
@@ -478,89 +282,7 @@ public class RobotRun extends PApplet {
 	 * text, and point entry menus.
 	 */
 	public void arrow_rt() {
-		if(curScreen != null) {
-			curScreen.actionRt();
-			updatePendantScreen();
-			return;
-		}
-		
-		switch (mode) {
-		case NAV_PROG_INSTR:
-			if (!isProgExec()) {
-				// Lock movement when a program is running
-				contents.moveRight();
-			}
-			break;
-		case NAV_DREGS:
-		case NAV_MACROS:
-		case NAV_PREGS:
-			contents.setSelectedColumnIdx(min(contents.getColumnIdx() + 1, contents.getCurrentItem().size() - 1));
-			break;
-		case SELECT_IO_INSTR_REG:
-			options.setSelectedColumnIdx(min(options.getColumnIdx() + 1, options.get(options.getLineIdx()).size() - 1));
-			break;
-		default:
-			if (mode.getType() == ScreenType.TYPE_TEXT_ENTRY) {
-
-				if (isShift()) {
-					// Delete key function
-					if (workingText.length() >= 1) {
-						workingText.deleteCharAt(contents.getColumnIdx());
-						contents.setSelectedColumnIdx(Math.max(0, Math.min(contents.getColumnIdx(), workingText.length() - 1)));
-					}
-
-				} else if (mode.getType() == ScreenType.TYPE_EXPR_EDIT) {
-					contents.setSelectedColumnIdx(
-							contents.getColumnIdx() + ((contents.getColumnIdx() + 4 < options.size()) ? 4 : 0));
-
-				} else {
-					// Add an insert element if the length of the current
-					// comment is less than 16
-					int len = workingText.length();
-					int columnIdx = contents.getColumnIdx();
-					
-					if (len <= TEXT_ENTRY_LEN && columnIdx == len - 1 &&
-							(len == 0 || workingText.charAt(len - 1) != '\0')) {
-
-						workingText.append('\0');
-					}
-
-					contents.setSelectedColumnIdx(min(columnIdx + 1,  workingText.length() - 1));
-					updatePendantScreen();
-				}
-
-				// Reset function key states
-				for (int idx = 0; idx < letterStates.length; ++idx) {
-					letterStates[idx] = 0;
-				}
-
-			} else if (mode.getType() == ScreenType.TYPE_POINT_ENTRY) {
-				DisplayLine entry = contents.getCurrentItem();
-				int idx = contents.getColumnIdx();
-				int size = entry.size();
-
-				// Delete a digit from the beginning of the number entry
-				if (isShift()) {
-					if (size > 2) {
-						entry.remove(idx);
-
-					} else {
-						// Leave at least one space value entry
-						entry.set(idx, "\0");
-					}
-
-				} else {
-
-					if (idx == (entry.size() - 1) && !entry.get(idx).equals("\0") && entry.size() < 10) {
-						entry.add("\0");
-					}
-
-					// Move to the right one digit
-					contents.setSelectedColumnIdx(Math.min(idx + 1, entry.size() - 1));
-				}
-			}
-		}
-
+		curScreen.actionRt();
 		updatePendantScreen();
 	}
 
@@ -572,119 +294,7 @@ public class RobotRun extends PApplet {
 	 * in either the content or options menu.
 	 */
 	public void arrow_up() {
-		if(curScreen != null) {
-			curScreen.actionUp();
-			updatePendantScreen();
-			return;
-		}
-		
-		switch (mode) {
-		case NAV_PROGRAMS:
-			contents.moveUp(isShift());
-
-			Fields.debug("line=%d col=%d TRS=%d\n", contents.getLineIdx(),
-					contents.getColumnIdx(), contents.getRenderStart());
-			break;
-		case NAV_PROG_INSTR:
-		case SELECT_COMMENT:
-		case SELECT_CUT_COPY:
-		case SELECT_INSTR_DELETE:
-			if (!isProgExec()) {
-				try {
-					// Lock movement when a program is running
-					Instruction i = getActiveInstruction();
-					int prevLine = getSelectedLine();
-					setActiveInstIdx(contents.moveUp(isShift()));
-					int curLine = getSelectedLine();
-
-					// special case for select statement column navigation
-					if ((i instanceof SelectStatement || i instanceof MotionInstruction) && curLine == 0) {
-						if (prevLine == 1) {
-							contents.setSelectedColumnIdx(contents.getColumnIdx() + 3);
-						}
-					}
-
-				} catch (IndexOutOfBoundsException IOOBEx) {
-					// Issue with loading a program, not sure if this helps ...
-					IOOBEx.printStackTrace();
-				}
-
-				Fields.debug("line=%d col=%d inst=%d TRS=%d\n",
-					contents.getLineIdx(), contents.getColumnIdx(),
-					getActiveInstIdx(),
-					contents.getRenderStart());
-			}
-			break;
-		case NAV_DREGS:
-		case NAV_PREGS:
-		case NAV_TOOL_FRAMES:
-		case NAV_USER_FRAMES:
-		case NAV_MACROS:
-		case NAV_MF_MACROS:
-		case NAV_MAIN_MENU:
-		case NAV_DATA:
-		case SET_MACRO_PROG:
-		case NAV_IOREGS:
-			contents.moveUp(shift);
-			
-			Fields.debug("line=%d col=%d TRS=%d\n",
-					contents.getLineIdx(), contents.getColumnIdx(),
-					contents.getRenderStart());
-			break;
-		case NAV_INSTR_MENU:
-		case SELECT_FRAME_MODE:
-		case SELECT_INSTR_INSERT:
-		case SELECT_IO_INSTR_REG:
-		case SELECT_FRAME_INSTR_TYPE:
-		case SELECT_REG_STMT:
-		case SELECT_COND_STMT:
-		case SELECT_JMP_LBL:
-		case SELECT_PASTE_OPT:
-		case TFRAME_DETAIL:
-		case UFRAME_DETAIL:
-		case TEACH_3PT_USER:
-		case TEACH_3PT_TOOL:
-		case TEACH_4PT:
-		case TEACH_6PT:
-		case SWAP_PT_TYPE:
-		case SET_MINST_TYPE:
-		case SET_MINST_REG_TYPE:
-		case SET_MINST_CREG_TYPE:
-		case SET_MINST_OFF_TYPE:
-		case SET_MINST_OBJ:
-		case SET_MACRO_TYPE:
-		case SET_MACRO_BINDING:
-		case SET_FRAME_INSTR_TYPE:
-		case SET_REG_EXPR_TYPE:
-		case SET_IF_STMT_ACT:
-		case SET_SELECT_STMT_ACT:
-		case SET_SELECT_STMT_ARG:
-		case SET_EXPR_ARG:
-		case SET_BOOL_EXPR_ARG:
-		case SET_EXPR_OP:
-		case SET_IO_INSTR_STATE:
-		case SET_CALL_PROG:
-		case SET_DEF_TOOLTIP:
-			options.moveUp(false);
-			break;
-		case ACTIVE_FRAMES:
-			updateActiveFramesDisplay();
-			workingText = new StringBuilder(Integer.toString(activeRobot.getActiveToolIdx() + 1));
-			contents.moveUp(false);
-			break;
-		default:
-			if (mode.getType() == ScreenType.TYPE_TEXT_ENTRY) {
-				options.moveUp(false);
-				// Reset function key states
-				for (int idx = 0; idx < letterStates.length; ++idx) {
-					letterStates[idx] = 0;
-				}
-
-			} else if (mode.getType() == ScreenType.TYPE_POINT_ENTRY) {
-				contents.moveUp(false);
-			}
-		}
-
+		curScreen.actionUp();
 		updatePendantScreen();
 	}
 	
@@ -706,52 +316,7 @@ public class RobotRun extends PApplet {
 	 * Functions as a backspace key for number, text, and point input menus.
 	 */
 	public void bkspc() {
-		if (mode.getType() == ScreenType.TYPE_NUM_ENTRY) {
-
-			// Functions as a backspace key
-			if (workingText.length() > 0) {
-				workingText.deleteCharAt(workingText.length() - 1);
-			}
-
-		} else if (mode.getType() == ScreenType.TYPE_POINT_ENTRY) {
-			DisplayLine entry = contents.getCurrentItem();
-			int idx = contents.getColumnIdx();
-
-			if (entry.size() > 2) {
-
-				if (idx > 1) {
-					contents.setSelectedColumnIdx(--idx);
-				}
-
-				entry.remove(idx);
-
-			} else {
-				entry.set(idx, "\0");
-			}
-
-		} else if (mode.getType() == ScreenType.TYPE_TEXT_ENTRY) {
-
-			// Delete/Backspace function
-			if (workingText.length() >= 1) {
-				int colIdx = contents.getColumnIdx();
-
-				if (colIdx < 1) {
-					// Remove the beginning character
-					workingText.deleteCharAt(0);
-
-				} else if (colIdx < workingText.length()) {
-					// Remove the character
-					workingText.deleteCharAt(colIdx - 1);
-				}
-
-				contents.setSelectedColumnIdx(Math.max(0, Math.min(colIdx - 1, workingText.length() - 1)));
-			}
-
-			for (int idx = 0; idx < letterStates.length; ++idx) {
-				letterStates[idx] = 0;
-			}
-		}
-
+		curScreen.actionBkspc();
 		updatePendantScreen();
 	}
 
@@ -776,9 +341,9 @@ public class RobotRun extends PApplet {
 	public void bwd() {
 		// Backwards is only functional when executing a program one instruction
 		// at a time
-		if (mode == ScreenMode.NAV_PROG_INSTR && isShift() && isStep()) {
+		if (curScreen instanceof ScreenNavProgInstructions && isShift() && isStep()) {
 			// Safeguard against editing a program while it is running
-			contents.setSelectedColumnIdx(0);
+			curScreen.getContents().setSelectedColumnIdx(0);
 			progExecBwd();
 		}
 	}
@@ -936,7 +501,7 @@ public class RobotRun extends PApplet {
 	 * menus.
 	 */
 	public void dash() {
-		characterInput('-');
+		curScreen.actionKeyPress('-');
 	}
 
 	/**
@@ -978,7 +543,7 @@ public class RobotRun extends PApplet {
 				UI.updateJogButtons(jogMotion);
 			}
 			
-			if (teachFrame != null && mode.getType() == ScreenType.TYPE_TEACH_POINTS) {
+			if (teachFrame != null && curScreen instanceof ST_ScreenTeachPoints) {
 				renderTeachPoints(teachFrame);
 			}
 	
@@ -1055,16 +620,15 @@ public class RobotRun extends PApplet {
 	 * the selected program
 	 */
 	public void edit() {
-		if (mode == ScreenMode.NAV_PROGRAMS) {
+		if (curScreen instanceof ScreenNavPrograms) {
 			// Load the selected program
-			setActiveProgIdx( contents.getCurrentItemIdx() );
+			setActiveProgIdx(curScreen.getContentIdx());
 			setActiveInstIdx(0);
 			nextScreen(ScreenMode.NAV_PROG_INSTR);
 			
 		} else if (getActiveProg() != null) {
 			// Load the current active program
 			nextScreen(ScreenMode.NAV_PROG_INSTR);
-			
 		} else {
 			// Load the program navigation menu
 			resetStack();
@@ -1145,25 +709,6 @@ public class RobotRun extends PApplet {
 			break;
 		}
 	}
-	
-	public void editTextEntry(int fIdx) {
-		char newChar = LETTERS[fIdx][letterStates[fIdx]];
-		if (options.getLineIdx() == 0 && !(fIdx == 4 && letterStates[fIdx] > 1)) {
-			// Use uppercase character
-			newChar = (char) (newChar - 32);
-		}
-
-		workingText.setCharAt(contents.getColumnIdx(), newChar);
-
-		// Update current letter state
-		letterStates[fIdx] = (letterStates[fIdx] + 1) % 6;
-		for (int idx = 0; idx < letterStates.length; idx += 1) {
-			// Reset all other letter states
-			if (idx != fIdx) {
-				letterStates[idx] = 0;
-			}
-		}
-	}
 
 	/**
 	 * Pendant ENTER button
@@ -1171,1385 +716,8 @@ public class RobotRun extends PApplet {
 	 * Functions as a confirmation button for almost all menus.
 	 */
 	public void enter() {
-		RoboticArm r = activeRobot;
-		Program p = getActiveProg();
-		
-		if(curScreen != null) {
-			curScreen.actionEntr();
-			updatePendantScreen();
-			return;
-		}
-
-		switch (mode) {
-		// Main menu
-		case NAV_MAIN_MENU:
-			if (contents.getLineIdx() == 0) { // Frames
-				nextScreen(ScreenMode.SELECT_FRAME_MODE);
-
-			} else if (contents.getLineIdx() == 1) { // Macros
-				nextScreen(ScreenMode.NAV_MACROS);
-
-			} else if (contents.getLineIdx() == 2) { // Manual Functions
-				nextScreen(ScreenMode.NAV_MF_MACROS);
-
-			} else if (contents.getLineIdx() == 3) {
-				nextScreen(ScreenMode.NAV_IOREGS);
-			}
-
-			break;
-		case NAV_IOREGS:
-			int ioIdx = contents.getCurrentItemIdx();
-			IORegister ioReg = r.getIOReg(ioIdx);
-			
-			if (ioReg != null) {
-				// Toggle the state of the I/O register
-				ioReg.state = (ioReg.state == Fields.ON) ? Fields.OFF : Fields.ON;
-				updatePendantScreen();
-			}
-			
-			break;
-		case SELECT_FRAME_MODE:
-			if (options.getLineIdx() == 0) {
-				nextScreen(ScreenMode.NAV_TOOL_FRAMES);
-			} else if (options.getLineIdx() == 1) {
-				nextScreen(ScreenMode.NAV_USER_FRAMES);
-			}
-			break;
-		case ACTIVE_FRAMES:
-			updateActiveFramesDisplay();
-			break;
-		case NAV_TOOL_FRAMES:
-			curFrameIdx = contents.getCurrentItemIdx();
-			nextScreen(ScreenMode.TFRAME_DETAIL);
-			break;
-		case NAV_USER_FRAMES:
-			curFrameIdx = contents.getCurrentItemIdx();
-			nextScreen(ScreenMode.UFRAME_DETAIL);
-			break;
-		case UFRAME_DETAIL:
-			// User Frame teaching methods
-			teachFrame = activeRobot.getUserFrame(curFrameIdx);
-			if (options.getLineIdx() == 0) {
-				nextScreen(ScreenMode.TEACH_3PT_USER);
-			} else if (options.getLineIdx() == 1) {
-				nextScreen(ScreenMode.TEACH_4PT);
-			} else if (options.getLineIdx() == 2) {
-				nextScreen(ScreenMode.DIRECT_ENTRY_USER);
-			}
-			break;
-		case TFRAME_DETAIL:
-			teachFrame = activeRobot.getToolFrame(curFrameIdx);
-			// Tool Frame teaching methods
-			if (options.getLineIdx() == 0) {
-				nextScreen(ScreenMode.TEACH_3PT_TOOL);
-			} else if (options.getLineIdx() == 1) {
-				nextScreen(ScreenMode.TEACH_6PT);
-			} else if (options.getLineIdx() == 2) {
-				nextScreen(ScreenMode.DIRECT_ENTRY_TOOL);
-			}
-			break;
-		case SET_DEF_TOOLTIP:
-			activeRobot.setDefToolTip(curFrameIdx, options.getLineIdx());
-			activeRobot.setActiveToolFrame(curFrameIdx);
-			DataManagement.saveRobotData(activeRobot, 2);
-			lastScreen();
-			break;
-		case TEACH_3PT_TOOL:
-		case TEACH_3PT_USER:
-			createFrame(teachFrame, 0);
-			lastScreen();
-			break;
-		case TEACH_4PT:
-		case TEACH_6PT:
-			createFrame(teachFrame, 1);
-			lastScreen();
-			break;
-		case DIRECT_ENTRY_TOOL:
-		case DIRECT_ENTRY_USER:
-			// User defined x, y, z, w, p, and r values
-			float[] inputs = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
-
-			try {
-				// Parse each input value
-				for (int val = 0; val < inputs.length; ++val) {
-					DisplayLine value = contents.get(val);
-					String str = new String();
-					int sdx;
-
-					/*
-					 * Combine all columns related to the value, ignoring the
-					 * prefix and last columns
-					 */
-					for (sdx = 1; sdx < (value.size() - 1); ++sdx) {
-						str += value.get(sdx);
-					}
-
-					// Ignore any trailing blank spaces
-					if (!value.get(sdx).equals("\0")) {
-						str += value.get(sdx);
-					}
-
-					if (str.length() < 0) {
-						// No value entered
-						updatePendantScreen();
-						println("All entries must have a value!");
-						return;
-					}
-
-					// Remove prefix
-					inputs[val] = Float.parseFloat(str);
-					// Bring within range of values
-					inputs[val] = max(-9999f, min(inputs[val], 9999f));
-				}
-
-				createFrameDirectEntry(teachFrame, inputs);
-				
-			} catch (NumberFormatException NFEx) {
-				// Invalid number
-				println("Entries must be real numbers!");
-				return;
-			}
-
-			if (teachFrame instanceof UserFrame) {
-				nextScreen(ScreenMode.UFRAME_DETAIL);
-				
-			} else {
-				nextScreen(ScreenMode.TFRAME_DETAIL);
-			}
-			break;
-
-			// Program nav and edit
-		case PROG_CREATE:
-			if (workingText.length() > 0 && !workingText.equals("\0")) {
-				if (workingText.charAt(workingText.length() - 1) == '\0') {
-					// Remove insert character
-					workingText.deleteCharAt(workingText.length() - 1);
-				}
-
-				int new_prog = activeRobot.addProgram(new Program(workingText.toString(), activeRobot));
-				setActiveProgIdx(new_prog);
-				setActiveInstIdx(0);
-
-				DataManagement.saveRobotData(activeRobot, 1);
-				switchScreen(ScreenMode.NAV_PROG_INSTR);
-			}
-			break;
-		case PROG_RENAME:
-			if (workingText.length() > 0 && !workingText.equals("\0")) {
-				if (workingText.charAt(workingText.length() - 1) == '\0') {
-					// Remove insert character
-					workingText.deleteCharAt(workingText.length() - 1);
-				}
-				// Rename the active program
-				Program prog = getActiveProg();
-
-				if (prog != null) {
-					prog.setName(workingText.toString());
-					activeRobot.reorderPrograms();
-					DataManagement.saveRobotData(activeRobot, 1);
-				}
-
-				lastScreen();
-			}
-			break;
-		case PROG_COPY:
-			if (workingText.length() > 0 && !workingText.equals("\0")) {
-				if (workingText.charAt(workingText.length() - 1) == '\0') {
-					// Remove insert character
-					workingText.deleteCharAt(workingText.length() - 1);
-				}
-
-				Program prog = getActiveProg();
-
-				if (prog != null) {
-					Program newProg = prog.clone();
-					newProg.setName(workingText.toString());
-					int new_prog = activeRobot.addProgram(newProg);
-					setActiveProgIdx(new_prog);
-					setActiveInstIdx(0);
-					DataManagement.saveRobotData(activeRobot, 1);
-				}
-
-				lastScreen();
-			}
-			break;
-		case TFRAME_RENAME:
-			// Update frame name
-			if (workingText.length() > 0 && !workingText.equals("\0")) {
-				if (workingText.charAt(workingText.length() - 1) == '\0') {
-					// Remove insert character
-					workingText.deleteCharAt(workingText.length() - 1);
-				}
-			}
-			
-			ToolFrame tFrame = activeRobot.getToolFrame(curFrameIdx);
-			tFrame.setName(workingText.toString());
-			
-			DataManagement.saveRobotData(activeRobot, 1);
-			lastScreen();
-			break;
-		case UFRAME_RENAME:
-			// Update frame name
-			if (workingText.length() > 0 && !workingText.equals("\0")) {
-				if (workingText.charAt(workingText.length() - 1) == '\0') {
-					// Remove insert character
-					workingText.deleteCharAt(workingText.length() - 1);
-				}
-			}
-			
-			UserFrame uFrame = activeRobot.getUserFrame(curFrameIdx);
-			uFrame.setName(workingText.toString());
-			
-			DataManagement.saveRobotData(activeRobot, 1);
-			lastScreen();
-			break;
-		case NAV_PROGRAMS:
-			r = activeRobot;
-			if (r.numOfPrograms() != 0) {
-				setActiveProgIdx( contents.getCurrentItemIdx() );
-				nextScreen(ScreenMode.NAV_PROG_INSTR);
-			}
-			break;
-
-			// Instruction options menu
-		case NAV_INSTR_MENU:
-
-			switch (options.getLineIdx()) {
-			case 0: // Undo
-				activeRobot.popInstructionUndo(getActiveProg());
-				lastScreen();
-				break;
-			case 1: // Insert
-				nextScreen(ScreenMode.CONFIRM_INSERT);
-				break;
-			case 2: // Delete
-				contents.resetSelection(p.getNumOfInst());
-				nextScreen(ScreenMode.SELECT_INSTR_DELETE);
-				break;
-			case 3: // Cut/Copy
-				contents.resetSelection(p.getNumOfInst());
-				nextScreen(ScreenMode.SELECT_CUT_COPY);
-				break;
-			case 4: // Paste
-				nextScreen(ScreenMode.SELECT_PASTE_OPT);
-				break;
-			case 5: // Find/Replace
-				nextScreen(ScreenMode.FIND_REPL);
-				break;
-			case 6: // Renumber
-				nextScreen(ScreenMode.CONFIRM_RENUM);
-				break;
-			case 7: // Comment
-				contents.resetSelection(p.getNumOfInst());
-				nextScreen(ScreenMode.SELECT_COMMENT);
-				break;
-			case 8: // Remark
-			}
-
-			break;
-
-			// Instruction insert menus
-		case SELECT_INSTR_INSERT:
-			switch (options.getLineIdx()) {
-			case 0: // I/O
-				nextScreen(ScreenMode.SELECT_IO_INSTR_REG);
-				break;
-			case 1: // Offset/Frames
-				nextScreen(ScreenMode.SELECT_FRAME_INSTR_TYPE);
-				break;
-			case 2: // Register
-				nextScreen(ScreenMode.SELECT_REG_STMT);
-				break;
-			case 3: // IF/ SELECT
-				nextScreen(ScreenMode.SELECT_COND_STMT);
-				break;
-			case 4: // JMP/ LBL
-				nextScreen(ScreenMode.SELECT_JMP_LBL);
-				break;
-			case 5: // Call
-				newCallInstruction();
-				editIdx = activeRobot.RID;
-				switchScreen(ScreenMode.SET_CALL_PROG);
-				break;
-			case 6: // RobotCall
-				newRobotCallInstruction();
-				RoboticArm inactive = getInactiveRobot();
-				
-				if (inactive.numOfPrograms() > 0) {
-					editIdx = getInactiveRobot().RID;
-					switchScreen(ScreenMode.SET_CALL_PROG);
-					
-				} else {
-					// No programs exist in the inactive robot
-					lastScreen();
-				}
-			}
-
-			break;
-		case SELECT_IO_INSTR_REG:
-			// IO registers are 1 indexed!
-			int state = (options.getColumnIdx() == 1) ? Fields.ON : Fields.OFF;
-			newIOInstruction(options.getLineIdx() + 1, state);
-			screenStates.pop();
-			lastScreen();
-			break;
-		case SELECT_FRAME_INSTR_TYPE:
-			if (options.getLineIdx() == 0) {
-				newFrameInstruction(Fields.FTYPE_TOOL);
-			} else {
-				newFrameInstruction(Fields.FTYPE_USER);
-			}
-
-			screenStates.pop();
-			switchScreen(ScreenMode.SET_FRAME_INSTR_IDX);
-			break;
-		case SELECT_REG_STMT:
-			screenStates.pop();
-			screenStates.pop();
-
-			if (options.getLineIdx() == 0) {
-				newRegisterStatement(new DataRegister());
-			} else if (options.getLineIdx() == 1) {
-				newRegisterStatement(new IORegister());
-			} else if (options.getLineIdx() == 2) {
-				newRegisterStatement(new PositionRegister());
-			} else {
-				newRegisterStatement(new PositionRegister(), 0);
-				ScreenState instEdit = screenStates.peek();
-				pushScreen(ScreenMode.SET_REG_EXPR_IDX2, instEdit.conLnIdx,
-						instEdit.conColIdx, instEdit.conRenIdx, 0,
-						0);
-			}
-
-			loadScreen(ScreenMode.SET_REG_EXPR_IDX1);
-			break;
-		case SELECT_COND_STMT:
-			if (options.getLineIdx() == 0) {
-				newIfStatement();
-				screenStates.pop();
-				switchScreen(ScreenMode.SET_EXPR_OP);
-			} else if (options.getLineIdx() == 1) {
-				newIfExpression();
-				screenStates.pop();
-				lastScreen();
-			} else {
-				newSelectStatement();
-				screenStates.pop();
-				lastScreen();
-			}
-
-			break;
-		case SELECT_JMP_LBL:
-			screenStates.pop();
-
-			if (options.getLineIdx() == 0) {
-				newLabel();
-				switchScreen(ScreenMode.SET_LBL_NUM);
-			} else {
-				newJumpInstruction();
-				switchScreen(ScreenMode.SET_JUMP_TGT);
-			}
-
-			break;
-
-			// Movement instruction edit
-		case SET_MINST_TYPE:
-			MotionInstruction m = (MotionInstruction) r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-			
-			if (options.getLineIdx() == 0) {
-				m.setMotionType(Fields.MTYPE_JOINT);
-				
-			} else if (options.getLineIdx() == 1) {
-				m.setMotionType(Fields.MTYPE_LINEAR);
-				
-			} else if (options.getLineIdx() == 2) {
-				m.setMotionType(Fields.MTYPE_CIRCULAR);
-				
-			}
-			
-			lastScreen();
-			break;
-		case SET_MINST_REG_TYPE:
-			MotionInstruction mInst = (MotionInstruction) r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-			
-			if (options.getLineIdx() == 2) {
-				if (!(mInst instanceof CamMoveToObject)) {
-					// Change to a camera motion instruction
-					MotionInstruction mCInst = new CamMoveToObject(
-							mInst.getMotionType(), 0,
-							mInst.getSpdMod(), mInst.getTermination(),
-							getActiveScenario()
-					);
-					
-					getActiveProg().replaceInstAt(getActiveInstIdx(), mCInst);
-				}
-				
-			} else {
-				int posType;
-				
-				if (options.getLineIdx() == 1) {
-					posType = Fields.PTYPE_PREG;
-					
-				} else {
-					posType = Fields.PTYPE_PROG;
-				}
-				
-				if (mInst instanceof CamMoveToObject) {
-					// Change to a position motion instruction
-					MotionInstruction mPInst = new PosMotionInst(
-							mInst.getMotionType(), posType, -1,
-							mInst.getSpdMod(), mInst.getTermination()
-					);
-					
-					getActiveProg().replaceInstAt(getActiveInstIdx(), mPInst);
-					
-				} else if (mInst instanceof PosMotionInst) {
-					// Update motion type of the position motion instruction
-					mInst.setPosType(posType);
-				}
-			}
-			
-			lastScreen();
-			break;
-		case SET_MINST_CREG_TYPE:
-			PosMotionInst pMInst = (PosMotionInst) r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-			
-			if (options.getLineIdx() == 0) {
-				pMInst.setCircPosType(Fields.PTYPE_PROG);
-			
-			} else if (options.getLineIdx() == 1) {
-				pMInst.setCircPosType(Fields.PTYPE_PREG);
-			}
-
-			lastScreen();
-			break;
-		case SET_MINST_SPD:
-			m = (MotionInstruction) r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-			int motionType = m.getMotionType();
-			
-			try {
-				float tempSpeed = Float.parseFloat(workingText.toString());
-				
-				if (motionType == Fields.MTYPE_LINEAR ||
-						motionType == Fields.MTYPE_CIRCULAR) {
-					
-					tempSpeed /= RoboticArm.motorSpeed;
-					
-				} else {
-					tempSpeed /= 100f;
-				}
-				
-				m.setSpdMod(RMath.clamp(tempSpeed, 0.01f, 1f));
-				
-			} catch (NumberFormatException NFEx) {
-				// Invalid input
-			}
-			
-			lastScreen();
-			break;
-		case SET_MINST_IDX:
-			mInst = (MotionInstruction) r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-			
-			try {
-				int tempRegister = Integer.parseInt(workingText.toString());
-				int lbound = 1, ubound = 0;
-				
-				if (mInst.getPosType() == Fields.PTYPE_PREG) {
-					ubound = 100;
-
-				} else if (mInst.getPosType() == Fields.PTYPE_PROG) {
-					ubound = 1000;
-					
-				} else if (mInst instanceof CamMoveToObject) {
-					Scenario s = ((CamMoveToObject) mInst).getScene();
-					
-					if (s != null) {
-						ubound = s.size();
-						
-					}	
-				}
-
-				if (tempRegister < lbound || tempRegister > ubound) {
-					// Invalid register index
-					String err = String.format("Only registers %d-%d are valid!", lbound, ubound);
-					System.err.println(err);
-				}
-				
-				mInst.setPosIdx(tempRegister - 1);
-				
-			} catch (NumberFormatException NFEx) {
-			/* Ignore invalid numbers */ }
-
-			lastScreen();
-			break;
-		case SET_MINST_CIDX:
-			try {
-				pMInst = (PosMotionInst) r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-				int tempRegister = Integer.parseInt(workingText.toString());
-				int lbound = 1, ubound;
-				
-				if (pMInst.getPosType() == Fields.PTYPE_PREG) {
-					ubound = 100;
-
-				} else if (pMInst.getPosType() == Fields.PTYPE_PROG) {
-					ubound = 1000;
-					
-				} else {
-					ubound = 0;
-				}
-
-				if (tempRegister < lbound || tempRegister > ubound) {
-					// Invalid register index
-					String err = String.format("Only registers %d-%d are valid!", lbound, ubound);
-					System.err.println(err);
-					lastScreen();
-					return;
-				}
-				
-				pMInst.setCircPosIdx(tempRegister - 1);
-				
-			} catch (NumberFormatException NFEx) {
-				String err = "Invalid entry!";
-				System.err.println(err);
-			}
-			
-			lastScreen();
-			break;
-		case SET_MINST_OBJ:
-			CamMoveToObject cMInst = (CamMoveToObject) r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-			cMInst.setPosIdx(options.getLineIdx() - 1);
-			
-			lastScreen();
-			break;
-		case SET_MINST_TERM:
-			try {
-				m = (MotionInstruction) r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-				int tempTerm = Integer.parseInt(workingText.toString());
-
-				if (tempTerm >= 0 && tempTerm <= 100) {
-					m.setTermination(tempTerm);
-				}
-			} catch (NumberFormatException NFEx) {
-			/* Ignore invalid input */ }
-
-			lastScreen();
-			break;
-		case SET_MINST_OFF_TYPE:
-			pMInst = (PosMotionInst) r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-			int ldx = options.getLineIdx();
-			// Set the offset type of the active motion instruction
-			if (ldx == 0) {
-				pMInst.setOffsetType(Fields.OFFSET_NONE);
-				
-			} else if (ldx == 1) {
-				pMInst.setOffsetType(Fields.OFFSET_PREG);
-			}
-			
-			lastScreen();
-			break;
-		case SET_MINST_OFFIDX:
-			try {
-				pMInst = (PosMotionInst) r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-				int tempRegister = Integer.parseInt(workingText.toString()) - 1;
-				
-				if (tempRegister < 0 || tempRegister > 99) {
-					// Invalid register index
-					String err = "Only registers 1 - 1000 are legal!";
-					System.out.println(err);
-					
-				} else {
-					pMInst.setOffsetType(Fields.OFFSET_PREG);
-					pMInst.setOffsetIdx(tempRegister);
-				}
-				
-			} catch (NumberFormatException NFEx) {/* Ignore invalid numbers */ }
-
-			lastScreen();
-			break;
-
-		// Expression edit
-		case SET_EXPR_ARG:
-			Expression expr = (Expression)opEdit;
-			Operand<?> operand;
-			
-			if (options.getLineIdx() == 0) {
-				// set arg to new data reg
-				operand = new OperandDReg(new DataRegister());
-				opEdit = expr.setOperand(editIdx, operand);
-				switchScreen(ScreenMode.INPUT_DREG_IDX);
-			} else if (options.getLineIdx() == 1) {
-				// set arg to new io reg
-				operand = new OperandIOReg(new IORegister());
-				opEdit = expr.setOperand(editIdx, operand);
-				switchScreen(ScreenMode.INPUT_IOREG_IDX);
-			} else if (options.getLineIdx() == 2) {
-				operand = new OperandPReg(new PositionRegister());
-				opEdit = expr.setOperand(editIdx, operand);
-				switchScreen(ScreenMode.INPUT_PREG_IDX1);
-				
-			} else if (options.getLineIdx() == 3) {
-				// JPos operand
-				operand = new RobotPoint(activeRobot, false);
-				opEdit = expr.setOperand(editIdx, operand);
-				lastScreen();
-				
-			} else if (options.getLineIdx() == 4) {
-				// LPos operand
-				operand = new RobotPoint(activeRobot, true);
-				opEdit = expr.setOperand(editIdx, operand);
-				lastScreen();
-				
-			} else if (options.getLineIdx() == 5) {
-				operand = new OperandPRegIdx(new PositionRegister(), 0);
-				opEdit = expr.setOperand(editIdx, operand);
-				screenStates.pop();
-				pushScreen(ScreenMode.INPUT_PREG_IDX2, contents.getLineIdx(),
-						contents.getColumnIdx(), contents.getRenderStart(), 0,
-						0);
-				loadScreen(ScreenMode.INPUT_PREG_IDX1);
-			} else if (options.getLineIdx() == 6) {
-				// set arg to new expression
-				operand = new Expression();
-				opEdit = expr.setOperand(editIdx, operand);
-				lastScreen();
-			} else {
-				// set arg to new constant
-				operand = new OperandFloat();
-				opEdit = expr.setOperand(editIdx, operand);
-				switchScreen(ScreenMode.INPUT_CONST);
-			}
-
-			break;
-		case SET_BOOL_EXPR_ARG:
-			IfStatement stmt = (IfStatement) r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-			if (options.getLineIdx() == 0) {
-				// set arg to new data reg
-				opEdit = new OperandDReg();
-				stmt.setOperand(editIdx, opEdit);
-				switchScreen(ScreenMode.INPUT_DREG_IDX);
-			} else if (options.getLineIdx() == 1) {
-				// set arg to new io reg
-				opEdit = new OperandIOReg();
-				stmt.setOperand(editIdx, opEdit);
-				switchScreen(ScreenMode.INPUT_IOREG_IDX);
-			} else {
-				// set arg to new constant
-				opEdit = new OperandFloat();
-				stmt.setOperand(editIdx, opEdit);
-				switchScreen(ScreenMode.INPUT_CONST);
-			}
-			break;
-		case SET_IF_STMT_ACT:
-			stmt = (IfStatement) r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-			if (options.getLineIdx() == 0) {
-				stmt.setInstr(new JumpInstruction());
-				switchScreen(ScreenMode.SET_JUMP_TGT);
-			} else if (options.getLineIdx() == 1) {
-				stmt.setInstr(new CallInstruction(activeRobot));
-				editIdx = activeRobot.RID;
-				switchScreen(ScreenMode.SET_CALL_PROG);
-			} else {
-				RoboticArm inactive = getInactiveRobot();
-				stmt.setInstr(new CallInstruction(inactive));
-				
-				if (inactive.numOfPrograms() > 0) {
-					switchScreen(ScreenMode.SET_CALL_PROG);
-					
-				} else {
-					// No programs from which to choose
-					lastScreen();
-				}
-			}
-
-			break;
-		case SET_EXPR_OP:
-			if (opEdit instanceof Expression) {
-				expr = (Expression) opEdit;
-				r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-				
-				switch (options.getLineIdx()) {
-				case 0:
-					expr.setOperator(editIdx, Operator.ADD);
-					break;
-				case 1:
-					expr.setOperator(editIdx, Operator.SUB);
-					break;
-				case 2:
-					expr.setOperator(editIdx, Operator.MULT);
-					break;
-				case 3:
-					expr.setOperator(editIdx, Operator.DIV);
-					break;
-				case 4:
-					expr.setOperator(editIdx, Operator.IDIV);
-					break;
-				case 5:
-					expr.setOperator(editIdx, Operator.MOD);
-					break;
-				case 6:
-					expr.setOperator(editIdx, Operator.EQUAL);
-					break;
-				case 7:
-					expr.setOperator(editIdx, Operator.NEQUAL);
-					break;
-				case 8:
-					expr.setOperator(editIdx, Operator.GRTR);
-					break;
-				case 9:
-					expr.setOperator(editIdx, Operator.LESS);
-					break;
-				case 10:
-					expr.setOperator(editIdx, Operator.GREQ);
-					break;
-				case 11:
-					expr.setOperator(editIdx, Operator.LSEQ);
-					break;
-				case 12:
-					expr.setOperator(editIdx, Operator.AND);
-					break;
-				case 13:
-					expr.setOperator(editIdx, Operator.OR);
-					break;
-				case 14:
-					expr.setOperator(editIdx, Operator.NOT);
-					break;
-				}
-			} else if (opEdit instanceof AtomicExpression) {
-				AtomicExpression atmExpr = (AtomicExpression) opEdit;
-				r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-
-				switch (options.getLineIdx()) {
-				case 0:
-					atmExpr.setOperator(Operator.EQUAL);
-					break;
-				case 1:
-					atmExpr.setOperator(Operator.NEQUAL);
-					break;
-				case 2:
-					atmExpr.setOperator(Operator.GRTR);
-					break;
-				case 3:
-					atmExpr.setOperator(Operator.LESS);
-					break;
-				case 4:
-					atmExpr.setOperator(Operator.GREQ);
-					break;
-				case 5:
-					atmExpr.setOperator(Operator.LSEQ);
-					break;
-				}
-			}
-
-			lastScreen();
-			break;
-		case INPUT_DREG_IDX:
-		case INPUT_IOREG_IDX:
-		case INPUT_PREG_IDX1:
-		case INPUT_PREG_IDX2:
-			try {
-				int idx = Integer.parseInt(workingText.toString());
-
-				if (mode == ScreenMode.INPUT_DREG_IDX) {
-
-					if (idx < 1 || idx > 100) {
-						System.err.println("Invalid index!");
-
-					} else {
-						r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-						((OperandDReg)opEdit).setValue(activeRobot.getDReg(idx - 1));
-					}
-
-				} else if (mode == ScreenMode.INPUT_PREG_IDX1) {
-
-					if (idx < 1 || idx > 100) {
-						System.err.println("Invalid index!");
-
-					} else if(opEdit instanceof OperandPReg) {
-						r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-						((OperandPReg)opEdit).setValue(activeRobot.getPReg(idx - 1));
-					} else if(opEdit instanceof OperandPRegIdx) {
-						r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-						((OperandPRegIdx)opEdit).setValue(activeRobot.getPReg(idx - 1));
-					}
-					
-				} else if (mode == ScreenMode.INPUT_PREG_IDX2) {
-
-					if (idx < 1 || idx > 6) {
-						System.err.println("Invalid index!");
-
-					} else {
-						r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-						((OperandPRegIdx)opEdit).setSubIdx(idx - 1);
-					}
-
-				} else if (mode == ScreenMode.INPUT_IOREG_IDX) {
-
-					if (idx < 1 || idx > activeRobot.numOfEndEffectors()) {
-						System.err.println("Invalid index!");
-
-					} else {
-						r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-						((OperandIOReg)opEdit).setValue(activeRobot.getIOReg(idx));
-					}
-				}
-			} catch (NumberFormatException e) {
-				//TODO display error to user
-			}
-
-			lastScreen();
-			break;
-		case INPUT_CONST:
-			try {
-				float data = Float.parseFloat(workingText.toString());
-				r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-				((OperandFloat)opEdit).setValue(data);
-				
-			} catch (NumberFormatException e) {
-				e.printStackTrace(); //TODO report error to user
-			}
-
-			lastScreen();
-			break;
-		case SET_BOOL_CONST:
-			r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-			
-			if (options.getLineIdx() == 0) {
-				((OperandBool)opEdit).setValue(true);
-			} else {
-				((OperandBool)opEdit).setValue(false);
-			}
-
-			lastScreen();
-			break;
-
-			// Select statement edit
-		case SET_SELECT_STMT_ACT:
-			SelectStatement s = (SelectStatement) r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-			int i = (getSelectedIdx() - 3) / 3;
-
-			if (options.getLineIdx() == 0) {
-				s.getInstrs().set(i, new JumpInstruction());
-			} else if (options.getLineIdx() == 1) {
-				s.getInstrs().set(i, new CallInstruction(activeRobot));
-			} else {
-				s.getInstrs().set(i, new CallInstruction(getInactiveRobot()));
-			}
-
-			lastScreen();
-			break;
-		case SET_SELECT_STMT_ARG:
-			s = (SelectStatement) r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-			
-			if (options.getLineIdx() == 0) {
-				opEdit = new OperandDReg(new DataRegister());
-			} else {
-				opEdit = new OperandGeneric();
-			}
-			
-			s.setOperand(editIdx, opEdit);
-			nextScreen(ScreenMode.SET_SELECT_ARGVAL);
-			break;
-		case SET_SELECT_ARGVAL:
-			try {
-				s = (SelectStatement) r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-				float f = Float.parseFloat(workingText.toString());
-
-				if (opEdit.getType() == Operand.UNINIT) {
-					opEdit = new OperandFloat(f);
-					s.setOperand(editIdx, opEdit);
-					
-				} else if (opEdit.getType() == Operand.DREG) {
-					if (f >= 1f && f <= 100f) {
-						opEdit = new OperandDReg(activeRobot.getDReg((int) f - 1));
-						s.setOperand(editIdx, opEdit);
-					}
-				}	
-				
-			} catch (NumberFormatException NFex) {
-				//TODO display error to user
-			}
-
-			screenStates.pop();
-			lastScreen();
-			break;
-
-			// IO instruction edit
-		case SET_IO_INSTR_STATE:
-			IOInstruction ioInst = (IOInstruction) r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-
-			if (options.getLineIdx() == 0) {
-				ioInst.setState(Fields.ON);
-			} else {
-				ioInst.setState(Fields.OFF);
-			}
-
-			lastScreen();
-			break;
-		case SET_IO_INSTR_IDX:
-			try {
-				int tempReg = Integer.parseInt(workingText.toString());
-
-				if (tempReg < 1 || tempReg >= activeRobot.numOfEndEffectors()) {
-					System.err.println("Invalid index!");
-
-				} else {
-					ioInst = (IOInstruction) r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-					ioInst.setReg(tempReg);
-				}
-			} catch (NumberFormatException NFEx) {
-				/* Ignore invalid input */ 
-			}
-
-			lastScreen();
-			break;
-
-			// Frame instruction edit
-		case SET_FRAME_INSTR_TYPE:
-			FrameInstruction fInst = (FrameInstruction) r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-
-			if (options.getLineIdx() == 0)
-				fInst.setFrameType(Fields.FTYPE_TOOL);
-			else
-				fInst.setFrameType(Fields.FTYPE_USER);
-
-			lastScreen();
-			break;
-		case SET_FRAME_INSTR_IDX:
-			try {
-				int frameIdx = Integer.parseInt(workingText.toString()) - 1;
-
-				if (frameIdx >= -1 && frameIdx < Fields.FRAME_NUM) {
-					fInst = (FrameInstruction) r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-					fInst.setReg(frameIdx);
-				}
-			} catch (NumberFormatException NFEx) {
-			/* Ignore invalid input */ }
-
-			lastScreen();
-			break;
-
-			// Register statement edit
-		case SET_REG_EXPR_TYPE:
-			RegisterStatement regStmt = (RegisterStatement) r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-			
-			if (options.getLineIdx() == 3) {
-				regStmt.setRegister(new PositionRegister(), 0);
-				
-				screenStates.pop();
-				pushScreen(ScreenMode.SET_REG_EXPR_IDX2, contents.getLineIdx(),
-						contents.getColumnIdx(), contents.getRenderStart(), 0,
-						0);
-				loadScreen(ScreenMode.SET_REG_EXPR_IDX1);
-				
-			} else {
-				if (options.getLineIdx() == 0) {
-					regStmt.setRegister(new DataRegister());
-				} else if (options.getLineIdx() == 1) {
-					regStmt.setRegister(new IORegister());
-				} else if (options.getLineIdx() == 2) {
-					regStmt.setRegister(new PositionRegister());
-				}
-				
-				switchScreen(ScreenMode.SET_REG_EXPR_IDX1);
-			}
-			
-			break;
-		case SET_REG_EXPR_IDX1:
-			try {
-				int idx = Integer.parseInt(workingText.toString());
-				regStmt = (RegisterStatement) r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-				Register reg = regStmt.getReg();
-
-				if (idx < 1 || ((reg instanceof DataRegister || reg instanceof PositionRegister) && idx > 100)
-						|| (reg instanceof IORegister && idx > 5)) {
-					// Index is out of bounds
-					println("Invalid register index!");
-
-				} else {
-
-					if (regStmt.getReg() instanceof DataRegister) {
-						regStmt.setRegister(activeRobot.getDReg(idx - 1));
-
-					} else if (regStmt.getReg() instanceof IORegister) {
-						regStmt.setRegister(activeRobot.getIOReg(idx - 1));
-
-					} else if (regStmt.getReg() instanceof PositionRegister) {
-						if (regStmt.getPosIdx() < 0) {
-							// Update a position register operand
-							regStmt.setRegister(activeRobot.getPReg(idx - 1));
-
-						} else {
-							// Update a position register index operand
-							regStmt.setRegister(activeRobot.getPReg(idx - 1), regStmt.getPosIdx());
-						}
-
-					}
-				}
-			} catch (NumberFormatException NFEx) {
-			/* Ignore invalid input */ }
-
-			lastScreen();
-			break;
-		case SET_REG_EXPR_IDX2:
-			try {
-				int idx = Integer.parseInt(workingText.toString());
-
-				if (idx < 1 || idx > 6) {
-					println("Invalid position index!");
-				} else {
-					regStmt = (RegisterStatement) r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-					if (regStmt.getReg() instanceof PositionRegister) {
-						regStmt.setPosIdx(idx - 1);
-					}
-				}
-			} catch (NumberFormatException NFEx) {
-			/* Ignore invalid input */ }
-
-			lastScreen();
-			break;
-
-			// Jump/ Label instruction edit
-		case SET_LBL_NUM:
-			try {
-				int idx = Integer.parseInt(workingText.toString());
-
-				if (idx < 0 || idx > 99) {
-					println("Invalid label index!");
-				} else {
-					((LabelInstruction) r.getInstToEdit(getActiveProg(), getActiveInstIdx())).setLabelNum(idx);
-				}
-			} catch (NumberFormatException NFEx) {
-			/* Ignore invalid input */ }
-
-			lastScreen();
-			break;
-		case SET_JUMP_TGT:
-			try {
-				int lblNum = Integer.parseInt(workingText.toString());
-				Instruction inst = r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-				
-				if (inst instanceof IfStatement) {
-					IfStatement ifStmt = (IfStatement) inst;
-					((JumpInstruction) ifStmt.getInstr()).setTgtLblNum(lblNum);
-				} else if (inst instanceof SelectStatement) {
-					SelectStatement sStmt = (SelectStatement) inst;
-					((JumpInstruction) sStmt.getInstrs().get(editIdx)).setTgtLblNum(lblNum);
-				} else {
-					if (lblNum >= 0) {
-						JumpInstruction jmp = (JumpInstruction) inst;
-						jmp.setTgtLblNum(lblNum);
-					} else {
-						System.err.println("Invalid label number.");
-					}
-				}
-			} catch (NumberFormatException NFEx) {
-			/* Ignore invalid input */ }
-
-			lastScreen();
-			break;
-		case SET_CALL_PROG:
-			Instruction inst = r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-			CallInstruction cInst;
-			
-			// Get the call instruction
-			if (inst instanceof IfStatement) {
-				cInst = (CallInstruction) ((IfStatement) inst).getInstr();
-				
-			} else if (inst instanceof SelectStatement) {
-				SelectStatement sStmt = (SelectStatement) inst;
-				cInst = (CallInstruction) sStmt.getInstrs().get(editIdx);
-				
-			} else {
-				cInst =  (CallInstruction) inst;
-			}
-			
-			// Set the program of the call instruction
-			Program tgt = cInst.getTgtDevice().getProgram( options.getCurrentItemIdx() );
-			cInst.setProg(tgt);
-
-			lastScreen();
-			break;
-			// Macro edit screens
-		case SET_MACRO_PROG:
-			if (macroEdit == null) {
-				macroEdit = new Macro(contents.getLineIdx());
-				macros.add(macroEdit);
-				switchScreen(ScreenMode.SET_MACRO_TYPE);
-			} else {
-				macroEdit.setProgram(contents.getLineIdx());
-			}
-			break;
-		case SET_MACRO_TYPE:
-			if (options.getLineIdx() == 0) {
-				macroEdit.setManual(false);
-				switchScreen(ScreenMode.SET_MACRO_BINDING);
-			} else if (options.getLineIdx() == 1) {
-				macroEdit.setManual(true);
-				macroEdit.clearNum();
-				lastScreen();
-			}
-			break;
-		case SET_MACRO_BINDING:
-			macroEdit.setNum(options.getLineIdx());
-			lastScreen();
-			break;
-
-		case NAV_MF_MACROS:
-			int macro_idx = contents.getCurrentItemIdx();
-			execute(macros.get(macro_idx));
-			break;
-
-			// Program instruction editing and navigation
-		case SELECT_CUT_COPY:
-		case SELECT_INSTR_DELETE:
-			contents.toggleSelect(getActiveInstIdx());
-			updatePendantScreen();
-			break;
-		case SELECT_PASTE_OPT:
-			if (options.getLineIdx() == 0) {
-				pasteInstructions(Fields.CLEAR_POSITION);
-			} else if (options.getLineIdx() == 1) {
-				pasteInstructions(Fields.PASTE_DEFAULT);
-			} else if (options.getLineIdx() == 2) {
-				pasteInstructions(Fields.NEW_POSITION);
-			} else if (options.getLineIdx() == 3) {
-				pasteInstructions(Fields.PASTE_REVERSE | Fields.CLEAR_POSITION);
-			} else if (options.getLineIdx() == 4) {
-				pasteInstructions(Fields.PASTE_REVERSE);
-			} else if (options.getLineIdx() == 5) {
-				pasteInstructions(Fields.PASTE_REVERSE | Fields.NEW_POSITION);
-			} else if (options.getLineIdx() == 6) {
-				pasteInstructions(Fields.PASTE_REVERSE | Fields.REVERSE_MOTION);
-			} else {
-				pasteInstructions(Fields.PASTE_REVERSE | Fields.NEW_POSITION | Fields.REVERSE_MOTION);
-			}
-			
-			
-			ScreenState prev = null;
-			
-			while (!screenStates.isEmpty()) {
-				prev = screenStates.peek();
-				
-				if (prev.mode == ScreenMode.NAV_INSTR_MENU) {
-					break;
-				}
-				
-				screenStates.pop();
-			}
-			
-			lastScreen();
-			break;
-		case SELECT_COMMENT:
-			r.getInstToEdit(getActiveProg(), getActiveInstIdx()).toggleCommented();
-
-			updatePendantScreen();
-			break;
-		case EDIT_PROG_POS:
-			pMInst = (PosMotionInst) r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-			Point pt = parsePosFromContents(pMInst.getMotionType() != Fields.MTYPE_JOINT);
-
-			if (pt != null) {
-				// Update the position of the active motion instruction
-				getActiveProg().setPosition(pMInst.getPosIdx(), pt);
-				DataManagement.saveRobotData(activeRobot, 1);
-			}
-
-			lastScreen();
-			break;
-		case FIND_REPL:
-			lastScreen();
-			break;
-		case JUMP_TO_LINE:
-			int jumpToInst = Integer.parseInt(workingText.toString()) - 1;
-			setActiveInstIdx(max(0, min(jumpToInst, p.getNumOfInst() - 1)));
-
-			lastScreen();
-			break;
-		case SWAP_PT_TYPE:
-			int itemIdx = contents.getItemIdx();
-			if (itemIdx >= 0 && itemIdx < Fields.DPREG_NUM) {
-				// Set the position type of the selected position register
-				PositionRegister toEdit = activeRobot.getPReg(itemIdx);
-				toEdit.isCartesian = options.getLineIdx() == 0;
-				DataManagement.saveRobotData(activeRobot, 3);
-				lastScreen();
-			}
-
-			break;
-
-		case NAV_DATA:
-			int select = contents.getLineIdx();
-			
-			if (select == 0) {
-				// Data Register Menu
-				nextScreen(ScreenMode.NAV_DREGS);
-			} else if (select == 1) {
-				// Position Register Menu
-				nextScreen(ScreenMode.NAV_PREGS);
-			}
-			break;
-		case CP_DREG_COM:
-			int regIdx = -1;
-			itemIdx = contents.getItemIdx();
-
-			try {
-				// Copy the comment of the curent Data register to the Data
-				// register at the specified index
-				regIdx = Integer.parseInt(workingText.toString()) - 1;
-				activeRobot.getDReg(regIdx).comment = activeRobot.getDReg(itemIdx).comment;
-				DataManagement.saveRobotData(activeRobot, 3);
-
-			} catch (NumberFormatException MFEx) {
-				println("Only real numbers are valid!");
-			} catch (IndexOutOfBoundsException IOOBEx) {
-				println("Only positve integers between 1 and 100 are valid!");
-			}
-
-			lastScreen();
-			break;
-		case CP_DREG_VAL:
-			regIdx = -1;
-			itemIdx = contents.getItemIdx();
-
-			try {
-				// Copy the value of the curent Data register to the Data
-				// register at the specified index
-				regIdx = Integer.parseInt(workingText.toString()) - 1;
-				activeRobot.getDReg(regIdx).value = activeRobot.getDReg(itemIdx).value;
-				DataManagement.saveRobotData(activeRobot, 3);
-
-			} catch (NumberFormatException MFEx) {
-				println("Only real numbers are valid!");
-			} catch (IndexOutOfBoundsException IOOBEx) {
-				println("Only positve integers between 1 and 100 are valid!");
-			}
-
-			lastScreen();
-			break;
-		case CP_PREG_COM:
-			regIdx = -1;
-			itemIdx = contents.getItemIdx();
-			
-			try {
-				// Copy the comment of the curent Position register to the
-				// Position register at the specified index
-				regIdx = Integer.parseInt(workingText.toString()) - 1;
-				activeRobot.getPReg(regIdx).comment = activeRobot.getPReg(itemIdx).comment;
-				DataManagement.saveRobotData(activeRobot, 3);
-
-			} catch (NumberFormatException MFEx) {
-				println("Only real numbers are valid!");
-			} catch (IndexOutOfBoundsException IOOBEx) {
-				println("Only positve integers between 1 and 100 are valid!");
-			}
-
-			lastScreen();
-			break;
-		case CP_PREG_PT:
-			regIdx = -1;
-
-			try {
-				// Copy the point of the curent Position register to the
-				// Position register at the specified index
-				regIdx = Integer.parseInt(workingText.toString()) - 1;
-				PositionRegister src = activeRobot.getPReg(contents.getItemIdx());
-				PositionRegister dest = activeRobot.getPReg(regIdx);
-				
-				dest.point = src.point.clone();
-				dest.isCartesian = src.isCartesian;
-				DataManagement.saveRobotData(activeRobot, 3);
-
-			} catch (NumberFormatException MFEx) {
-				println("Only real numbers are valid!");
-			} catch (IndexOutOfBoundsException IOOBEx) {
-				println("Only positve integers between 1 and 100 are valid!");
-			}
-
-			lastScreen();
-			break;
-		case EDIT_DREG_VAL:
-			Float f = null;
-			itemIdx = contents.getItemIdx();
-			
-			try {
-				// Read inputed Float value
-				f = Float.parseFloat(workingText.toString());
-				// Clamp the value between -9999 and 9999, inclusive
-				f = max(-9999f, min(f, 9999f));
-				DataRegister dReg = activeRobot.getDReg(itemIdx);
-
-				if (dReg != null) {
-					// Save inputed value
-					dReg.value = f;
-					DataManagement.saveRobotData(activeRobot, 3);
-				}
-
-			} catch (NumberFormatException NFEx) {
-				// Invalid input value
-				println("Value must be a real number!");
-			}
-
-			lastScreen();
-			break;
-		case NAV_DREGS:
-			if (contents.getColumnIdx() == 0) {
-				// Edit register comment
-				nextScreen(ScreenMode.EDIT_DREG_COM);
-			} else if (contents.getColumnIdx() >= 1) {
-				// Edit Data Register value
-				nextScreen(ScreenMode.EDIT_DREG_VAL);
-			}
-			break;
-		case NAV_PREGS:
-			if (contents.getColumnIdx() == 0) {
-				// Edit register comment
-				nextScreen(ScreenMode.EDIT_PREG_COM);
-			} else if (contents.getColumnIdx() >= 1) {
-				// Edit Position Register value
-				nextScreen(ScreenMode.EDIT_PREG);
-			}
-			break;
-		case EDIT_PREG:
-			PositionRegister pReg = activeRobot.getPReg(getLastScreenState().conLnIdx);
-			pt = parsePosFromContents(pReg.isCartesian);
-
-			if (pt != null) {
-				// Position was successfully pulled form the contents menu
-				pReg.point = pt;
-				DataManagement.saveRobotData(activeRobot, 3);
-			}
-
-			lastScreen();
-			break;
-		case EDIT_PREG_COM:
-			if (!workingText.equals("\0")) {
-				if (workingText.charAt(workingText.length() - 1) == '\0') {
-					workingText.deleteCharAt(workingText.length() - 1);
-				}
-				// Save the inputed comment to the selected register
-				activeRobot.getPReg(getLastScreenState().conLnIdx).comment = 
-						workingText.toString();
-				DataManagement.saveRobotData(activeRobot, 3);
-				workingText = new StringBuilder();
-				lastScreen();
-			}
-			break;
-		case EDIT_DREG_COM:
-			if (!workingText.equals("\0")) {
-				if (workingText.charAt(workingText.length() - 1) == '\0') {
-					workingText.deleteCharAt(workingText.length() - 1);
-				}
-				// Save the inputed comment to the selected register
-				activeRobot.getDReg(getLastScreenState().conLnIdx).comment = 
-						workingText.toString();
-				DataManagement.saveRobotData(activeRobot, 3);
-				workingText = new StringBuilder();
-				lastScreen();
-			}
-			break;
-		default:
-			break;
-		}
+		curScreen.actionEntr();
+		updatePendantScreen();
 	}
 
 	/**
@@ -2561,10 +729,10 @@ public class RobotRun extends PApplet {
 		// Stop any prior Robot movement
 		hold();
 		// Safeguard against editing a program while it is running
-		contents.setSelectedColumnIdx(0);
+		curScreen.getContents().setSelectedColumnIdx(0);
 		progExec(m.getProgIdx(), 0, isStep());
 	}
-
+  
 	/**
 	 * Pendant F1 button
 	 * 
@@ -2573,98 +741,7 @@ public class RobotRun extends PApplet {
 	 * menu.
 	 */
 	public void f1() {
-		if(curScreen != null) {
-			curScreen.actionF1();
-			updatePendantScreen();
-			return;
-		}
-		
-		switch (mode) {
-		case NAV_PROGRAMS:
-			nextScreen(ScreenMode.PROG_CREATE);
-			break;
-		case NAV_PROG_INSTR:
-			if (isShift()) {
-				newPosMotionInst();
-				contents.setSelectedColumnIdx(0);
-
-				if (getSelectedLine() == 0) {
-					contents.setSelectedLineIdx(contents.getLineIdx() + 1);
-					updatePendantScreen();
-					if (getSelectedLine() == 0) {
-						setActiveInstIdx(getActiveInstIdx() + 1);
-					}
-				}
-			}
-			break;
-		case NAV_TOOL_FRAMES:
-			int frame = contents.getCurrentItem().getItemIdx();
-			
-			if (isShift()) {
-				// Reset the highlighted frame in the tool frame list
-				activeRobot.getToolFrame(frame).reset();
-				updatePendantScreen();
-			} else {
-				// Set the current tool frame
-				activeRobot.setActiveToolFrame(frame);
-			}
-			
-			break;
-		case NAV_USER_FRAMES:
-			frame = contents.getCurrentItem().getItemIdx();
-			
-			if (isShift()) {
-				// Reset the highlighted frame in the user frames list
-				activeRobot.getUserFrame(frame).reset();
-				updatePendantScreen();
-			} else {
-				// Set the current user frame
-				activeRobot.setActiveUserFrame(frame);
-			}
-			break;
-		case ACTIVE_FRAMES:
-			if (contents.getLineIdx() == 0) {
-				nextScreen(ScreenMode.NAV_TOOL_FRAMES);
-			} else if (contents.getLineIdx() == 1) {
-				nextScreen(ScreenMode.NAV_USER_FRAMES);
-			}
-			break;
-		case TFRAME_DETAIL:
-			nextScreen(ScreenMode.TFRAME_RENAME);
-			break;
-		case UFRAME_DETAIL:
-			nextScreen(ScreenMode.UFRAME_RENAME);
-			break;
-		case NAV_MACROS:
-			macroEdit = null;
-			nextScreen(ScreenMode.SET_MACRO_PROG);
-			break;
-		case NAV_DREGS:
-			// Clear Data Register entry
-			DataRegister dReg = activeRobot.getDReg(contents.getItemIdx());
-
-			if (dReg != null) {
-				dReg.comment = null;
-				dReg.value = null;
-			}
-
-			break;
-		case NAV_PREGS:
-			// Clear Position Register entry
-			PositionRegister pReg = activeRobot.getPReg(contents.getItemIdx());
-
-			if (pReg != null) {
-				pReg.comment = null;
-				pReg.point = null;
-			}
-
-			break;
-		default:
-			if (mode.getType() == ScreenType.TYPE_TEXT_ENTRY) {
-				editTextEntry(0);
-			}
-		}
-
+		curScreen.actionF1();
 		updatePendantScreen();
 	}
 
@@ -2676,56 +753,8 @@ public class RobotRun extends PApplet {
 	 * menu.
 	 */
 	public void f2() {
-		if(curScreen != null) {
-			curScreen.actionF2();
-			updatePendantScreen();
-			return;
-		}
-		
-		switch (mode) {
-		case NAV_PROGRAMS:
-			if (activeRobot.numOfPrograms() > 0) {
-				nextScreen(ScreenMode.PROG_RENAME);
-			}
-			break;
-		case NAV_PROG_INSTR:
-			nextScreen(ScreenMode.SELECT_INSTR_INSERT);
-			break;
-		case SELECT_CUT_COPY:
-			nextScreen(ScreenMode.SELECT_PASTE_OPT);
-			break;
-		case TEACH_3PT_TOOL:
-		case TEACH_6PT:
-		case DIRECT_ENTRY_TOOL:
-			lastScreen();
-			break;
-		case TEACH_3PT_USER:
-		case TEACH_4PT:
-		case DIRECT_ENTRY_USER:
-			lastScreen();
-			break;
-		case NAV_DREGS:
-			// Data Register copy menus
-			if (contents.getColumnIdx() == 0) {
-				nextScreen(ScreenMode.CP_DREG_COM);
-			} else if (contents.getColumnIdx() == 1) {
-				nextScreen(ScreenMode.CP_DREG_VAL);
-			}
-			break;
-		case NAV_PREGS:
-			// Position Register copy menus
-			if (contents.getColumnIdx() == 0) {
-				nextScreen(ScreenMode.CP_PREG_COM);
-			} else if (contents.getColumnIdx() == 1) {
-				nextScreen(ScreenMode.CP_PREG_PT);
-			}
-			break;
-		default:
-			if (mode.getType() == ScreenType.TYPE_TEXT_ENTRY) {
-				editTextEntry(1);
-				updatePendantScreen();
-			}
-		}
+		curScreen.actionF2();
+		updatePendantScreen();
 	}
 	
 	/**
@@ -2736,139 +765,8 @@ public class RobotRun extends PApplet {
 	 * menu.
 	 */
 	public void f3() {
-		if(curScreen != null) {
-			curScreen.actionF3();
-			updatePendantScreen();
-			return;
-		}
-		
-		RoboticArm r = activeRobot;
-		
-		switch (mode) {
-		case NAV_PROGRAMS:
-			if (r.numOfPrograms() > 0) {
-				setActiveProgIdx( contents.getCurrentItemIdx() );
-				nextScreen(ScreenMode.CONFIRM_PROG_DELETE);
-			}
-			break;
-		case NAV_PROG_INSTR:
-			Instruction inst = getActiveInstruction();
-			int selectIdx = getSelectedIdx();
-
-			if (inst instanceof PosMotionInst) {
-				r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-				
-				Point pt = r.getToolTipUser();
-				Program p = getActiveProg();
-				int actInst = getActiveInstIdx();
-
-				if (getSelectedLine() == 1) {
-					// Update the secondary position in a circular motion
-					// instruction
-					r.updateMCInstPosition(p, actInst, pt);
-
-				} else {
-					// Update the position associated with the active motion
-					// instruction
-					r.updateMInstPosition(p, actInst, pt);
-				}
-
-				PosMotionInst mInst = (PosMotionInst) inst;
-
-				// Update the motion instruction's fields
-				CoordFrame coord = activeRobot.getCurCoordFrame();
-
-				if (coord == CoordFrame.JOINT) {
-					mInst.setMotionType(Fields.MTYPE_JOINT);
-
-				} else {
-					/*
-					 * Keep circular motion instructions as circular motion
-					 * instructions in world, tool, or user frame modes
-					 */
-					if (mInst.getMotionType() == Fields.MTYPE_JOINT) {
-						mInst.setMotionType(Fields.MTYPE_LINEAR);
-					}					
-				}
-				
-				mInst.setSpdMod(0.5f);
-				mInst.setTFrameIdx(activeRobot.getActiveToolIdx());
-				mInst.setUFrameIdx(activeRobot.getActiveUserIdx());
-
-			} else if (inst instanceof IfStatement) {
-				IfStatement stmt = (IfStatement) inst;
-
-				if (stmt.getExpr() instanceof Expression && selectIdx >= 2) {
-					r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-					((Expression) stmt.getExpr()).insertElement(selectIdx - 3);
-					updatePendantScreen();
-					arrow_rt();
-				}
-			} else if (inst instanceof SelectStatement) {
-				SelectStatement stmt = (SelectStatement) inst;
-
-				if (selectIdx >= 3) {
-					r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-					stmt.addCase();
-					updatePendantScreen();
-					arrow_dn();
-				}
-			} else if (inst instanceof RegisterStatement) {
-				RegisterStatement stmt = (RegisterStatement) inst;
-				int rLen = (stmt.getPosIdx() == -1) ? 2 : 3;
-
-				if (selectIdx > rLen) {
-					r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-					stmt.getExpr().insertElement(selectIdx - (rLen + 2));
-					updatePendantScreen();
-					arrow_rt();
-				}
-			}
-
-			updatePendantScreen();
-			break;
-		case SELECT_CUT_COPY:
-			Program p = getActiveProg();
-			int size = p.getNumOfInst();
-			clipBoard = new ArrayList<>();
-
-			int remIdx = 0;
-			for (int i = 0; i < size; i += 1) {
-				
-				if (contents.isSelected(i)) {
-					clipBoard.add(p.get(remIdx));
-					p.rmInstAt(remIdx);
-					
-				} else {
-					remIdx += 1;
-				}
-			}
-
-			break;
-		case NAV_TOOL_FRAMES:
-			switchScreen(ScreenMode.NAV_USER_FRAMES);
-			break;
-		case NAV_USER_FRAMES:
-			switchScreen(ScreenMode.NAV_TOOL_FRAMES);
-			break;
-		case NAV_DREGS:
-			// Switch to Position Registers
-			nextScreen(ScreenMode.NAV_PREGS);
-			break;
-		case NAV_PREGS:
-			if (isShift()) {
-				switchScreen(ScreenMode.NAV_DREGS);
-			} else {
-				// Switch to Data Registers
-				nextScreen(ScreenMode.SWAP_PT_TYPE);
-			}
-			break;
-		default:
-			if (mode.getType() == ScreenType.TYPE_TEXT_ENTRY) {
-				editTextEntry(2);
-				updatePendantScreen();
-			}
-		}
+		curScreen.actionF3();
+		updatePendantScreen();
 	}
 	
 	/**
@@ -2879,213 +777,7 @@ public class RobotRun extends PApplet {
 	 * menu.
 	 */
 	public void f4() {
-		if(curScreen != null) {
-			curScreen.actionF4();
-			updatePendantScreen();
-			return;
-		}
-		
-		RoboticArm r = activeRobot;
-		Program p = getActiveProg();
-
-		switch (mode) {
-		case NAV_PROGRAMS:
-			if (activeRobot.numOfPrograms() > 0) {
-				nextScreen(ScreenMode.PROG_COPY);
-			}
-			break;
-		case NAV_PROG_INSTR:
-			Instruction ins = getActiveInstruction();
-
-			if (ins != null) {
-				int selectIdx = getSelectedIdx();
-				getEditScreen(ins, selectIdx);
-			}
-
-			break;
-		case CONFIRM_INSERT:
-			try {
-				int lines_to_insert = Integer.parseInt(workingText.toString());
-				for (int i = 0; i < lines_to_insert; i += 1) {
-					p.addInstAt(getActiveInstIdx(), new Instruction());
-				}
-				
-				updateInstructions();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-
-			lastScreen();
-			break;
-		case CONFIRM_PROG_DELETE:
-			r = activeRobot;
-			int progIdx = getActiveProgIdx();
-
-			if (progIdx >= 0 && progIdx < r.numOfPrograms()) {
-				r.rmProgAt(progIdx);
-				lastScreen();
-			}
-			break;
-		case SELECT_INSTR_DELETE:
-			r = activeRobot;
-			int instrIdx = 0;
-
-			for (int i = 0; i < contents.getSelection().length; i += 1) {
-				if (contents.isSelected(i)) {
-					r.rmInstAt(p, instrIdx);
-				} else {
-					instrIdx += 1;
-				}
-			}
-
-			screenStates.pop();
-			updateInstructions();
-			break;
-		case SELECT_CUT_COPY:
-			clipBoard = new ArrayList<>();
-
-			for (int i = 0; i < p.getNumOfInst(); i += 1) {
-				if (contents.isSelected(i))
-					clipBoard.add(p.get(i).clone());
-			}
-
-			break;
-		case FIND_REPL:
-			int lineIdx = 0;
-			String s;
-
-			for (Instruction instruct : p) {
-				s = (lineIdx + 1) + ") " + instruct.toString();
-
-				if (s.toUpperCase().contains(workingText.toString().toUpperCase())) {
-					break;
-				}
-
-				lineIdx += 1;
-			}
-
-			screenStates.pop();
-			setActiveInstIdx(lineIdx);
-			updateInstructions();
-			break;
-		case SELECT_COMMENT:
-			screenStates.pop();
-			updateInstructions();
-			break;
-		case CONFIRM_RENUM:
-			Point[] pTemp = new Point[1000];
-			int posIdx = 0;
-
-			// make a copy of the current positions in p
-			for (int i = 0; i < 1000; i += 1) {
-				pTemp[i] = p.getPosition(i);
-			}
-
-			p.clearPositions();
-
-			// rearrange positions
-			for (int i = 0; i < p.getNumOfInst(); i += 1) {
-				Instruction instr = p.get(i);
-
-				if (instr instanceof PosMotionInst) {
-					// Update the primary position
-					PosMotionInst mInst = ((PosMotionInst) instr);
-					int oldPosNum = mInst.getPosIdx();
-					
-					if (oldPosNum >= 0 && oldPosNum < pTemp.length) {
-						p.setPosition(posIdx, pTemp[oldPosNum]);
-						mInst.setPosIdx(posIdx++);
-					}
-
-					if (mInst.getMotionType() == Fields.MTYPE_CIRCULAR) {
-
-						/*
-						 * Update position for secondary point of a circular
-						 * motion instruction
-						 */
-						oldPosNum = mInst.getCircPosIdx();
-						
-						if (oldPosNum >= 0 && oldPosNum < pTemp.length) {
-							p.setPosition(posIdx, pTemp[oldPosNum]);
-							mInst.setCircPosIdx(posIdx++);
-						}
-					}
-				}
-			}
-
-			screenStates.pop();
-			updateInstructions();
-			break;
-		case NAV_MACROS:
-			if(macros.size() > 0) {
-				macroEdit = macros.get(contents.getLineIdx());
-				
-				if (contents.getColumnIdx() == 1) {
-					nextScreen(ScreenMode.SET_MACRO_PROG);
-				} else if (contents.getColumnIdx() == 2) {
-					nextScreen(ScreenMode.SET_MACRO_TYPE);
-				} else if (contents.getColumnIdx() == 3){
-					if (!macros.get(contents.getLineIdx()).isManual())
-						nextScreen(ScreenMode.SET_MACRO_BINDING);
-				}
-			}
-			break;
-		case NAV_PREGS:
-			if (isShift() && !isProgExec()) {
-				// Stop any prior jogging motion
-				hold();
-
-				// Move To function
-				PositionRegister pReg = r.getPReg( contents.getCurrentItemIdx() );
-
-				if (pReg.point != null) {
-					Point pt = pReg.point.clone();
-					// Move the Robot to the select point
-					if (pReg.isCartesian) {
-						
-						if (r.getCurCoordFrame() == CoordFrame.USER) {
-							// Move in terms of the user frame
-							UserFrame uFrame = r.getActiveUser();
-							pt = RMath.removeFrame(r, pt, uFrame.getOrigin(), uFrame.getOrientation());
-
-							Fields.debug("pt: %s\n", pt.position.toString());
-						}
-
-						r.updateMotion(pt);
-
-					} else {
-						r.updateMotion(pt.angles);
-					}
-				} else {
-					println("Position register is uninitialized!");
-				}
-			}
-
-			break;
-		default:
-			if (mode.getType() == ScreenType.TYPE_TEACH_POINTS) {
-
-				if (isShift() && teachFrame != null) {
-					Point tgt = teachFrame.getPoint(options.getLineIdx());
-
-					if (mode == ScreenMode.TEACH_3PT_USER || mode == ScreenMode.TEACH_4PT) {
-						if (tgt != null && tgt.position != null && tgt.orientation != null) {
-							// Move to the point's position and orientation
-							activeRobot.updateMotion(tgt);
-						}
-					} else {
-						if (tgt != null && tgt.angles != null) {
-							// Move to the point's joint angles
-							activeRobot.updateMotion(tgt.angles);
-						}
-					}
-				}
-			} else if (mode.getType() == ScreenType.TYPE_TEXT_ENTRY) {
-				editTextEntry(3);
-			}
-
-		}
-
+		curScreen.actionF4();
 		updatePendantScreen();
 	}
 	
@@ -3097,103 +789,7 @@ public class RobotRun extends PApplet {
 	 * menu.
 	 */
 	public void f5() {
-		if(curScreen != null) {
-			curScreen.actionF5();
-			updatePendantScreen();
-			return;
-		}
-		
-		RoboticArm r = activeRobot;
-		Instruction inst = getActiveInstruction();
-		
-		switch (mode) {
-		case NAV_PROG_INSTR:
-			int selectIdx = getSelectedIdx();	
-
-			if (selectIdx == 0) {
-				nextScreen(ScreenMode.NAV_INSTR_MENU);
-				
-			} else if (inst instanceof MotionInstruction) {
-				int regState = selectedMInstRegState();
-				
-				if (regState == 1) {
-					// Only allow editing of primary position of motion instruction
-					nextScreen(ScreenMode.EDIT_PROG_POS);	
-				}
-				
-			} else if (inst instanceof IfStatement) {
-				IfStatement stmt = (IfStatement) inst;
-				if (stmt.getExpr() instanceof Expression) {
-					r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-					((Expression) stmt.getExpr()).removeElement(selectIdx - 3);
-				}
-			} else if (inst instanceof SelectStatement) {
-				SelectStatement stmt = (SelectStatement) inst;
-				if (selectIdx >= 3) {
-					r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-					stmt.deleteCase((selectIdx - 3) / 3);
-				}
-			} else if (inst instanceof RegisterStatement) {
-				RegisterStatement stmt = (RegisterStatement) inst;
-				int rLen = (stmt.getPosIdx() == -1) ? 2 : 3;
-				
-				if (selectIdx > (rLen + 1) && selectIdx < stmt.getExpr().getLength() + rLen) {
-					r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-					stmt.getExpr().removeElement(selectIdx - (rLen + 2));
-				}
-			}
-			break;
-		case TEACH_3PT_USER:
-		case TEACH_3PT_TOOL:
-		case TEACH_4PT:
-		case TEACH_6PT:
-			if (isShift()) {
-				// Save the Robot's current position and joint angles
-				Point pt;
-				
-				if (mode == ScreenMode.TEACH_3PT_USER || mode == ScreenMode.TEACH_4PT) {
-					pt = activeRobot.getToolTipNative();
-					
-				} else {
-					pt = activeRobot.getFacePlatePoint();
-				}
-
-				teachFrame.setPoint(pt, options.getLineIdx());
-				DataManagement.saveRobotData(activeRobot, 2);
-				updatePendantScreen();
-			}
-			break;
-		case CONFIRM_PROG_DELETE:
-			lastScreen();
-			break;
-		case SELECT_INSTR_DELETE:
-		case CONFIRM_INSERT:
-		case CONFIRM_RENUM:
-		case FIND_REPL:
-		case SELECT_CUT_COPY:
-			screenStates.pop();
-			updateInstructions();
-			break;
-		case TFRAME_DETAIL:
-			// Set a default tool tip for the selected tool frame
-			nextScreen(ScreenMode.SET_DEF_TOOLTIP);
-			break;
-		case NAV_PREGS:
-			PositionRegister pReg = r.getPReg( contents.getCurrentItemIdx() );
-
-			if (isShift() && pReg != null) {
-				// Save the Robot's current position and joint angles
-				pReg.point = activeRobot.getToolTipNative();
-				pReg.isCartesian = true;
-				DataManagement.saveRobotData(r, 3);
-			}
-			break;
-		default:
-			if (mode.getType() == ScreenType.TYPE_TEXT_ENTRY) {
-				editTextEntry(4);
-			}
-		}
-
+		curScreen.actionF5();
 		updatePendantScreen();
 	}
 	
@@ -3216,11 +812,11 @@ public class RobotRun extends PApplet {
 	 * otherwise the entire program is executed.
 	 */
 	public void fwd() {
-		if (mode == ScreenMode.NAV_PROG_INSTR && !isProgExec() && isShift()) {
+		if (curScreen instanceof ScreenNavProgInstructions && !isProgExec() && isShift()) {
 			// Stop any prior Robot movement
 			hold();
 			// Safeguard against editing a program while it is running
-			contents.setSelectedColumnIdx(0);
+			curScreen.getContents().setSelectedColumnIdx(0);
 			progExec(isStep());
 		}
 	}
@@ -3286,10 +882,6 @@ public class RobotRun extends PApplet {
 	public Camera getCamera() {
 		return camera;
 	}
-	
-	public MenuScroll getContentsMenu() {
-		return contents;
-	}
 
 	/**
 	 * Pulls the origin and orientation from the top of the matrix stack and
@@ -3332,589 +924,6 @@ public class RobotRun extends PApplet {
 		cs.setAxes(axes);
 	}
 	
-	public void getEditScreen(Instruction ins, int selectIdx) {
-		if (ins instanceof MotionInstruction) {
-			MotionInstruction mInst = (MotionInstruction)ins;
-			int sdx = getSelectedIdx();
-			
-			if (sdx == 2) {
-				// Motion type
-				nextScreen(ScreenMode.SET_MINST_TYPE);
-				
-			} else if (sdx == 3) {
-				// Position type
-				nextScreen(ScreenMode.SET_MINST_REG_TYPE);
-				
-			} else if (sdx == 4) {
-				
-				if (mInst instanceof CamMoveToObject) {
-					CamMoveToObject cMInst = (CamMoveToObject)mInst;
-					
-					if (cMInst.getScene() == null) {
-						cMInst.setScene(activeScenario);
-					}
-					
-					// Set World Object reference
-					nextScreen(ScreenMode.SET_MINST_OBJ);
-				} else {
-					// Position index
-					nextScreen(ScreenMode.SET_MINST_IDX);
-				}
-				
-			} else if (sdx == 5) {
-				// Speed modifier
-				nextScreen(ScreenMode.SET_MINST_SPD);
-				
-			} else if (sdx == 6) {
-				// Termination
-				nextScreen(ScreenMode.SET_MINST_TERM);
-				
-			} else if (sdx == 7) {
-				// Offset type
-				nextScreen(ScreenMode.SET_MINST_OFF_TYPE);
-				
-			} else if (mInst instanceof PosMotionInst) {
-				PosMotionInst pMInst = (PosMotionInst)mInst;
-				
-				if (pMInst.getOffsetType() == Fields.OFFSET_PREG) {
-					
-					if (sdx == 8) {
-						// Offset index
-						nextScreen(ScreenMode.SET_MINST_OFFIDX);
-						
-					} else if (sdx == 9) {
-						// Circular position type
-						nextScreen(ScreenMode.SET_MINST_CREG_TYPE);
-						
-					} else if (sdx == 10) {
-						// Circular position index
-						nextScreen(ScreenMode.SET_MINST_CIDX);
-					}
-					
-				} else if (pMInst.getOffsetType() == Fields.OFFSET_NONE) {
-					
-					if (sdx == 8) {
-						// Circular position type
-						nextScreen(ScreenMode.SET_MINST_CREG_TYPE);
-						
-					} else if (sdx == 9) {
-						// Circular position index
-						nextScreen(ScreenMode.SET_MINST_CIDX);
-					}
-				}
-				
-			}
-			
-		} else if (ins instanceof FrameInstruction) {
-			switch (selectIdx) {
-			case 1:
-				nextScreen(ScreenMode.SET_FRAME_INSTR_TYPE);
-				break;
-			case 2:
-				nextScreen(ScreenMode.SET_FRAME_INSTR_IDX);
-				break;
-			}
-		} else if (ins instanceof IOInstruction) {
-			switch (selectIdx) {
-			case 1:
-				nextScreen(ScreenMode.SET_IO_INSTR_IDX);
-				break;
-			case 2:
-				nextScreen(ScreenMode.SET_IO_INSTR_STATE);
-				break;
-			}
-		} else if (ins instanceof LabelInstruction) {
-			nextScreen(ScreenMode.SET_LBL_NUM);
-		} else if (ins instanceof JumpInstruction) {
-			nextScreen(ScreenMode.SET_JUMP_TGT);
-		} else if (ins instanceof CallInstruction) {
-			if (((CallInstruction) ins).getTgtDevice() != null) {
-				editIdx = ((CallInstruction) ins).getTgtDevice().RID;
-
-			} else {
-				editIdx = -1;
-			}
-
-			nextScreen(ScreenMode.SET_CALL_PROG);
-		} else if (ins instanceof IfStatement) {
-			IfStatement stmt = (IfStatement) ins;
-			
-			if (stmt.getExpr() instanceof Expression) {
-				int len = stmt.getExpr().getLength();
-
-				if (selectIdx >= 3 && selectIdx < len + 1) {
-					editExpression((Expression) stmt.getExpr(), selectIdx - 3);
-				} else if (selectIdx == len + 2) {
-					nextScreen(ScreenMode.SET_IF_STMT_ACT);
-				} else if (selectIdx == len + 3) {
-					if (stmt.getInstr() instanceof JumpInstruction) {
-						nextScreen(ScreenMode.SET_JUMP_TGT);
-					} else if (stmt.getInstr() instanceof CallInstruction) {
-						nextScreen(ScreenMode.SET_CALL_PROG);
-					}
-				}
-			} else if (stmt.getExpr() instanceof AtomicExpression) {
-				if (selectIdx == 2) {
-					opEdit = stmt.getExpr().getArg1();
-					editIdx = 0;
-					nextScreen(ScreenMode.SET_BOOL_EXPR_ARG);
-				} else if (selectIdx == 3) {
-					opEdit = stmt.getExpr();
-					nextScreen(ScreenMode.SET_EXPR_OP);
-				} else if (selectIdx == 4) {
-					opEdit = stmt.getExpr().getArg2();
-					editIdx = 2;
-					nextScreen(ScreenMode.SET_BOOL_EXPR_ARG);
-				} else if (selectIdx == 5) {
-					nextScreen(ScreenMode.SET_IF_STMT_ACT);
-				} else if (selectIdx == 6) {
-					if (stmt.getInstr() instanceof JumpInstruction) {
-						nextScreen(ScreenMode.SET_JUMP_TGT);
-					} else if (stmt.getInstr() instanceof CallInstruction) {
-						nextScreen(ScreenMode.SET_CALL_PROG);
-					}
-				}
-			}
-		} else if (ins instanceof SelectStatement) {
-			SelectStatement stmt = (SelectStatement) ins;
-			editIdx = (selectIdx - 3) / 3;
-			
-			if (selectIdx == 2) {
-				opEdit = stmt.getArg();
-				editIdx = -1;
-				nextScreen(ScreenMode.SET_SELECT_STMT_ARG);
-			} else if ((selectIdx - 3) % 3 == 0 && selectIdx > 2) {
-				opEdit = stmt.getCases().get((selectIdx - 3) / 3);
-				nextScreen(ScreenMode.SET_SELECT_STMT_ARG);
-			} else if ((selectIdx - 3) % 3 == 1) {
-				nextScreen(ScreenMode.SET_SELECT_STMT_ACT);
-			} else if ((selectIdx - 3) % 3 == 2) {
-				Instruction toExec = stmt.getInstrs().get(editIdx);
-				if (toExec instanceof JumpInstruction) {
-					nextScreen(ScreenMode.SET_JUMP_TGT);
-				} else if (toExec instanceof CallInstruction) {
-					nextScreen(ScreenMode.SET_CALL_PROG);
-				}
-			}
-		} else if (ins instanceof RegisterStatement) {
-			RegisterStatement stmt = (RegisterStatement) ins;
-			int len = stmt.getExpr().getLength();
-			int rLen = (stmt.getPosIdx() == -1) ? 2 : 3;
-			
-			if (selectIdx == 1) {
-				nextScreen(ScreenMode.SET_REG_EXPR_TYPE);
-			} else if (selectIdx == 2) {
-				nextScreen(ScreenMode.SET_REG_EXPR_IDX1);
-			} else if (selectIdx == 3 && stmt.getPosIdx() != -1) {
-				nextScreen(ScreenMode.SET_REG_EXPR_IDX2);
-			} else if (selectIdx >= rLen + 1 && selectIdx <= len + rLen) {
-				editExpression(stmt.getExpr(), selectIdx - (rLen + 2));
-			}
-		}
-	}
-	
-	// Function label text
-	public String[] getFunctionLabels(ScreenMode mode) {
-		String[] funct = new String[5];
-
-		switch (mode) {
-		case NAV_PROGRAMS:
-			// F2, F3
-			funct[0] = "[Create]";
-			if (activeRobot.numOfPrograms() > 0) {
-				funct[1] = "[Rename]";
-				funct[2] = "[Delete]";
-				funct[3] = "[Copy]";
-				funct[4] = "";
-			} else {
-				funct[1] = "";
-				funct[2] = "";
-				funct[3] = "";
-				funct[4] = "";
-			}
-			break;
-		case NAV_PROG_INSTR:
-			Instruction inst = getActiveInstruction();
-
-			// F1, F4, F5f
-			funct[0] = "[New Pt]";
-			funct[1] = "[New Ins]";
-			funct[2] = "";
-			funct[3] = "[Edit]";
-			funct[4] = (contents.getColumnIdx() == 0) ? "[Opt]" : "";
-						
-			if (inst instanceof MotionInstruction) {
-				funct[2] = "[Ovr Pt]";
-				
-				int regState = selectedMInstRegState();
-				/* Only display edit function for a motion instruction's
-				 * primary position referencing a position */
-				if (regState == 1) {
-					funct[4] = "[Reg]";
-				}
-			} 
-			else if (inst instanceof IfStatement) {
-				IfStatement stmt = (IfStatement) inst;
-				int selectIdx = getSelectedIdx();
-
-				if (stmt.getExpr() instanceof Expression) {
-					if (selectIdx > 1 && selectIdx < stmt.getExpr().getLength() + 1) {
-						funct[2] = "[Insert]";
-					}
-					if (selectIdx > 2 && selectIdx < stmt.getExpr().getLength() + 1) {
-						funct[4] = "[Delete]";
-					}
-				}
-			} 
-			else if (inst instanceof SelectStatement) {
-				int selectIdx = getSelectedIdx();
-
-				if (selectIdx >= 3) {
-					funct[2] = "[Insert]";
-					funct[4] = "[Delete]";
-				}
-			} 
-			else if (inst instanceof RegisterStatement) {
-				RegisterStatement stmt = (RegisterStatement) inst;
-				int rLen = (stmt.getPosIdx() == -1) ? 2 : 3;
-				int selectIdx = getSelectedIdx();
-
-				if (selectIdx > rLen && selectIdx < stmt.getExpr().getLength() + rLen) {
-					funct[2] = "[Insert]";
-				}
-				if (selectIdx > (rLen + 1) && selectIdx < stmt.getExpr().getLength() + rLen) {
-					funct[4] = "[Delete]";
-				}
-			}
-			break;
-		case EDIT_PROG_POS:
-			funct[0] = "";
-			funct[1] = "";
-			funct[2] = "";
-			funct[3] = "";
-			funct[4] = "";
-			break;
-		case SELECT_COMMENT:
-			funct[0] = "";
-			funct[1] = "";
-			funct[2] = "";
-			funct[3] = "[Done]";
-			funct[4] = "";
-			break;
-		case SELECT_CUT_COPY:
-			funct[0] = "";
-			funct[1] = clipBoard.isEmpty() ? "" : "[Paste]";
-			funct[2] = "[Cut]";
-			funct[3] = "[Copy]";
-			funct[4] = "[Cancel]";
-			break;
-		case NAV_TOOL_FRAMES:
-		case NAV_USER_FRAMES:
-			// F1, F2, F3
-			if (isShift()) {
-				funct[0] = "[Clear]";
-				funct[1] = "";
-				funct[2] = "[Switch]";
-				funct[3] = "";
-				funct[4] = "";
-			} else {
-				funct[0] = "[Set]";
-				funct[1] = "";
-				funct[2] = "[Switch]";
-				funct[3] = "";
-				funct[4] = "";
-			}
-			break;
-		case TFRAME_DETAIL:
-			// F1, F2, F5
-			funct[0] = "[Rename]";
-			funct[1] = "[Method]";
-			funct[2] = "";
-			funct[3] = "";
-			funct[4] = "[Default]";
-			break;
-		case UFRAME_DETAIL:
-			// F1, F2
-			funct[0] = "[Rename]";
-			funct[1] = "[Method]";
-			funct[2] = "";
-			funct[3] = "";
-			funct[4] = "";
-			break;
-		case TEACH_3PT_TOOL:
-		case TEACH_3PT_USER:
-		case TEACH_4PT:
-		case TEACH_6PT:
-			// F1, F5
-			funct[0] = "";
-			funct[1] = "[Method]";
-			funct[2] = "";
-			funct[3] = "[Mov To]";
-			funct[4] = "[Record]";
-			break;
-		case DIRECT_ENTRY_TOOL:
-		case DIRECT_ENTRY_USER:
-			funct[0] = "";
-			funct[1] = "[Method]";
-			funct[2] = "";
-			funct[3] = "";
-			funct[4] = "";
-			break;
-		case ACTIVE_FRAMES:
-			// F1, F2
-			funct[0] = "[List]";
-			funct[1] = "";
-			funct[2] = "";
-			funct[3] = "";
-			funct[4] = "";
-			break;
-		case NAV_MACROS:
-			funct[0] = "[New]";
-			funct[1] = "";
-			funct[2] = "";
-			funct[3] = "[Edit]";
-			funct[4] = "";
-			break;
-		case NAV_PREGS:
-			// F1 - F5
-			if (isShift()) {
-				funct[0] = "[Clear]";
-				funct[1] = "[Copy]";
-				funct[2] = "[Switch]";
-				funct[3] = "[Move To]";
-				funct[4] = "[Record]";
-			} else {
-				funct[0] = "[Clear]";
-				funct[1] = "[Copy]";
-				funct[2] = "[Type]";
-				funct[3] = "[Move To]";
-				funct[4] = "[Record]";
-			}
-			break;
-		case NAV_DREGS:
-			// F1 - F3
-			funct[0] = "[Clear]";
-			funct[1] = "[Copy]";
-			funct[2] = "[Switch]";
-			funct[3] = "";
-			funct[4] = "";
-			break;
-		case CONFIRM_INSERT:
-		case CONFIRM_PROG_DELETE:
-		case CONFIRM_RENUM:
-		case FIND_REPL:
-		case SELECT_INSTR_DELETE:
-			// F4, F5
-			funct[0] = "";
-			funct[1] = "";
-			funct[2] = "";
-			funct[3] = "[Confirm]";
-			funct[4] = "[Cancel]";
-			break;
-		default:
-			if (mode.getType() == ScreenType.TYPE_TEXT_ENTRY) {
-				if (options.getLineIdx() == 0) {
-					// F1 - F5
-					funct[0] = "[ABCDEF]";
-					funct[1] = "[GHIJKL]";
-					funct[2] = "[MNOPQR]";
-					funct[3] = "[STUVWX]";
-					funct[4] = "[YZ_@*.]";
-				} else {
-					funct[0] = "[abcdef]";
-					funct[1] = "[ghijkl]";
-					funct[2] = "[mnopqr]";
-					funct[3] = "[stuvwx]";
-					funct[4] = "[yz_@*.]";
-				}
-			} else {
-				funct[0] = "";
-				funct[1] = "";
-				funct[2] = "";
-				funct[3] = "";
-				funct[4] = "";
-			}
-			break;
-		}
-
-		return funct;
-	}
-	
-	// Header text
-	public String getHeader(ScreenMode mode) {
-		String header = null;
-
-		switch (mode) {
-		case NAV_MAIN_MENU:
-			header = "MAIN MENU";
-			break;
-		case NAV_PROGRAMS:
-			header = "PROGRAMS";
-			break;
-		case PROG_CREATE:
-			header = "NAME PROGRAM";
-			break;
-		case PROG_RENAME:
-			header = "RENAME PROGRAM";
-			break;
-		case PROG_COPY:
-			header = "COPY PROGRAM";
-			break;
-		case CONFIRM_INSERT:
-		case CONFIRM_RENUM:
-		case INPUT_DREG_IDX:
-		case INPUT_IOREG_IDX:
-		case INPUT_PREG_IDX1:
-		case INPUT_PREG_IDX2:
-		case NAV_PROG_INSTR:
-		case NAV_INSTR_MENU:
-		case SET_MINST_SPD:
-		case SET_MINST_IDX:
-		case SET_MINST_TERM:
-		case SET_MINST_OFF_TYPE:
-		case SET_MINST_OFFIDX:
-		case SELECT_INSTR_INSERT:
-		case SET_IO_INSTR_STATE:
-		case SET_FRAME_INSTR_TYPE:
-		case SET_FRAME_INSTR_IDX:
-		case SET_EXPR_ARG:
-		case SET_BOOL_EXPR_ARG:
-		case SET_JUMP_TGT:
-		case SET_LBL_NUM:
-		case SELECT_CUT_COPY:
-		case SELECT_INSTR_DELETE:
-		case SET_MINST_OBJ:
-			header = getActiveProg().getName();
-			break;
-		case EDIT_PROG_POS:
-			Program p = getActiveProg();
-			header = String.format("EDIT %s POSITION", p.getName());
-			break;
-		case SELECT_IO_INSTR_REG:
-			header = "SELECT IO REGISTER";
-			break;
-		case SELECT_FRAME_INSTR_TYPE:
-			header = "SELECT FRAME INSTRUCTION TYPE";
-			break;
-		case SELECT_COND_STMT:
-			header = "INSERT IF/ SELECT STATEMENT";
-			break;
-		case SELECT_JMP_LBL:
-			header = "INSERT JUMP/ LABEL INSTRUCTION";
-			break;
-		case SET_CALL_PROG:
-			header = "SELECT CALL TARGET";
-			break;
-			
-		case ACTIVE_FRAMES:
-			header = "ACTIVE FRAMES";
-			break;
-		case SELECT_FRAME_MODE:
-			header = "FRAME MODE";
-			break;
-		case NAV_TOOL_FRAMES:
-			header = "TOOL FRAMES";
-			break;
-		case NAV_USER_FRAMES:
-			header = "USER FRAMES";
-			break;
-		case TFRAME_RENAME:
-			header = String.format("TOOL %d: RENAME", curFrameIdx + 1);
-			break;
-		case UFRAME_RENAME:
-			header = String.format("USER %d: RENAME", curFrameIdx + 1);
-			break;
-		case TFRAME_DETAIL:
-			header = String.format("TOOL %d: DETAIL", curFrameIdx + 1);
-			break;
-		case SET_DEF_TOOLTIP:
-			header = "DEFAULT TOOL TIPS";
-			break;
-		case UFRAME_DETAIL:
-			header = String.format("USER %d: DETAIL", curFrameIdx + 1);
-			break;
-		case TEACH_3PT_TOOL:
-			header = String.format("TOOL %d: 3P METHOD", curFrameIdx + 1);
-			break;
-		case TEACH_3PT_USER:
-			header = String.format("USER %d: 3P METHOD", curFrameIdx + 1);
-			break;
-		case TEACH_4PT:
-			header = String.format("USER %d: 4P METHOD", curFrameIdx + 1);
-			break;
-		case TEACH_6PT:
-			header = String.format("TOOL %d: 6P METHOD", curFrameIdx + 1);
-			break;
-		case DIRECT_ENTRY_TOOL:
-			header = String.format("TOOL %d: DIRECT ENTRY", curFrameIdx + 1);
-			break;
-		case DIRECT_ENTRY_USER:
-			header = String.format("USER %d: DIRECT ENTRY", curFrameIdx + 1);
-			break;
-		case NAV_MACROS:
-		case SET_MACRO_TYPE:
-		case SET_MACRO_BINDING:
-			header = "VIEW/ EDIT MACROS";
-			break;
-		case NAV_MF_MACROS:
-			header = "EXECUTE MANUAL FUNCTION";
-			break;
-		case SET_MACRO_PROG:
-			header = "SELECT MACRO PROGRAM";
-			break;
-			
-		case NAV_DATA:
-			header = "VIEW REGISTERS";
-			break;
-		case NAV_DREGS:
-			header = "REGISTERS";
-			break;
-		case NAV_PREGS:
-			header = "POSTION REGISTERS";
-			break;
-		case EDIT_DREG_VAL:
-			Register reg = activeRobot.getDReg(contents.getItemIdx());
-			header = String.format("%s: VALUE EDIT", reg.getLabel());
-			break;
-		case EDIT_DREG_COM:
-			header = String.format("R[%d]: COMMENT EDIT", getLastScreenState().conLnIdx + 1);
-			break;
-		case CP_DREG_VAL:
-			reg = activeRobot.getDReg(contents.getItemIdx());
-			header = String.format("%s: VALUE COPY", reg.getLabel());
-			break;
-		case EDIT_PREG:
-			reg = activeRobot.getPReg(getLastScreenState().conLnIdx);
-			header = String.format("%s: POSITION EDIT", reg.getLabel());
-			break;
-		case EDIT_PREG_COM:
-			header = String.format("PR[%d]: COMMENT EDIT", getLastScreenState().conLnIdx + 1);
-			break;
-		case CP_PREG_PT:
-			reg = activeRobot.getPReg(contents.getItemIdx());
-			header = String.format("%s: POSITION COPY", reg.getLabel());
-			break;
-		case SWAP_PT_TYPE:
-			reg = activeRobot.getPReg(contents.getItemIdx());
-			header = String.format("%s: TYPE EDIT", reg.getLabel());
-			break;
-		case CP_PREG_COM:
-		case CP_DREG_COM:
-			reg = activeRobot.getDReg(contents.getItemIdx());
-			header = String.format("%s: COMMENT COPY", reg.getLabel());
-			break;
-
-		case NAV_IOREGS:
-			header = "I/O REGISTERS";
-			break;
-
-		default:
-			break;
-		}
-
-		return header;
-	}
-	
 	public RoboticArm getInactiveRobot() {
 		try {
 			return ROBOTS.get((activeRobot.RID + 1) % 2);
@@ -3923,7 +932,7 @@ public class RobotRun extends PApplet {
 			return null;
 		}
 	}
-
+	
 	/**
 	 * Returns the first line in the current list of contents that the
 	 * instruction matching the given index appears on.
@@ -3935,7 +944,7 @@ public class RobotRun extends PApplet {
 		try {	
 			while (instr.get(row).getItemIdx() != instrIdx) {
 				row += 1;
-				if (contents.getLineIdx() >= contents.size() - 1)
+				if (curScreen.getContentIdx() >= curScreen.getContents().size() - 1)
 					break;
 			}
 		
@@ -3954,8 +963,8 @@ public class RobotRun extends PApplet {
 		return keyCodeMap;
 	}
 
-	public ScreenState getLastScreenState() {
-		return screenStates.get(screenStates.size() - 2);
+	public Screen getLastScreen() {
+		return screenStack.get(screenStack.size() - 2);
 	}
 
 	public Macro getMacro(int idx) {
@@ -3965,13 +974,9 @@ public class RobotRun extends PApplet {
 	public ArrayList<Macro> getMacroList() {
 		return macros;
 	}
-
-	public ScreenMode getMode() {
-		return mode;
-	}
 	
-	public MenuScroll getOptionsMenu() {
-		return options;
+	public ScreenMode getMode() {
+		return curScreen.mode;
 	}
 	
 	/**
@@ -3995,11 +1000,11 @@ public class RobotRun extends PApplet {
 	public Stack<ProgExecution> getProgCallStack() {
 		return progCallStack;
 	}
-	
+
 	public boolean getRecord() {
 		return record;
 	}
-
+	
 	/**
 	 * Returns the robot with the associated ID, or null if no such robot
 	 * exists.
@@ -4011,7 +1016,7 @@ public class RobotRun extends PApplet {
 	public RoboticArm getRobot(int rid) {
 		return ROBOTS.get(rid);
 	}
-	
+
 	public RobotCamera getRobotCamera() {
 		return rCamera;
 	}
@@ -4020,28 +1025,8 @@ public class RobotRun extends PApplet {
 		return SCENARIOS;
 	}
 
-	public Stack<ScreenState> getScreenStates() {
-		return screenStates;
-	}
-
-	//TODO remove
-	public int getSelectedIdx() {
-		if (mode.getType() == ScreenType.TYPE_LINE_SELECT)
-			return 0;
-
-		return contents.getItemColumnIdx();
-	}
-
-	//TODO remove
-	public int getSelectedLine() {
-		int row = 0;
-		DisplayLine currRow = contents.getCurrentItem();
-		while (contents.getLineIdx() - row >= 0
-				&& currRow.getItemIdx() == contents.get(contents.getLineIdx() - row).getItemIdx()) {
-			row += 1;
-		}
-
-		return row - 1;
+	public Stack<Screen> getScreenStack() {
+		return screenStack;
 	}
 
 	public Macro[] getSU_macro_bindings() {
@@ -4067,11 +1052,11 @@ public class RobotRun extends PApplet {
 				xAxis.z, yAxis.z, zAxis.z, origin.z
 		);
 	}
-
+	
 	public WGUI getUI() {
 		return UI;
 	}
-	
+
 	/**
 	 * Pendant HOLD button
 	 * 
@@ -4088,7 +1073,7 @@ public class RobotRun extends PApplet {
 			updateInstList();
 		}
 	}
-
+	
 	/**
 	 * Pendant I/O button
 	 * 
@@ -4109,7 +1094,7 @@ public class RobotRun extends PApplet {
 			}
 		}
 	}
-	
+
 	/**
 	 * @return	Is the active robot executing a program?
 	 */
@@ -4131,18 +1116,18 @@ public class RobotRun extends PApplet {
 	public boolean isStep() {
 		return step;
 	}
-
+	
 	/**
 	 * Pendant ITEM button
 	 * 
 	 * Not sure what this does ...
 	 */
 	public void item() {
-		if (mode == ScreenMode.NAV_PROG_INSTR) {
+		if (curScreen instanceof ScreenNavProgInstructions) {
 			nextScreen(ScreenMode.JUMP_TO_LINE);
 		}
 	}
-	
+
 	/**
 	 * Pendant -X/(J1) button
 	 * 
@@ -4164,7 +1149,7 @@ public class RobotRun extends PApplet {
 	public void joint1_pos() {
 		updateRobotJogMotion(0, 1);
 	}
-
+	
 	/**
 	 * Pendant -Y/(J2) button
 	 * 
@@ -4175,7 +1160,7 @@ public class RobotRun extends PApplet {
 	public void joint2_neg() {
 		updateRobotJogMotion(1, -1);
 	}
-	
+
 	/**
 	 * Pendant +Y/(J2) button
 	 * 
@@ -4186,7 +1171,7 @@ public class RobotRun extends PApplet {
 	public void joint2_pos() {
 		updateRobotJogMotion(1, 1);
 	}
-
+	
 	/**
 	 * Pendant -Z/(J3) button
 	 * 
@@ -4274,7 +1259,7 @@ public class RobotRun extends PApplet {
 	public void joint6_pos() {
 		updateRobotJogMotion(5, 1);
 	}
-	
+
 	@Override
 	public void keyPressed() {
 		boolean ctrlDown = keyCodeMap.isKeyDown(KeyEvent.VK_CONTROL);
@@ -4292,13 +1277,8 @@ public class RobotRun extends PApplet {
 			
 		}  else if (UI != null && UI.isPendantActive()) {
 			// Suppress other key events when entering text for the pendant
-			int ret = characterInput(key);
-			
-			if (ret != 0) {
-				/* Only suppress key events when input is used for a pendant
-				 * screen mode */
-				return;
-			}
+			curScreen.actionKeyPress(key);
+			updatePendantScreen();
 			
 			// Pendant button shortcuts
 			switch(keyCode) {
@@ -4323,34 +1303,6 @@ public class RobotRun extends PApplet {
 				// Update the coordinate frame
 				coordFrameTransition();
 				updatePendantScreen();
-				
-			} else if (keyCode == KeyEvent.VK_D) {
-				/* Debug output */
-				Fields.debug("li=%d si=%d\n", contents.getLineIdx(), getSelectedIdx());
-				/**
-				if (activeRobot.inMotion()) {
-					System.err.printf("Motion: %s\n",
-							Arrays.toString(activeRobot.getJogMotion()));
-				}
-				/**
-				updatePendantScreen();
-				/**
-				Fields.debug("Screen state: %s\n", screenStates.peek());
-				/**
-				if (mode == ScreenMode.NAV_PROG_INSTR && (contents.getColumnIdx() == 3
-						|| contents.getColumnIdx() == 4)) {
-					
-					Instruction inst = getActiveInstruction();
-
-					if (inst instanceof MotionInstruction) {
-						MotionInstruction mInst = (MotionInstruction) inst;
-						Fields.debug("\nUser frame: %d\nTool frame: %d\n",
-								mInst.getUserFrame(), mInst.getToolFrame());
-					}
-				}
-				/**
-				Fields.debug(options.toString());
-				/**/
 				
 			} else if (keyCode == KeyEvent.VK_E) {
 				// Cycle End Effectors
@@ -4400,7 +1352,7 @@ public class RobotRun extends PApplet {
 			
 			// Pendant button shortcuts
 			switch(keyCode) {
-			case KeyEvent.VK_SHIFT:		if (mode.getType() != ScreenType.TYPE_TEXT_ENTRY) 
+			case KeyEvent.VK_SHIFT:		if (!(curScreen instanceof ST_ScreenTextEntry)) 
 											setShift(true); break;
 			case KeyEvent.VK_U: 		joint1_neg(); break;
 			case KeyEvent.VK_I:			joint1_pos(); break;
@@ -4429,7 +1381,7 @@ public class RobotRun extends PApplet {
 				!UIKeyboardUse()) {
 			
 			switch(keyCode) {
-			case KeyEvent.VK_SHIFT: 	if (mode.getType() != ScreenType.TYPE_TEXT_ENTRY) 
+			case KeyEvent.VK_SHIFT: 	if (!(curScreen instanceof ST_ScreenTextEntry))
 											setShift(false); break;
 			case KeyEvent.VK_U: 		joint1_neg(); break;
 			case KeyEvent.VK_I:			joint1_pos(); break;
@@ -4453,64 +1405,19 @@ public class RobotRun extends PApplet {
 	 * 
 	 * @return	If a previous screen exists
 	 */
-	public boolean lastScreen() {
-		ScreenState cur = screenStates.peek();
+	public void lastScreen() {
+		Screen cur = screenStack.peek();
 		
 		if (cur.mode != ScreenMode.DEFAULT) {
-			RoboticArm r = activeRobot;
-			screenStates.pop();
-			cur = screenStates.peek();
+			screenStack.pop();
+			curScreen = screenStack.peek();
 			
-			Fields.debug("\n%s <= %s\n", cur, mode);
-			
-			curScreen = Screen.getScreen(cur.mode, this);
-			curScreen.updateScreen(cur);
-			
-			// Update mode and menu indices
-			mode = cur.mode;
-			
-			contents.clear();
-			contents.setSelectedLineIdx(cur.conLnIdx);
-			contents.setSelectedColumnIdx(cur.conColIdx);
-			contents.setRenderStart(cur.conRenIdx);
-			
-			options.clear();
-			options.setSelectedLineIdx(cur.optLnIdx);
-			options.setRenderStart(cur.optRenIdx);
-			
-			switch (mode) {
-			case NAV_PROG_INSTR:
-				DisplayLine active = contents.getCurrentItem();
-				updateInstList();
-				// Update the active robot's active instruction index
-				if (active != null && active.getItemIdx() < getActiveProg().size()) {
-					setActiveInstIdx(active.getItemIdx());
-				}
-				
-				break;
-			case ACTIVE_FRAMES:
-				String idxTxt;
-				
-				if (contents.getLineIdx() == 0) {
-					idxTxt = Integer.toString(r.getActiveToolIdx() + 1);
-					
-				} else {
-					idxTxt = Integer.toString(r.getActiveUserIdx() + 1);
-				}
-				
-				workingText = new StringBuilder(idxTxt);
-				break;
-			default:
-				workingText = new StringBuilder();
-			}
+			Fields.debug("\n%s <= %s\n", cur.mode, curScreen.mode);
 			
 			updatePendantScreen();
-			return true;
-		}
-		
-		return false;
+		}		
 	}
-
+	
 	/**
 	 * Camera L button
 	 * 
@@ -4556,7 +1463,7 @@ public class RobotRun extends PApplet {
 		
 		return lines;
 	}
-	
+
 	/**
 	 * TODO comment this
 	 * 
@@ -4609,36 +1516,6 @@ public class RobotRun extends PApplet {
 			// Invalid coordFrame or frame index
 			lines.add(new DisplayLine(-1, 0, String.format("CoordFrame=%s", coordFrame) ));
 			lines.add(new DisplayLine(-1, 0, String.format("Frame Index=%d", fdx) ));
-		}
-		
-		return lines;
-	}
-
-	/**
-	 * TODO
-	 * 
-	 * @param f
-	 * @return
-	 */
-	public ArrayList<DisplayLine> loadFrameDirectEntry(Frame f) {
-		ArrayList<DisplayLine> lines = new ArrayList<>();
-		
-		if (f instanceof Frame) {
-			String[][] entries = f.directEntryStringArray();
-	
-			for (int idx = 0; idx < entries.length; ++idx) {
-				String[] line = new String[entries[idx][1].length() + 1];
-				line[0] = entries[idx][0];
-				// Give each character in the value String it own column
-				for (int sdx = 0; sdx < entries[idx][1].length(); ++sdx) {
-					line[sdx + 1] = Character.toString(entries[idx][1].charAt(sdx));
-				}
-	
-				lines.add(new DisplayLine(idx, 0, line));
-			}
-			
-		} else {
-			lines.add(new DisplayLine(-1, 0, "Null frame"));
 		}
 		
 		return lines;
@@ -4890,46 +1767,6 @@ public class RobotRun extends PApplet {
 		
 		return lines;
 	}
-
-	/**
-	 * TODO
-	 * 
-	 * @param pt
-	 * @param isCartesian
-	 * @return
-	 */
-	public ArrayList<DisplayLine> loadPosition(Point pt, boolean isCartesian) {
-		ArrayList<DisplayLine> lines = new ArrayList<>();
-		
-		if (pt == null) {
-			lines.add(new DisplayLine(-1, 0, "Null point") );
-
-		} else {
-			String[][] entries;
-
-			if (isCartesian) {
-				// List Cartesian values
-				entries = pt.toCartesianStringArray();
-
-			} else {
-				// List joint angles
-				entries = pt.toJointStringArray();
-			}
-
-			for (int idx = 0; idx < entries.length; ++idx) {
-				String[] line = new String[entries[idx][1].length() + 1];
-				line[0] = entries[idx][0];
-				// Give each character in the value String it own column
-				for (int sdx = 0; sdx < entries[idx][1].length(); ++sdx) {
-					line[sdx + 1] = Character.toString(entries[idx][1].charAt(sdx));
-				}
-
-				lines.add(new DisplayLine(idx, 0, line));
-			}
-		}
-		
-		return lines;
-	}
 	
 	/**
 	 * TODO
@@ -4957,15 +1794,6 @@ public class RobotRun extends PApplet {
 	/**
 	 * TODO comment
 	 * 
-	 * @return
-	 */
-	public ArrayList<DisplayLine> loadPrograms() {
-		return loadPrograms( activeRobot );
-	}
-	
-	/**
-	 * TODO comment
-	 * 
 	 * @param rid
 	 * @return
 	 */
@@ -4985,19 +1813,7 @@ public class RobotRun extends PApplet {
 		
 		return progList;
 	}
-
-	/**
-	 * Sets the given screen mode as the active mode. In the process thereof,
-	 * the contents and options menus are updated and redrawn based on the new
-	 * active screen and the previous screen. In addition, the active screen
-	 * state is pushed onto the stack.
-	 * 
-	 * @param m	The new active screen mode
-	 */
-	public void loadScreen(ScreenMode m) {
-		loadScreen(m, screenStates.peek());
-	}
-
+	
 	/**
 	 * Build a PShape object from the contents of the given .stl source file
 	 * stored in /RobotRun/data/.
@@ -5059,27 +1875,7 @@ public class RobotRun extends PApplet {
 
 		return mesh;
 	}
-	
-	/**
-	 * This method loads text to screen in such a way as to allow the user to
-	 * input an arbitrary character string consisting of letters (a-z upper and
-	 * lower case) and/ or special characters (_, @, *, .) via the function row,
-	 * as well as numbers via the number pad. Strings are limited to 16
-	 * characters and can be used to name new routines, as well as set remark
-	 * fields for frames and instructions.
-	 */
-	public DisplayLine loadTextInput(String txt) {
-		contents.addLine("\0");
 
-		DisplayLine line = new DisplayLine();
-		// Give each letter in the name a separate column
-		for (int idx = 0; idx < txt.length() && idx < TEXT_ENTRY_LEN; idx += 1) {
-			line.add( Character.toString(txt.charAt(idx)) );
-		}
-
-		return line;
-	}
-	
 	/**
 	 * Pendant MENU button
 	 * 
@@ -5227,13 +2023,13 @@ public class RobotRun extends PApplet {
 			mouseOverWO = null;
 		}
 	}
-
+	
 	@Override
 	public void mouseReleased() {
 		mouseOverWO = null;
 		mouseDragWO = false;
 	}
-	
+
 	@Override
 	public void mouseWheel(MouseEvent event) {
 		if (UI != null && UI.isMouseOverUIElement()) {
@@ -5295,7 +2091,7 @@ public class RobotRun extends PApplet {
 			}
 		}
 	}
-
+	
 	/**
 	 * Move to Default button in the edit window
 	 * 
@@ -5321,7 +2117,7 @@ public class RobotRun extends PApplet {
 			}
 		}
 	}
-	
+
 	/**
 	 * Pendant MVMU button
 	 * 
@@ -5344,7 +2140,7 @@ public class RobotRun extends PApplet {
 			p.addInstAtEnd(call);
 		}
 	}
-
+	
 	public void newFrameInstruction(int fType) {
 		RoboticArm r = activeRobot;
 		Program p = getActiveProg();
@@ -5356,7 +2152,7 @@ public class RobotRun extends PApplet {
 			p.addInstAtEnd(f);
 		}
 	}
-	
+
 	public void newIfExpression() {
 		RoboticArm r = activeRobot;
 		Program p = getActiveProg();
@@ -5478,7 +2274,7 @@ public class RobotRun extends PApplet {
 		}  else if (mInst.getPosType() == Fields.PTYPE_PROG) {
 			prog.setPosition(regNum, pt);
 			
-			if (getSelectedLine() > 0) {
+			if (curScreen.getContents().getItemLineIdx() > 0) {
 				mInst.setCircPosIdx(regNum);
 				
 			} else {
@@ -5546,22 +2342,13 @@ public class RobotRun extends PApplet {
 	 * @param nextScreen	The new screen mode
 	 */
 	public void nextScreen(ScreenMode nextScreen) {
-		if (!screenStates.isEmpty()) {
-			ScreenState cur = screenStates.peek();
-			// Update the current screen state
-			if(curScreen != null) {
-				
-			} else {
-				cur.conLnIdx = contents.getLineIdx();
-				cur.conColIdx = contents.getColumnIdx();
-				cur.conRenIdx = contents.getRenderStart();
-				cur.optLnIdx = options.getLineIdx();
-				cur.optRenIdx = options.getRenderStart();
-			}
-		}
+		Fields.debug("\n%s => %s\n", curScreen.mode, nextScreen);
 		
-		// Load the new screen
-		loadScreen(nextScreen);
+		curScreen = Screen.getScreen(nextScreen, this);
+		System.out.println("Loaded screen " + nextScreen.name());
+		curScreen.updateScreen(screenStack.peek().getScreenState());
+		pushActiveScreen();
+		updatePendantScreen();
 	}
 
 	/**
@@ -5571,7 +2358,7 @@ public class RobotRun extends PApplet {
 	 * menus.
 	 */
 	public void num0() {
-		characterInput('0');
+		curScreen.actionKeyPress('0');
 	}
 
 	/**
@@ -5581,9 +2368,9 @@ public class RobotRun extends PApplet {
 	 * menus.
 	 */
 	public void num1() {
-		characterInput('1');
+		curScreen.actionKeyPress('1');
 	}
-
+	
 	/**
 	 * Pendant '2' button
 	 * 
@@ -5591,7 +2378,7 @@ public class RobotRun extends PApplet {
 	 * menus.
 	 */
 	public void num2() {
-		characterInput('2');
+		curScreen.actionKeyPress('2');
 	}
 	
 	/**
@@ -5601,7 +2388,7 @@ public class RobotRun extends PApplet {
 	 * menus.
 	 */
 	public void num3() {
-		characterInput('3');
+		curScreen.actionKeyPress('3');
 	}
 	
 	/**
@@ -5611,7 +2398,7 @@ public class RobotRun extends PApplet {
 	 * menus.
 	 */
 	public void num4() {
-		characterInput('4');
+		curScreen.actionKeyPress('4');
 	}
 	
 	/**
@@ -5621,7 +2408,7 @@ public class RobotRun extends PApplet {
 	 * menus.
 	 */
 	public void num5() {
-		characterInput('5');
+		curScreen.actionKeyPress('5');
 	}
 	
 	/**
@@ -5631,7 +2418,7 @@ public class RobotRun extends PApplet {
 	 * menus.
 	 */
 	public void num6() {
-		characterInput('6');
+		curScreen.actionKeyPress('6');
 	}
 	
 	/**
@@ -5641,7 +2428,7 @@ public class RobotRun extends PApplet {
 	 * menus.
 	 */
 	public void num7() {
-		characterInput('7');
+		curScreen.actionKeyPress('7');
 	}
 	
 	/**
@@ -5651,7 +2438,7 @@ public class RobotRun extends PApplet {
 	 * menus.
 	 */
 	public void num8() {
-		characterInput('8');
+		curScreen.actionKeyPress('8');
 	}
 	
 	/**
@@ -5661,76 +2448,13 @@ public class RobotRun extends PApplet {
 	 * menus.
 	 */
 	public void num9() {
-		characterInput('9');
-	}
-	
-	public Point parsePosFromContents(boolean isCartesian) {
-		// Obtain point inputs from UI display text
-		float[] inputs = new float[6];
-
-		try {
-			for (int idx = 0; idx < inputs.length; ++idx) {
-				DisplayLine value = contents.get(idx);
-				String inputStr = new String();
-				int sdx;
-
-				/*
-				 * Combine all columns related to the value, ignoring the prefix
-				 * and last column
-				 */
-				for (sdx = 1; sdx < (value.size() - 1); ++sdx) {
-					inputStr += value.get(sdx);
-				}
-
-				// Ignore any trailing blank spaces
-				if (!value.get(sdx).equals("\0")) {
-					inputStr += value.get(sdx);
-				}
-
-				inputs[idx] = Float.parseFloat(inputStr);
-				// Bring the input values with the range [-9999, 9999]
-				inputs[idx] = max(-9999f, min(inputs[idx], 9999f));
-			}
-
-			if (isCartesian) {
-				PVector position = RMath.vFromWorld(new PVector(inputs[0], inputs[1], inputs[2]));
-				PVector wpr = new PVector(inputs[3], inputs[4], inputs[5]);
-				// Convert the angles from degrees to radians, then convert from
-				// World to Native frame, and finally convert to a quaternion
-				RQuaternion orientation = RMath.wEulerToNQuat(wpr);
-
-				// Use default the Robot's joint angles for computing inverse
-				// kinematics
-				float[] defJointAngles = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
-				float[] jointAngles = RMath.inverseKinematics(activeRobot, defJointAngles, position,
-						orientation);
-				
-				if (jointAngles == null) {
-					// Inverse kinematics failed
-					return new Point(position, orientation, defJointAngles);
-				}
-				
-				return new Point(position, orientation, jointAngles);
-			}
-			
-			// Bring angles within range: (0, TWO_PI)
-			for (int idx = 0; idx < inputs.length; ++idx) {
-				inputs[idx] = RMath.mod2PI(inputs[idx] * DEG_TO_RAD);
-			}
-			
-			return activeRobot.getToolTipNative(inputs);
-
-		} catch (NumberFormatException NFEx) {
-			// Invalid input
-			println("Values must be real numbers!");
-			return null;
-		}
+		curScreen.actionKeyPress('9');
 	}
 	
 	public void pasteInstructions() {
 		pasteInstructions(0);
 	}
-	
+
 	public void pasteInstructions(int options) {
 		ArrayList<Instruction> pasteList = new ArrayList<>();
 		Program p = getActiveProg();
@@ -5798,7 +2522,7 @@ public class RobotRun extends PApplet {
 	 * menus.
 	 */
 	public void period() {
-		characterInput('.');
+		curScreen.actionKeyPress('.');
 	}
 
 	/**
@@ -5811,7 +2535,7 @@ public class RobotRun extends PApplet {
 			execute(getSU_macro_bindings()[5]);
 		}
 	}
-
+	
 	/**
 	 * Pendant PREV button
 	 * 
@@ -5820,29 +2544,12 @@ public class RobotRun extends PApplet {
 	public void prev() {
 		lastScreen();
 	}
-	
+
 	/**
-	 * Pushes a save state with the given values onto the screen state stack.
-	 * 
-	 * @param mode			The screen mode
-	 * @param conLnIdx		The line index of the contents menu
-	 * @param conColIdx		The column index of the contents menu
-	 * @param conRenIdx		The render start index of the contents menu
-	 * @param optLnIdx		The line index of the options menu
-	 * @param optRenIdx		The render start index of the options menu
+	 * Pushes a screen on the stack to allow us to return to the screen later.
 	 */
-	public void pushScreen(ScreenMode mode, int conLnIdx, int conColIdx,
-			int conRenIdx, int optLnIdx, int optRenIdx) {
-		
-		ScreenState curState = new ScreenState(mode, conLnIdx, conColIdx,
-				conRenIdx, optLnIdx, optRenIdx);
-		
-		if (screenStates.size() > 10) {
-			screenStates.remove(0);
-		}
-		
-		screenStates.push(curState);
-		
+	public void pushScreen(Screen s) {
+		screenStack.push(s);
 	}
 
 	/**
@@ -5861,7 +2568,7 @@ public class RobotRun extends PApplet {
 			}
 		}
 	}
-
+	
 	/**
 	 * Pendant RESET button
 	 * 
@@ -5875,19 +2582,18 @@ public class RobotRun extends PApplet {
 			activeRobot.setMotionFault(false);
 		}
 	}
-	
+
 	/**
 	 * Clears the screen state stack and sets the default screen as the active
 	 * screen.
 	 */
 	public void resetStack() {
 		// Stop a program from executing when transition screens
-		screenStates.clear();
-
-		mode = ScreenMode.DEFAULT;
-		pushScreen(mode, -1, -1, 0, -1, 0);
+		screenStack.clear();
+		curScreen = Screen.getScreen(ScreenMode.DEFAULT, this);
+		pushScreen(curScreen);
 	}
-
+	
 	/**
 	 * Camera R button
 	 * 
@@ -5943,12 +2649,12 @@ public class RobotRun extends PApplet {
 	 * 			0 anything else
 	 */
 	public int selectedMInstRegState() {
-		if (mode == ScreenMode.NAV_PROG_INSTR) {
+		if (curScreen instanceof ScreenNavProgInstructions) {
 			Instruction inst = getActiveInstruction();
 			
 			if (inst instanceof PosMotionInst) {
 				PosMotionInst mInst = (PosMotionInst)inst;
-				int sdx = getSelectedIdx();
+				int sdx = curScreen.getContents().getItemColumnIdx();
 				
 				if (sdx == 3 || sdx == 4) {
 					// Primary register is selected
@@ -6012,7 +2718,7 @@ public class RobotRun extends PApplet {
 		
 		return false;
 	}
-	
+
 	/**
 	 * Sets the given program as the robot's active program if the program
 	 * exists in the robot's list of programs. Otherwise, the robot's active
@@ -6075,11 +2781,11 @@ public class RobotRun extends PApplet {
 		return false;
 
 	}
-
+	
 	public void setRecord(boolean state) {
 		record = state;
 	}
-	
+
 	/**
 	 * Update the active Robot to the Robot at the given index in the list of
 	 * Robots.
@@ -6153,7 +2859,6 @@ public class RobotRun extends PApplet {
 		};
 		
 		instance = this;
-		letterStates = new int[] { 0, 0, 0, 0, 0 };
 		workingText = new StringBuilder();
 		
 		RegisteredModels.loadModelDefs();
@@ -6187,12 +2892,9 @@ public class RobotRun extends PApplet {
 			
 			DataManagement.loadState(this);
 			
-			screenStates = new Stack<>();
-			mode = ScreenMode.DEFAULT;
-			pushScreen(ScreenMode.DEFAULT, 0, 0, 0, 0, 0);
-			
-			contents = new MenuScroll("cont", ITEMS_TO_SHOW, 10, 20);
-			options = new MenuScroll("opt", 3, 10, 180);
+			screenStack = new Stack<>();
+			curScreen = Screen.getScreen(ScreenMode.DEFAULT, this);
+			pushScreen(curScreen);
 			
 			progExecState = new ProgExecution();
 			progCallStack = new Stack<>();
@@ -6237,7 +2939,7 @@ public class RobotRun extends PApplet {
 	public void shift() {
 		setShift(!shift);
 	}
-
+	
 	/**
 	 * Pendant +% button
 	 * 
@@ -6264,7 +2966,7 @@ public class RobotRun extends PApplet {
 			}
 		}
 	}
-	
+
 	/**
 	 * Pendant -% button
 	 * 
@@ -6292,6 +2994,7 @@ public class RobotRun extends PApplet {
 		}
 	}
 
+
 	/**
 	 * Pendant STATUS button
 	 * 
@@ -6302,8 +3005,7 @@ public class RobotRun extends PApplet {
 			execute(getSU_macro_bindings()[4]);
 		}
 	}
-
-
+	
 	/**
 	 * Pendant STEP button
 	 * 
@@ -6321,9 +3023,9 @@ public class RobotRun extends PApplet {
 	 * @param nextScreen	The new screen mode
 	 */
 	public void switchScreen(ScreenMode nextScreen) {
-		screenStates.pop();
+		screenStack.pop();
 		// Load the new screen
-		loadScreen(nextScreen);
+		nextScreen(nextScreen);
 	}
 	
 	public void TeachCamObj() {
@@ -6386,7 +3088,7 @@ public class RobotRun extends PApplet {
 		UI.updateUIContentPositions();
 		updatePendantScreen();
 	}
-	
+
 	/**
 	 * ENABLE/DISABLE TRACE button in miscellaneous window
 	 * 
@@ -6411,7 +3113,7 @@ public class RobotRun extends PApplet {
 			execute(getSU_macro_bindings()[0]);
 		}
 	}
-
+	
 	/**
 	 * Pendant TOOl2 button
 	 * 
@@ -6422,7 +3124,7 @@ public class RobotRun extends PApplet {
 			execute(getSU_macro_bindings()[1]);
 		}
 	}
-	
+
 	/**
 	 * Camera T button
 	 * 
@@ -6434,7 +3136,7 @@ public class RobotRun extends PApplet {
 		camera.reset();
 		camera.setRotation(3f * HALF_PI, 0f, 0f);
 	}
-
+	
 	/**
 	 * Is the trace function enabled. The user can enable/disable this function
 	 * with a button in the miscellaneous window.
@@ -6463,7 +3165,7 @@ public class RobotRun extends PApplet {
 			activeRobot.releaseHeldObject();
 		}
 	}
-	
+
 	/**
 	 * Updates the index display in the Active Frames menu based on the current
 	 * value of workingText
@@ -6475,182 +3177,31 @@ public class RobotRun extends PApplet {
 
 			if (frameIdx >= -1 && frameIdx < 10) {
 				// Update the appropriate active Frame index
-				if (contents.getLineIdx() == 0) {
+				if (curScreen.getContentIdx() == 0) {
 					activeRobot.setActiveToolFrame(frameIdx);
 				} else {
 					activeRobot.setActiveUserFrame(frameIdx);
-				}
+        }
 			}
 
 		} catch (NumberFormatException NFEx) {
 			// Non-integer value
 		}
 		// Update display
-		if (contents.getLineIdx() == 0) {
+		if (curScreen.getContentIdx() == 0) {
 			workingText = new StringBuilder(Integer.toString(activeRobot.getActiveToolIdx() + 1));
 
 		} else {
 			workingText = new StringBuilder(Integer.toString(activeRobot.getActiveUserIdx() + 1));
 		}
 
-		contents.getCurrentItem().set(contents.getColumnIdx(), workingText.toString());
+		curScreen.getContents().getCurrentItem().set(curScreen.getContentIdx(), workingText.toString());
 		updatePendantScreen();
 	}
 
 	public void UpdateCam() {
 		if (rCamera != null) {
 			UI.updateCameraCurrent();
-		}
-	}
-
-	public void updateContents() {
-		RoboticArm r = activeRobot;
-		ArrayList<DisplayLine> prevContents = contents.copyContents();
-		contents.clear();
-
-		switch (mode) {
-		// Main menu and submenus
-		case NAV_MAIN_MENU:
-			contents.addLine("1 Frames");
-			contents.addLine("2 Macros");
-			contents.addLine("3 Manual Fncts");
-			contents.addLine("4 I/O Registers");
-			break;
-		// Program list navigation/ edit
-		case NAV_PROGRAMS:
-		case SET_MACRO_PROG:
-			contents.setLines( loadPrograms(r) );
-			break;
-			
-		case PROG_CREATE:
-		case PROG_RENAME:
-		case PROG_COPY:
-		case TFRAME_RENAME:
-		case UFRAME_RENAME:
-			DisplayLine line = loadTextInput(workingText.toString());
-			contents.addLine(line);
-			break;
-
-		// View instructions
-		case CONFIRM_INSERT:
-		case CONFIRM_RENUM:
-		case FIND_REPL:
-		case NAV_PROG_INSTR:
-		case SELECT_INSTR_DELETE:
-		case SELECT_COMMENT:
-		case SELECT_CUT_COPY:
-		case SELECT_PASTE_OPT:
-		case SET_MINST_TYPE:
-		case SET_MINST_REG_TYPE:
-		case SET_MINST_CREG_TYPE:
-		case SET_MINST_IDX:
-		case SET_MINST_CIDX:
-		case SET_MINST_SPD:
-		case SET_MINST_TERM:
-		case SET_MINST_OFF_TYPE:
-		case SET_MINST_OFFIDX:
-		case SET_MINST_OBJ:
-		case SET_IO_INSTR_STATE:
-		case SET_IO_INSTR_IDX:
-		case SET_FRAME_INSTR_TYPE:
-		case SET_FRAME_INSTR_IDX:
-		case SET_REG_EXPR_TYPE:
-		case SET_REG_EXPR_IDX1:
-		case SET_REG_EXPR_IDX2:
-		case SET_IF_STMT_ACT:
-		case SET_SELECT_STMT_ARG:
-		case SET_SELECT_ARGVAL:
-		case SET_SELECT_STMT_ACT:
-		case SET_EXPR_ARG:
-		case SET_BOOL_EXPR_ARG:
-		case SET_EXPR_OP:
-		case INPUT_DREG_IDX:
-		case INPUT_IOREG_IDX:
-		case INPUT_PREG_IDX1:
-		case INPUT_PREG_IDX2:
-		case INPUT_CONST:
-		case SET_BOOL_CONST:
-		case SET_LBL_NUM:
-		case SET_JUMP_TGT:
-		case SET_CALL_PROG:
-			contents.setLines( loadInstructions(getActiveProg()) );
-			break;
-		case NAV_DATA:
-			contents.addLine("1. Data Registers");
-			contents.addLine("2. Position Registers");
-			break;
-		case ACTIVE_FRAMES:
-			/* workingText corresponds to the active row's index display */
-			if (contents.getLineIdx() == 0) {
-				contents.addLine("Tool: ", workingText.toString());
-				contents.addLine("User: ", Integer.toString(r.getActiveUserIdx() + 1));
-
-			} else {
-				contents.addLine("Tool: ", Integer.toString(r.getActiveToolIdx() + 1));
-				contents.addLine("User: ", workingText.toString());
-			}
-			break;
-
-			// View frame details
-		case NAV_TOOL_FRAMES:
-			contents.setLines( loadFrames(activeRobot, CoordFrame.TOOL) );
-			break;
-		case NAV_USER_FRAMES:
-			contents.setLines( loadFrames(activeRobot, CoordFrame.USER) );
-			break;
-			// View frame details
-		case SET_DEF_TOOLTIP:
-		case TFRAME_DETAIL:
-		case TEACH_3PT_TOOL:
-		case TEACH_6PT:
-			contents.setLines(
-				loadFrameDetail(r, CoordFrame.TOOL, curFrameIdx)
-			);
-			break;
-		case UFRAME_DETAIL:
-		case TEACH_3PT_USER:
-		case TEACH_4PT:
-			contents.setLines(
-				loadFrameDetail(r, CoordFrame.USER, curFrameIdx)
-			);
-			break;
-		case NAV_DREGS:
-		case EDIT_DREG_VAL:
-		case CP_DREG_COM:
-		case CP_DREG_VAL:
-			contents.setLines( loadDataRegisters(r) );
-			break;
-		case NAV_PREGS:
-		case CP_PREG_COM:
-		case CP_PREG_PT:
-		case SWAP_PT_TYPE:
-			contents.setLines( loadPositionRegisters(r) );
-			break;
-		case NAV_IOREGS:
-			contents.setLines( loadIORegNav(activeRobot) );
-			break;
-		// Position entry menus
-		case EDIT_PROG_POS:
-		case EDIT_PREG:
-		case DIRECT_ENTRY_TOOL:
-		case DIRECT_ENTRY_USER:
-			contents.setLines(prevContents);
-			break;
-		case NAV_MACROS:
-		case SET_MACRO_TYPE:
-		case SET_MACRO_BINDING:
-			contents.setLines(loadMacros());
-			break;
-		case NAV_MF_MACROS:
-			contents.setLines(loadManualFunct());
-			break;
-		case EDIT_DREG_COM:
-		case EDIT_PREG_COM:
-			line = loadTextInput(workingText.toString());
-			contents.addLine(line);
-			break;
-		default:
-			break;
 		}
 	}
 
@@ -6662,474 +3213,15 @@ public class RobotRun extends PApplet {
 		setActiveInstIdx(min(getActiveInstIdx(), instSize));
 		lastScreen();
 	}
-
-	public void updateOptions() {
-		options.clear();
-		
-		Instruction inst = getActiveInstruction();
-
-		switch (mode) {
-		case NAV_PROG_INSTR:
-			Program p = getActiveProg();
-			int selectedReg = selectedMInstRegState();
-			
-			if (inst instanceof PosMotionInst && selectedReg > 0) {
-				// Show the position associated with the active motion
-				// instruction
-				PosMotionInst mInst = (PosMotionInst) inst;
-				boolean isCart = false;
-				Point pt = null;
-				
-				if (selectedReg == 6) {
-					PositionRegister pReg = activeRobot.getPReg(mInst.getOffsetIdx());
-					
-					if (pReg != null) {
-						isCart = pReg.isCartesian;
-						pt = pReg.point;
-					}
-					
-				} else if (selectedReg == 4 || selectedReg == 3) {
-					isCart = true;
-					pt = activeRobot.getCPosition(mInst, p);
-					
-				} else if (selectedReg == 1 || selectedReg == 2) {
-					isCart = mInst.getMotionType() != Fields.MTYPE_JOINT;
-					pt = activeRobot.getPosition(mInst, p);
-				}
-
-				if (pt != null) {
-					String[] pregEntry = pt.toLineStringArray(isCart);
-
-					for (String line : pregEntry) {
-						options.addLine(line);
-					}
-					
-				} else {
-					options.addLine("Uninitialized");
-				}
-			}
-
-			break;
-		case CONFIRM_PROG_DELETE:
-			options.addLine("Delete selected program?");
-			break;
-
-			// Instruction options
-		case NAV_INSTR_MENU:
-			options.addLine("1 Undo");
-			options.addLine("2 Insert");
-			options.addLine("3 Delete");
-			options.addLine("4 Cut/ Copy");
-			options.addLine("5 Paste");
-			options.addLine("6 Find/ Replace");
-			options.addLine("7 Renumber");
-			options.addLine("8 Comment");
-			break;
-		case CONFIRM_INSERT:
-			options.addLine("Enter number of lines to insert:");
-			options.addLine("\0" + workingText);
-			break;
-		case SELECT_INSTR_DELETE:
-			options.addLine("Select lines to delete (ENTER).");
-			break;
-		case SELECT_CUT_COPY:
-			options.addLine("Select lines to cut/ copy (ENTER).");
-			break;
-		case SELECT_PASTE_OPT:
-			options.addLine("1 Logic");
-			options.addLine("2 Position");
-			options.addLine("3 Pos ID");
-			options.addLine("4 R Logic");
-			options.addLine("5 R Position");
-			options.addLine("6 R Pos ID");
-			options.addLine("7 RM Pos ID");
-			break;
-		case FIND_REPL:
-			options.addLine("Enter text to search for:");
-			options.addLine("\0" + workingText);
-			break;
-		case CONFIRM_RENUM:
-			options.addLine("Renumber program positions?");
-			break;
-		case SELECT_COMMENT:
-			options.addLine("Select lines to comment/uncomment.");
-			break;
-
-		case SET_MINST_TYPE:
-			options.addLine("1.JOINT");
-			options.addLine("2.LINEAR");
-			options.addLine("3.CIRCULAR");
-			break;
-		case SET_MINST_REG_TYPE:
-			options.addLine("1.LOCAL(P)");
-			options.addLine("2.GLOBAL(PR)");
-			options.addLine("3.CAM OBJECT(OBJ)");
-			break;
-		case SET_MINST_CREG_TYPE:
-			options.addLine("1.LOCAL(P)");
-			options.addLine("2.GLOBAL(PR)");
-			break;
-		case SET_MINST_IDX:
-		case SET_MINST_CIDX:
-			options.addLine("Enter desired position/ register:");
-			options.addLine("\0" + workingText);
-			break;
-		case SET_MINST_OBJ:
-			CamMoveToObject castIns = (CamMoveToObject)inst;
-			Scenario s = castIns.getScene();
-			
-			if (s != null && s.size() > 0) {
-				options.addLine("Enter target object:");
-				
-				for (WorldObject wo : s) {
-					options.addLine(wo.getName());
-				}
-				
-			} else {
-				options.addLine("No objects to select");
-			}
-			
-			break;
-		case SET_MINST_SPD:
-			inst = getActiveInstruction();
-
-			if (inst instanceof MotionInstruction) {
-				MotionInstruction mInst = (MotionInstruction)inst;
-				
-				if (mInst.getMotionType() == Fields.MTYPE_JOINT) {
-					workingTextSuffix = "%";
-				} else {
-					workingTextSuffix = "mm/s";
-				}
-				
-				options.addLine("Enter desired speed:");
-				options.addLine(workingText + workingTextSuffix);
-				
-			} else {
-				String line = String.format("Invalid instruction: %s", inst);
-				options.addLine(line);
-			}
-			
-			break;
-		case SET_MINST_TERM:
-			options.addLine("Enter desired termination %(0-100):");
-			options.addLine("\0" + workingText);
-			break;
-		case SET_MINST_OFF_TYPE:
-			options.addLine("None");
-			options.addLine("PR[...]");
-			break;
-		case SET_MINST_OFFIDX:
-			options.addLine("Enter desired offset register (1-100):");
-			options.addLine("\0" + workingText);
-			break;
-		case SET_IO_INSTR_STATE:
-			options.addLine("1. ON");
-			options.addLine("2. OFF");
-			break;
-		case SET_IO_INSTR_IDX:
-			options.addLine("Select I/O register index:");
-			options.addLine("\0" + workingText);
-			break;
-		case SET_FRAME_INSTR_TYPE:
-			options.addLine("1. TFRAME_NUM = x");
-			options.addLine("2. UFRAME_NUM = x");
-			break;
-		case SET_FRAME_INSTR_IDX:
-			options.addLine("Select frame index:");
-			options.addLine("\0" + workingText);
-			break;
-		case SET_REG_EXPR_TYPE:
-			options.addLine("1. R[x] = (...)");
-			options.addLine("2. IO[x] = (...)");
-			options.addLine("3. PR[x] = (...)");
-			options.addLine("4. PR[x, y] = (...)");
-			break;
-		case SET_REG_EXPR_IDX1:
-			options.addLine("Select register index:");
-			options.addLine("\0" + workingText);
-			break;
-		case SET_REG_EXPR_IDX2:
-			options.addLine("Select point index:");
-			options.addLine("\0" + workingText);
-			break;
-		case SET_EXPR_OP:
-			if (opEdit instanceof Expression) {
-				if (getActiveInstruction() instanceof IfStatement) {
-					options.addLine("1. + ");
-					options.addLine("2. - ");
-					options.addLine("3. * ");
-					options.addLine("4. / (Division)");
-					options.addLine("5. | (Integer Division)");
-					options.addLine("6. % (Modulus)");
-					options.addLine("7. = ");
-					options.addLine("8. <> (Not Equal)");
-					options.addLine("9. > ");
-					options.addLine("10. < ");
-					options.addLine("11. >= ");
-					options.addLine("12. <= ");
-					options.addLine("13. AND ");
-					options.addLine("14. OR ");
-					options.addLine("15. NOT ");
-				} else {
-					options.addLine("1. + ");
-					options.addLine("2. - ");
-					options.addLine("3. * ");
-					options.addLine("4. / (Division)");
-					options.addLine("5. | (Integer Division)");
-					options.addLine("6. % (Modulus)");
-				}
-			} else {
-				options.addLine("1. ... =  ...");
-				options.addLine("2. ... <> ...");
-				options.addLine("3. ... >  ...");
-				options.addLine("4. ... <  ...");
-				options.addLine("5. ... >= ...");
-				options.addLine("6. ... <= ...");
-			}
-
-			break;
-		case SET_EXPR_ARG:
-		case SET_BOOL_EXPR_ARG:
-			options.addLine("R[x]");
-			options.addLine("IO[x]");
-			if (opEdit instanceof Expression) {
-				options.addLine("PR[x]");
-				options.addLine("JPos");
-				options.addLine("LPos");
-				options.addLine("PR[x, y]");
-				options.addLine("(...)");
-			}
-			options.addLine("Const");
-			break;
-		case INPUT_DREG_IDX:
-		case INPUT_IOREG_IDX:
-		case INPUT_PREG_IDX1:
-			options.addLine("Input register index:");
-			options.addLine("\0" + workingText);
-			break;
-		case INPUT_PREG_IDX2:
-			options.addLine("Input position value index:");
-			options.addLine("\0" + workingText);
-			break;
-		case INPUT_CONST:
-			options.addLine("Input constant value:");
-			options.addLine("\0" + workingText);
-			break;
-		case SET_BOOL_CONST:
-			options.addLine("1. False");
-			options.addLine("2. True");
-			break;
-		case SET_IF_STMT_ACT:
-		case SET_SELECT_STMT_ACT:
-			options.addLine("JMP LBL[x]");
-			options.addLine("CALL");
-			
-			if ( UI.getRobotButtonState() ) {
-				options.addLine("RCALL");
-			}
-			break;
-		case SET_SELECT_STMT_ARG:
-			options.addLine("R[x]");
-			options.addLine("Const");
-			break;
-		case SET_SELECT_ARGVAL:
-			options.addLine("Input value/ register index:");
-			options.addLine("\0" + workingText);
-			break;
-		case SET_LBL_NUM:
-			options.addLine("Set label number:");
-			options.addLine("\0" + workingText);
-			break;
-		case SET_JUMP_TGT:
-			options.addLine("Set jump target label:");
-			options.addLine("\0" + workingText);
-			break;
-		case SET_CALL_PROG:
-			RoboticArm r = activeRobot;
-			inst = r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-			CallInstruction cInst;
-			
-			// Get the call instruction
-			if (inst instanceof IfStatement) {
-				cInst = (CallInstruction) ((IfStatement) inst).getInstr();
-				
-			} else if (inst instanceof SelectStatement) {
-				SelectStatement sStmt = (SelectStatement) inst;
-				cInst = (CallInstruction) sStmt.getInstrs().get(editIdx);
-				
-			} else {
-				cInst =  (CallInstruction) inst;
-			}
-						
-			// List the robot's program names
-			options.setLines( loadPrograms( cInst.getTgtDevice() ) );
-			
-			break;
-			// Insert instructions (non-movement)
-		case SELECT_INSTR_INSERT:
-			options.addLine("1. I/O");
-			options.addLine("2. Frames");
-			options.addLine("3. Registers");
-			options.addLine("4. IF/SELECT");
-			options.addLine("5. JMP/LBL");
-			options.addLine("6. CALL");
-			
-			/*
-			 * Only allow the user to add robot call instructions when the
-			 * second robot is in the application
-			 */
-			if (UI.getRobotButtonState()) {
-				options.addLine("7. RCALL");
-			}
-			
-			break;
-		case SELECT_IO_INSTR_REG:
-			options.setLines( loadIORegInst(activeRobot) );
-			break;
-		case SELECT_FRAME_INSTR_TYPE:
-			options.addLine("1. TFRAME_NUM = ...");
-			options.addLine("2. UFRAME_NUM = ...");
-			break;
-		case SELECT_REG_STMT:
-			options.addLine("1. R[x] = (...)");
-			options.addLine("2. IO[x] = (...)");
-			options.addLine("3. PR[x] = (...)");
-			options.addLine("4. PR[x, y] = (...)");
-			break;
-		case SELECT_COND_STMT:
-			options.addLine("1. IF Stmt");
-			options.addLine("2. IF (...)");
-			options.addLine("3. SELECT Stmt");
-			break;
-		case SELECT_JMP_LBL:
-			options.addLine("1. LBL[...]");
-			options.addLine("2. JMP LBL[...]");
-			break;
-
-			// Frame navigation and edit menus
-		case SELECT_FRAME_MODE:
-			options.addLine("1. Tool Frame");
-			options.addLine("2. User Frame");
-			break;
-		case TFRAME_DETAIL:
-			options.addLine("1. Three Point Method");
-			options.addLine("2. Six Point Method");
-			options.addLine("3. Direct Entry Method");
-			break;
-		case SET_DEF_TOOLTIP:
-			options.setLines( loadEEToolTipDefaults(activeRobot) );
-			break;
-		case UFRAME_DETAIL:
-			options.addLine("1. Three Point Method");
-			options.addLine("2. Four Point Method");
-			options.addLine("3. Direct Entry Method");
-			break;
-		case TEACH_3PT_TOOL:
-			r = activeRobot;
-			ArrayList<DisplayLine> lines =
-					loadPointList(r.getToolFrame(curFrameIdx), 0);
-			options.setLines(lines);
-			break;
-		case TEACH_3PT_USER:
-			r = activeRobot;
-			lines = loadPointList(r.getUserFrame(curFrameIdx), 0);
-			options.setLines(lines);
-			break;
-		case TEACH_4PT:
-			r = activeRobot;
-			lines = loadPointList(r.getUserFrame(curFrameIdx), 1);
-			options.setLines(lines);
-			break;
-		case TEACH_6PT:
-			r = activeRobot;
-			lines = loadPointList(r.getToolFrame(curFrameIdx), 1);
-			options.setLines(lines);
-			break;
-
-			// Macro edit menus
-		case SET_MACRO_TYPE:
-			options.addLine("1. Shift + User Key");
-			options.addLine("2. Manual Function");
-			break;
-		case SET_MACRO_BINDING:
-			options.addLine("1. Tool 1");
-			options.addLine("2. Tool 2");
-			options.addLine("3. MVMU");
-			options.addLine("4. Setup");
-			options.addLine("5. Status");
-			options.addLine("6. POSN");
-			options.addLine("7. I/O");
-			break;
-		case NAV_PREGS:
-			PositionRegister pReg = activeRobot.getPReg(contents.getItemIdx());
-			Point pt = pReg.point;
-			// Display the point with the Position register of the highlighted
-			// line, when viewing the Position registers
-			if (pt != null) {
-				String[] pregEntry = pt.toLineStringArray(pReg.isCartesian);
-
-				for (String line : pregEntry) {
-					options.addLine(line);
-				}
-			}
-
-			break;
-		case CP_DREG_COM:
-			options.addLine(String.format("Move R[%d]'s comment to:", contents.getItemIdx() + 1));
-			options.addLine(String.format("R[%s]", workingText));
-			break;
-		case CP_DREG_VAL:
-			options.addLine(String.format("Move R[%d]'s value to:", contents.getItemIdx() + 1));
-			options.addLine(String.format("R[%s]", workingText));
-			break;
-		case CP_PREG_COM:
-			options.addLine(String.format("Move PR[%d]'s comment to:", contents.getItemIdx() + 1));
-			options.addLine(String.format("PR[%s]", workingText));
-			break;
-		case CP_PREG_PT:
-			options.addLine(String.format("Move PR[%d]'s point to:", contents.getItemIdx() + 1));
-			options.addLine(String.format("PR[%s]", workingText));
-			break;
-		case SWAP_PT_TYPE:
-			options.addLine("1. Cartesian");
-			options.addLine("2. Joint");
-			break;
-		case EDIT_DREG_VAL:
-			options.addLine(String.format("Input R[%d]'s value:", contents.getItemIdx() + 1));
-			options.addLine("\0" + workingText);
-			break;
-
-			// Misc functions
-		case JUMP_TO_LINE:
-			options.addLine("Use number keys to enter line number to jump to");
-			options.addLine("\0" + workingText);
-			break;
-		default:
-			if (mode.getType() == ScreenType.TYPE_TEXT_ENTRY) {
-				options.addLine("1. Uppercase");
-				options.addLine("1. Lowercase");
-			}
-		}
-	}
 	
 	/**
 	 * Update the header, contents, options, and function button labels on the
 	 * pendant.
 	 */
 	public void updatePendantScreen() {
-		if(curScreen != null) {
-			System.out.println("Text loaded from screen");
-			curScreen.updateScreen();
-			UI.renderPendantScreen(curScreen.getHeader(), curScreen.getContents(),
-					curScreen.getOptions(), curScreen.getLabels());
-		} else {
-			updateContents();
-			updateOptions();
-			
-			UI.renderPendantScreen(getHeader(mode), getContentsMenu(),
-					getOptionsMenu(), getFunctionLabels(mode));
-		}
+		curScreen.updateScreen();
+		UI.renderPendantScreen(curScreen.getHeader(), curScreen.getContents(),
+				curScreen.getOptions(), curScreen.getLabels());
 	}
 	
 	/**
@@ -7144,7 +3236,7 @@ public class RobotRun extends PApplet {
 	public void updateRobotEEState(int edx, int newState) {
 		updateRobotEEState(activeRobot, edx, newState);
 	}
-	
+
 	/**
 	 * Updates the end effector state of the given robot's end effector
 	 * associated with the given index and checks for pickup collisions
@@ -7175,7 +3267,7 @@ public class RobotRun extends PApplet {
 			}
 		}
 	}
-
+	
 	/**
 	 * Push a world object onto the undo stack for world objects.
 	 * 
@@ -7209,7 +3301,7 @@ public class RobotRun extends PApplet {
 			}
 		}
 	}
-	
+
 	/**
 	 * Create button in the Create window
 	 * 
@@ -7233,7 +3325,7 @@ public class RobotRun extends PApplet {
 			System.err.println("No active scenario!");
 		}
 	}
-
+	
 	/**
 	 * Delete button in the edit window
 	 * 
@@ -7254,84 +3346,6 @@ public class RobotRun extends PApplet {
 			
 			DataManagement.saveScenarios(this);
 		}
-	}
-	
-	/**
-	 * Updates the appropriate user input buffer based on the active pendant
-	 * screen.
-	 * 
-	 * @param c	The character input by the user
-	 * @return	A signal based on what screen mode used the character input
-	 * 			(if any)
-	 */
-	private int characterInput(char c) {
-		int ret = 0;
-		
-		if (mode.getType() == ScreenType.TYPE_TEXT_ENTRY && workingText.length() < TEXT_ENTRY_LEN
-				&& ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')
-						|| c == '.' || c == '@' || c == '*' || c == '_')) {
-
-			int columnIdx = contents.getColumnIdx();
-
-			if (workingText.length() == 0 || columnIdx >= workingText.length()) {
-				workingText.append(c);
-				ret = 1;
-
-			} else {
-				workingText.insert(columnIdx, c);
-				ret = 1;
-			}
-			// Edge case of adding a character to an empty text entry
-			if (workingText.length() == 1 && workingText.charAt(0) != '\0') {
-				workingText.append('\0');
-				++columnIdx;
-				ret = 1;
-			}
-
-			contents.setSelectedColumnIdx(min(columnIdx + 1, workingText.length() - 1));
-
-		} else if (mode.getType() == ScreenType.TYPE_NUM_ENTRY && workingText.length() < NUM_ENTRY_LEN) {
-			
-			if (mode == ScreenMode.SET_MINST_SPD) {
-				// Special case for motion instruction speed number entry
-				if ((c >= '0' && c <= '9') && workingText.length() < 4) {
-					workingText.append(c);
-					ret = 2;
-				}
-				
-			} else if ((c >= '0' && c <= '9') || c == '.' || c == '-') {
-				// Append the character
-				workingText.append(c);
-				ret = 2;
-			}
-
-		} else if (mode.getType() == ScreenType.TYPE_POINT_ENTRY) {
-
-			if ((c >= '0' && c <= '9') || c == '-' || c == '.') {
-				DisplayLine entry = contents.getCurrentItem();
-				int idx = contents.getColumnIdx();
-				
-				if (entry.get(idx) == "\0") {
-					entry.set(idx, Character.toString(c));
-					arrow_rt();
-					ret = 3;
-					
-				// Include prefix in length	
-				} else if (entry.size() < (NUM_ENTRY_LEN + 1)) {
-					entry.add(idx, Character.toString(c));
-					arrow_rt();
-					ret = 3;
-				}
-			}
-			
-		}
-		
-		if (ret != 0) {
-			// Update the screen after a character insertion
-			updatePendantScreen();
-		}
-		
-		return ret;
 	}
 	
 	/**
@@ -7456,7 +3470,6 @@ public class RobotRun extends PApplet {
 		
 		return new RoboticArm(rid, basePosition, segModels, eeModels);
 	}
-	
 	/**
 	 * Draws the points stored for this robot's trace function with respect to
 	 * the given graphics object's coordinate frame.
@@ -7480,291 +3493,6 @@ public class RobotRun extends PApplet {
 			
 			g.popStyle();
 		}
-	}
-	/**
-	 * Sets the given screen mode m as the active screen. Current defines the
-	 * state of the current active screen. In the process of setting the active
-	 * screen, the contents and options menus are updated and redrawn based on
-	 * the new active screen and the previous screen. In addition, the active
-	 * screen state is pushed onto the stack.
-	 * 
-	 * @param m			The new active screen
-	 * @param current	The current active screen state
-	 */
-	private void loadScreen(ScreenMode m, ScreenState current) {
-		Fields.debug("\n%s => %s\n", current.mode, m);
-		
-		curScreen = Screen.getScreen(m, this);
-		
-		if(curScreen != null) {
-			System.out.println("Loaded screen " + m.name());
-			curScreen.updateScreen(current);
-		} else {
-			mode = m;
-			workingText = new StringBuilder();
-			contents.reset();
-			options.reset();
-			
-			switch (mode) {
-			case INPUT_DREG_IDX:
-			case INPUT_IOREG_IDX:
-			case INPUT_PREG_IDX1:
-			case INPUT_PREG_IDX2:
-			case INPUT_CONST:
-			case SELECT_INSTR_INSERT:
-			case SELECT_JMP_LBL:
-			case SELECT_REG_STMT:
-			case SELECT_COND_STMT:
-			case SELECT_PASTE_OPT:
-			case SET_BOOL_EXPR_ARG:
-			case SET_CALL_PROG:
-			case SET_EXPR_ARG:
-			case SET_EXPR_OP:
-			case SET_FRAME_INSTR_IDX:
-			case SET_FRAME_INSTR_TYPE:
-			case SET_IF_STMT_ACT:
-			case SET_IO_INSTR_IDX:
-			case SET_IO_INSTR_STATE:
-			case SET_JUMP_TGT:
-			case SET_LBL_NUM:
-			case SET_MINST_CREG_TYPE:
-			case SET_MINST_OFF_TYPE:
-			case SET_MINST_OFFIDX:
-			case SET_MINST_REG_TYPE:
-			case SET_REG_EXPR_IDX1:
-			case SET_REG_EXPR_IDX2:
-			case SET_REG_EXPR_TYPE:
-			case SET_SELECT_ARGVAL:
-			case SET_SELECT_STMT_ACT:
-			case SET_SELECT_STMT_ARG:
-			case SWAP_PT_TYPE:
-				contents.setSelectedLineIdx( current.conLnIdx );
-				contents.setSelectedColumnIdx( current.conColIdx );
-				contents.setRenderStart(  current.conRenIdx );
-				break;
-			case NAV_IOREGS:
-				contents.setSelectedColumnIdx(1);
-				break;
-				// Frames
-			case ACTIVE_FRAMES:
-				contents.setSelectedColumnIdx(1);
-				workingText = new StringBuilder(Integer.toString(activeRobot.getActiveToolIdx() + 1));
-				break;
-			case TEACH_3PT_USER:
-			case TEACH_4PT:
-			case TEACH_3PT_TOOL:
-			case TEACH_6PT:
-			case TFRAME_DETAIL:
-			case UFRAME_DETAIL:
-				contents.setSelectedLineIdx(-1);
-				contents.setSelectedColumnIdx(-1);
-				break;
-			case NAV_PROGRAMS:
-				if (getActiveProg() == null) {
-					setActiveProgIdx(0);
-					setActiveInstIdx(0);
-				}
-				
-				contents.setSelectedLineIdx( getActiveProgIdx() );
-				break;
-			case NAV_PROG_INSTR:
-				progCallStack.clear();
-				setActiveInstIdx(0);
-				// Reinitialize the map of motion instructions
-				updateInstList();
-				
-				break;
-			case PROG_CREATE:
-				contents.setSelectedLineIdx(1);
-				break;
-			case PROG_RENAME:
-				setActiveProgIdx(current.conLnIdx);
-				contents.setSelectedLineIdx(1);
-				workingText = new StringBuilder(getActiveProg().getName());
-				break;
-			case TFRAME_RENAME:
-				contents.setSelectedLineIdx(1);
-				workingText = new StringBuilder(
-						activeRobot.getToolFrame(curFrameIdx).getName()
-				);
-				break;
-			case UFRAME_RENAME:
-				contents.setSelectedLineIdx(1);
-				workingText = new StringBuilder(
-						activeRobot.getUserFrame(curFrameIdx).getName()
-				);
-				break;
-			case PROG_COPY:
-				setActiveProgIdx(current.conLnIdx);
-				contents.setSelectedLineIdx(1);
-				break;
-			case SELECT_IO_INSTR_REG:
-				contents.setSelectedLineIdx( current.conLnIdx );
-				contents.setSelectedColumnIdx( current.conColIdx );
-				contents.setRenderStart(  current.conRenIdx );
-				options.setSelectedColumnIdx(1);
-				break;
-			case SET_MINST_TYPE:
-				MotionInstruction mInst = (MotionInstruction) getActiveInstruction();
-				
-				int motionType = mInst.getMotionType();
-				
-				if (motionType == Fields.MTYPE_LINEAR) {
-					options.setSelectedLineIdx(1);
-					
-				} else if (motionType == Fields.MTYPE_CIRCULAR) {
-					options.setSelectedLineIdx(2);
-				}
-				
-				contents.setSelectedLineIdx( current.conLnIdx );
-				contents.setSelectedColumnIdx( current.conColIdx );
-				contents.setRenderStart(  current.conRenIdx );
-	
-				break;
-			case SET_MINST_SPD:
-				mInst = (MotionInstruction) getActiveInstruction();	
-				float instSpd = mInst.getSpdMod();
-				
-				if (mInst.getMotionType() == Fields.MTYPE_JOINT) {
-					instSpd *= 100f;
-					
-				} else {
-					instSpd *= RoboticArm.motorSpeed;
-				}
-				
-				workingText = new StringBuilder(Integer.toString((int)instSpd));
-				
-				contents.setSelectedLineIdx( current.conLnIdx );
-				contents.setSelectedColumnIdx( current.conColIdx );
-				contents.setRenderStart(  current.conRenIdx );
-				break;
-			case SET_MINST_IDX:
-				workingText = new StringBuilder("");
-				
-				contents.setSelectedLineIdx( current.conLnIdx );
-				contents.setSelectedColumnIdx( current.conColIdx );
-				contents.setRenderStart(  current.conRenIdx );
-				break;
-			case SET_MINST_TERM:
-				mInst = (MotionInstruction) getActiveInstruction();
-				int term = mInst.getTermination();
-				
-				workingText = new StringBuilder(Integer.toString(term));
-				
-				contents.setSelectedLineIdx( current.conLnIdx );
-				contents.setSelectedColumnIdx( current.conColIdx );
-				contents.setRenderStart(  current.conRenIdx );
-				break;
-			case EDIT_PROG_POS:
-				contents.setSelectedLineIdx( current.conLnIdx );
-				contents.setSelectedColumnIdx( current.conColIdx );
-				contents.setRenderStart(  current.conRenIdx );
-				Program prog = getActiveProg();
-				PosMotionInst pMInst = (PosMotionInst) getActiveInstruction();
-				Point pt = prog.getPosition(pMInst.getPosIdx());
-				
-				// Initialize the point if it is null
-				if (pt == null) {
-					pt = new Point();
-					prog.setPosition(pMInst.getPosIdx(), pt);
-				}
-				
-				boolean isCartesian = pMInst.getMotionType() != Fields.MTYPE_JOINT;
-				contents.setLines( loadPosition(pt, isCartesian));
-				break;
-			case SELECT_INSTR_DELETE:
-			case SELECT_COMMENT:
-			case SELECT_CUT_COPY:
-				prog = getActiveProg();
-				int size = prog.getNumOfInst() - 1;
-				setActiveInstIdx(max(0, min(getActiveInstIdx(), size)));
-				break;
-	
-				// Macros
-			case NAV_MACROS:
-				contents.setSelectedLineIdx( current.conLnIdx );
-				break;
-			case NAV_PREGS:
-				options.setSelectedLineIdx(-1);
-				break;
-			case SET_DEF_TOOLTIP:
-				contents.setSelectedLineIdx(-1);
-				break;
-			case DIRECT_ENTRY_TOOL:
-				contents.setSelectedColumnIdx(1);
-				Frame tool = activeRobot.getToolFrame(curFrameIdx);
-				contents.setLines( loadFrameDirectEntry(tool) );
-				break;
-			case DIRECT_ENTRY_USER:
-				contents.setSelectedColumnIdx(1);
-				Frame user = activeRobot.getUserFrame(curFrameIdx);
-				contents.setLines( loadFrameDirectEntry(user) );
-				break;
-			case CP_DREG_COM:
-			case CP_DREG_VAL:
-			case CP_PREG_COM:
-			case CP_PREG_PT:
-				contents.setSelectedLineIdx( current.conLnIdx );
-				contents.setSelectedColumnIdx( current.conColIdx );
-				contents.setRenderStart(  current.conRenIdx );
-				options.setSelectedLineIdx(1);
-				workingText = new StringBuilder((contents.getItemIdx() + 1));
-				break;
-			case EDIT_DREG_COM:
-				contents.setSelectedLineIdx(1);
-	
-				String c = activeRobot.getDReg(screenStates.peek().conLnIdx).comment;
-				if (c != null && c.length() > 0) {
-					workingText = new StringBuilder(c);
-				} else {
-					workingText = new StringBuilder("\0");
-				}
-	
-				break;
-			case EDIT_PREG_COM:
-				contents.setSelectedLineIdx(1);
-	
-				c = activeRobot.getPReg(screenStates.peek().conLnIdx).comment;
-				if (c != null && c.length() > 0) {
-					workingText = new StringBuilder(c);
-				} else {
-					workingText = new StringBuilder("\0");
-				}
-	
-				break;
-			case EDIT_DREG_VAL:
-				contents.setSelectedLineIdx( current.conLnIdx );
-				contents.setSelectedColumnIdx( current.conColIdx );
-				contents.setRenderStart(  current.conRenIdx );
-				// Bring up float input menu
-				Float val = activeRobot.getDReg(screenStates.peek().conLnIdx).value;
-				if (val != null) {
-					workingText = new StringBuilder(val.toString());
-	
-				}
-				break;
-			case EDIT_PREG:
-				ArrayList<DisplayLine> limbo;
-				PositionRegister pReg = activeRobot.getPReg(screenStates.peek().conLnIdx);
-				// Load the position associated with active position register
-				if (pReg.point == null) {
-					// Initialize an empty position register
-					limbo = loadPosition(activeRobot.getDefaultPoint(), pReg.isCartesian);
-	
-				} else {
-					limbo = loadPosition(pReg.point, pReg.isCartesian);
-				}
-				
-				contents.setLines(limbo);
-				contents.setSelectedColumnIdx(1);
-				break;
-			default:
-				break;
-			}
-		}
-		
-		pushActiveScreen();
-		updatePendantScreen();
 	}
 	
 	/**
@@ -7806,7 +3534,7 @@ public class RobotRun extends PApplet {
 			progExec(activeRobot.RID, progIdx, instIdx, pExec);
 		}
 	}
-	
+
 	/**
 	 * TODO comment this
 	 * 
@@ -7817,7 +3545,7 @@ public class RobotRun extends PApplet {
 	private void progExec(int rid, int progIdx, int instIdx, ExecType exec) {
 		progExecState.setExec(rid, exec, progIdx, instIdx);
 	}
-
+	
 	/**
 	 * TODO comment this
 	 */
@@ -7846,21 +3574,13 @@ public class RobotRun extends PApplet {
 		setActiveProgIdx(-1);
 		setActiveInstIdx(-1);
 	}
-	
+
 	/**
 	 * Pushes the current state of the screen, contents, and options fields
 	 * onto the screen state stack.
 	 */
 	private void pushActiveScreen() {
-		if(curScreen != null) {
-			pushScreen(curScreen.mode, curScreen.getContentIdx(), curScreen.getContentColIdx(),
-					curScreen.getContentStart(), curScreen.getOptionIdx(),
-					curScreen.getOptionStart());
-		} else {
-			pushScreen(mode, contents.getLineIdx(), contents.getColumnIdx(),
-					contents.getRenderStart(), options.getLineIdx(),
-					options.getRenderStart());
-		}
+		pushScreen(curScreen);
 	}
 
 	/**
@@ -8087,7 +3807,7 @@ public class RobotRun extends PApplet {
 					500f, Fields.BLACK);
 		}
 	}
-
+	
 	/**
 	 * TODO comment this
 	 * 
@@ -8096,9 +3816,9 @@ public class RobotRun extends PApplet {
 	private void renderTeachPoints(Frame frame) {
 		int size = 3;
 
-		if (mode == ScreenMode.TEACH_6PT && teachFrame instanceof ToolFrame) {
+		if (curScreen instanceof ScreenTeach6Pt && teachFrame instanceof ToolFrame) {
 			size = 6;
-		} else if (mode == ScreenMode.TEACH_4PT && teachFrame instanceof UserFrame) {
+		} else if (curScreen instanceof ScreenTeach4Pt && teachFrame instanceof UserFrame) {
 			size = 4;
 		}
 
@@ -8349,7 +4069,7 @@ public class RobotRun extends PApplet {
 	 */
 	private boolean UIKeyboardUse() {
 		
-		if (UI.isPendantActive() && mode.getType() == ScreenType.TYPE_TEXT_ENTRY) {
+		if (UI.isPendantActive() && curScreen instanceof ST_ScreenTextEntry) {
 			return true;
 			
 		} else if (UI.getMenu() == WindowTab.CREATE || UI.getMenu() == WindowTab.EDIT) {
@@ -8358,7 +4078,7 @@ public class RobotRun extends PApplet {
 		
 		return false;
 	}
-	
+
 	private void updateCurIdx() {
 		if (progExecState.getState() == ExecState.EXEC_MINST &&
 				!activeRobot.inMotion()) {
@@ -8401,7 +4121,7 @@ public class RobotRun extends PApplet {
 							if (r.RID != activeRobot.RID) {
 								// Update the active robot
 								activeRobot = ROBOTS.get(progExecState.getRID());
-								contents.setSelectedColumnIdx(0);
+								curScreen.getContents().setSelectedColumnIdx(0);
 							}
 							
 							progExecState.setCurIdx( progExecState.getNextIdx() );
@@ -8424,7 +4144,7 @@ public class RobotRun extends PApplet {
 		}
 		
 		// Update the display
-		contents.setSelectedLineIdx( getInstrLine(getActiveInstIdx()) );
+		curScreen.getContents().setSelectedLineIdx(getInstrLine(getActiveInstIdx()) );
 		updatePendantScreen();
 	}
 
@@ -8436,7 +4156,7 @@ public class RobotRun extends PApplet {
 	 * instruction.
 	 */
 	private void updateInstList() {
-		if (mode == ScreenMode.NAV_PROG_INSTR) {
+		if (curScreen instanceof ScreenNavProgInstructions) {
 			Program prog = getActiveProg();
 			Point robotPos = activeRobot.getToolTipNative();
 			boolean updatedLines = false;

@@ -2,15 +2,40 @@ package screen.edit_point;
 
 import core.RobotRun;
 import enums.ScreenMode;
+import geom.Point;
+import geom.RQuaternion;
+import global.RMath;
+import processing.core.PVector;
 import screen.Screen;
 import screen.ScreenState;
 import ui.DisplayLine;
 
 public abstract class ST_ScreenPointEntry extends Screen {
 	static final int NUM_ENTRY_LEN = 9;
+	protected StringBuilder[] workingText;
+	protected String[] prefixes;
 
 	public ST_ScreenPointEntry(ScreenMode m, RobotRun r) {
 		super(m, r);
+		workingText = new StringBuilder[6];
+		prefixes = new String[6];
+		loadWorkingText();
+	}
+	
+	@Override
+	protected void loadContents() {
+		String[] line;
+
+		for (int idx = 0; idx < workingText.length; idx += 1) {
+			line = new String[workingText[idx].length() + 1];
+			line[0] = prefixes[idx];
+			// Give each character in the value String it own column
+			for (int sdx = 1; sdx < line.length; sdx += 1) {
+				line[sdx] = Character.toString(workingText[idx].charAt(sdx - 1));
+			}
+
+			contents.addLine(line);
+		}
 	}
 	
 	@Override
@@ -27,24 +52,80 @@ public abstract class ST_ScreenPointEntry extends Screen {
 	
 	@Override
 	protected void loadVars(ScreenState s) {
-		setScreenIndices(0, 1, 0, -1, -1);
+		setScreenIndices(0, 1, 0, -1, 0);
+	}
+	
+	protected abstract void loadWorkingText();
+	
+	protected Point parsePosFromContents(boolean isCartesian) {
+		// Obtain point inputs from UI display text
+		float[] inputs = new float[6];
+
+		try {
+			for (int idx = 0; idx < inputs.length; ++idx) {
+				DisplayLine value = contents.get(idx);
+				String inputStr = new String();
+				int sdx;
+
+				/*
+				 * Combine all columns related to the value, ignoring the prefix
+				 * and last column
+				 */
+				for (sdx = 1; sdx < (value.size() - 1); ++sdx) {
+					inputStr += value.get(sdx);
+				}
+
+				// Ignore any trailing blank spaces
+				if (!value.get(sdx).equals("\0")) {
+					inputStr += value.get(sdx);
+				}
+
+				inputs[idx] = Float.parseFloat(inputStr);
+				// Bring the input values with the range [-9999, 9999]
+				inputs[idx] = RMath.clamp(inputs[idx], -9999f, 9999f);
+			}
+
+			if (isCartesian) {
+				PVector position = RMath.vFromWorld(new PVector(inputs[0], inputs[1], inputs[2]));
+				PVector wpr = new PVector(inputs[3], inputs[4], inputs[5]);
+				// Convert the angles from degrees to radians, then convert from
+				// World to Native frame, and finally convert to a quaternion
+				RQuaternion orientation = RMath.wEulerToNQuat(wpr);
+
+				// Use default the Robot's joint angles for computing inverse
+				// kinematics
+				float[] defJointAngles = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
+				float[] jointAngles = RMath.inverseKinematics(robotRun.getActiveRobot(), defJointAngles, position,
+						orientation);
+				
+				if (jointAngles == null) {
+					// Inverse kinematics failed
+					return new Point(position, orientation, defJointAngles);
+				}
+				
+				return new Point(position, orientation, jointAngles);
+			}
+			
+			// Bring angles within range: (0, TWO_PI)
+			for (int idx = 0; idx < inputs.length; ++idx) {
+				inputs[idx] = RMath.mod2PI(inputs[idx] * RMath.DEG_TO_RAD);
+			}
+			
+			return robotRun.getActiveRobot().getToolTipNative(inputs);
+		} catch (NumberFormatException NFEx) {
+			// Invalid input
+			System.err.println("Values must be real numbers!");
+			return null;
+		}
 	}
 
-	public void actionKeyPressed(char key) {
+	@Override
+	public void actionKeyPress(char key) {
 		if ((key >= '0' && key <= '9') || key == '-' || key == '.') {
-			DisplayLine entry = contents.getCurrentItem();
-			int idx = contents.getColumnIdx();
-			
-			if (entry.get(idx) == "\0") {
-				entry.set(idx, Character.toString(key));
-				actionRt();
-				
-			// Include prefix in length	
-			} else if (entry.size() < (NUM_ENTRY_LEN + 1)) {
-				entry.add(idx, Character.toString(key));
-				actionRt();
-			}
+			workingText[contents.getLineIdx()].insert(contents.getColumnIdx() - 1, key);
 		}
+		
+		robotRun.updatePendantScreen();
 	}
 	
 	@Override
@@ -59,7 +140,9 @@ public abstract class ST_ScreenPointEntry extends Screen {
 
 	@Override
 	public void actionLt() {
-		contents.moveLeft();
+		if(contents.getColumnIdx() > 1) {
+			contents.moveLeft();
+		}
 	}
 
 	@Override
@@ -85,6 +168,7 @@ public abstract class ST_ScreenPointEntry extends Screen {
 		}
 	}
 	
+	@Override
 	public void actionBkspc() {
 		DisplayLine entry = contents.getCurrentItem();
 		int idx = contents.getColumnIdx();

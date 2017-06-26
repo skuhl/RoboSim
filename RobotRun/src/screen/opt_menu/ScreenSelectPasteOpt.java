@@ -3,7 +3,7 @@ package screen.opt_menu;
 import core.RobotRun;
 import enums.ScreenMode;
 import global.Fields;
-import screen.ScreenState;
+import screen.Screen;
 
 public class ScreenSelectPasteOpt extends ST_ScreenOptionsMenu {
 
@@ -53,15 +53,15 @@ public class ScreenSelectPasteOpt extends ST_ScreenOptionsMenu {
 				break;
 		}
 				
-		ScreenState prev = null;
-		while (!robotRun.screenStates.isEmpty()) {
-			prev = robotRun.screenStates.peek();
+		Screen prev = null;
+		while (!robotRun.screenStack.isEmpty()) {
+			prev = robotRun.screenStack.peek();
 			
 			if (prev.mode == ScreenMode.NAV_INSTR_MENU) {
 				break;
 			}
 			
-			robotRun.screenStates.pop();
+			robotRun.screenStack.pop();
 		}
 		
 		robotRun.lastScreen();

@@ -43,7 +43,7 @@ public class ScreenSetSelectArgValue extends ST_ScreenNumEntry {
 			//TODO display error to user
 		}
 
-		robotRun.getScreenStates().pop();
+		robotRun.getScreenStack().pop();
 		robotRun.lastScreen();
 	}
 }

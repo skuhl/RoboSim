@@ -2,7 +2,6 @@ package screen.edit_point;
 
 import core.RobotRun;
 import enums.ScreenMode;
-import frame.Frame;
 import frame.UserFrame;
 import ui.DisplayLine;
 
@@ -18,18 +17,23 @@ public class ScreenDirectEntryUser extends ST_ScreenPointEntry {
 	}
 	
 	@Override
-	protected void loadContents() {
-		Frame user = robotRun.getActiveRobot().getUserFrame(robotRun.curFrameIdx);
-		contents.setLines(robotRun.loadFrameDirectEntry(user));
-	}
-	
-	@Override
 	protected void loadLabels() {
 		labels[0] = "";
 		labels[1] = "[Method]";
 		labels[2] = "";
 		labels[3] = "";
 		labels[4] = "";
+	}
+	
+	@Override
+	protected void loadWorkingText() {
+		UserFrame user = robotRun.getActiveRobot().getUserFrame(robotRun.curFrameIdx);
+		String[][] entries = user.directEntryStringArray();
+		
+		for(int i = 0; i < entries.length; i += 1) {
+			prefixes[i] = entries[i][0];
+			workingText[i] = new StringBuilder(entries[i][1]);
+		}
 	}
 	
 	@Override
@@ -71,18 +75,11 @@ public class ScreenDirectEntryUser extends ST_ScreenPointEntry {
 			}
 
 			robotRun.createFrameDirectEntry(robotRun.teachFrame, inputs);
-			
+			robotRun.nextScreen(ScreenMode.UFRAME_DETAIL);
 		} catch (NumberFormatException NFEx) {
 			// Invalid number
 			System.err.println("Entries must be real numbers!");
 			return;
-		}
-
-		if (robotRun.teachFrame instanceof UserFrame) {
-			robotRun.nextScreen(ScreenMode.UFRAME_DETAIL);
-			
-		} else {
-			robotRun.nextScreen(ScreenMode.TFRAME_DETAIL);
 		}
 	}
 	

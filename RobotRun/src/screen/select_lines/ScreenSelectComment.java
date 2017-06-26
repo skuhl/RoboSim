@@ -33,7 +33,7 @@ public class ScreenSelectComment extends ST_ScreenLineSelect {
 	
 	@Override
 	public void actionF4() {
-		robotRun.getScreenStates().pop();
+		robotRun.getScreenStack().pop();
 		robotRun.updateInstructions();
 	}
 }

@@ -19,9 +19,9 @@ public class ScreenEditProgramPos extends ST_ScreenPointEntry {
 	protected String loadHeader() {
 		return String.format("EDIT %s POSITION", robotRun.getActiveProg().getName());
 	}
-
+	
 	@Override
-	protected void loadContents() {
+	protected void loadWorkingText() {
 		Program prog = robotRun.getActiveProg();
 		PosMotionInst pMInst = (PosMotionInst)robotRun.getActiveInstruction();
 		Point pt = prog.getPosition(pMInst.getPosIdx());
@@ -31,9 +31,22 @@ public class ScreenEditProgramPos extends ST_ScreenPointEntry {
 			pt = new Point();
 			prog.setPosition(pMInst.getPosIdx(), pt);
 		}
-		
+				
 		boolean isCartesian = pMInst.getMotionType() != Fields.MTYPE_JOINT;
-		contents.setLines(robotRun.loadPosition(pt, isCartesian));
+		String[][] entries;
+		
+		if (isCartesian) {
+			// List Cartesian values
+			entries = pt.toCartesianStringArray();	
+		} else {
+			// List joint angles
+			entries = pt.toJointStringArray();
+		}
+		
+		for(int i = 0; i < entries.length; i += 1) {
+			prefixes[i] = entries[i][0];
+			workingText[i] = new StringBuilder(entries[i][1]);
+		}
 	}
 	
 	@Override
@@ -41,7 +54,7 @@ public class ScreenEditProgramPos extends ST_ScreenPointEntry {
 		RoboticArm r = robotRun.getActiveRobot();
 		PosMotionInst pMInst = (PosMotionInst) r.getInstToEdit(robotRun.getActiveProg(), 
 				robotRun.getActiveInstIdx());
-		Point pt = robotRun.parsePosFromContents(pMInst.getMotionType() != Fields.MTYPE_JOINT);
+		Point pt = parsePosFromContents(pMInst.getMotionType() != Fields.MTYPE_JOINT);
 
 		if (pt != null) {
 			// Update the position of the active motion instruction

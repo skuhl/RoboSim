@@ -99,7 +99,13 @@ public class ScreenNavPosRegs extends ST_ScreenListContents {
 			robotRun.switchScreen(ScreenMode.NAV_DREGS);
 		} else {
 			// Switch to Data Registers
-			robotRun.nextScreen(ScreenMode.SWAP_PT_TYPE);
+			int itemIdx = contents.getItemIdx();
+			if (itemIdx >= 0 && itemIdx < Fields.DPREG_NUM) {
+				// Set the position type of the selected position register
+				PositionRegister toEdit = robotRun.getActiveRobot().getPReg(itemIdx);
+				toEdit.isCartesian = !toEdit.isCartesian;
+				DataManagement.saveRobotData(robotRun.getActiveRobot(), 3);
+			}
 		}
 	}
 	

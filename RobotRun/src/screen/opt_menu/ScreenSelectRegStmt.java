@@ -5,7 +5,6 @@ import enums.ScreenMode;
 import regs.DataRegister;
 import regs.IORegister;
 import regs.PositionRegister;
-import screen.ScreenState;
 
 public class ScreenSelectRegStmt extends ST_ScreenOptionsMenu {
 
@@ -28,8 +27,8 @@ public class ScreenSelectRegStmt extends ST_ScreenOptionsMenu {
 
 	@Override
 	public void actionEntr() {
-		robotRun.screenStates.pop();
-		robotRun.screenStates.pop();
+		robotRun.screenStack.pop();
+		robotRun.screenStack.pop();
 
 		if (options.getLineIdx() == 0) {
 			robotRun.newRegisterStatement(new DataRegister());
@@ -39,13 +38,10 @@ public class ScreenSelectRegStmt extends ST_ScreenOptionsMenu {
 			robotRun.newRegisterStatement(new PositionRegister());
 		} else {
 			robotRun.newRegisterStatement(new PositionRegister(), 0);
-			ScreenState instEdit = robotRun.screenStates.peek();
-			robotRun.pushScreen(ScreenMode.SET_REG_EXPR_IDX2, instEdit.conLnIdx,
-					instEdit.conColIdx, instEdit.conRenIdx, 0,
-					0);
+			robotRun.nextScreen(ScreenMode.SET_REG_EXPR_IDX2);
 		}
 
-		robotRun.loadScreen(ScreenMode.SET_REG_EXPR_IDX1);
+		robotRun.nextScreen(ScreenMode.SET_REG_EXPR_IDX1);
 	}
 
 }

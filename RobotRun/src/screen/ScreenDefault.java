@@ -39,6 +39,9 @@ public class ScreenDefault extends Screen {
 	}
 
 	@Override
+	public void actionKeyPress(char key) {}
+	
+	@Override
 	public void actionUp() {}
 
 	@Override
@@ -52,6 +55,9 @@ public class ScreenDefault extends Screen {
 	
 	@Override
 	public void actionEntr() {}
+	
+	@Override
+	public void actionBkspc() {}
 
 	@Override
 	public void actionF1() {}

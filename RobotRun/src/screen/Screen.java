@@ -73,7 +73,6 @@ import screen.opt_menu.ScreenSetCallProg;
 import screen.opt_menu.ScreenSetDefaultTooltip;
 import screen.opt_menu.ScreenSetMacroBinding;
 import screen.opt_menu.ScreenSetMacroType;
-import screen.opt_menu.ScreenSwapPointType;
 import screen.opt_menu.ScreenToolFrameDetail;
 import screen.opt_menu.ScreenUserFrameDetail;
 import screen.select_lines.ScreenSelectComment;
@@ -178,7 +177,6 @@ public abstract class Screen {
 		case SET_DEF_TOOLTIP: return new ScreenSetDefaultTooltip(r);
 		case SET_MACRO_BINDING: return new ScreenSetMacroBinding(r);
 		case SET_MACRO_TYPE: return new ScreenSetMacroType(r);
-		case SWAP_PT_TYPE: return new ScreenSwapPointType(r);
 		case TFRAME_DETAIL: return new ScreenToolFrameDetail(r);
 		case UFRAME_DETAIL: return new ScreenUserFrameDetail(r);
 		
@@ -255,24 +253,18 @@ public abstract class Screen {
 	}
 	
 	public void updateScreen() {
-		ScreenState s = new ScreenState(mode, 
-				contents.getLineIdx(), 
-				contents.getColumnIdx(), 
-				contents.getRenderStart(), 
-				options.getLineIdx(), 
-				options.getRenderStart());
-		
-		updateScreen(s);
-	}
-	
-	public void updateScreen(ScreenState s) {
 		contents.clear();
 		options.clear();
 		
 		loadContents();
 		loadOptions();
 		loadLabels();
+	}
+	
+	public void updateScreen(ScreenState s) {
+		updateScreen();
 		loadVars(s);
+		
 		printScreenInfo();
 	}
 	
@@ -288,6 +280,13 @@ public abstract class Screen {
 
 	public int getOptionIdx() { return options.getLineIdx(); }
 	public int getOptionStart() { return options.getRenderStart(); }
+	
+	public ScreenState getScreenState() {
+		ScreenState s = new ScreenState(mode, contents.getLineIdx(), contents.getColumnIdx(),
+				contents.getRenderStart(), options.getLineIdx(), options.getRenderStart());
+		
+		return s;
+	}
 		
 	//Loads given set of screen state variables 
 	public void setScreenIndices(int contLine, int col, int contRS, int optLine, int optRS) {
@@ -315,11 +314,13 @@ public abstract class Screen {
 	protected abstract void loadVars(ScreenState s);
 		
 	//Button actions
+	public abstract void actionKeyPress(char key);
 	public abstract void actionUp();
 	public abstract void actionDn();
 	public abstract void actionLt();
 	public abstract void actionRt();
 	public abstract void actionEntr();
+	public abstract void actionBkspc();
 	public abstract void actionF1();
 	public abstract void actionF2();
 	public abstract void actionF3();
