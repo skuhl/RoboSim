@@ -1,8 +1,8 @@
 package screen.instr_edit;
 
 import core.RobotRun;
-import enums.ScreenMode;
 import global.Fields;
+import screen.ScreenMode;
 
 public class ScreenSetFrameInstrType extends ST_ScreenInstructionEdit {
 	

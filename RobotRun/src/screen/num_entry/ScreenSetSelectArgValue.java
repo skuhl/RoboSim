@@ -1,12 +1,12 @@
 package screen.num_entry;
 
 import core.RobotRun;
-import enums.ScreenMode;
 import expression.Operand;
 import expression.OperandDReg;
 import expression.OperandFloat;
 import programming.SelectStatement;
 import robot.RoboticArm;
+import screen.ScreenMode;
 
 public class ScreenSetSelectArgValue extends ST_ScreenNumEntry {
 

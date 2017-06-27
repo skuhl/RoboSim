@@ -1,8 +1,8 @@
 package screen.cnfrm_cncl;
 
 import core.RobotRun;
-import enums.ScreenMode;
 import robot.RoboticArm;
+import screen.ScreenMode;
 
 public class ScreenConfirmProgramDelete extends ST_ScreenConfirmCancel {
 

@@ -1,8 +1,8 @@
 package screen.opt_menu;
 
 import core.RobotRun;
-import enums.ScreenMode;
 import robot.RoboticArm;
+import screen.ScreenMode;
 
 public class ScreenSelectInstrInsert extends ST_ScreenOptionsMenu {
 

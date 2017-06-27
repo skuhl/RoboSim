@@ -1,9 +1,9 @@
 package screen.select_lines;
 
 import core.RobotRun;
-import enums.ScreenMode;
 import programming.Program;
 import robot.RoboticArm;
+import screen.ScreenMode;
 
 public class ScreenSelectInstrDelete extends ST_ScreenLineSelect {
 

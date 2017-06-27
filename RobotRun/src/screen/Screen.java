@@ -1,7 +1,6 @@
 package screen;
 
 import core.RobotRun;
-import enums.ScreenMode;
 import screen.content_disp.ScreenNavMainMenu;
 import screen.cnfrm_cncl.ScreenConfirmProgramDelete;
 import screen.cnfrm_cncl.ScreenConfirmRenumber;

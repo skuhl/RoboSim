@@ -1,8 +1,8 @@
 package screen.select_lines;
 
 import core.RobotRun;
-import enums.ScreenMode;
 import robot.RoboticArm;
+import screen.ScreenMode;
 
 public class ScreenSelectComment extends ST_ScreenLineSelect {
 

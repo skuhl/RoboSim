@@ -1,10 +1,10 @@
 package screen.content_disp;
 
 import core.RobotRun;
-import enums.ScreenMode;
 import global.Fields;
 import regs.IORegister;
 import robot.RoboticArm;
+import screen.ScreenMode;
 
 public class ScreenNavIORegs extends ST_ScreenListContents {
 

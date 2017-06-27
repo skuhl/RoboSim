@@ -1,10 +1,10 @@
 package screen.instr_edit;
 
 import core.RobotRun;
-import enums.ScreenMode;
 import global.Fields;
 import programming.IOInstruction;
 import robot.RoboticArm;
+import screen.ScreenMode;
 
 public class ScreenSetIOInstrState extends ST_ScreenInstructionEdit {
 

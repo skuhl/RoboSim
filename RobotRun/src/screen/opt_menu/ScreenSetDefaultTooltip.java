@@ -2,9 +2,9 @@ package screen.opt_menu;
 
 import core.RobotRun;
 import enums.CoordFrame;
-import enums.ScreenMode;
 import global.DataManagement;
 import robot.RoboticArm;
+import screen.ScreenMode;
 
 public class ScreenSetDefaultTooltip extends ST_ScreenOptionsMenu {
 

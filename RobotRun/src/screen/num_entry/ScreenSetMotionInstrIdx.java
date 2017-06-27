@@ -2,11 +2,11 @@ package screen.num_entry;
 
 import core.RobotRun;
 import core.Scenario;
-import enums.ScreenMode;
 import global.Fields;
 import programming.CamMoveToObject;
 import programming.MotionInstruction;
 import robot.RoboticArm;
+import screen.ScreenMode;
 
 public class ScreenSetMotionInstrIdx extends ST_ScreenNumEntry {
 

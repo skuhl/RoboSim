@@ -1,9 +1,9 @@
 package screen.num_entry;
 
 import core.RobotRun;
-import enums.ScreenMode;
 import global.RMath;
 import programming.Program;
+import screen.ScreenMode;
 
 public class ScreenJumpToLine extends ST_ScreenNumEntry {
 

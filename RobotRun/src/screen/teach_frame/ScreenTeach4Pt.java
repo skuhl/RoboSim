@@ -4,8 +4,8 @@ import java.util.ArrayList;
 
 import core.RobotRun;
 import enums.CoordFrame;
-import enums.ScreenMode;
 import robot.RoboticArm;
+import screen.ScreenMode;
 import ui.DisplayLine;
 
 public class ScreenTeach4Pt extends ST_ScreenTeachPoints {

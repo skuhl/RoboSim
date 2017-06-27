@@ -1,9 +1,9 @@
 package screen.num_entry;
 
 import core.RobotRun;
-import enums.ScreenMode;
 import expression.OperandPRegIdx;
 import robot.RoboticArm;
+import screen.ScreenMode;
 
 public class ScreenInputPosRegSubIdx extends ST_ScreenNumEntry {
 

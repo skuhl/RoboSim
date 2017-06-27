@@ -1,9 +1,9 @@
 package screen.instr_edit;
 
 import core.RobotRun;
-import enums.ScreenMode;
 import expression.OperandBool;
 import robot.RoboticArm;
+import screen.ScreenMode;
 
 public class ScreenSetBoolConst extends ST_ScreenInstructionEdit {
 

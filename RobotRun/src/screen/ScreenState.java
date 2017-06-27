@@ -1,7 +1,5 @@
 package screen;
 
-import enums.ScreenMode;
-
 /**
  * A save state for previous pendant screens.
  * 

@@ -1,11 +1,11 @@
 package screen.instr_edit;
 
 import core.RobotRun;
-import enums.ScreenMode;
 import expression.AtomicExpression;
 import expression.Expression;
 import expression.Operator;
 import programming.IfStatement;
+import screen.ScreenMode;
 
 public class ScreenSetExpressionOp extends ST_ScreenInstructionEdit {
 

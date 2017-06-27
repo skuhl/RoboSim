@@ -2,10 +2,10 @@ package screen.instr_edit;
 
 import core.RobotRun;
 import core.Scenario;
-import enums.ScreenMode;
 import geom.WorldObject;
 import programming.CamMoveToObject;
 import robot.RoboticArm;
+import screen.ScreenMode;
 
 public class ScreenSetMotionInstrObj extends ST_ScreenInstructionEdit {
 

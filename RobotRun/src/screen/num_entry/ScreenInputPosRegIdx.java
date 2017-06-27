@@ -1,10 +1,10 @@
 package screen.num_entry;
 
 import core.RobotRun;
-import enums.ScreenMode;
 import expression.OperandPReg;
 import expression.OperandPRegIdx;
 import robot.RoboticArm;
+import screen.ScreenMode;
 
 public class ScreenInputPosRegIdx extends ST_ScreenNumEntry {
 
