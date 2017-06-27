@@ -201,7 +201,9 @@ public class Expression extends AtomicExpression {
 	}
 
 	public Operand<?> setOperand(int idx, Operand<?> o) {
-		if(elementList.get(idx) instanceof Operand<?>) {
+		if(idx >= 0 && idx < elementList.size() &&
+				elementList.get(idx) instanceof Operand<?>) {
+			
 			elementList.set(idx, o);
 			return (Operand<?>)elementList.get(idx);
 		}

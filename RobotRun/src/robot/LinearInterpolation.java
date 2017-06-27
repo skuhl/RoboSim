@@ -375,7 +375,6 @@ public class LinearInterpolation extends LinearMotion {
 	}
 	
 	private void reset(float speed) {
-		motionFault = false;
 		interpolatePts.clear();
 		this.distBtwPts = speed / 60f;
 		this.speed = speed;

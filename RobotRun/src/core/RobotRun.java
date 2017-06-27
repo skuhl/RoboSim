@@ -66,6 +66,8 @@ import screen.Screen;
 import screen.ScreenMode;
 import screen.content_disp.ScreenNavProgInstructions;
 import screen.content_disp.ScreenNavPrograms;
+import screen.edit_point.ST_ScreenPointEntry;
+import screen.num_entry.ST_ScreenNumEntry;
 import screen.teach_frame.ST_ScreenTeachPoints;
 import screen.teach_frame.ScreenTeach4Pt;
 import screen.teach_frame.ScreenTeach6Pt;
@@ -1471,7 +1473,7 @@ public class RobotRun extends PApplet {
 	public void editExpression(Expression expr, int selectIdx) {
 		int[] elements = expr.mapToEdit();
 		
-		if (selectIdx >= 0 && selectIdx < elements.length) {
+		try {
 			opEdit = expr;
 			ExpressionElement e = expr.get(elements[selectIdx]);
 	
@@ -1490,6 +1492,9 @@ public class RobotRun extends PApplet {
 				editIdx = elements[selectIdx];
 				nextScreen(ScreenMode.SET_EXPR_OP);
 			}
+			
+		} catch (ArrayIndexOutOfBoundsException AIOOBEx) {
+			System.err.printf("Invalid expression index: %d!\n", selectIdx);
 		}
 	}
 
@@ -1841,18 +1846,45 @@ public class RobotRun extends PApplet {
 			updatePendantScreen();
 			
 			// Pendant button shortcuts
-			switch(keyCode) {
-			case KeyEvent.VK_1:				button_F1(); break;
-			case KeyEvent.VK_2:				button_F2(); break;
-			case KeyEvent.VK_3:				button_F3(); break;
-			case KeyEvent.VK_4:				button_F4(); break;
-			case KeyEvent.VK_5:				button_F5(); break;
-			case KeyEvent.VK_ENTER:			button_enter(); break;
-			case KeyEvent.VK_BACK_SPACE:	button_bkspc(); break;
-			case KeyEvent.VK_DOWN:			button_arrowDn(); break;
-			case KeyEvent.VK_LEFT:			button_arrowLt(); break;
-			case KeyEvent.VK_RIGHT:			button_arrowRt(); break;
-			case KeyEvent.VK_UP:			button_arrowUp(); break;
+			if (!(curScreen instanceof ST_ScreenTextEntry) &&
+					!(curScreen instanceof ST_ScreenNumEntry) &&
+					!(curScreen instanceof ST_ScreenPointEntry)) {
+				// Disable function shortcuts when entering in text or number input
+				if (keyCode == KeyEvent.VK_1) {
+					f1();
+					
+				} else if (keyCode == KeyEvent.VK_2) {
+					f2();
+					
+				} else if (keyCode == KeyEvent.VK_3) {
+					f3();
+					
+				} else if (keyCode == KeyEvent.VK_4) {
+					f4();
+					
+				} else if (keyCode == KeyEvent.VK_5) {
+					f5();
+				}
+				
+			}
+			
+			if (keyCode == KeyEvent.VK_ENTER) {
+				enter();
+				
+			} else if (keyCode == KeyEvent.VK_BACK_SPACE) {
+				bkspc();
+				
+			} else if (keyCode == KeyEvent.VK_DOWN) {
+				arrow_dn();
+				
+			} else if (keyCode == KeyEvent.VK_LEFT) {
+				arrow_lt();
+				
+			} else if (keyCode == KeyEvent.VK_RIGHT) {
+				arrow_rt();
+				
+			} else if (keyCode == KeyEvent.VK_UP) {
+				arrow_up();
 			}
 		}
 		
@@ -3237,38 +3269,11 @@ public class RobotRun extends PApplet {
 			activeRobot.releaseHeldObject();
 		}
 	}
-	
-	/**
-	 * Updates the index display in the Active Frames menu based on the current
-	 * value of workingText
-	 */
-	public void updateActiveFramesDisplay() {
-		// Attempt to parse the inputed integer value
-		try {
-			int frameIdx = Integer.parseInt(workingText.toString()) - 1;
 
-			if (frameIdx >= -1 && frameIdx < 10) {
-				// Update the appropriate active Frame index
-				if (curScreen.getContentIdx() == 0) {
-					activeRobot.setActiveToolFrame(frameIdx);
-				} else {
-					activeRobot.setActiveUserFrame(frameIdx);
-        }
-			}
-
-		} catch (NumberFormatException NFEx) {
-			// Non-integer value
+	public void UpdateCam() {
+		if (rCamera != null) {
+			UI.updateCameraCurrent();
 		}
-		// Update display
-		if (curScreen.getContentIdx() == 0) {
-			workingText = new StringBuilder(Integer.toString(activeRobot.getActiveToolIdx() + 1));
-
-		} else {
-			workingText = new StringBuilder(Integer.toString(activeRobot.getActiveUserIdx() + 1));
-		}
-
-		curScreen.getContents().getCurrentItem().set(curScreen.getContentIdx(), workingText.toString());
-		updatePendantScreen();
 	}
 
 	/**
@@ -4074,7 +4079,10 @@ public class RobotRun extends PApplet {
 	 */
 	private boolean UIKeyboardUse() {
 		
-		if (UI.isPendantActive() && curScreen instanceof ST_ScreenTextEntry) {
+		if (UI.isPendantActive() && (curScreen instanceof ST_ScreenTextEntry ||
+				curScreen instanceof ST_ScreenPointEntry ||
+				curScreen instanceof ST_ScreenNumEntry)) {
+			
 			return true;
 			
 		} else if (UI.getMenu() == WindowTab.CREATE || UI.getMenu() == WindowTab.EDIT) {
