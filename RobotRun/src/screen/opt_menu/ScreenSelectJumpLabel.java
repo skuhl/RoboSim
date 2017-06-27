@@ -22,7 +22,7 @@ public class ScreenSelectJumpLabel extends ST_ScreenOptionsMenu {
 
 	@Override
 	public void actionEntr() {
-		robotRun.screenStack.pop();
+		robotRun.getScreenStack().pop();
 
 		if (options.getLineIdx() == 0) {
 			robotRun.newLabel();

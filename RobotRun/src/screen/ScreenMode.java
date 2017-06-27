@@ -27,13 +27,9 @@ public enum ScreenMode {
 	SET_REG_EXPR_TYPE(ScreenType.TYPE_INSTRUCT_EDIT),
 	SET_SELECT_STMT_ARG(ScreenType.TYPE_INSTRUCT_EDIT),
 	SET_SELECT_STMT_ACT(ScreenType.TYPE_INSTRUCT_EDIT),
-
-	/*
-	 * Set of screens used to edit expression elements
-	 */
-	SET_BOOL_EXPR_ARG(ScreenType.TYPE_EXPR_EDIT),
-	SET_EXPR_ARG(ScreenType.TYPE_EXPR_EDIT),
-	SET_EXPR_OP(ScreenType.TYPE_EXPR_EDIT),
+	SET_BOOL_EXPR_ARG(ScreenType.TYPE_INSTRUCT_EDIT),
+	SET_EXPR_ARG(ScreenType.TYPE_INSTRUCT_EDIT),
+	SET_EXPR_OP(ScreenType.TYPE_INSTRUCT_EDIT),
 
 	/*
 	 * Screens used to display a several list of contents for the user to
@@ -51,6 +47,7 @@ public enum ScreenMode {
 	NAV_DREGS(ScreenType.TYPE_LIST_CONTENTS),
 	NAV_IOREGS(ScreenType.TYPE_LIST_CONTENTS),
 	SET_MACRO_PROG(ScreenType.TYPE_LIST_CONTENTS),
+	CREATE_MACRO(ScreenType.TYPE_LIST_CONTENTS),
 
 	/*
 	 * Screens used to perform arbitrary line-wise selection on a list of

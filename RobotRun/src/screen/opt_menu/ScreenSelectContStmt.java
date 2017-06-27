@@ -25,15 +25,15 @@ public class ScreenSelectContStmt extends ST_ScreenOptionsMenu {
 	public void actionEntr() {
 		if (options.getLineIdx() == 0) {
 			robotRun.newIfStatement();
-			robotRun.screenStack.pop();
+			robotRun.getScreenStack().pop();
 			robotRun.switchScreen(ScreenMode.SET_EXPR_OP);
 		} else if (options.getLineIdx() == 1) {
 			robotRun.newIfExpression();
-			robotRun.screenStack.pop();
+			robotRun.getScreenStack().pop();
 			robotRun.lastScreen();
 		} else {
 			robotRun.newSelectStatement();
-			robotRun.screenStack.pop();
+			robotRun.getScreenStack().pop();
 			robotRun.lastScreen();
 		}
 	}

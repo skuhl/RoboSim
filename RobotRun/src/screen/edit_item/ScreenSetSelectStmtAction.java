@@ -1,4 +1,4 @@
-package screen.instr_edit;
+package screen.edit_item;
 
 import core.RobotRun;
 import programming.CallInstruction;
@@ -7,7 +7,7 @@ import programming.SelectStatement;
 import robot.RoboticArm;
 import screen.ScreenMode;
 
-public class ScreenSetSelectStmtAction extends ST_ScreenInstructionEdit {
+public class ScreenSetSelectStmtAction extends ST_ScreenEditItem {
 
 	public ScreenSetSelectStmtAction(RobotRun r) {
 		super(ScreenMode.SET_SELECT_STMT_ACT, r);

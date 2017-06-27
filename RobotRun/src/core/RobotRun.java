@@ -126,10 +126,9 @@ public class RobotRun extends PApplet {
 	private KeyCodeMap keyCodeMap;
 	private Screen curScreen;
 
-	public Stack<Screen> screenStack;
-	public ArrayList<Macro> macros = new ArrayList<>();
-	public Macro[] macroKeyBinds = new Macro[7];
-	public Macro macroEdit;
+	private Stack<Screen> screenStack;
+	private ArrayList<Macro> macros = new ArrayList<>();
+	private Macro[] macroKeyBinds = new Macro[7];
 
 	private boolean shift = false; // Is shift button pressed or not?
 	private boolean step = false; // Is step button pressed or not?
@@ -2805,6 +2804,8 @@ public class RobotRun extends PApplet {
 		curScreen = Screen.getScreen(nextScreen, this);
 		System.out.println("Loaded screen " + nextScreen.name());
 		curScreen.updateScreen(screenStack.peek().getScreenState());
+		System.out.println(screenStack.peek().getScreenState().mode.name());
+		System.out.println(screenStack.peek().getScreenState().conLnIdx);
 		pushActiveScreen();
 		updatePendantScreen();
 	}
@@ -3147,16 +3148,17 @@ public class RobotRun extends PApplet {
 			
 			DataManagement.loadState(this);
 			
+			setManager(new WGUI(this, buttonImages));
+			
 			screenStack = new Stack<>();
 			curScreen = Screen.getScreen(ScreenMode.DEFAULT, this);
 			pushScreen(curScreen);
+			updatePendantScreen();
 			
 			progExecState = new ProgExecution();
 			progCallStack = new Stack<>();
 			
 			tracePts = new LinkedList<PVector>();
-			
-			setManager(new WGUI(this, buttonImages));
 			
 			mInstRobotAt = new HashMap<Integer, Boolean>();
 			
@@ -3284,6 +3286,10 @@ public class RobotRun extends PApplet {
 	 */
 	public void updatePendantScreen() {
 		curScreen.updateScreen();
+		curScreen.getHeader();
+		curScreen.getContents();
+		curScreen.getOptions();
+		curScreen.getLabels();
 		UI.renderPendantScreen(curScreen.getHeader(), curScreen.getContents(),
 				curScreen.getOptions(), curScreen.getLabels());
 	}

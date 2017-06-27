@@ -1,13 +1,14 @@
 package screen.content_disp;
 
 import core.RobotRun;
+import programming.Macro;
 import robot.RoboticArm;
 import screen.ScreenMode;
 
-public class ScreenSetMacroProg extends ST_ScreenListContents {
+public class ScreenCreateMacro extends ST_ScreenListContents {
 
-	public ScreenSetMacroProg(RobotRun r) {
-		super(ScreenMode.SET_MACRO_PROG, r);
+	public ScreenCreateMacro(RobotRun r) {
+		super(ScreenMode.CREATE_MACRO, r);
 	}
 
 	@Override
@@ -23,7 +24,8 @@ public class ScreenSetMacroProg extends ST_ScreenListContents {
 
 	@Override
 	public void actionEntr() {
-		int idx = robotRun.getLastScreen().getContentIdx();
-		robotRun.getMacro(idx).setProgram(contents.getLineIdx());
+		Macro m = new Macro(contents.getLineIdx());
+		robotRun.getMacroList().add(m);
+		robotRun.switchScreen(ScreenMode.SET_MACRO_TYPE);
 	}
 }

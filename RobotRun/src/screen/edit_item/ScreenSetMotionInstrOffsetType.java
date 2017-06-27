@@ -1,4 +1,4 @@
-package screen.instr_edit;
+package screen.edit_item;
 
 import core.RobotRun;
 import global.Fields;
@@ -6,7 +6,7 @@ import programming.PosMotionInst;
 import robot.RoboticArm;
 import screen.ScreenMode;
 
-public class ScreenSetMotionInstrOffsetType extends ST_ScreenInstructionEdit {
+public class ScreenSetMotionInstrOffsetType extends ST_ScreenEditItem {
 
 	public ScreenSetMotionInstrOffsetType(RobotRun r) {
 		super(ScreenMode.SET_MINST_OFF_TYPE, r);

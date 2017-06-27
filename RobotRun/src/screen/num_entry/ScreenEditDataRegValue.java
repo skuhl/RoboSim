@@ -34,7 +34,7 @@ public class ScreenEditDataRegValue extends ST_ScreenNumEntry {
 	@Override
 	public void actionEntr() {
 		Float f = null;
-		int itemIdx = contents.getItemIdx();
+		int itemIdx = contents.getCurrentItemIdx();
 		
 		try {
 			// Read inputed Float value

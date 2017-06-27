@@ -15,7 +15,7 @@ public class ScreenCopyPosRegPoint extends ST_ScreenNumEntry {
 
 	@Override
 	protected String loadHeader() {
-		Register reg = robotRun.getActiveRobot().getPReg(contents.getItemIdx());
+		Register reg = robotRun.getActiveRobot().getPReg(contents.getCurrentItemIdx());
 		return String.format("%s: POSITION COPY", reg.getLabel());
 	}
 	
@@ -27,7 +27,7 @@ public class ScreenCopyPosRegPoint extends ST_ScreenNumEntry {
 	
 	@Override
 	protected void loadOptions() {
-		options.addLine(String.format("Move PR[%d]'s point to:", contents.getItemIdx() + 1));
+		options.addLine(String.format("Move PR[%d]'s point to:", contents.getCurrentItemIdx() + 1));
 		options.addLine(String.format("PR[%s]", workingText));
 	}
 
@@ -39,7 +39,7 @@ public class ScreenCopyPosRegPoint extends ST_ScreenNumEntry {
 			// Copy the point of the curent Position register to the
 			// Position register at the specified index
 			regIdx = Integer.parseInt(workingText.toString()) - 1;
-			PositionRegister src = robotRun.getActiveRobot().getPReg(contents.getItemIdx());
+			PositionRegister src = robotRun.getActiveRobot().getPReg(contents.getCurrentItemIdx());
 			PositionRegister dest = robotRun.getActiveRobot().getPReg(regIdx);
 			
 			dest.point = src.point.clone();

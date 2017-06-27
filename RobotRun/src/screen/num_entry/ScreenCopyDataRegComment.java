@@ -14,7 +14,7 @@ public class ScreenCopyDataRegComment extends ST_ScreenNumEntry {
 	
 	@Override
 	protected String loadHeader() {
-		Register reg = robotRun.getActiveRobot().getDReg(contents.getItemIdx());
+		Register reg = robotRun.getActiveRobot().getDReg(contents.getCurrentItemIdx());
 		return String.format("%s: COMMENT COPY", reg.getLabel());
 	}
 	
@@ -26,14 +26,14 @@ public class ScreenCopyDataRegComment extends ST_ScreenNumEntry {
 
 	@Override
 	protected void loadOptions() {
-		options.addLine(String.format("Move R[%d]'s comment to:", contents.getItemIdx() + 1));
+		options.addLine(String.format("Move R[%d]'s comment to:", contents.getCurrentItemIdx() + 1));
 		options.addLine(String.format("R[%s]", workingText));
 	}
 
 	@Override
 	public void actionEntr() {
 		int regIdx = -1;
-		int itemIdx = contents.getItemIdx();
+		int itemIdx = contents.getCurrentItemIdx();
 
 		try {
 			// Copy the comment of the curent Data register to the Data

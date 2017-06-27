@@ -27,21 +27,18 @@ public class ScreenNavMacros extends ST_ScreenListContents {
 		labels[3] = "[Edit]";
 		labels[4] = "";
 	}
-
+	
 	@Override
 	public void actionEntr() {}
 
 	@Override
 	public void actionF1() {
-		robotRun.macroEdit = null;
-		robotRun.nextScreen(ScreenMode.SET_MACRO_PROG);
+		robotRun.nextScreen(ScreenMode.CREATE_MACRO);
 	}
 
 	@Override
 	public void actionF4() {
-		if(robotRun.getMacroList().size() > 0) {
-			robotRun.macroEdit = robotRun.getMacro(contents.getLineIdx());
-			
+		if(robotRun.getMacroList().size() > 0) {			
 			if (contents.getColumnIdx() == 1) {
 				robotRun.nextScreen(ScreenMode.SET_MACRO_PROG);
 			} else if (contents.getColumnIdx() == 2) {

@@ -1,4 +1,4 @@
-package screen.instr_edit;
+package screen.edit_item;
 
 import core.RobotRun;
 import expression.AtomicExpression;
@@ -7,7 +7,7 @@ import expression.Operator;
 import programming.IfStatement;
 import screen.ScreenMode;
 
-public class ScreenSetExpressionOp extends ST_ScreenInstructionEdit {
+public class ScreenSetExpressionOp extends ST_ScreenEditItem {
 
 	public ScreenSetExpressionOp(RobotRun r) {
 		super(ScreenMode.SET_EXPR_OP, r);

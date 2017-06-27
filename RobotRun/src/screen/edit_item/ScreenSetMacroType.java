@@ -1,9 +1,9 @@
-package screen.opt_menu;
+package screen.edit_item;
 
 import core.RobotRun;
 import screen.ScreenMode;
 
-public class ScreenSetMacroType extends ST_ScreenOptionsMenu {
+public class ScreenSetMacroType extends ST_ScreenEditItem {
 
 	public ScreenSetMacroType(RobotRun r) {
 		super(ScreenMode.SET_MACRO_TYPE, r);
@@ -27,12 +27,13 @@ public class ScreenSetMacroType extends ST_ScreenOptionsMenu {
 
 	@Override
 	public void actionEntr() {
+		int idx = robotRun.getLastScreen().getContentIdx();
 		if (options.getLineIdx() == 0) {
-			robotRun.macroEdit.setManual(false);
+			robotRun.getMacro(idx).setManual(false);
 			robotRun.switchScreen(ScreenMode.SET_MACRO_BINDING);
 		} else if (options.getLineIdx() == 1) {
-			robotRun.macroEdit.setManual(true);
-			robotRun.macroEdit.clearNum();
+			robotRun.getMacro(idx).setManual(true);
+			robotRun.getMacro(idx).clearNum();
 			robotRun.lastScreen();
 		}
 	}

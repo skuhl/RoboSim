@@ -31,7 +31,7 @@ public abstract class ST_ScreenConfirmCancel extends Screen {
 	
 	@Override
 	protected void loadVars(ScreenState s) {
-		setScreenIndices(-1, -1, 0, 0, 0);
+		setScreenIndices(0, 0, 0, 0, 0);
 	}
 	
 	@Override

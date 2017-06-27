@@ -54,14 +54,14 @@ public class ScreenSelectPasteOpt extends ST_ScreenOptionsMenu {
 		}
 				
 		Screen prev = null;
-		while (!robotRun.screenStack.isEmpty()) {
-			prev = robotRun.screenStack.peek();
+		while (!robotRun.getScreenStack().isEmpty()) {
+			prev = robotRun.getScreenStack().peek();
 			
 			if (prev.mode == ScreenMode.NAV_INSTR_MENU) {
 				break;
 			}
 			
-			robotRun.screenStack.pop();
+			robotRun.getScreenStack().pop();
 		}
 		
 		robotRun.lastScreen();
