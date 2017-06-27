@@ -29,7 +29,6 @@ public abstract class ST_ScreenLineSelect extends Screen {
 	protected void loadVars(ScreenState s) {
 		setScreenIndices(s.conLnIdx, 0, s.conRenIdx, 0, 0);
 		contents.resetSelection(contents.size());
-		System.out.println(contents.getSelection().length);
 	}
 	
 	@Override
