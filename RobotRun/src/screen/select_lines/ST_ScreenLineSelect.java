@@ -16,10 +16,13 @@ public abstract class ST_ScreenLineSelect extends Screen {
 	 */
 	protected boolean[] lineSelectState;
 	
+	private int lastEnterIdx;
+	
 	public ST_ScreenLineSelect(ScreenMode m, RobotRun r) {
 		super(m, r);
 		
 		lineSelectState = null;
+		lastEnterIdx = -1;
 	}
 	
 	@Override
@@ -109,12 +112,35 @@ public abstract class ST_ScreenLineSelect extends Screen {
 	@Override
 	public void actionEntr() {
 		int lineIdx = robotRun.getActiveInstIdx();
-		// Toggle line select state for the active line
-		if (lineIdx >= 0 && lineIdx < lineSelectState.length) {
-			lineSelectState[lineIdx] = !lineSelectState[lineIdx];
-			//contents.toggleSelect(robotRun.getActiveInstIdx());
-			robotRun.updatePendantScreen();
+		
+		if (robotRun.isShift() && lastEnterIdx != -1 && lastEnterIdx != lineIdx) {
+			/* Toggle all lines between the current line and the last line
+			 * selected, while shift was set */
+			int increment = (lineIdx < lastEnterIdx) ? -1 : 1;
+			int size = robotRun.getActiveProg().getNumOfInst();
+			
+			for (int idx = lastEnterIdx + increment; idx >= 0 && idx < size;
+					idx += increment) {
+					
+				lineSelectState[idx] = !lineSelectState[idx];
+				
+				if (idx == lineIdx) {
+					// Reached current index
+					break;
+				}
+			}
+			
+		} else {
+			// Toggle line select state for the active line
+			if (lineIdx >= 0 && lineIdx < lineSelectState.length) {
+				lineSelectState[lineIdx] = !lineSelectState[lineIdx];
+				//contents.toggleSelect(robotRun.getActiveInstIdx());
+				robotRun.updatePendantScreen();
+			}
 		}
+		
+		// Save a reference to this index
+		lastEnterIdx = lineIdx;
 	}
 	
 	@Override

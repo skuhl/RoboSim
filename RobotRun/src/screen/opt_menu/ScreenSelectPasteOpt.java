@@ -4,6 +4,7 @@ import core.RobotRun;
 import global.Fields;
 import screen.Screen;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenSelectPasteOpt extends ST_ScreenOptionsMenu {
 
@@ -30,6 +31,11 @@ public class ScreenSelectPasteOpt extends ST_ScreenOptionsMenu {
 		options.addLine("5 R Position");
 		options.addLine("6 R Pos ID");
 		options.addLine("7 RM Pos ID");
+	}
+	
+	@Override
+	protected void loadVars(ScreenState s) {
+		setScreenIndices(s.conLnIdx, s.conColIdx, s.conRenIdx, 0, 0);
 	}
 
 	@Override

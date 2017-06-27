@@ -76,7 +76,7 @@ public abstract class ST_ScreenTextEntry extends Screen {
 
 	@Override
 	protected void loadVars(ScreenState s) {
-		setScreenIndices(1, 0, 0, 0, 0);
+		setScreenIndices(1, 0, 0, -1, 0);
 	}
 	
 	@Override

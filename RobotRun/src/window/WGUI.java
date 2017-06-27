@@ -2242,7 +2242,7 @@ public class WGUI implements ControlListener {
 			//draw each element in current line
 			for(int j = 0; j < temp.size(); j += 1) {
 				if(i == menu.getLineIdx()) {
-					if(j == menu.getColumnIdx() && lineSelectStates != null){
+					if(j == menu.getColumnIdx() && lineSelectStates == null){
 						//highlight selected row + column
 						txt = Fields.UI_LIGHT_C;
 						bg = Fields.UI_DARK_C;          
