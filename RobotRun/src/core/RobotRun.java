@@ -2831,8 +2831,6 @@ public class RobotRun extends PApplet {
 		curScreen = Screen.getScreen(nextScreen, this);
 		System.out.println("Loaded screen " + nextScreen.name());
 		curScreen.updateScreen(screenStack.peek().getScreenState());
-		System.out.println(screenStack.peek().getScreenState().mode.name());
-		System.out.println(screenStack.peek().getScreenState().conLnIdx);
 		pushActiveScreen();
 		updatePendantScreen();
 	}
@@ -3285,10 +3283,6 @@ public class RobotRun extends PApplet {
 	 */
 	public void updatePendantScreen() {
 		curScreen.updateScreen();
-		curScreen.getHeader();
-		curScreen.getContents();
-		curScreen.getOptions();
-		curScreen.getLabels();
 		UI.renderPendantScreen(curScreen.getHeader(), curScreen.getContents(),
 				curScreen.getOptions(), curScreen.getLabels());
 	}

@@ -26,7 +26,6 @@ public abstract class ST_ScreenListContents extends Screen {
 	@Override
 	protected void loadVars(ScreenState s) {
 		setScreenIndices(0, 0, 0, 0, 0);
-		System.out.println(contents.getColumnIdx());
 	}
 	
 	@Override
@@ -35,13 +34,11 @@ public abstract class ST_ScreenListContents extends Screen {
 	@Override
 	public void actionUp() {
 		contents.moveUp(robotRun.isShift());
-		System.out.println(contents.getColumnIdx());
 	}
 
 	@Override
 	public void actionDn() {
 		contents.moveDown(robotRun.isShift());
-		System.out.println(contents.getColumnIdx());
 	}
 
 	@Override

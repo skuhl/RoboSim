@@ -177,7 +177,7 @@ public class MenuScroll {
 				moveUp(false);
 				columnIdx = (lines.get(lineIdx).size() - 1);
 			}
-		} else {
+		} else if(lines.size() != 0) {
 			columnIdx = (Math.max(0, columnIdx - 1));
 		}
 		
@@ -191,7 +191,7 @@ public class MenuScroll {
 				moveDown(false);
 				columnIdx = (0);
 			}
-		} else {
+		} else if(lines.size() != 0){
 			columnIdx = (Math.min(lines.get(lineIdx).size() - 1, columnIdx + 1));
 		}
 		
