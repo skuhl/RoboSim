@@ -88,17 +88,19 @@ public abstract class ST_ScreenTextEntry extends Screen {
 
 			if (workingText.length() == 0 || columnIdx >= workingText.length()) {
 				workingText.append(key);
+				columnIdx++;
 
-			} else {
+			} else if (workingText.length() < TEXT_ENTRY_LEN) {
 				workingText.insert(columnIdx, key);
+				++columnIdx;
 			}
 			// Edge case of adding a character to an empty text entry
 			if (workingText.length() == 1 && workingText.charAt(0) != '\0') {
 				workingText.append('\0');
-				++columnIdx;
+				columnIdx += 2;
 			}
 
-			contents.setSelectedColumnIdx(Math.min(columnIdx + 1, workingText.length() - 1));
+			contents.setSelectedColumnIdx(Math.min(columnIdx, workingText.length() - 1));
 			robotRun.updatePendantScreen();
 		}
 	}

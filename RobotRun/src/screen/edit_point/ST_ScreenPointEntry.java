@@ -121,17 +121,19 @@ public abstract class ST_ScreenPointEntry extends Screen {
 
 	@Override
 	public void actionKeyPress(char key) {
-		StringBuilder line = workingText[contents.getLineIdx()];
 		int idx = contents.getColumnIdx() - 1;
 		
 		if (idx >= 0 && ((key >= '0' && key <= '9') || key == '-' || key == '.')) {
-			if(line.charAt(idx) != '\0') {
-				line.insert(idx, key);
-			} else {
-				line.setCharAt(idx, key);
-			}
+			StringBuilder line = workingText[contents.getLineIdx()];
 			
-			actionRt();
+			if(line.charAt(idx) == '\0') {
+				line.setCharAt(idx, key);
+				actionRt();
+				
+			} else if (line.length() < 10) {
+				line.insert(idx, key);
+				actionRt();
+			}
 		}
 		
 		robotRun.updatePendantScreen();
@@ -156,21 +158,23 @@ public abstract class ST_ScreenPointEntry extends Screen {
 
 	@Override
 	public void actionRt() {
-		DisplayLine entry = contents.getCurrentItem();
-		int idx = contents.getColumnIdx();
-		int size = entry.size();
+		StringBuilder entry = workingText[contents.getLineIdx()];
+		int idx = contents.getColumnIdx() - 1;
+		int size = entry.length();
 
 		// Delete a digit from the beginning of the number entry
 		if (robotRun.isShift()) {
 			if (size > 2) {
-				entry.remove(idx);
+				entry.deleteCharAt(idx);
 			} else {
 				// Leave at least one space value entry
-				entry.set(idx, "\0");
+				entry.setCharAt(idx, '\0');
 			}
+			
 		} else {
-			if (idx == (entry.size() - 1) && !entry.get(idx).equals("\0") && entry.size() < 10) {
-				entry.add("\0");
+			if (idx == (size - 1) && entry.charAt(idx) != '\0' && size < 10) {
+				entry.append("\0");
+				contents.getCurrentItem().add("\0");
 			}
 
 			contents.moveRight();
@@ -183,7 +187,13 @@ public abstract class ST_ScreenPointEntry extends Screen {
 		int idx = contents.getColumnIdx() - 1;
 
 		if (entry.length() > 1) {
+			
+			if (idx > 0) {
+				contents.setSelectedColumnIdx(idx--);
+			}
+			
 			entry.deleteCharAt(idx);
+			
 		} else {
 			entry.setCharAt(idx, '\0');
 		}

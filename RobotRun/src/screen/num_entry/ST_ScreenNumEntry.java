@@ -11,7 +11,7 @@ public abstract class ST_ScreenNumEntry extends Screen {
 	
 	public ST_ScreenNumEntry(ScreenMode m, RobotRun r) {
 		super(m, r);
-		workingText = new StringBuilder();
+		workingText = new StringBuilder("");
 	}
 	
 	@Override

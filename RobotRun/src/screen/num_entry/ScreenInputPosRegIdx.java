@@ -32,5 +32,7 @@ public class ScreenInputPosRegIdx extends ST_ScreenNumEntry {
 			r.getInstToEdit(robotRun.getActiveProg(), robotRun.getActiveInstIdx());
 			((OperandPRegIdx)robotRun.opEdit).setValue(robotRun.getActiveRobot().getPReg(idx - 1));
 		}
+		
+		robotRun.lastScreen();
 	}
 }
