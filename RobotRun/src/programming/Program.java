@@ -27,7 +27,7 @@ public class Program implements Iterable<Instruction> {
 		LPosReg = new HashMap<>();
 		instructions = new ArrayList<>();
 	}
-
+	
 	public void addInstAtEnd(Instruction i) {
 		instructions.add(i);
 	}

@@ -28,5 +28,7 @@ public class ScreenInputPosRegSubIdx extends ST_ScreenNumEntry {
 			r.getInstToEdit(robotRun.getActiveProg(), robotRun.getActiveInstIdx());
 			((OperandPRegIdx)robotRun.opEdit).setSubIdx(idx - 1);
 		}
+		
+		robotRun.lastScreen();
 	}
 }
