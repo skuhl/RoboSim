@@ -3,7 +3,6 @@ package screen.select_lines;
 import core.RobotRun;
 import programming.Program;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenSelectCutCopy extends ST_ScreenLineSelect {
 
