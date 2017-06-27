@@ -4,6 +4,7 @@ import core.RobotRun;
 import programming.Instruction;
 import programming.Program;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenConfirmInsert extends ST_ScreenNumEntry {
 
@@ -25,6 +26,21 @@ public class ScreenConfirmInsert extends ST_ScreenNumEntry {
 		labels[2] = "";
 		labels[3] = "";
 		labels[4] = "";
+	}
+	
+	@Override
+	protected void loadVars(ScreenState s) {
+		setScreenIndices(s.conLnIdx, 0, s.conRenIdx, -1, 0);
+	}
+	
+	@Override
+	public void actionDn() {
+		contents.moveDown(robotRun.isShift());
+	}
+	
+	@Override
+	public void actionUp() {
+		contents.moveUp(robotRun.isShift());
 	}
 	
 	@Override

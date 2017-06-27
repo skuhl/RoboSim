@@ -37,11 +37,9 @@ public class ScreenNavInstrMenu extends ST_ScreenOptionsMenu {
 			robotRun.nextScreen(ScreenMode.CONFIRM_INSERT);
 			break;
 		case 2: // Delete
-			contents.resetSelection(robotRun.getActiveProg().getNumOfInst());
 			robotRun.nextScreen(ScreenMode.SELECT_INSTR_DELETE);
 			break;
 		case 3: // Cut/Copy
-			contents.resetSelection(robotRun.getActiveProg().getNumOfInst());
 			robotRun.nextScreen(ScreenMode.SELECT_CUT_COPY);
 			break;
 		case 4: // Paste
@@ -54,7 +52,6 @@ public class ScreenNavInstrMenu extends ST_ScreenOptionsMenu {
 			robotRun.nextScreen(ScreenMode.CONFIRM_RENUM);
 			break;
 		case 7: // Comment
-			contents.resetSelection(robotRun.getActiveProg().getNumOfInst());
 			robotRun.nextScreen(ScreenMode.SELECT_COMMENT);
 			break;
 		case 8: // Remark
