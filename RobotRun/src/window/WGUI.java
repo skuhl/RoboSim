@@ -156,7 +156,6 @@ public class WGUI implements ControlListener {
 
 		// Initialize the window groups
 		pendant = addGroup("PENDANT", relPos[0], relPos[1], Fields.PENDANT_WIDTH, Fields.PENDANT_HEIGHT);
-		sharedElements = addGroup("SHARED", relPos[0], relPos[1], windowTabs.getWidth(), 0);
 		createWO = addGroup("CREATEWO", relPos[0], relPos[1], windowTabs.getWidth(), 0);
 		editWO = addGroup("EDITWO", relPos[0], relPos[1], windowTabs.getWidth(), 0);
 		editWOPos = addGroup("EDITWOPOS", editWO, 0, 0, windowTabs.getWidth(), 0);
@@ -164,6 +163,7 @@ public class WGUI implements ControlListener {
 		scenario = addGroup("SCENARIO", relPos[0], relPos[1], windowTabs.getWidth(), 0);
 		camera = addGroup("CAMERA", relPos[0], relPos[1], windowTabs.getWidth(), 0);
 		miscellaneous = addGroup("MISC", relPos[0], relPos[1], windowTabs.getWidth(), 0);
+		sharedElements = addGroup("SHARED", relPos[0], relPos[1], windowTabs.getWidth(), 0);
 
 		// Initialize camera view buttons
 		addButton(WGUI_Buttons.CamViewFr, "F", sButtonWidth, sButtonHeight, Fields.small).hide();

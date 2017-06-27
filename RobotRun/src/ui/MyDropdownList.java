@@ -102,7 +102,7 @@ public class MyDropdownList extends DropdownList implements UIInputElement {
 	@Override
 	public DropdownList setValue(float newValue) {
 		super.setValue(newValue);
-		updateLabel();
+		updateLabel();	
 		return this;
 	}
 	
