@@ -2876,6 +2876,8 @@ public class RobotRun extends PApplet {
 				}
 			}
 			
+		} else if (false) {
+			
 		} else {
 			curScreen.updateScreen(screenStack.peek().getScreenState());
 		}
