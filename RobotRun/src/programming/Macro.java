@@ -14,7 +14,7 @@ public class Macro {
 
 	public void clearNum() {
 		if(num != -1) {
-			RobotRun.getInstance().getSU_macro_bindings()[num] = null;
+			RobotRun.getInstance().getMacroKeyBinds()[num] = null;
 			num = -1;
 		}
 	}
@@ -27,9 +27,9 @@ public class Macro {
 	public void setManual(boolean b) { manual = b; }
 
 	public Macro setNum(int n) {
-		if(n <= 6 && n >= 0 && RobotRun.getInstance().getSU_macro_bindings()[n] == null) {
+		if(n <= 6 && n >= 0 && RobotRun.getInstance().getMacroKeyBinds()[n] == null) {
 			clearNum();
-			RobotRun.getInstance().getSU_macro_bindings()[n] = this;
+			RobotRun.getInstance().getMacroKeyBinds()[n] = this;
 			num = n;
 
 			return this;

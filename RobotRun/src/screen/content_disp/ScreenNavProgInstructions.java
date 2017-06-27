@@ -2,7 +2,6 @@ package screen.content_disp;
 
 import core.RobotRun;
 import enums.CoordFrame;
-import enums.ScreenMode;
 import expression.AtomicExpression;
 import expression.Expression;
 import geom.Point;
@@ -22,6 +21,7 @@ import programming.RegisterStatement;
 import programming.SelectStatement;
 import regs.PositionRegister;
 import robot.RoboticArm;
+import screen.ScreenMode;
 
 public class ScreenNavProgInstructions extends ST_ScreenListContents {
 

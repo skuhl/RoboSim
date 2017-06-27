@@ -2,7 +2,6 @@ package screen.content_disp;
 
 import core.RobotRun;
 import enums.CoordFrame;
-import enums.ScreenMode;
 import frame.UserFrame;
 import geom.Point;
 import global.DataManagement;
@@ -10,6 +9,7 @@ import global.Fields;
 import global.RMath;
 import regs.PositionRegister;
 import robot.RoboticArm;
+import screen.ScreenMode;
 
 public class ScreenNavPosRegs extends ST_ScreenListContents {
 
@@ -113,7 +113,7 @@ public class ScreenNavPosRegs extends ST_ScreenListContents {
 	public void actionF4() {
 		if (robotRun.isShift() && !robotRun.isProgExec()) {
 			// Stop any prior jogging motion
-			robotRun.hold();
+			robotRun.button_hold();
 
 			// Move To function
 			RoboticArm r = robotRun.getActiveRobot();

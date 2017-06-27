@@ -1,7 +1,6 @@
 package screen.instr_edit;
 
 import core.RobotRun;
-import enums.ScreenMode;
 import expression.Expression;
 import expression.Operand;
 import expression.OperandDReg;
@@ -13,6 +12,7 @@ import expression.RobotPoint;
 import regs.DataRegister;
 import regs.IORegister;
 import regs.PositionRegister;
+import screen.ScreenMode;
 
 public class ScreenSetExpressionArg extends ST_ScreenInstructionEdit {
 

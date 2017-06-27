@@ -1,10 +1,10 @@
 package screen.text_entry;
 
 import core.RobotRun;
-import enums.ScreenMode;
 import global.DataManagement;
 import programming.Program;
 import robot.RoboticArm;
+import screen.ScreenMode;
 
 public class ScreenProgramCreate extends ST_ScreenTextEntry {
 

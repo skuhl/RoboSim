@@ -1,12 +1,12 @@
 package screen.instr_edit;
 
 import core.RobotRun;
-import enums.ScreenMode;
 import global.Fields;
 import programming.CamMoveToObject;
 import programming.MotionInstruction;
 import programming.PosMotionInst;
 import robot.RoboticArm;
+import screen.ScreenMode;
 
 public class ScreenSetMostionInstrRegType extends ST_ScreenInstructionEdit {
 

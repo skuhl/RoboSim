@@ -1,9 +1,9 @@
 package screen.opt_menu;
 
 import core.RobotRun;
-import enums.ScreenMode;
 import global.Fields;
 import screen.Screen;
+import screen.ScreenMode;
 
 public class ScreenSelectPasteOpt extends ST_ScreenOptionsMenu {
 

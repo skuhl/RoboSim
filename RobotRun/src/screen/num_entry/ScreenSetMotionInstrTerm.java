@@ -1,9 +1,9 @@
 package screen.num_entry;
 
 import core.RobotRun;
-import enums.ScreenMode;
 import programming.MotionInstruction;
 import robot.RoboticArm;
+import screen.ScreenMode;
 
 public class ScreenSetMotionInstrTerm extends ST_ScreenNumEntry {
 

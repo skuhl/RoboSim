@@ -1,8 +1,8 @@
 package screen.content_disp;
 
 import core.RobotRun;
-import enums.ScreenMode;
 import screen.Screen;
+import screen.ScreenMode;
 import screen.ScreenState;
 
 public abstract class ST_ScreenListContents extends Screen {

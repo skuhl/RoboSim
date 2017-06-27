@@ -1,9 +1,9 @@
 package screen.num_entry;
 
 import core.RobotRun;
-import enums.ScreenMode;
 import expression.OperandFloat;
 import robot.RoboticArm;
+import screen.ScreenMode;
 
 public class ScreenInputConst extends ST_ScreenNumEntry {
 

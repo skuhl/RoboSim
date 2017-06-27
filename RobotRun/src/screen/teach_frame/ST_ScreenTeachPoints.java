@@ -1,11 +1,11 @@
 package screen.teach_frame;
 
 import core.RobotRun;
-import enums.ScreenMode;
 import geom.Point;
 import global.DataManagement;
 import robot.RoboticArm;
 import screen.Screen;
+import screen.ScreenMode;
 import screen.ScreenState;
 
 public abstract class ST_ScreenTeachPoints extends Screen {

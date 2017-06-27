@@ -1,8 +1,8 @@
 package screen.edit_point;
 
 import core.RobotRun;
-import enums.ScreenMode;
 import frame.UserFrame;
+import screen.ScreenMode;
 import ui.DisplayLine;
 
 public class ScreenDirectEntryUser extends ST_ScreenPointEntry {

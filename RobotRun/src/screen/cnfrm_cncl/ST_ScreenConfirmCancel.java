@@ -1,8 +1,8 @@
 package screen.cnfrm_cncl;
 
 import core.RobotRun;
-import enums.ScreenMode;
 import screen.Screen;
+import screen.ScreenMode;
 import screen.ScreenState;
 
 public abstract class ST_ScreenConfirmCancel extends Screen {

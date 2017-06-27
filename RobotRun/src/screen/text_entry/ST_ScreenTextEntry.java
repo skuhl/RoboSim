@@ -1,10 +1,10 @@
 package screen.text_entry;
 
 import core.RobotRun;
-import enums.ScreenMode;
-import enums.ScreenType;
 import screen.Screen;
+import screen.ScreenMode;
 import screen.ScreenState;
+import screen.ScreenType;
 import ui.DisplayLine;
 
 public abstract class ST_ScreenTextEntry extends Screen {

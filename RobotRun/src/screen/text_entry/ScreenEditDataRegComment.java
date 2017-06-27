@@ -1,9 +1,9 @@
 package screen.text_entry;
 
 import core.RobotRun;
-import enums.ScreenMode;
 import global.DataManagement;
 import robot.RoboticArm;
+import screen.ScreenMode;
 
 public class ScreenEditDataRegComment extends ST_ScreenTextEntry {
 

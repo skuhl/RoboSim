@@ -2,8 +2,8 @@ package screen.opt_menu;
 
 import core.RobotRun;
 import enums.CoordFrame;
-import enums.ScreenMode;
 import robot.RoboticArm;
+import screen.ScreenMode;
 
 public class ScreenToolFrameDetail extends ST_ScreenOptionsMenu {
 

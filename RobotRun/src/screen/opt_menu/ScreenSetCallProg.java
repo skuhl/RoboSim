@@ -1,13 +1,13 @@
 package screen.opt_menu;
 
 import core.RobotRun;
-import enums.ScreenMode;
 import programming.CallInstruction;
 import programming.IfStatement;
 import programming.Instruction;
 import programming.Program;
 import programming.SelectStatement;
 import robot.RoboticArm;
+import screen.ScreenMode;
 
 public class ScreenSetCallProg extends ST_ScreenOptionsMenu {
 

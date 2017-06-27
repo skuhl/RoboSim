@@ -1,8 +1,8 @@
 package screen.num_entry;
 
 import core.RobotRun;
-import enums.ScreenMode;
 import screen.Screen;
+import screen.ScreenMode;
 import screen.ScreenState;
 
 public abstract class ST_ScreenNumEntry extends Screen {

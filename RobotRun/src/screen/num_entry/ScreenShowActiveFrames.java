@@ -1,8 +1,8 @@
 package screen.num_entry;
 
 import core.RobotRun;
-import enums.ScreenMode;
 import robot.RoboticArm;
+import screen.ScreenMode;
 import screen.ScreenState;
 import ui.DisplayLine;
 

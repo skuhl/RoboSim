@@ -1,12 +1,12 @@
 package screen.instr_edit;
 
 import core.RobotRun;
-import enums.ScreenMode;
 import expression.OperandDReg;
 import expression.OperandGeneric;
 import programming.SelectStatement;
 import regs.DataRegister;
 import robot.RoboticArm;
+import screen.ScreenMode;
 
 public class ScreenSetSelectStmtArg extends ST_ScreenInstructionEdit {
 

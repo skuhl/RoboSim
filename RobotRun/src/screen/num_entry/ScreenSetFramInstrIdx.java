@@ -1,10 +1,10 @@
 package screen.num_entry;
 
 import core.RobotRun;
-import enums.ScreenMode;
 import global.Fields;
 import programming.FrameInstruction;
 import robot.RoboticArm;
+import screen.ScreenMode;
 
 public class ScreenSetFramInstrIdx extends ST_ScreenNumEntry {
 

@@ -1,10 +1,10 @@
 package screen.num_entry;
 
 import core.RobotRun;
-import enums.ScreenMode;
 import global.Fields;
 import programming.PosMotionInst;
 import robot.RoboticArm;
+import screen.ScreenMode;
 
 public class ScreenSetMotionInstrOffsetIdx extends ST_ScreenNumEntry {
 

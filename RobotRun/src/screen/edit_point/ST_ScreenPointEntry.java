@@ -1,12 +1,12 @@
 package screen.edit_point;
 
 import core.RobotRun;
-import enums.ScreenMode;
 import geom.Point;
 import geom.RQuaternion;
 import global.RMath;
 import processing.core.PVector;
 import screen.Screen;
+import screen.ScreenMode;
 import screen.ScreenState;
 import ui.DisplayLine;
 

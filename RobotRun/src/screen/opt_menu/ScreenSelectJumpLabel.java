@@ -1,7 +1,7 @@
 package screen.opt_menu;
 
 import core.RobotRun;
-import enums.ScreenMode;
+import screen.ScreenMode;
 
 public class ScreenSelectJumpLabel extends ST_ScreenOptionsMenu {
 
