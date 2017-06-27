@@ -581,7 +581,8 @@ public class WGUI implements ControlListener {
 		addButton(WGUI_Buttons.ObjMoveToDefault, "Move to Default", editWOPos, fieldWidthMed, sButtonHeight, Fields.small);
 
 		addButton(WGUI_Buttons.ObjResetDefault, "Restore Defaults", editWOPos, lLblWidth, sButtonHeight, Fields.small);
-
+		
+		addButton(WGUI_Buttons.ObjConfirmDims, "Confirm", editWOOther, mButtonWidth, sButtonHeight, Fields.small);
 		addButton(WGUI_Buttons.ObjDelete, "Delete", editWOOther, mButtonWidth, sButtonHeight, Fields.small);
 
 		// Initialize the scenario window elements
@@ -1597,7 +1598,7 @@ public class WGUI implements ControlListener {
 					throw new NumberFormatException("Invalid length value!");
 				}
 				// Length cap of 800
-				dimensions[0] = PApplet.max(10, PApplet.min(val, 800f));
+				dimensions[0] = PApplet.max(10f, PApplet.min(val, 800f));
 			}
 
 			if (hgtField != null && !hgtField.equals("")) {
@@ -1608,7 +1609,7 @@ public class WGUI implements ControlListener {
 					throw new NumberFormatException("Invalid height value!");
 				}
 				// Height cap of 800
-				dimensions[1] = PApplet.max(10, PApplet.min(val, 800f));
+				dimensions[1] = PApplet.max(10f, PApplet.min(val, 800f));
 			}
 
 			if (wdhField != null && !wdhField.equals("")) {
@@ -1619,7 +1620,7 @@ public class WGUI implements ControlListener {
 					throw new NumberFormatException("Invalid width value!");
 				}
 				// Width cap of 800
-				dimensions[2] = PApplet.max(10, PApplet.min(val, 800f));
+				dimensions[2] = PApplet.max(10f, PApplet.min(val, 800f));
 			}
 
 			return dimensions;
@@ -1744,8 +1745,8 @@ public class WGUI implements ControlListener {
 				if (val <= 0) {
 					throw new NumberFormatException("Invalid length value!");
 				}
-				// Radius cap of 9999
-				dimensions[0] = PApplet.max(5, PApplet.min(val, 800f));
+				// Radius cap of 400
+				dimensions[0] = PApplet.max(5f, PApplet.min(val, 400f));
 			}
 
 			if (hgtField != null && !hgtField.equals("")) {
@@ -1755,8 +1756,8 @@ public class WGUI implements ControlListener {
 				if (val <= 0) {
 					throw new NumberFormatException("Invalid height value!");
 				}
-				// Height cap of 9999
-				dimensions[1] = PApplet.max(10, PApplet.min(val, 800f));
+				// Height cap of 800
+				dimensions[1] = PApplet.max(10f, PApplet.min(val, 800f));
 			}
 
 			return dimensions;
@@ -1832,16 +1833,6 @@ public class WGUI implements ControlListener {
 
 		} else if (t == DimType.HEIGHT) {
 			return ( (MyTextfield) manager.get("Dim1") ).getText();
-
-		} if (t == DimType.SCALE) {
-			int dimNum = 0;
-
-			if (menu == WindowTab.CREATE) {
-				// Different text field in the create window tab
-				dimNum = 1;
-			}
-
-			return ( (MyTextfield) manager.get( String.format("Dim%d", dimNum) ) ).getText();
 
 		} else {
 			return ( (MyTextfield) manager.get("Dim0") ).getText();
@@ -2555,7 +2546,7 @@ public class WGUI implements ControlListener {
 
 			relPos = getAbsPosFrom(dimLbl, Alignment.TOP_RIGHT, distLblToFieldX, 0);
 			dimTxt.setPosition(relPos[0], relPos[1]);
-
+			
 			relPos = getAbsPosFrom(dimLbl, Alignment.BOTTOM_LEFT, 0, winMargin);
 		}
 
@@ -2910,7 +2901,10 @@ public class WGUI implements ControlListener {
 			relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 			relPos = updateDimLblAndFieldPositions(relPos[0], relPos[1]);
 			
+			c0 = getButton(WGUI_Buttons.ObjConfirmDims).setPosition(relPos[0], relPos[1]);
+			
 			// Fill color label and dropdown
+			relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 			c0 = getTextArea("WOFillLbl").setPosition(relPos[0], relPos[1] + 5);
 
 			relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, winMargin);
@@ -3629,8 +3623,8 @@ public class WGUI implements ControlListener {
 	}
 
 	/**
-	 * Updates the dimensions as well as the current position and orientation
-	 * of the selected world object.
+	 * Updates the current position and orientation of the selected world
+	 * object.
 	 * 
 	 * @param selectedWO	The object of which to update the position and
 	 * 						orientation
@@ -3641,62 +3635,6 @@ public class WGUI implements ControlListener {
 		boolean edited = false;
 
 		try {
-			boolean dimChanged = false;
-			RShape s = selectWO.getForm();
-
-			if (s instanceof RBox) {
-				Float[] newDims = getBoxDimensions();
-
-				if (newDims[0] != null) {
-					// Update the box's length
-					s.setDim(newDims[0], DimType.LENGTH);
-					dimChanged = true;
-				}
-
-				if (newDims[1] != null) {
-					// Update the box's height
-					s.setDim(newDims[1], DimType.HEIGHT);
-					dimChanged = true;
-				}
-
-				if (newDims[2] != null) {
-					// Update the box's width
-					s.setDim(newDims[2], DimType.WIDTH);
-					dimChanged = true;
-				}
-
-			} else if (s instanceof RCylinder) {
-				Float[] newDims = getCylinderDimensions();
-
-				if (newDims[0] != null) {
-					// Update the cylinder's radius
-					s.setDim(newDims[0], DimType.RADIUS);
-					dimChanged = true;
-				}
-
-				if (newDims[1] != null) {
-					// Update the cylinder's height
-					s.setDim(newDims[1], DimType.HEIGHT);
-					dimChanged = true;
-				}
-
-			} else if (s instanceof ComplexShape) {
-				Float[] newDims = getModelDimensions();
-
-				if (newDims[0] != null) {
-					// Update the model's scale value
-					s.setDim(newDims[0], DimType.SCALE);
-					dimChanged = true;
-				}
-			}
-
-			if (dimChanged && selectWO instanceof Part) {
-				// Update the bounding box dimensions of a part
-				((Part)selectWO).updateOBBDims();
-			}
-
-			edited = dimChanged;
-
 			// Convert origin position into the World Frame
 			PVector oPosition = RMath.vToWorld( selectWO.getLocalCenter() );
 			PVector oWPR = RMath.nRMatToWEuler( selectWO.getLocalOrientation() );
@@ -3804,6 +3742,72 @@ public class WGUI implements ControlListener {
 		fillDefWithDef(selectedPart);
 		
 		return edited;
+	}
+	
+	/**
+	 * Updates the dimensions of the given world object based on the non-empty
+	 * values of the dimension input fields. If all dimension fields are empty,
+	 * then the given world object will remain unchanged.
+	 * 
+	 * @param selectedWO	The world object, of which to update the dimensions	
+	 * @return				If the world object's dimensions were updated
+	 */
+	public boolean updateWODims(WorldObject selectedWO) {
+		boolean dimChanged = false;
+		RShape s = selectedWO.getForm();
+
+		if (s instanceof RBox) {
+			Float[] newDims = getBoxDimensions();
+
+			if (newDims[0] != null) {
+				// Update the box's length
+				s.setDim(newDims[0], DimType.LENGTH);
+				dimChanged = true;
+			}
+
+			if (newDims[1] != null) {
+				// Update the box's height
+				s.setDim(newDims[1], DimType.HEIGHT);
+				dimChanged = true;
+			}
+
+			if (newDims[2] != null) {
+				// Update the box's width
+				s.setDim(newDims[2], DimType.WIDTH);
+				dimChanged = true;
+			}
+
+		} else if (s instanceof RCylinder) {
+			Float[] newDims = getCylinderDimensions();
+
+			if (newDims[0] != null) {
+				// Update the cylinder's radius
+				s.setDim(newDims[0], DimType.RADIUS);
+				dimChanged = true;
+			}
+
+			if (newDims[1] != null) {
+				// Update the cylinder's height
+				s.setDim(newDims[1], DimType.HEIGHT);
+				dimChanged = true;
+			}
+
+		} else if (s instanceof ComplexShape) {
+			Float[] newDims = getModelDimensions();
+
+			if (newDims[0] != null) {
+				// Update the model's scale value
+				s.setDim(newDims[0], DimType.SCALE);
+				dimChanged = true;
+			}
+		}
+
+		if (dimChanged && selectedWO instanceof Part) {
+			// Update the bounding box dimensions of a part
+			((Part)selectedWO).updateOBBDims();
+		}
+		
+		return dimChanged;
 	}
 
 	/**
