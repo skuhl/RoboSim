@@ -18,7 +18,7 @@ public class ScreenSelectPasteOpt extends ST_ScreenOptionsMenu {
 	
 	@Override
 	protected void loadContents() {
-		contents.setLines(robotRun.loadInstructions(robotRun.getActiveProg()));
+		contents.setLines(robotRun.loadInstructions(robotRun.getActiveProg(), true));
 	}
 
 	@Override

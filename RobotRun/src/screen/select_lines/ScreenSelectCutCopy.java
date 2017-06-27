@@ -26,11 +26,6 @@ public class ScreenSelectCutCopy extends ST_ScreenLineSelect {
 	}
 	
 	@Override
-	protected void loadVars(ScreenState s) {
-		setScreenIndices(s.conLnIdx, s.conColIdx, s.conRenIdx, -1, 0);
-	}
-	
-	@Override
 	public void actionF2() {
 		robotRun.nextScreen(ScreenMode.SELECT_PASTE_OPT);
 	}
@@ -44,7 +39,7 @@ public class ScreenSelectCutCopy extends ST_ScreenLineSelect {
 		int remIdx = 0;
 		for (int i = 0; i < size; i += 1) {
 			
-			if (contents.isSelected(i)) {
+			if (isSelected(i)) {
 				robotRun.clipBoard.add(p.get(remIdx));
 				p.rmInstAt(remIdx);
 				
@@ -60,7 +55,7 @@ public class ScreenSelectCutCopy extends ST_ScreenLineSelect {
 		robotRun.clipBoard.clear();
 
 		for (int i = 0; i < p.getNumOfInst(); i += 1) {
-			if (contents.isSelected(i))
+			if (isSelected(i))
 				robotRun.clipBoard.add(p.get(i).clone());
 		}
 	}

@@ -1699,7 +1699,7 @@ public class RobotRun extends PApplet {
 	 * instruction matching the given index appears on.
 	 */
 	public int getInstrLine(int instrIdx) {
-		ArrayList<DisplayLine> instr = loadInstructions(getActiveProg());
+		ArrayList<DisplayLine> instr = loadInstructions(getActiveProg(), false);
 		int row = instrIdx;
 		
 		try {	
@@ -2163,7 +2163,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	// prepare for displaying motion instructions on screen
-	public ArrayList<DisplayLine> loadInstructions(Program p) {
+	public ArrayList<DisplayLine> loadInstructions(Program p, boolean includeEND) {
 		ArrayList<DisplayLine> instruct_list = new ArrayList<>();
 		int tokenOffset = Fields.TXT_PAD - Fields.PAD_OFFSET;
 		
@@ -2234,12 +2234,14 @@ public class RobotRun extends PApplet {
 
 			instruct_list.add(line);
 		}
-
-		DisplayLine endl = new DisplayLine(size);
-		endl.add("[End]");
-
-		instruct_list.add(endl);
-
+		
+		if (includeEND) {
+			DisplayLine endl = new DisplayLine(size);
+			endl.add("[End]");
+	
+			instruct_list.add(endl);
+		}
+		
 		return instruct_list;
 	}
 
@@ -2857,7 +2859,29 @@ public class RobotRun extends PApplet {
 		
 		curScreen = Screen.getScreen(nextScreen, this);
 		System.out.println("Loaded screen " + nextScreen.name());
-		curScreen.updateScreen(screenStack.peek().getScreenState());
+		
+		// Give the previous program navigation screen to the option screens
+		if (nextScreen == ScreenMode.CONFIRM_INSERT || nextScreen == ScreenMode.SELECT_INSTR_DELETE
+				|| nextScreen == ScreenMode.CONFIRM_RENUM || nextScreen == ScreenMode.SELECT_COMMENT
+				|| nextScreen == ScreenMode.SELECT_PASTE_OPT || nextScreen == ScreenMode.FIND_REPL) {
+			
+			System.out.printf("\nStack: %d\n", screenStack.size());
+			
+			if (screenStack.size() > 2) {
+				// Find the program navigation screen
+				Screen prevScreen = screenStack.get( screenStack.size() - 2 );
+				System.out.println(prevScreen.mode);
+				
+				if (prevScreen.mode == ScreenMode.NAV_PROG_INSTR) {
+					System.out.printf("HERE\n\n");
+					curScreen.updateScreen(prevScreen.getScreenState());
+				}
+			}
+			
+		} else {
+			curScreen.updateScreen(screenStack.peek().getScreenState());
+		}
+		
 		pushActiveScreen();
 		updatePendantScreen();
 	}
@@ -3309,8 +3333,7 @@ public class RobotRun extends PApplet {
 	 */
 	public void updatePendantScreen() {
 		curScreen.updateScreen();
-		UI.renderPendantScreen(curScreen.getHeader(), curScreen.getContents(),
-				curScreen.getOptions(), curScreen.getLabels());
+		UI.renderPendantScreen(curScreen);
 	}
 	
 	/**

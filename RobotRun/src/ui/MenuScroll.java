@@ -11,7 +11,6 @@ public class MenuScroll {
 	private int yPos;
 	
 	private ArrayList<DisplayLine> lines;
-	private boolean[] lineSelect;
 	
 	private int lineIdx;
 	private int columnIdx;
@@ -141,10 +140,6 @@ public class MenuScroll {
 		return renderStart;
 	}
 	
-	public boolean[] getSelection() {
-		return lineSelect;
-	}
-	
 	public int getXPos() {
 		return xPos;
 	}
@@ -153,22 +148,13 @@ public class MenuScroll {
 		return yPos;
 	}
 
-	public boolean isSelected(int idx) {
-		return lineSelect != null && idx >= 0 && idx < lineSelect.length
-				&& lineSelect[idx];
-	}
-
 	public int moveDown(boolean page) {
 		int size = lines.size();  
 
 		if (page) {
-			// Move display frame down an entire screen's display length
-			int prevIdx = getItemIdx();			
+			// Move display frame down an entire screen's display length		
 			lineIdx = Math.min(size - 1, lineIdx + (maxDisp - 1));
 			renderStart = (Math.max(0, Math.min(size - maxDisp, renderStart + (maxDisp - 1))));
-			for(; prevIdx <= getItemIdx() && lineSelect != null; prevIdx += 1) {
-				toggleSelect(prevIdx);
-			}
 		} else {
 			// Move down a single row
 			lineIdx = Math.min(size - 1, lineIdx + 1);
@@ -208,12 +194,8 @@ public class MenuScroll {
 	public int moveUp(boolean page) {
 		if (page) {
 			// Move display frame up an entire screen's display length
-			int prevIdx = getItemIdx();
 			lineIdx = (Math.max(0, lineIdx - (maxDisp - 1)));
 			renderStart = (Math.max(0, renderStart - (maxDisp - 1)));
-			for(; prevIdx >= getItemIdx() && lineSelect != null; prevIdx -= 1) {
-				toggleSelect(prevIdx);
-			}
 		} 
 		else {
 			// Move up a single row
@@ -229,14 +211,7 @@ public class MenuScroll {
 		columnIdx = 0;
 		renderStart = 0;
 	}
-	
-	// clears the array of selected lines
-	public boolean[] resetSelection(int n) {
-		if(n > 0) lineSelect = new boolean[n];
-		else 	  lineSelect = null;
-		return lineSelect;
-	}
-	
+
 	public DisplayLine set(int i, DisplayLine d) {
 		return lines.set(i, d);
 	}
@@ -277,14 +252,6 @@ public class MenuScroll {
 	
 	public int size() {
 		return lines.size();
-	}
-	
-	public boolean toggleSelect(int idx) {
-		if (lineSelect != null && idx >= 0 && idx < lineSelect.length) {
-			return lineSelect[idx] = !lineSelect[idx];
-		}
-		
-		return false;
 	}
 	
 	@Override

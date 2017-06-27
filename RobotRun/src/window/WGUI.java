@@ -41,8 +41,10 @@ import processing.core.PGraphics;
 import processing.core.PImage;
 import processing.core.PVector;
 import robot.RoboticArm;
+import screen.Screen;
 import screen.ScreenMode;
 import screen.ScreenType;
+import screen.select_lines.ST_ScreenLineSelect;
 import ui.DisplayLine;
 import ui.DropdownSearch;
 import ui.KeyCodeMap;
@@ -2157,20 +2159,21 @@ public class WGUI implements ControlListener {
 	 * @param options	The option fields
 	 * @param funcLbls	The function button labels
 	 */
-	public void renderPendantScreen(String header, MenuScroll contents,
-			MenuScroll options, String[] funcLbls) {
-
+	public void renderPendantScreen(Screen screen) {
 		Textarea headerLbl = getTextArea("header");
 
-		if (header != null) {
+		if (screen.getHeader() != null) {
 			// Display header field
-			headerLbl.setText(header).show();
+			headerLbl.setText(screen.getHeader()).show();
 
 		} else {
 			headerLbl.hide();
 		}
 
 		hidePendantScreen();
+		
+		MenuScroll contents = screen.getContents();
+		MenuScroll options = screen.getOptions();
 
 		if (contents.size() == 0) {
 			options.setLocation(10, 20);
@@ -2180,11 +2183,19 @@ public class WGUI implements ControlListener {
 			options.setLocation(10, 199);
 			options.setMaxDisplay(3);
 		}
+		
+		boolean[] lnSelectState = null;
+		
+		if (screen instanceof ST_ScreenLineSelect) {
+			lnSelectState = ((ST_ScreenLineSelect) screen).getLnSelectStates();
+		}
 
 		/* Keep track of the pendant display text-field indexes last used by
 		 * each menu. */
-		int lastTAIdx = renderMenu(contents, 0);
-		lastTAIdx = renderMenu(options, lastTAIdx);
+		int lastTAIdx = renderMenu(lnSelectState, contents, 0);
+		lastTAIdx = renderMenu(null, options, lastTAIdx);
+		
+		String[] funcLbls = screen.getLabels();
 
 		// Set the labels for each function button
 		for (int i = 0; i < 5; i += 1) {
@@ -2203,12 +2214,8 @@ public class WGUI implements ControlListener {
 	 * 				for rendering the contents of menu.
 	 * @return		The index of the next unused text-field in displayLines
 	 */
-	public int renderMenu(MenuScroll menu, int TAIdx) {
-		ScreenMode m = app.getMode();
+	private int renderMenu(boolean[] lineSelectStates, MenuScroll menu, int TAIdx) {
 		DisplayLine active;
-		boolean selectMode = false;
-
-		if(m.getType() == ScreenType.TYPE_LINE_SELECT) { selectMode = true; } 
 
 		menu.updateRenderIndices();
 		active = menu.getCurrentItem();
@@ -2244,12 +2251,12 @@ public class WGUI implements ControlListener {
 			//draw each element in current line
 			for(int j = 0; j < temp.size(); j += 1) {
 				if(i == menu.getLineIdx()) {
-					if(j == menu.getColumnIdx() && !selectMode){
+					if(j == menu.getColumnIdx() && lineSelectStates != null){
 						//highlight selected row + column
 						txt = Fields.UI_LIGHT_C;
 						bg = Fields.UI_DARK_C;          
 					} 
-					else if(selectMode && menu.isSelected(temp.getItemIdx())) {
+					else if(lineSelectStates != null && lineSelectStates[temp.getItemIdx()]) {
 						//highlight selected line
 						txt = Fields.UI_LIGHT_C;
 						bg = Fields.UI_DARK_C;
@@ -2258,11 +2265,11 @@ public class WGUI implements ControlListener {
 						txt = Fields.UI_DARK_C;
 						bg = Fields.UI_LIGHT_C;
 					}
-				} else if(selectMode && menu.isSelected(temp.getItemIdx())) {
+				} else if(lineSelectStates != null && lineSelectStates[temp.getItemIdx()]) {
 					/* highlight any currently selected lines a different color
 					 * then the active line */
 					txt = Fields.UI_LIGHT_C;
-					bg = Fields.color(125, 125, 153);
+					bg = Fields.color(10, 10, 125);
 				} else {
 					//display normal row
 					txt = Fields.UI_DARK_C;

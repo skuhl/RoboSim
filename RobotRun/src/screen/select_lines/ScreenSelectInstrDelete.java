@@ -32,8 +32,8 @@ public class ScreenSelectInstrDelete extends ST_ScreenLineSelect {
 		RoboticArm r = robotRun.getActiveRobot();
 		int instrIdx = 0;
 
-		for (int i = 0; i < contents.getSelection().length; i += 1) {
-			if (contents.isSelected(i)) {
+		for (int i = 0; i < lineSelectState.length; i += 1) {
+			if (isSelected(i)) {
 				r.rmInstAt(p, instrIdx);
 			} else {
 				instrIdx += 1;
