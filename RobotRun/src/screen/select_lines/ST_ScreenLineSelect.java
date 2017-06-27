@@ -27,7 +27,7 @@ public abstract class ST_ScreenLineSelect extends Screen {
 	
 	@Override
 	protected void loadVars(ScreenState s) {
-		setScreenIndices(s.conLnIdx, 0, s.conRenIdx, -1, 0);
+		setScreenIndices(s.conLnIdx, 0, s.conRenIdx, 0, 0);
 	}
 	
 	@Override

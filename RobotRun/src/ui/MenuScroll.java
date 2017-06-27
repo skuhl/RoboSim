@@ -108,13 +108,6 @@ public class MenuScroll {
 		return idx;
 	}
 	
-	public int getItemIdx() {
-		if(lineIdx < lines.size() && lineIdx >= 0)
-			return lines.get(lineIdx).getItemIdx();
-		else
-			return -1;
-	}
-	
 	public int getItemLineIdx() {
 		int row = 0;
 		DisplayLine currRow = getCurrentItem();
@@ -163,10 +156,10 @@ public class MenuScroll {
 
 		if (page) {
 			// Move display frame down an entire screen's display length
-			int prevIdx = getItemIdx();			
+			int prevIdx = getCurrentItemIdx();			
 			lineIdx = Math.min(size - 1, lineIdx + (maxDisp - 1));
 			renderStart = (Math.max(0, Math.min(size - maxDisp, renderStart + (maxDisp - 1))));
-			for(; prevIdx <= getItemIdx() && lineSelect != null; prevIdx += 1) {
+			for(; prevIdx <= getCurrentItemIdx() && lineSelect != null; prevIdx += 1) {
 				toggleSelect(prevIdx);
 			}
 		} else {
@@ -174,7 +167,7 @@ public class MenuScroll {
 			lineIdx = Math.min(size - 1, lineIdx + 1);
 		}
 
-		return getItemIdx();
+		return getCurrentItemIdx();
 	}
 
 	public int moveLeft() {
@@ -184,7 +177,7 @@ public class MenuScroll {
 				moveUp(false);
 				columnIdx = (lines.get(lineIdx).size() - 1);
 			}
-		} else {
+		} else if(lines.size() != 0) {
 			columnIdx = (Math.max(0, columnIdx - 1));
 		}
 		
@@ -198,7 +191,7 @@ public class MenuScroll {
 				moveDown(false);
 				columnIdx = (0);
 			}
-		} else {
+		} else if(lines.size() != 0){
 			columnIdx = (Math.min(lines.get(lineIdx).size() - 1, columnIdx + 1));
 		}
 		
@@ -208,10 +201,10 @@ public class MenuScroll {
 	public int moveUp(boolean page) {
 		if (page) {
 			// Move display frame up an entire screen's display length
-			int prevIdx = getItemIdx();
+			int prevIdx = getCurrentItemIdx();
 			lineIdx = (Math.max(0, lineIdx - (maxDisp - 1)));
 			renderStart = (Math.max(0, renderStart - (maxDisp - 1)));
-			for(; prevIdx >= getItemIdx() && lineSelect != null; prevIdx -= 1) {
+			for(; prevIdx >= getCurrentItemIdx() && lineSelect != null; prevIdx -= 1) {
 				toggleSelect(prevIdx);
 			}
 		} 
@@ -220,7 +213,7 @@ public class MenuScroll {
 			lineIdx = (Math.max(0, lineIdx - 1));
 		}
 
-		return getItemIdx();
+		return getCurrentItemIdx();
 	}
 	
 	public void reset() {
@@ -303,14 +296,14 @@ public class MenuScroll {
 	
 	public void updateRenderIndices() {
 		if(lines.size() > 0) {
-			lineIdx = RMath.clamp(lineIdx, -1, lines.size() - 1);
+			lineIdx = RMath.clamp(lineIdx, 0, lines.size() - 1);
 			int limboLnIdx = (lineIdx == -1) ? 0 : lineIdx;
-			columnIdx = RMath.clamp(columnIdx, -1, lines.get(limboLnIdx).size() - 1);
+			columnIdx = RMath.clamp(columnIdx, 0, lines.get(limboLnIdx).size() - 1);
 			renderStart = RMath.clamp(renderStart, limboLnIdx - (maxDisp - 1), limboLnIdx);
 			
 		} else {
-			lineIdx = -1;
-			columnIdx = -1;
+			lineIdx = 0;
+			columnIdx = 0;
 			renderStart = 0;
 		}	
 	}

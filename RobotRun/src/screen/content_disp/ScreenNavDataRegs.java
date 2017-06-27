@@ -46,7 +46,7 @@ public class ScreenNavDataRegs extends ST_ScreenListContents {
 	@Override
 	public void actionF1() {
 		// Clear Data Register entry
-		DataRegister dReg = robotRun.getActiveRobot().getDReg(contents.getItemIdx());
+		DataRegister dReg = robotRun.getActiveRobot().getDReg(contents.getCurrentItemIdx());
 
 		if (dReg != null) {
 			dReg.comment = null;

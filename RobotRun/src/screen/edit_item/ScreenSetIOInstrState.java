@@ -1,4 +1,4 @@
-package screen.instr_edit;
+package screen.edit_item;
 
 import core.RobotRun;
 import global.Fields;
@@ -6,7 +6,7 @@ import programming.IOInstruction;
 import robot.RoboticArm;
 import screen.ScreenMode;
 
-public class ScreenSetIOInstrState extends ST_ScreenInstructionEdit {
+public class ScreenSetIOInstrState extends ST_ScreenEditItem {
 
 	public ScreenSetIOInstrState(RobotRun r) {
 		super(ScreenMode.SET_IO_INSTR_STATE, r);

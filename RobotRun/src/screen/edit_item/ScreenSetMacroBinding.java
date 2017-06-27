@@ -1,9 +1,9 @@
-package screen.opt_menu;
+package screen.edit_item;
 
 import core.RobotRun;
 import screen.ScreenMode;
 
-public class ScreenSetMacroBinding extends ST_ScreenOptionsMenu {
+public class ScreenSetMacroBinding extends ST_ScreenEditItem {
 
 	public ScreenSetMacroBinding(RobotRun r) {
 		super(ScreenMode.SET_MACRO_BINDING, r);
@@ -32,7 +32,8 @@ public class ScreenSetMacroBinding extends ST_ScreenOptionsMenu {
 
 	@Override
 	public void actionEntr() {
-		robotRun.macroEdit.setNum(options.getLineIdx());
+		int idx = robotRun.getLastScreen().getContentIdx();
+		robotRun.getMacro(idx).setNum(options.getLineIdx());
 		robotRun.lastScreen();
 	}
 

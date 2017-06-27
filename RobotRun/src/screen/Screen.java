@@ -12,28 +12,31 @@ import screen.content_disp.ScreenNavMacros;
 import screen.content_disp.ScreenNavPosRegs;
 import screen.content_disp.ScreenNavToolFrames;
 import screen.content_disp.ScreenNavUserFrames;
+import screen.content_disp.ScreenCreateMacro;
 import screen.content_disp.ScreenNavProgInstructions;
 import screen.content_disp.ScreenNavPrograms;
 import screen.content_disp.ScreenSetMacroProg;
+import screen.edit_item.ScreenSetBoolConst;
+import screen.edit_item.ScreenSetBoolExpressionArg;
+import screen.edit_item.ScreenSetExpressionArg;
+import screen.edit_item.ScreenSetExpressionOp;
+import screen.edit_item.ScreenSetFrameInstrType;
+import screen.edit_item.ScreenSetIOInstrState;
+import screen.edit_item.ScreenSetIfStmtAction;
+import screen.edit_item.ScreenSetMacroBinding;
+import screen.edit_item.ScreenSetMacroType;
+import screen.edit_item.ScreenSetMostionInstrRegType;
+import screen.edit_item.ScreenSetMotionInstrCircRegType;
+import screen.edit_item.ScreenSetMotionInstrObj;
+import screen.edit_item.ScreenSetMotionInstrOffsetType;
+import screen.edit_item.ScreenSetMotionInstrType;
+import screen.edit_item.ScreenSetRegExpressionType;
+import screen.edit_item.ScreenSetSelectStmtAction;
+import screen.edit_item.ScreenSetSelectStmtArg;
 import screen.edit_point.ScreenDirectEntryTool;
 import screen.edit_point.ScreenDirectEntryUser;
 import screen.edit_point.ScreenEditPosReg;
 import screen.edit_point.ScreenEditProgramPos;
-import screen.instr_edit.ScreenSetBoolConst;
-import screen.instr_edit.ScreenSetBoolExpressionArg;
-import screen.instr_edit.ScreenSetExpressionArg;
-import screen.instr_edit.ScreenSetExpressionOp;
-import screen.instr_edit.ScreenSetFrameInstrType;
-import screen.instr_edit.ScreenSetIOInstrState;
-import screen.instr_edit.ScreenSetIfStmtAction;
-import screen.instr_edit.ScreenSetMostionInstrRegType;
-import screen.instr_edit.ScreenSetMotionInstrCircRegType;
-import screen.instr_edit.ScreenSetMotionInstrObj;
-import screen.instr_edit.ScreenSetMotionInstrOffsetType;
-import screen.instr_edit.ScreenSetMotionInstrType;
-import screen.instr_edit.ScreenSetRegExpressionType;
-import screen.instr_edit.ScreenSetSelectStmtAction;
-import screen.instr_edit.ScreenSetSelectStmtArg;
 import screen.num_entry.ScreenConfirmInsert;
 import screen.num_entry.ScreenCopyDataRegComment;
 import screen.num_entry.ScreenCopyDataRegValue;
@@ -70,8 +73,6 @@ import screen.opt_menu.ScreenSelectPasteOpt;
 import screen.opt_menu.ScreenSelectRegStmt;
 import screen.opt_menu.ScreenSetCallProg;
 import screen.opt_menu.ScreenSetDefaultTooltip;
-import screen.opt_menu.ScreenSetMacroBinding;
-import screen.opt_menu.ScreenSetMacroType;
 import screen.opt_menu.ScreenToolFrameDetail;
 import screen.opt_menu.ScreenUserFrameDetail;
 import screen.select_lines.ScreenSelectComment;
@@ -133,6 +134,7 @@ public abstract class Screen {
 		 * Screens used to display a several list of contents for the user to
 		 * examine and interact with
 		 */
+		case CREATE_MACRO: return new ScreenCreateMacro(r);
 		case NAV_DATA: return new ScreenNavData(r);
 		case NAV_DREGS: return new ScreenNavDataRegs(r);
 		case NAV_IOREGS: return new ScreenNavIORegs(r);
@@ -145,7 +147,7 @@ public abstract class Screen {
 		case NAV_TOOL_FRAMES: return new ScreenNavToolFrames(r);
 		case NAV_USER_FRAMES: return new ScreenNavUserFrames(r);
 		case SET_MACRO_PROG: return new ScreenSetMacroProg(r);
-
+		
 		/*
 		 * Screens used to perform arbitrary line-wise selection on a list of
 		 * elements displayed on a screen of type 'TYPE_LIST_CONTENTS'

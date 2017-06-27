@@ -27,8 +27,8 @@ public class ScreenSelectRegStmt extends ST_ScreenOptionsMenu {
 
 	@Override
 	public void actionEntr() {
-		robotRun.screenStack.pop();
-		robotRun.screenStack.pop();
+		robotRun.getScreenStack().pop();
+		robotRun.getScreenStack().pop();
 
 		if (options.getLineIdx() == 0) {
 			robotRun.newRegisterStatement(new DataRegister());

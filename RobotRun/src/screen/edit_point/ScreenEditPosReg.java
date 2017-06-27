@@ -7,7 +7,6 @@ import regs.PositionRegister;
 import regs.Register;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import ui.DisplayLine;
 
 public class ScreenEditPosReg extends ST_ScreenPointEntry {
 

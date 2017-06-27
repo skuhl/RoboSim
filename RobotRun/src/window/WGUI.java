@@ -687,15 +687,6 @@ public class WGUI implements ControlListener {
 			addDropdownSearch(String.format("DimDdl%d", idx), sharedElements, ldropItemWidth,
 					dropItemHeight, 4, Fields.small, Fields.ITYPE_TRANSIENT);
 		}
-		
-		int count = 0;
-		for(ControllerInterface<?> c: manager.getAll()) {
-			if(c instanceof Button) {
-				count += 1;
-				System.out.println(((Button)c).getName());
-			}
-		}
-		System.out.println(count);
 
 		addDropdown("WO", editWO, ldropItemWidth, dropItemHeight, 4,
 				Fields.small, Fields.ITYPE_TRANSIENT);

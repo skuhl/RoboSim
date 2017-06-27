@@ -48,7 +48,7 @@ public class ScreenNavPosRegs extends ST_ScreenListContents {
 	
 	@Override
 	protected void loadOptions() {
-		PositionRegister pReg = robotRun.getActiveRobot().getPReg(contents.getItemIdx());
+		PositionRegister pReg = robotRun.getActiveRobot().getPReg(contents.getCurrentItemIdx());
 		Point pt = pReg.point;
 		// Display the point with the Position register of the highlighted
 		// line, when viewing the Position registers
@@ -75,7 +75,7 @@ public class ScreenNavPosRegs extends ST_ScreenListContents {
 	@Override
 	public void actionF1() {
 		// Clear Position Register entry
-		PositionRegister pReg = robotRun.getActiveRobot().getPReg(contents.getItemIdx());
+		PositionRegister pReg = robotRun.getActiveRobot().getPReg(contents.getCurrentItemIdx());
 
 		if (pReg != null) {
 			pReg.comment = null;
@@ -99,7 +99,7 @@ public class ScreenNavPosRegs extends ST_ScreenListContents {
 			robotRun.switchScreen(ScreenMode.NAV_DREGS);
 		} else {
 			// Switch to Data Registers
-			int itemIdx = contents.getItemIdx();
+			int itemIdx = contents.getCurrentItemIdx();
 			if (itemIdx >= 0 && itemIdx < Fields.DPREG_NUM) {
 				// Set the position type of the selected position register
 				PositionRegister toEdit = robotRun.getActiveRobot().getPReg(itemIdx);

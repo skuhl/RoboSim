@@ -1,13 +1,13 @@
-package screen.instr_edit;
+package screen.edit_item;
 
 import core.RobotRun;
 import screen.Screen;
 import screen.ScreenMode;
 import screen.ScreenState;
 
-public abstract class ST_ScreenInstructionEdit extends Screen {
+public abstract class ST_ScreenEditItem extends Screen {
 
-	public ST_ScreenInstructionEdit(ScreenMode m, RobotRun r) {
+	public ST_ScreenEditItem(ScreenMode m, RobotRun r) {
 		super(m, r);
 	}
 	

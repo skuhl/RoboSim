@@ -14,14 +14,10 @@ public class ScreenDefault extends Screen {
 	}
 
 	@Override
-	protected void loadContents() {
-		contents.clear();
-	}
+	protected void loadContents() {}
 
 	@Override
-	protected void loadOptions() {
-		contents.clear();
-	}
+	protected void loadOptions() {}
 
 	@Override
 	protected void loadLabels() {
@@ -34,7 +30,7 @@ public class ScreenDefault extends Screen {
 	
 	@Override
 	protected void loadVars(ScreenState s) {
-		setScreenIndices(-1, -1, -1, -1, -1);
+		setScreenIndices(0, 0, 0, 0, 0);
 	}
 
 	@Override

@@ -35,7 +35,7 @@ public class ScreenSelectIOInstrReg extends ST_ScreenOptionsMenu {
 		// IO registers are 1 indexed!
 		int state = (options.getColumnIdx() == 1) ? Fields.ON : Fields.OFF;
 		robotRun.newIOInstruction(options.getLineIdx() + 1, state);
-		robotRun.screenStack.pop();
+		robotRun.getScreenStack().pop();
 		robotRun.lastScreen();
 	}
 

@@ -1,4 +1,4 @@
-package screen.instr_edit;
+package screen.edit_item;
 
 import core.RobotRun;
 import expression.Expression;
@@ -9,7 +9,7 @@ import programming.IfStatement;
 import robot.RoboticArm;
 import screen.ScreenMode;
 
-public class ScreenSetBoolExpressionArg extends ST_ScreenInstructionEdit {
+public class ScreenSetBoolExpressionArg extends ST_ScreenEditItem {
 
 	public ScreenSetBoolExpressionArg(RobotRun r) {
 		super(ScreenMode.SET_BOOL_EXPR_ARG, r);

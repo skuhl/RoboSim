@@ -29,7 +29,7 @@ public class ScreenSelectFrameInstrType extends ST_ScreenOptionsMenu {
 			robotRun.newFrameInstruction(Fields.FTYPE_USER);
 		}
 
-		robotRun.screenStack.pop();
+		robotRun.getScreenStack().pop();
 		robotRun.switchScreen(ScreenMode.SET_FRAME_INSTR_IDX);
 	}
 

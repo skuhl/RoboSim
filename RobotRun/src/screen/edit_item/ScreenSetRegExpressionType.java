@@ -1,4 +1,4 @@
-package screen.instr_edit;
+package screen.edit_item;
 
 import core.RobotRun;
 import programming.RegisterStatement;
@@ -8,7 +8,7 @@ import regs.PositionRegister;
 import robot.RoboticArm;
 import screen.ScreenMode;
 
-public class ScreenSetRegExpressionType extends ST_ScreenInstructionEdit {
+public class ScreenSetRegExpressionType extends ST_ScreenEditItem {
 
 	public ScreenSetRegExpressionType(RobotRun r) {
 		super(ScreenMode.SET_REG_EXPR_TYPE, r);
