@@ -1,6 +1,7 @@
 package screen.opt_menu;
 
 import core.RobotRun;
+import programming.Program;
 import screen.ScreenMode;
 
 public class ScreenNavInstrMenu extends ST_ScreenOptionsMenu {
@@ -37,24 +38,65 @@ public class ScreenNavInstrMenu extends ST_ScreenOptionsMenu {
 			robotRun.nextScreen(ScreenMode.CONFIRM_INSERT);
 			break;
 		case 2: // Delete
-			robotRun.nextScreen(ScreenMode.SELECT_INSTR_DELETE);
+			Program prog = robotRun.getActiveProg();
+			
+			if (prog.getNumOfInst() > 0) {	
+				robotRun.nextScreen(ScreenMode.SELECT_INSTR_DELETE);
+				
+			} else {
+				System.err.println("No instructions to delete");
+				robotRun.lastScreen();
+			}
 			break;
 		case 3: // Cut/Copy
-			robotRun.nextScreen(ScreenMode.SELECT_CUT_COPY);
+			prog = robotRun.getActiveProg();
+			
+			if (prog.getNumOfInst() > 0) {	
+				robotRun.nextScreen(ScreenMode.SELECT_CUT_COPY);
+				
+			} else {
+				System.err.println("No instructions to cut or copy");
+				robotRun.lastScreen();
+			}
+			
 			break;
 		case 4: // Paste
-			robotRun.nextScreen(ScreenMode.SELECT_PASTE_OPT);
+			if (robotRun.clipBoard.size() > 0) {
+				robotRun.nextScreen(ScreenMode.SELECT_PASTE_OPT);
+				
+			} else {
+				System.err.println("No instructions to paste");
+				robotRun.lastScreen();
+			}
+			
 			break;
 		case 5: // Find/Replace
-			robotRun.nextScreen(ScreenMode.FIND_REPL);
+			prog = robotRun.getActiveProg();
+			
+			if (prog.getNumOfInst() > 0) {	
+				robotRun.nextScreen(ScreenMode.FIND_REPL);
+				
+			} else {
+				System.err.println("Nothing to find");
+				robotRun.lastScreen();
+			}
+			
 			break;
 		case 6: // Renumber
 			robotRun.nextScreen(ScreenMode.CONFIRM_RENUM);
 			break;
 		case 7: // Comment
-			robotRun.nextScreen(ScreenMode.SELECT_COMMENT);
+			prog = robotRun.getActiveProg();
+			
+			if (prog.getNumOfInst() > 0) {	
+				robotRun.nextScreen(ScreenMode.SELECT_COMMENT);
+				
+			} else {
+				System.err.println("No instructions to cut or copy");
+				robotRun.lastScreen();
+			}
+			
 			break;
-		case 8: // Remark
 		}
 	}
 }

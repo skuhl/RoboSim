@@ -9,6 +9,11 @@ public class ScreenSelectCutCopy extends ST_ScreenLineSelect {
 	public ScreenSelectCutCopy(RobotRun r) {
 		super(ScreenMode.SELECT_CUT_COPY, r);
 	}
+	
+	@Override
+	protected void loadContents() {
+		contents.setLines(robotRun.loadInstructions(robotRun.getActiveProg(), true));
+	}
 
 	@Override
 	protected void loadOptions() {
@@ -41,6 +46,7 @@ public class ScreenSelectCutCopy extends ST_ScreenLineSelect {
 			if (isSelected(i)) {
 				robotRun.clipBoard.add(p.get(remIdx));
 				p.rmInstAt(remIdx);
+				lineSelectState[i] = false;
 				
 			} else {
 				remIdx += 1;

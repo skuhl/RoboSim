@@ -35,12 +35,12 @@ public class ScreenConfirmInsert extends ST_ScreenNumEntry {
 	
 	@Override
 	public void actionDn() {
-		contents.moveDown(robotRun.isShift());
+		robotRun.setActiveInstIdx(contents.moveDown(robotRun.isShift()));
 	}
 	
 	@Override
 	public void actionUp() {
-		contents.moveUp(robotRun.isShift());
+		robotRun.setActiveInstIdx(contents.moveUp(robotRun.isShift()));
 	}
 	
 	@Override

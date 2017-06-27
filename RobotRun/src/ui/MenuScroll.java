@@ -98,13 +98,20 @@ public class MenuScroll {
 	}
 	
 	public int getItemColumnIdx() {
-		int idx = columnIdx;
-		for(int i = lineIdx - 1; i >= 0; i -= 1) {
-			if(lines.get(i).getItemIdx() != lines.get(i + 1).getItemIdx()) break;
-			idx += lines.get(i).size();
+		
+		try {
+			int idx = columnIdx;
+			
+			for(int i = lineIdx - 1; i >= 0; i -= 1) {
+				if(lines.get(i).getItemIdx() != lines.get(i + 1).getItemIdx()) break;
+				idx += lines.get(i).size();
+			}
+			
+			return idx;
+			
+		} catch (IndexOutOfBoundsException IOOBEx) {
+			return 0;
 		}
-
-		return idx;
 	}
 	
 	public int getItemLineIdx() {
