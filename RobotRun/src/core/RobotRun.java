@@ -136,11 +136,6 @@ public class RobotRun extends PApplet {
 	private boolean step = false; // Is step button pressed or not?
 	private boolean camEnable = false;
 	private boolean record;
-	
-	/**
-	 * A temporary storage string for user input in the pendant window.
-	 */
-	private StringBuilder workingText;
 
 	/**
 	 * Index of the current frame (Tool or User) selecting when in the Frame
@@ -1851,40 +1846,40 @@ public class RobotRun extends PApplet {
 					!(curScreen instanceof ST_ScreenPointEntry)) {
 				// Disable function shortcuts when entering in text or number input
 				if (keyCode == KeyEvent.VK_1) {
-					f1();
+					button_F1();
 					
 				} else if (keyCode == KeyEvent.VK_2) {
-					f2();
+					button_F2();
 					
 				} else if (keyCode == KeyEvent.VK_3) {
-					f3();
+					button_F3();
 					
 				} else if (keyCode == KeyEvent.VK_4) {
-					f4();
+					button_F4();
 					
 				} else if (keyCode == KeyEvent.VK_5) {
-					f5();
+					button_F5();
 				}
 				
 			}
 			
 			if (keyCode == KeyEvent.VK_ENTER) {
-				enter();
+				button_enter();
 				
 			} else if (keyCode == KeyEvent.VK_BACK_SPACE) {
-				bkspc();
+				button_bkspc();
 				
 			} else if (keyCode == KeyEvent.VK_DOWN) {
-				arrow_dn();
+				button_arrowDn();
 				
 			} else if (keyCode == KeyEvent.VK_LEFT) {
-				arrow_lt();
+				button_arrowLt();
 				
 			} else if (keyCode == KeyEvent.VK_RIGHT) {
-				arrow_rt();
+				button_arrowRt();
 				
 			} else if (keyCode == KeyEvent.VK_UP) {
-				arrow_up();
+				button_arrowUp();
 			}
 		}
 		
@@ -3147,7 +3142,6 @@ public class RobotRun extends PApplet {
 		};
 		
 		instance = this;
-		workingText = new StringBuilder();
 		
 		RegisteredModels.loadModelDefs();
 		
