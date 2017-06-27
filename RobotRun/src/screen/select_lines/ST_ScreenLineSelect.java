@@ -28,6 +28,8 @@ public abstract class ST_ScreenLineSelect extends Screen {
 	@Override
 	protected void loadVars(ScreenState s) {
 		setScreenIndices(s.conLnIdx, 0, s.conRenIdx, 0, 0);
+		contents.resetSelection(contents.size());
+		System.out.println(contents.getSelection().length);
 	}
 	
 	@Override
@@ -95,7 +97,7 @@ public abstract class ST_ScreenLineSelect extends Screen {
 	
 	@Override
 	public void actionEntr() {
-		contents.toggleSelect(robotRun.getActiveInstIdx());
+		contents.toggleSelect(contents.getCurrentItemIdx());
 		robotRun.updatePendantScreen();
 	}
 	
