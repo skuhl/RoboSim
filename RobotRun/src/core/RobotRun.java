@@ -86,7 +86,7 @@ public class RobotRun extends PApplet {
 	private static RobotRun instance;
 	
 	/**
-	 * Returns the instance of this PApplet
+	 * Returns the instance of this PApplet	
 	 */
 	public static RobotRun getInstance() {
 		return instance;
@@ -2863,7 +2863,8 @@ public class RobotRun extends PApplet {
 		// Give the previous program navigation screen to the option screens
 		if (nextScreen == ScreenMode.CONFIRM_INSERT || nextScreen == ScreenMode.SELECT_INSTR_DELETE
 				|| nextScreen == ScreenMode.CONFIRM_RENUM || nextScreen == ScreenMode.SELECT_COMMENT
-				|| nextScreen == ScreenMode.SELECT_PASTE_OPT || nextScreen == ScreenMode.FIND_REPL) {
+				|| nextScreen == ScreenMode.SELECT_PASTE_OPT || nextScreen == ScreenMode.FIND_REPL
+				|| nextScreen == ScreenMode.SELECT_CUT_COPY) {
 			
 			System.out.printf("\nStack: %d\n", screenStack.size());
 			
