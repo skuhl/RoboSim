@@ -1,13 +1,13 @@
 package screen.num_entry;
 
 import core.RobotRun;
-import enums.ScreenMode;
 import programming.RegisterStatement;
 import regs.DataRegister;
 import regs.IORegister;
 import regs.PositionRegister;
 import regs.Register;
 import robot.RoboticArm;
+import screen.ScreenMode;
 
 public class ScreenSetRegExprIdx1 extends ST_ScreenNumEntry {
 

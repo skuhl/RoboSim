@@ -1,8 +1,8 @@
 package screen.num_entry;
 
 import core.RobotRun;
-import enums.ScreenMode;
 import robot.RoboticArm;
+import screen.ScreenMode;
 
 public class ScreenShowActiveFrames extends ST_ScreenNumEntry {
 

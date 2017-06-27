@@ -1,7 +1,7 @@
 package screen.content_disp;
 
 import core.RobotRun;
-import enums.ScreenMode;
+import screen.ScreenMode;
 
 public class ScreenNavMacros extends ST_ScreenListContents {
 

@@ -1,8 +1,8 @@
 package screen.opt_menu;
 
 import core.RobotRun;
-import enums.ScreenMode;
 import global.Fields;
+import screen.ScreenMode;
 
 public class ScreenSelectIOInstrReg extends ST_ScreenOptionsMenu {
 

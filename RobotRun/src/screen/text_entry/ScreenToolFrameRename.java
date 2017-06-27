@@ -1,9 +1,9 @@
 package screen.text_entry;
 
 import core.RobotRun;
-import enums.ScreenMode;
 import frame.ToolFrame;
 import global.DataManagement;
+import screen.ScreenMode;
 
 public class ScreenToolFrameRename extends ST_ScreenTextEntry {
 

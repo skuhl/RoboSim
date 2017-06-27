@@ -1,12 +1,12 @@
 package screen.edit_point;
 
 import core.RobotRun;
-import enums.ScreenMode;
 import geom.Point;
 import global.DataManagement;
 import regs.PositionRegister;
 import regs.Register;
 import robot.RoboticArm;
+import screen.ScreenMode;
 
 public class ScreenEditPosReg extends ST_ScreenPointEntry {
 

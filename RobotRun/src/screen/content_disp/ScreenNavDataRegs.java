@@ -1,9 +1,9 @@
 package screen.content_disp;
 
 import core.RobotRun;
-import enums.ScreenMode;
 import regs.DataRegister;
 import robot.RoboticArm;
+import screen.ScreenMode;
 
 public class ScreenNavDataRegs extends ST_ScreenListContents {
 

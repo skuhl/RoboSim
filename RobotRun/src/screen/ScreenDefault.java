@@ -1,7 +1,6 @@
 package screen;
 
 import core.RobotRun;
-import enums.ScreenMode;
 
 public class ScreenDefault extends Screen {
 	

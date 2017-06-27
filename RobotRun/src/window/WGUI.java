@@ -21,8 +21,6 @@ import core.RobotRun;
 import core.Scenario;
 import enums.Alignment;
 import enums.AxesDisplay;
-import enums.ScreenMode;
-import enums.ScreenType;
 import enums.WindowTab;
 import geom.ComplexShape;
 import geom.DimType;
@@ -43,6 +41,8 @@ import processing.core.PGraphics;
 import processing.core.PImage;
 import processing.core.PVector;
 import robot.RoboticArm;
+import screen.ScreenMode;
+import screen.ScreenType;
 import ui.DisplayLine;
 import ui.DropdownSearch;
 import ui.KeyCodeMap;
@@ -166,12 +166,12 @@ public class WGUI implements ControlListener {
 		miscellaneous = addGroup("MISC", relPos[0], relPos[1], windowTabs.getWidth(), 0);
 
 		// Initialize camera view buttons
-		addButton("FrontView", "F", sButtonWidth, sButtonHeight, Fields.small).hide();
-		addButton("BackView", "Bk", sButtonWidth, sButtonHeight, Fields.small).hide();
-		addButton("LeftView", "L", sButtonWidth, sButtonHeight, Fields.small).hide();
-		addButton("RightView", "R", sButtonWidth, sButtonHeight, Fields.small).hide();
-		addButton("TopView", "T", sButtonWidth, sButtonHeight, Fields.small).hide();
-		addButton("BottomView", "Bt", sButtonWidth, sButtonHeight, Fields.small).hide();
+		addButton(WGUI_Buttons.CamViewFr, "F", sButtonWidth, sButtonHeight, Fields.small).hide();
+		addButton(WGUI_Buttons.CamViewBk, "Bk", sButtonWidth, sButtonHeight, Fields.small).hide();
+		addButton(WGUI_Buttons.CamViewLt, "L", sButtonWidth, sButtonHeight, Fields.small).hide();
+		addButton(WGUI_Buttons.CamViewRt, "R", sButtonWidth, sButtonHeight, Fields.small).hide();
+		addButton(WGUI_Buttons.CamViewTp, "T", sButtonWidth, sButtonHeight, Fields.small).hide();
+		addButton(WGUI_Buttons.CamViewBt, "Bt", sButtonWidth, sButtonHeight, Fields.small).hide();
 
 		// Pendant screen background
 		c1 = addTextarea("pendantScreen", "", pendant, winMargin, 0,
@@ -204,209 +204,209 @@ public class WGUI implements ControlListener {
 		// Function buttons
 
 		relPos = getAbsPosFrom(c1, Alignment.BOTTOM_LEFT, 0, 2);
-		c1 = addButton("f1", "F1", pendant, relPos[0], relPos[1],
+		c1 = addButton(WGUI_Buttons.F1, "F1", pendant, relPos[0], relPos[1],
 				Fields.PENDANT_SCREEN_WIDTH / 5 - 1, Fields.LARGE_BUTTON, Fields.bond);
 
 		relPos = getAbsPosFrom(c1, Alignment.TOP_RIGHT, 1, 0);
-		c2 = addButton("f2", "F2", pendant, relPos[0], relPos[1],
+		c2 = addButton(WGUI_Buttons.F2, "F2", pendant, relPos[0], relPos[1],
 				Fields.PENDANT_SCREEN_WIDTH / 5 - 1, Fields.LARGE_BUTTON, Fields.bond);
 
 		relPos = getAbsPosFrom(c2, Alignment.TOP_RIGHT, 1, 0);
-		c2 = addButton("f3", "F3", pendant, relPos[0], relPos[1],
+		c2 = addButton(WGUI_Buttons.F3, "F3", pendant, relPos[0], relPos[1],
 				Fields.PENDANT_SCREEN_WIDTH / 5 - 1, Fields.LARGE_BUTTON, Fields.bond);
 
 		relPos = getAbsPosFrom(c2, Alignment.TOP_RIGHT, 1, 0);
-		c2 = addButton("f4", "F4", pendant, relPos[0], relPos[1],
+		c2 = addButton(WGUI_Buttons.F4, "F4", pendant, relPos[0], relPos[1],
 				Fields.PENDANT_SCREEN_WIDTH / 5 - 1, Fields.LARGE_BUTTON, Fields.bond);
 
 		relPos = getAbsPosFrom(c2, Alignment.TOP_RIGHT, 1, 0);
-		c2 = addButton("f5", "F5", pendant, relPos[0], relPos[1],
+		c2 = addButton(WGUI_Buttons.F5, "F5", pendant, relPos[0], relPos[1],
 				Fields.PENDANT_SCREEN_WIDTH / 5 - 1, Fields.LARGE_BUTTON, Fields.bond);
 
 
 		// Step button
 		relPos = getAbsPosFrom(c1, Alignment.BOTTOM_LEFT, 0, 11);
-		c1 = addButton("step", "STEP", pendant, relPos[0], relPos[1],
+		c1 = addButton(WGUI_Buttons.Step, "STEP", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.LARGE_BUTTON, Fields.bond);
 
 		// Menu button
 		relPos = getAbsPosFrom(c1, Alignment.TOP_RIGHT, 19, 0);
-		c1 = addButton("menu", "MENU", pendant, relPos[0], relPos[1],
+		c1 = addButton(WGUI_Buttons.Menu, "MENU", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 
 		// Previous button
 		int smLrDiff = Fields.LARGE_BUTTON - Fields.SMALL_BUTTON;
 		relPos = getAbsPosFrom(c1, Alignment.BOTTOM_LEFT, 0,	smLrDiff +
 				16);
-		addButton("prev", "PREV", pendant, relPos[0], relPos[1],
+		addButton(WGUI_Buttons.Prev, "PREV", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 
 		// Select button
 		relPos = getAbsPosFrom(c1, Alignment.TOP_RIGHT, 15, 0);
-		c2 = addButton("select", "SELECT", pendant, relPos[0], relPos[1],
+		c2 = addButton(WGUI_Buttons.Selct, "SELECT", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 
 		// Edit button
 		relPos = getAbsPosFrom(c2, Alignment.TOP_RIGHT, 1, 0);
-		c2 = addButton("edit", "EDIT", pendant, relPos[0], relPos[1],
+		c2 = addButton(WGUI_Buttons.Edit, "EDIT", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 
 		// Data button
 		relPos = getAbsPosFrom(c2, Alignment.TOP_RIGHT, 1, 0);
-		c2 = addButton("data", "DATA", pendant, relPos[0], relPos[1],
+		c2 = addButton(WGUI_Buttons.Data, "DATA", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 
 		// Function-Control button
 		relPos = getAbsPosFrom(c2, Alignment.TOP_RIGHT, 15, 0);
-		c2 = addButton("fctn", "FCTN", pendant, relPos[0], relPos[1],
+		c2 = addButton(WGUI_Buttons.Funct, "FCTN", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 
 		// Next button
 		relPos = getAbsPosFrom(c2, Alignment.BOTTOM_LEFT, 0, smLrDiff +
 				16);
-		addButton("next", "NEXT", pendant, relPos[0], relPos[1],
+		addButton(WGUI_Buttons.Next, "NEXT", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 
 		// Shift button
 		relPos = getAbsPosFrom(c2, Alignment.TOP_RIGHT, 19, 0);
-		addButton("shift", "SHIFT", pendant, relPos[0], relPos[1],
+		addButton(WGUI_Buttons.Shift, "SHIFT", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.LARGE_BUTTON, Fields.bond);
 
 		// Arrow buttons
 
-		relPos = getAbsPosFrom(getButton("edit"), Alignment.BOTTOM_LEFT,
+		relPos = getAbsPosFrom(getButton(WGUI_Buttons.Edit), Alignment.BOTTOM_LEFT,
 				smLrDiff / 2, 11);
-		c2 = addButton("arrow_up", pendant, buttonImages[0], relPos[0],
+		c2 = addButton(WGUI_Buttons.ArrowUp, pendant, buttonImages[0], relPos[0],
 				relPos[1], Fields.SMALL_BUTTON, Fields.SMALL_BUTTON);
 
 		relPos = getAbsPosFrom(c2, Alignment.BOTTOM_LEFT, 0, 1);
-		c2 = addButton("arrow_dn", pendant, buttonImages[1], relPos[0],
+		c2 = addButton(WGUI_Buttons.ArrowDn, pendant, buttonImages[1], relPos[0],
 				relPos[1], Fields.SMALL_BUTTON, Fields.SMALL_BUTTON);
 
-		relPos = getAbsPosFrom(getButton("select"), Alignment.BOTTOM_LEFT,
+		relPos = getAbsPosFrom(getButton(WGUI_Buttons.Selct), Alignment.BOTTOM_LEFT,
 				smLrDiff / 2, smLrDiff + 16);
-		addButton("arrow_lt", pendant, buttonImages[2], relPos[0],
+		addButton(WGUI_Buttons.ArrowLt, pendant, buttonImages[2], relPos[0],
 				relPos[1], Fields.SMALL_BUTTON, Fields.SMALL_BUTTON);
 
-		relPos = getAbsPosFrom(getButton("data"), Alignment.BOTTOM_LEFT,
+		relPos = getAbsPosFrom(getButton(WGUI_Buttons.Data), Alignment.BOTTOM_LEFT,
 				smLrDiff / 2, smLrDiff + 16);
-		addButton("arrow_rt", pendant, buttonImages[3], relPos[0],
+		addButton(WGUI_Buttons.ArrowRt, pendant, buttonImages[3], relPos[0],
 				relPos[1], Fields.SMALL_BUTTON, Fields.SMALL_BUTTON);
 
 
 		// Reset button column
 
 		int btmColsY = (int)Math.ceil(c2.getPosition()[1]) + c2.getWidth() + 11;
-		int resPosX = (int)Math.ceil(getButton("step").getPosition()[0]);
-		c1 = addButton("reset", "RESET", pendant, resPosX, btmColsY,
+		int resPosX = (int)Math.ceil(getButton(WGUI_Buttons.Step).getPosition()[0]);
+		c1 = addButton(WGUI_Buttons.Reset, "RESET", pendant, resPosX, btmColsY,
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 
 		relPos = getAbsPosFrom(c1, Alignment.BOTTOM_LEFT, 0, 1);
-		c2 = addButton("num7", "7", pendant, relPos[0], relPos[1],
+		c2 = addButton(WGUI_Buttons.Num7, "7", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 
 		relPos = getAbsPosFrom(c2, Alignment.BOTTOM_LEFT, 0, 1);
-		c2 = addButton("num4", "4", pendant, relPos[0], relPos[1],
+		c2 = addButton(WGUI_Buttons.Num4, "4", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 
 		relPos = getAbsPosFrom(c2, Alignment.BOTTOM_LEFT, 0, 1);
-		c2 = addButton("num1", "1", pendant, relPos[0], relPos[1],
+		c2 = addButton(WGUI_Buttons.Num1, "1", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 
 		relPos = getAbsPosFrom(c2, Alignment.BOTTOM_LEFT, 0, 1);
-		c2 = addButton("num0", "0", pendant, relPos[0], relPos[1],
+		c2 = addButton(WGUI_Buttons.Num0, "0", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 
 		relPos = getAbsPosFrom(c2, Alignment.BOTTOM_LEFT, 0, 1);
-		c2 = addButton("dash", "-", pendant, relPos[0], relPos[1],
+		c2 = addButton(WGUI_Buttons.Dash, "-", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 
 
 		// Backspace button column
 
 		relPos = getAbsPosFrom(c1, Alignment.TOP_RIGHT, 1, 0);
-		c1 = addButton("bkspc", "BKSPC", pendant, relPos[0], relPos[1],
+		c1 = addButton(WGUI_Buttons.Bkspc, "BKSPC", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 
 		relPos = getAbsPosFrom(c1, Alignment.BOTTOM_LEFT, 0, 1);
-		c2 = addButton("num8", "8", pendant, relPos[0], relPos[1],
+		c2 = addButton(WGUI_Buttons.Num8, "8", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 
 		relPos = getAbsPosFrom(c2, Alignment.BOTTOM_LEFT, 0, 1);
-		c2 = addButton("num5", "5", pendant, relPos[0], relPos[1],
+		c2 = addButton(WGUI_Buttons.Num5, "5", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 
 		relPos = getAbsPosFrom(c2, Alignment.BOTTOM_LEFT, 0, 1);
-		c2 = addButton("num2", "2", pendant, relPos[0], relPos[1],
+		c2 = addButton(WGUI_Buttons.Num2, "2", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 
 		relPos = getAbsPosFrom(c2, Alignment.BOTTOM_LEFT, 0, 1);
-		c2 = addButton("period", ".", pendant, relPos[0], relPos[1],
+		c2 = addButton(WGUI_Buttons.Period, ".", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 
 		relPos = getAbsPosFrom(c2, Alignment.BOTTOM_LEFT, 0, 1);
-		c2 = addButton("posn", "POSN", pendant, relPos[0], relPos[1],
+		c2 = addButton(WGUI_Buttons.Posn, "POSN", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 
 
 		// Item button column
 
 		relPos = getAbsPosFrom(c1, Alignment.TOP_RIGHT, 1, 0);
-		c1 = addButton("item", "ITEM", pendant, relPos[0], relPos[1],
+		c1 = addButton(WGUI_Buttons.Item, "ITEM", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 
 		relPos = getAbsPosFrom(c1, Alignment.BOTTOM_LEFT, 0, 1);
-		c2 = addButton("num9", "9", pendant, relPos[0], relPos[1],
+		c2 = addButton(WGUI_Buttons.Num9, "9", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 
 		relPos = getAbsPosFrom(c2, Alignment.BOTTOM_LEFT, 0, 1);
-		c2 = addButton("num6", "6", pendant, relPos[0], relPos[1],
+		c2 = addButton(WGUI_Buttons.Num6, "6", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 
 		relPos = getAbsPosFrom(c2, Alignment.BOTTOM_LEFT, 0, 1);
-		c2 = addButton("num3", "3", pendant, relPos[0], relPos[1],
+		c2 = addButton(WGUI_Buttons.Num3, "3", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 
 		relPos = getAbsPosFrom(c2, Alignment.BOTTOM_LEFT, 0, 1);
-		c2 = addButton("comma", ",", pendant, relPos[0], relPos[1],
+		c2 = addButton(WGUI_Buttons.Comma, ",", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 
 		relPos = getAbsPosFrom(c2, Alignment.BOTTOM_LEFT, 0, 1);
-		c2 = addButton("io", "I/O", pendant, relPos[0], relPos[1],
+		c2 = addButton(WGUI_Buttons.IO, "I/O", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 
 
 		// Util button column
 
-		relPos = getAbsPosFrom(getButton("arrow_dn"), Alignment.BOTTOM_LEFT,
+		relPos = getAbsPosFrom(getButton(WGUI_Buttons.ArrowDn), Alignment.BOTTOM_LEFT,
 				-smLrDiff / 2, 10);
-		c1 = addButton("enter", "ENTER", pendant, relPos[0], btmColsY,
+		c1 = addButton(WGUI_Buttons.Enter, "ENTER", pendant, relPos[0], btmColsY,
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 
 		relPos = getAbsPosFrom(c1, Alignment.BOTTOM_LEFT, 0, 1);
-		c2 = addButton("tool1", "TOOL1", pendant, relPos[0], relPos[1],
+		c2 = addButton(WGUI_Buttons.Tool1, "TOOL1", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 
 		relPos = getAbsPosFrom(c2, Alignment.BOTTOM_LEFT, 0, 1);
-		c2 = addButton("tool2", "TOOL2", pendant, relPos[0], relPos[1],
+		c2 = addButton(WGUI_Buttons.Tool2, "TOOL2", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 
 		relPos = getAbsPosFrom(c2, Alignment.BOTTOM_LEFT, 0, 1);
-		c2 = addButton("mvmu", "MVMU", pendant, relPos[0], relPos[1],
+		c2 = addButton(WGUI_Buttons.Mvmu, "MVMU", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 
 		relPos = getAbsPosFrom(c2, Alignment.BOTTOM_LEFT, 0, 1);
-		c2 = addButton("SETUP", "SETUP", pendant, relPos[0], relPos[1],
+		c2 = addButton(WGUI_Buttons.Setup, "SETUP", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 
 		relPos = getAbsPosFrom(c2, Alignment.BOTTOM_LEFT, 0, 1);
-		c2 = addButton("status", "STATUS", pendant, relPos[0], relPos[1],
+		c2 = addButton(WGUI_Buttons.Stat, "STATUS", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 
 
 		// Jog button columns
 
-		c1 = getButton("shift");
+		c1 = getButton(WGUI_Buttons.Shift);
 		relPos = getAbsPosFrom(c1, Alignment.BOTTOM_LEFT, 0, 0);
 		relPos[1] = btmColsY;
 
@@ -417,7 +417,7 @@ public class WGUI implements ControlListener {
 		for (int idx = 1; idx <= 6; ++idx) {
 
 			int sym = 88 + (idx - 1) % 3;
-			String name = String.format("joint%d_pos", idx);
+			String name = String.format(WGUI_Buttons.JointPos[idx-1], idx);
 			String format = (idx < 4) ? " +%c\n(J%d)" : "+%cR\n(J%d)";
 			String lbl = String.format(format, sym, idx);
 
@@ -427,7 +427,7 @@ public class WGUI implements ControlListener {
 			b.getCaptionLabel().alignY(RobotRun.TOP);
 			relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, 1);
 
-			name = String.format("joint%d_neg", idx);
+			name = String.format(WGUI_Buttons.JointNeg[idx-1], idx);
 			format = (idx < 4) ? " -%c\n(J%d)" : "-%cR\n(J%d)";
 			lbl = String.format(format, sym, idx);
 
@@ -444,27 +444,27 @@ public class WGUI implements ControlListener {
 		relPos = getAbsPosFrom(c1, Alignment.BOTTOM_LEFT,
 				-2 * (Fields.LARGE_BUTTON + 1), 0);
 		relPos[1] = btmColsY;
-		c1 = addButton("hold", "HOLD", pendant, relPos[0],
+		c1 = addButton(WGUI_Buttons.Hold, "HOLD", pendant, relPos[0],
 				btmColsY, Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 
 		relPos = getAbsPosFrom(c1, Alignment.BOTTOM_LEFT, 0, 1);
-		c2 = addButton("fwd", "FWD", pendant, relPos[0], relPos[1],
+		c2 = addButton(WGUI_Buttons.Fwd, "FWD", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 
 		relPos = getAbsPosFrom(c2, Alignment.BOTTOM_LEFT, 0, 1);
-		c2 = addButton("bwd", "BWD", pendant, relPos[0], relPos[1],
+		c2 = addButton(WGUI_Buttons.Bwd, "BWD", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 
 		relPos = getAbsPosFrom(c2, Alignment.BOTTOM_LEFT, 0, 1);
-		c2 = addButton("coord", "COORD", pendant, relPos[0], relPos[1],
+		c2 = addButton(WGUI_Buttons.Coord, "COORD", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 
 		relPos = getAbsPosFrom(c2, Alignment.BOTTOM_LEFT, 0, 1);
-		c2 = addButton("spdup", "+%", pendant, relPos[0], relPos[1],
+		c2 = addButton(WGUI_Buttons.SpdUp, "+%", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 
 		relPos = getAbsPosFrom(c2, Alignment.BOTTOM_LEFT, 0, 1);
-		c2 = addButton("spddn", "-%", pendant, relPos[0], relPos[1],
+		c2 = addButton(WGUI_Buttons.SpdDn, "-%", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 
 		// Initialize the elements shared amongst the create and edit windows
@@ -504,7 +504,7 @@ public class WGUI implements ControlListener {
 				Fields.ITYPE_TRANSIENT);
 		addTextarea("WOOutlineLbl", "Outline:", sharedElements, mLblWidth, sButtonHeight, Fields.medium);
 
-		addButton("ClearFields", "Clear", sharedElements, mButtonWidth, sButtonHeight, Fields.small);
+		addButton(WGUI_Buttons.ObjClearFields, "Clear", sharedElements, mButtonWidth, sButtonHeight, Fields.small);
 		
 		// Initialize the world object creation window elements
 		addTextarea("WONameLbl", "Name:", createWO, mLblWidth, fieldHeight, Fields.medium);
@@ -529,7 +529,7 @@ public class WGUI implements ControlListener {
 		
 		addTextarea("WOFillSmp", "\0", createWO, sButtonHeight, sButtonHeight, Fields.medium);
 		addTextarea("WOOutlineSmp", "\0", createWO, sButtonHeight, sButtonHeight, Fields.medium);
-		addButton("WOCreateBtn", "Create", createWO, mButtonWidth, sButtonHeight, Fields.small);
+		addButton(WGUI_Buttons.ObjCreate, "Create", createWO, mButtonWidth, sButtonHeight, Fields.small);
 
 		// Initialize the world object edit window elements
 		addTextarea("WOEditLbl", "Object:", editWO, mLblWidth, fieldHeight, Fields.medium);
@@ -576,13 +576,13 @@ public class WGUI implements ControlListener {
 
 		addTextarea("RefLbl", "Reference:", editWOPos, lLblWidth, sButtonHeight, Fields.medium);
 
-		addButton("MoveToCur", "Move to Current", editWOPos, fieldWidthMed, sButtonHeight, Fields.small);
-		addButton("UpdateWODef", "Update Default", editWOPos, fieldWidthMed, sButtonHeight, Fields.small);
-		addButton("MoveToDef", "Move to Default", editWOPos, fieldWidthMed, sButtonHeight, Fields.small);
+		addButton(WGUI_Buttons.ObjMoveToCur, "Move to Current", editWOPos, fieldWidthMed, sButtonHeight, Fields.small);
+		addButton(WGUI_Buttons.ObjSetDefault, "Update Default", editWOPos, fieldWidthMed, sButtonHeight, Fields.small);
+		addButton(WGUI_Buttons.ObjMoveToDefault, "Move to Default", editWOPos, fieldWidthMed, sButtonHeight, Fields.small);
 
-		addButton("ResDefs", "Restore Defaults", editWOPos, lLblWidth, sButtonHeight, Fields.small);
+		addButton(WGUI_Buttons.ObjResetDefault, "Restore Defaults", editWOPos, lLblWidth, sButtonHeight, Fields.small);
 
-		addButton("WODelBtn", "Delete", editWOOther, mButtonWidth, sButtonHeight, Fields.small);
+		addButton(WGUI_Buttons.ObjDelete, "Delete", editWOOther, mButtonWidth, sButtonHeight, Fields.small);
 
 		// Initialize the scenario window elements
 		addTextarea("SOptLbl", "Options:", scenario, mLblWidth, fieldHeight, Fields.medium);
@@ -601,7 +601,7 @@ public class WGUI implements ControlListener {
 				54, Fields.small).hideScrollbar();
 
 		addTextfield("SInput", scenario, fieldWidthMed, fieldHeight, Fields.medium, app.getKeyCodeMap());
-		addButton("SConfirm", "N/A", scenario, mButtonWidth, sButtonHeight, Fields.small);
+		addButton(WGUI_Buttons.ScenarioConfirm, "N/A", scenario, mButtonWidth, sButtonHeight, Fields.small);
 
 		// Initialize the camera window
 		addTextarea("CXLbl", "X Position:", camera, lLblWidth, fieldHeight, Fields.medium);
@@ -639,20 +639,20 @@ public class WGUI implements ControlListener {
 		addSlider("CExp", camera, fieldWidthMed, fieldHeight, 0.01f, 1f, 0.1f,
 				Fields.medium, Fields.ITYPE_TRANSIENT);
 		
-		addButton("UpdateCam", "Update Camera", camera, fieldWidthMed, sButtonHeight, Fields.small);
+		addButton(WGUI_Buttons.CamUpdate, "Update Camera", camera, fieldWidthMed, sButtonHeight, Fields.small);
 		addDropdown("CamObjects", camera, ldropItemWidth, dropItemHeight, 0,
 				Fields.small, Fields.ITYPE_PERMENANT);
-		addButton("CamObjPreview", "ObjPreview", camera, 150, 200, Fields.small);
-		addButton("TeachCamObj", "Teach Object", camera, fieldWidthMed, sButtonHeight, Fields.small);
+		addButton(WGUI_Buttons.CamObjPreview, "ObjPreview", camera, 150, 200, Fields.small);
+		addButton(WGUI_Buttons.CamTeachObj, "Teach Object", camera, fieldWidthMed, sButtonHeight, Fields.small);
 		
 		// Initialize the miscellaneous window elements
 		addTextarea("ActiveRobotEE", "EE:", miscellaneous, lLblWidth, sButtonHeight, Fields.medium);
 		addTextarea("ActiveAxesDisplay", "Axes Display:", miscellaneous, lLblWidth, sButtonHeight, Fields.medium);
 
-		addButton("ToggleOBBs", "Hide OBBs", miscellaneous, mdropItemWidth, sButtonHeight, Fields.small);
-		addButton("ToggleRobot", "Add Robot", miscellaneous, mdropItemWidth, sButtonHeight, Fields.small);
-		addButton("ToggleCamera", "Enable RCam", miscellaneous, mdropItemWidth, sButtonHeight, Fields.small);
-		addButton("ToggleTrace", "Enable Trace", miscellaneous, mdropItemWidth, sButtonHeight, Fields.small);
+		addButton(WGUI_Buttons.ObjToggleBounds, "Hide OBBs", miscellaneous, mdropItemWidth, sButtonHeight, Fields.small);
+		addButton(WGUI_Buttons.RobotToggleActive, "Add Robot", miscellaneous, mdropItemWidth, sButtonHeight, Fields.small);
+		addButton(WGUI_Buttons.CamToggleActive, "Enable RCam", miscellaneous, mdropItemWidth, sButtonHeight, Fields.small);
+		addButton(WGUI_Buttons.RobotToggleTrace, "Enable Trace", miscellaneous, mdropItemWidth, sButtonHeight, Fields.small);
 		
 		/* Initialize dropdown list elements
 		 * 
@@ -686,6 +686,15 @@ public class WGUI implements ControlListener {
 			addDropdownSearch(String.format("DimDdl%d", idx), sharedElements, ldropItemWidth,
 					dropItemHeight, 4, Fields.small, Fields.ITYPE_TRANSIENT);
 		}
+		
+		int count = 0;
+		for(ControllerInterface<?> c: manager.getAll()) {
+			if(c instanceof Button) {
+				count += 1;
+				System.out.println(((Button)c).getName());
+			}
+		}
+		System.out.println(count);
 
 		addDropdown("WO", editWO, ldropItemWidth, dropItemHeight, 4,
 				Fields.small, Fields.ITYPE_TRANSIENT);
@@ -1179,7 +1188,7 @@ public class WGUI implements ControlListener {
 			} else if (arg0.isFrom("CamObjPreview")) {
 				WorldObject o = (WorldObject) getDropdown("CamObjects").getSelectedItem();	
 				RMatrix mdlOrient = o.getLocalOrientation();
-				Pointer p = getButton("CamObjPreview").getPointer();
+				Pointer p = getButton(WGUI_Buttons.CamObjPreview).getPointer();
 				int x = p.x();
 				int y = p.y();
 				
@@ -1977,7 +1986,7 @@ public class WGUI implements ControlListener {
 	 * @return	Whether or not the robot display button is on
 	 */
 	public boolean getRobotButtonState() {
-		return getButton("ToggleRobot").isOn();
+		return getButton(WGUI_Buttons.RobotToggleActive).isOn();
 	}
 	
 	/**
@@ -2311,8 +2320,8 @@ public class WGUI implements ControlListener {
 	 */
 	public void resetJogButtons() {
 		for (int idx = 1; idx <= 6; idx += 1) {
-			updateButtonBgColor( String.format("joint%d_pos", idx) , false);
-			updateButtonBgColor( String.format("joint%d_neg", idx) , false);
+			updateButtonBgColor( String.format(WGUI_Buttons.JointPos[idx-1], idx) , false);
+			updateButtonBgColor( String.format(WGUI_Buttons.JointNeg[idx-1], idx) , false);
 		}
 	}
 
@@ -2356,7 +2365,7 @@ public class WGUI implements ControlListener {
 		}
 
 		// Remove or add the robot2 tab based on the robot toggle button
-		Button tr = getButton("ToggleRobot");
+		Button tr = getButton(WGUI_Buttons.RobotToggleActive);
 		if(tr.isOn()) {
 			tr.setLabel("Remove Robot");
 		}
@@ -2375,7 +2384,7 @@ public class WGUI implements ControlListener {
 		}
 
 		// Remove or add the camera tab based on the camera toggle button
-		Button tc = getButton("ToggleCamera");
+		Button tc = getButton(WGUI_Buttons.CamToggleActive);
 		if(tc.isOn()) {
 			tc.setLabel("Disable RCam");
 		}
@@ -2391,11 +2400,11 @@ public class WGUI implements ControlListener {
 		windowTabs.clear();
 		windowTabs.setItems(WGUI.tabs);
 		
-		if(!getButton("ToggleRobot").isOn()) {
+		if(!getButton(WGUI_Buttons.RobotToggleActive).isOn()) {
 			windowTabs.removeItem("Robot2");
 		}
 		
-		if(!getButton("ToggleCamera").isOn()) {
+		if(!getButton(WGUI_Buttons.CamToggleActive).isOn()) {
 			windowTabs.removeItem("Camera");
 		}
 	}
@@ -2493,10 +2502,10 @@ public class WGUI implements ControlListener {
 
 		// Create button
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		c = getButton("WOCreateBtn").setPosition(relPos[0], relPos[1]);
+		c = getButton(WGUI_Buttons.ObjCreate).setPosition(relPos[0], relPos[1]);
 		// Clear button
 		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, winMargin, 0);
-		c = getButton("ClearFields").setPosition(relPos[0], relPos[1]).show();
+		c = getButton(WGUI_Buttons.ObjClearFields).setPosition(relPos[0], relPos[1]).show();
 
 		// Update window background display
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
@@ -2722,7 +2731,7 @@ public class WGUI implements ControlListener {
 	 */
 	private void updateEditWindowContentPositions() {
 		updateDimLblsAndFields();
-		getButton("ClearFields").hide();
+		getButton(WGUI_Buttons.ObjClearFields).hide();
 		
 		WorldObject wo = getSelectedWO();
 		boolean isPart = wo instanceof Part;
@@ -2868,28 +2877,28 @@ public class WGUI implements ControlListener {
 
 			// Move to current button
 			relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-			c = getButton("MoveToCur").setPosition(relPos[0], relPos[1]);
+			c = getButton(WGUI_Buttons.ObjMoveToCur).setPosition(relPos[0], relPos[1]);
 
 			if (isPart) {
 				// Update default button
 				relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
-				getButton("UpdateWODef").setPosition(relPos[0], relPos[1]).show();
+				getButton(WGUI_Buttons.ObjSetDefault).setPosition(relPos[0], relPos[1]).show();
 
 				// Move to default button
 				relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-				c0 = getButton("MoveToDef").setPosition(relPos[0], relPos[1]).show();
+				c0 = getButton(WGUI_Buttons.ObjMoveToDefault).setPosition(relPos[0], relPos[1]).show();
 
 				// Restore Defaults button
 				relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-				c = getButton("ResDefs").setPosition(relPos[0], relPos[1]).show();
+				c = getButton(WGUI_Buttons.ObjResetDefault).setPosition(relPos[0], relPos[1]).show();
 
 			} else {
-				getButton("UpdateWODef").hide();
-				getButton("MoveToDef").hide();
+				getButton(WGUI_Buttons.ObjSetDefault).hide();
+				getButton(WGUI_Buttons.ObjMoveToDefault).hide();
 
 				// Restore Defaults button
 				relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-				c = getButton("ResDefs").setPosition(relPos[0], relPos[1]).show();
+				c = getButton(WGUI_Buttons.ObjResetDefault).setPosition(relPos[0], relPos[1]).show();
 			}
 			
 		} else {
@@ -2940,7 +2949,7 @@ public class WGUI implements ControlListener {
 			
 			// Delete button
 			relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-			c = getButton("WODelBtn").setPosition(winMargin, relPos[1]);
+			c = getButton(WGUI_Buttons.ObjDelete).setPosition(winMargin, relPos[1]);
 		}
 
 		// Update window background display
@@ -3035,13 +3044,13 @@ public class WGUI implements ControlListener {
 		
 		// Cam update button
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		c = getButton("UpdateCam").setPosition(relPos[0], relPos[1]);
+		c = getButton(WGUI_Buttons.CamUpdate).setPosition(relPos[0], relPos[1]);
 		
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		c = getButton("CamObjPreview").setPosition(relPos[0], relPos[1]);
+		c = getButton(WGUI_Buttons.CamObjPreview).setPosition(relPos[0], relPos[1]);
 		
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		c = getButton("TeachCamObj").setPosition(relPos[0], relPos[1]);
+		c = getButton(WGUI_Buttons.CamTeachObj).setPosition(relPos[0], relPos[1]);
 		
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		c = getDropdown("CamObjects").setPosition(relPos[0], relPos[1]);
@@ -3049,11 +3058,11 @@ public class WGUI implements ControlListener {
 		WorldObject o = (WorldObject)getDropdown("CamObjects").getSelectedItem();
 		if(o != null) {
 			PGraphics preview = ((ComplexShape)o.getForm()).getModelPreview(o.getLocalOrientation());
-			getButton("CamObjPreview").setImage(preview);
-			getButton("CamObjPreview").show();
+			getButton(WGUI_Buttons.CamObjPreview).setImage(preview);
+			getButton(WGUI_Buttons.CamObjPreview).show();
 		}
 		else {
-			getButton("CamObjPreview").hide();
+			getButton(WGUI_Buttons.CamObjPreview).hide();
 		}
 		
 		// Update window background display
@@ -3109,9 +3118,9 @@ public class WGUI implements ControlListener {
 	 */
 	private void updateJogButtons(int pair, int newDir) {
 		// Positive jog button is active when the direction is positive
-		updateButtonBgColor(String.format("joint%d_pos", pair + 1), newDir > 0);
+		updateButtonBgColor(String.format(WGUI_Buttons.JointPos[pair], pair + 1), newDir > 0);
 		// Negative jog button is active when the direction is negative
-		updateButtonBgColor(String.format("joint%d_neg", pair + 1), newDir < 0);
+		updateButtonBgColor(String.format(WGUI_Buttons.JointNeg[pair], pair + 1), newDir < 0);
 	}
 
 	/**
@@ -3272,7 +3281,7 @@ public class WGUI implements ControlListener {
 		Textarea ta = getTextArea("SInstructions");
 		MyDropdownList mdl = getDropdown("Scenario");
 		MyTextfield mtf = getTextField("SInput");
-		Button b = getButton("SConfirm");
+		Button b = getButton(WGUI_Buttons.ScenarioConfirm);
 
 		if (winVar == 2f) { // Rename scenario variation
 			// Scenario instructions
@@ -3337,7 +3346,7 @@ public class WGUI implements ControlListener {
 	 * @param state	The state of the shift button
 	 */
 	public void updateShiftButton(boolean state) {
-		updateButtonBgColor("shift", state);
+		updateButtonBgColor(WGUI_Buttons.Shift, state);
 		updateAndDrawUI();
 	}
 
@@ -3348,7 +3357,7 @@ public class WGUI implements ControlListener {
 	 * @param state	The state of the step button
 	 */
 	public void updateStepButton(boolean state) {
-		updateButtonBgColor("step", state);
+		updateButtonBgColor(WGUI_Buttons.Step, state);
 		updateAndDrawUI();
 	}
 
@@ -3373,7 +3382,7 @@ public class WGUI implements ControlListener {
 
 		// Bounding box display toggle button
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		Button b = getButton("ToggleOBBs").setPosition(relPos[0], relPos[1]);
+		Button b = getButton(WGUI_Buttons.ObjToggleBounds).setPosition(relPos[0], relPos[1]);
 		c = b;
 		
 		// Update button color based on the state of the button
@@ -3388,17 +3397,17 @@ public class WGUI implements ControlListener {
 		
 		// Robot Camera toggle button
 		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
-		b = getButton("ToggleCamera").setPosition(relPos[0], relPos[1]);
+		b = getButton(WGUI_Buttons.CamToggleActive).setPosition(relPos[0], relPos[1]);
 		updateButtonBgColor(b.getName(), b.isOn());
 
 		// Second robot toggle button
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		c = b = getButton("ToggleRobot").setPosition(relPos[0], relPos[1]);
+		c = b = getButton(WGUI_Buttons.RobotToggleActive).setPosition(relPos[0], relPos[1]);
 		updateButtonBgColor(b.getName(), b.isOn());
 		
 		// Trace Robot Tool Tip button
 		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
-		c = b = getButton("ToggleTrace").setPosition(relPos[0], relPos[1]);
+		c = b = getButton(WGUI_Buttons.RobotToggleTrace).setPosition(relPos[0], relPos[1]);
 		
 		if (b.isOn()) {
 			b.setLabel("Disable Trace");
@@ -3570,12 +3579,12 @@ public class WGUI implements ControlListener {
 		if (menu == null) {
 			// Window is hidden
 			background.hide();
-			getButton("FrontView").hide();
-			getButton("BackView").hide();
-			getButton("LeftView").hide();
-			getButton("RightView").hide();
-			getButton("TopView").hide();
-			getButton("BottomView").hide();
+			getButton(WGUI_Buttons.CamViewFr).hide();
+			getButton(WGUI_Buttons.CamViewBk).hide();
+			getButton(WGUI_Buttons.CamViewLt).hide();
+			getButton(WGUI_Buttons.CamViewRt).hide();
+			getButton(WGUI_Buttons.CamViewTp).hide();
+			getButton(WGUI_Buttons.CamViewBt).hide();
 
 		} else {
 			
@@ -3603,17 +3612,17 @@ public class WGUI implements ControlListener {
 			// Update the camera view buttons
 			int[] relPos = getAbsPosFrom(windowTabs, Alignment.BOTTOM_RIGHT, winMargin, 0);
 	
-			Button b = getButton("FrontView").setPosition(relPos[0], relPos[1]).show();
+			Button b = getButton(WGUI_Buttons.CamViewFr).setPosition(relPos[0], relPos[1]).show();
 			relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-			b = getButton("BackView").setPosition(relPos[0], relPos[1]).show();
+			b = getButton(WGUI_Buttons.CamViewBk).setPosition(relPos[0], relPos[1]).show();
 			relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-			b = getButton("LeftView").setPosition(relPos[0], relPos[1]).show();
+			b = getButton(WGUI_Buttons.CamViewLt).setPosition(relPos[0], relPos[1]).show();
 			relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-			b = getButton("RightView").setPosition(relPos[0], relPos[1]).show();
+			b = getButton(WGUI_Buttons.CamViewRt).setPosition(relPos[0], relPos[1]).show();
 			relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-			b = getButton("TopView").setPosition(relPos[0], relPos[1]).show();
+			b = getButton(WGUI_Buttons.CamViewTp).setPosition(relPos[0], relPos[1]).show();
 			relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-			b = getButton("BottomView").setPosition(relPos[0], relPos[1]).show();
+			b = getButton(WGUI_Buttons.CamViewBt).setPosition(relPos[0], relPos[1]).show();
 	
 			updateListContents();
 		}

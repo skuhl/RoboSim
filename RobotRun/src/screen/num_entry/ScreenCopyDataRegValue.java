@@ -1,10 +1,10 @@
 package screen.num_entry;
 
 import core.RobotRun;
-import enums.ScreenMode;
 import global.DataManagement;
 import regs.Register;
 import robot.RoboticArm;
+import screen.ScreenMode;
 
 public class ScreenCopyDataRegValue extends ST_ScreenNumEntry {
 

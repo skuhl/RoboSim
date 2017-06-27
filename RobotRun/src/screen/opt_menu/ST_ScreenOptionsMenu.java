@@ -1,8 +1,8 @@
 package screen.opt_menu;
 
 import core.RobotRun;
-import enums.ScreenMode;
 import screen.Screen;
+import screen.ScreenMode;
 import screen.ScreenState;
 
 public abstract class ST_ScreenOptionsMenu extends Screen {

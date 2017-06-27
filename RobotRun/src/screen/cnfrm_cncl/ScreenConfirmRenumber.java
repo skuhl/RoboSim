@@ -1,12 +1,12 @@
 package screen.cnfrm_cncl;
 
 import core.RobotRun;
-import enums.ScreenMode;
 import geom.Point;
 import global.Fields;
 import programming.Instruction;
 import programming.PosMotionInst;
 import programming.Program;
+import screen.ScreenMode;
 
 public class ScreenConfirmRenumber extends ST_ScreenConfirmCancel {
 

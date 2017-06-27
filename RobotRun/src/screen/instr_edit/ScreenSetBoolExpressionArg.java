@@ -1,13 +1,13 @@
 package screen.instr_edit;
 
 import core.RobotRun;
-import enums.ScreenMode;
 import expression.Expression;
 import expression.OperandDReg;
 import expression.OperandFloat;
 import expression.OperandIOReg;
 import programming.IfStatement;
 import robot.RoboticArm;
+import screen.ScreenMode;
 
 public class ScreenSetBoolExpressionArg extends ST_ScreenInstructionEdit {
 

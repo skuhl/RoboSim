@@ -1,12 +1,12 @@
 package screen.select_lines;
 
 import core.RobotRun;
-import enums.ScreenMode;
 import global.Fields;
 import programming.Instruction;
 import programming.MotionInstruction;
 import programming.SelectStatement;
 import screen.Screen;
+import screen.ScreenMode;
 import screen.ScreenState;
 
 public abstract class ST_ScreenLineSelect extends Screen {

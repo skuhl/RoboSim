@@ -1,4 +1,4 @@
-package enums;
+package screen;
 
 /**
  * Defines the set of screen modes available for the pendant menu system.

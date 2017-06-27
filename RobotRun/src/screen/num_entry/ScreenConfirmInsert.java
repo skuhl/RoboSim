@@ -1,9 +1,9 @@
 package screen.num_entry;
 
 import core.RobotRun;
-import enums.ScreenMode;
 import programming.Instruction;
 import programming.Program;
+import screen.ScreenMode;
 
 public class ScreenConfirmInsert extends ST_ScreenNumEntry {
 

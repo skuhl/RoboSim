@@ -1,12 +1,12 @@
 package screen.num_entry;
 
 import core.RobotRun;
-import enums.ScreenMode;
 import programming.IfStatement;
 import programming.Instruction;
 import programming.JumpInstruction;
 import programming.SelectStatement;
 import robot.RoboticArm;
+import screen.ScreenMode;
 
 public class ScreenSetJumpTgt extends ST_ScreenNumEntry {
 

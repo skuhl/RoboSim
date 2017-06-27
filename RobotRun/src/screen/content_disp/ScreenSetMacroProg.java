@@ -1,9 +1,9 @@
 package screen.content_disp;
 
 import core.RobotRun;
-import enums.ScreenMode;
 import programming.Macro;
 import robot.RoboticArm;
+import screen.ScreenMode;
 
 public class ScreenSetMacroProg extends ST_ScreenListContents {
 

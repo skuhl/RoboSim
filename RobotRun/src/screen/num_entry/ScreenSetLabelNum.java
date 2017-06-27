@@ -1,9 +1,9 @@
 package screen.num_entry;
 
 import core.RobotRun;
-import enums.ScreenMode;
 import programming.LabelInstruction;
 import robot.RoboticArm;
+import screen.ScreenMode;
 
 public class ScreenSetLabelNum extends ST_ScreenNumEntry {
 
