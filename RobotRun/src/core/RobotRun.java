@@ -2273,9 +2273,9 @@ public class RobotRun extends PApplet {
 
 		for (int i = 0; i < macros.size(); i += 1) {
 			if (macros.get(i).isManual()) {
-				macroNum += 1;
 				String manFunct = macros.get(i).toString();
-				disp.add(new DisplayLine(macroNum, macroNum + " " + manFunct));
+				disp.add(new DisplayLine(macroNum, (macroNum + 1) + " " + manFunct));
+				macroNum += 1;
 			}
 		}
 		
