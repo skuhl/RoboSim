@@ -10,14 +10,10 @@ import screen.ScreenState;
 
 public class ScreenCopyPosRegPoint extends ST_ScreenNumEntry {
 
-	public ScreenCopyPosRegPoint(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.CP_PREG_PT, prevState, r);
-	}
-
-	@Override
-	protected String loadHeader() {
-		Register reg = robotRun.getActiveRobot().getPReg(contents.getCurrentItemIdx());
-		return String.format("%s: POSITION COPY", reg.getLabel());
+	public ScreenCopyPosRegPoint(ScreenState prevState, String header,
+			RobotRun r) {
+		
+		super(ScreenMode.CP_PREG_PT, prevState, header, r);
 	}
 	
 	@Override
@@ -43,7 +39,13 @@ public class ScreenCopyPosRegPoint extends ST_ScreenNumEntry {
 			PositionRegister src = robotRun.getActiveRobot().getPReg(contents.getCurrentItemIdx());
 			PositionRegister dest = robotRun.getActiveRobot().getPReg(regIdx);
 			
-			dest.point = src.point.clone();
+			if (src.point != null) {
+				dest.point = src.point.clone();
+				
+			} else {
+				dest.point = null;
+			}
+			
 			dest.isCartesian = src.isCartesian;
 			DataManagement.saveRobotData(robotRun.getActiveRobot(), 3);
 

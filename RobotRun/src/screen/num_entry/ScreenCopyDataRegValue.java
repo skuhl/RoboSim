@@ -9,14 +9,10 @@ import screen.ScreenState;
 
 public class ScreenCopyDataRegValue extends ST_ScreenNumEntry {
 
-	public ScreenCopyDataRegValue(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.CP_DREG_VAL, prevState, r);
-	}
-
-	@Override
-	protected String loadHeader() {
-		Register reg = robotRun.getActiveRobot().getDReg(contents.getCurrentItemIdx());
-		return String.format("%s: VALUE COPY", reg.getLabel());
+	public ScreenCopyDataRegValue(ScreenState prevState, String header,
+			RobotRun r) {
+		
+		super(ScreenMode.CP_DREG_VAL, prevState, header, r);
 	}
 	
 	@Override

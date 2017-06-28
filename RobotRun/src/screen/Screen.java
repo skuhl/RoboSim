@@ -12,6 +12,18 @@ public abstract class Screen {
 	protected MenuScroll options;
 	protected String[] labels;
 	
+	public Screen(ScreenMode m, ScreenState prevState, String header, RobotRun r) {
+		mode = m;
+		robotRun = r;
+		
+		this.header = header;
+		contents = new MenuScroll("cont", 8, 10, 20);
+		options = new MenuScroll("opt", 3, 10, 180);
+		labels = new String[5];
+		
+		loadVars(prevState);
+	}
+	
 	public Screen(ScreenMode m, ScreenState prevState, RobotRun r) {
 		mode = m;
 		robotRun = r;

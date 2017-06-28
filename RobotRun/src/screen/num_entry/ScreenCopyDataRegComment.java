@@ -9,14 +9,10 @@ import screen.ScreenState;
 
 public class ScreenCopyDataRegComment extends ST_ScreenNumEntry {
 
-	public ScreenCopyDataRegComment(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.CP_DREG_COM, prevState, r);
-	}
-	
-	@Override
-	protected String loadHeader() {
-		Register reg = robotRun.getActiveRobot().getDReg(contents.getCurrentItemIdx());
-		return String.format("%s: COMMENT COPY", reg.getLabel());
+	public ScreenCopyDataRegComment(ScreenState prevState, String header,
+			RobotRun r) {
+		
+		super(ScreenMode.CP_DREG_COM, prevState, header, r);
 	}
 	
 	@Override

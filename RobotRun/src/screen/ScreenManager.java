@@ -4,6 +4,9 @@ import java.util.Stack;
 
 import core.RobotRun;
 import programming.Program;
+import regs.DataRegister;
+import regs.PositionRegister;
+import robot.RoboticArm;
 import screen.cnfrm_cncl.ScreenConfirmProgramDelete;
 import screen.cnfrm_cncl.ScreenConfirmRenumber;
 import screen.content_disp.ScreenCreateMacro;
@@ -320,10 +323,35 @@ public class ScreenManager {
 		case SET_MINST_OFFIDX: return new ScreenSetMotionInstrOffsetIdx(prevState, APP);
 		case SET_MINST_SPD: return new ScreenSetMotionInstrSpeed(prevState, APP);
 		case SET_MINST_TERM: return new ScreenSetMotionInstrTerm(prevState, APP);
-		case CP_DREG_COM: return new ScreenCopyDataRegComment(prevState, APP);
-		case CP_DREG_VAL: return new ScreenCopyDataRegValue(prevState, APP);
-		case CP_PREG_COM: return new ScreenCopyPosRegComment(prevState, APP);
-		case CP_PREG_PT: return new ScreenCopyPosRegPoint(prevState, APP);
+		case CP_DREG_COM:
+			// The header requires some pre-processing
+			RoboticArm r = APP.getActiveRobot();
+			DataRegister dReg = r.getDReg( prevScreen.getContentIdx() );
+			String header = String.format("%s: COMMENT COPY", dReg.getLabel());
+			
+			return new ScreenCopyDataRegComment(prevState, header, APP);
+		case CP_DREG_VAL:
+			// The header requires some pre-processing
+			r = APP.getActiveRobot();
+			dReg = r.getDReg( prevScreen.getContentIdx() );
+			header = String.format("%s: VALUE COPY", dReg.getLabel());
+			
+			return new ScreenCopyDataRegValue(prevState, header, APP);
+		case CP_PREG_COM:
+			// The header requires some pre-processing
+			r = APP.getActiveRobot();
+			PositionRegister pReg = r.getPReg( prevScreen.getContentIdx() );
+			header = String.format("%s: COMMENT COPY", pReg.getLabel());
+			
+			return new ScreenCopyPosRegComment(prevState, header, APP);
+		
+		case CP_PREG_PT:
+			// The header requires some pre-processing
+			r = APP.getActiveRobot();
+			pReg = r.getPReg( prevScreen.getContentIdx() );
+			header = String.format("%s: POINT COPY", pReg.getLabel());
+			
+			return new ScreenCopyPosRegPoint(prevState, header, APP);
 
 		/*
 		 * Frame input methods
