@@ -2,12 +2,11 @@ package screen.content_disp;
 
 import core.RobotRun;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenNavMFMacros extends ST_ScreenListContents {
 
-	public ScreenNavMFMacros(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.NAV_MF_MACROS, prevState, r);
+	public ScreenNavMFMacros(RobotRun r) {
+		super(ScreenMode.NAV_MF_MACROS, r);
 	}
 
 	@Override

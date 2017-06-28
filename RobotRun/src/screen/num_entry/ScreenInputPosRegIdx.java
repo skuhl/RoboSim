@@ -5,12 +5,11 @@ import expression.OperandPReg;
 import expression.OperandPRegIdx;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenInputPosRegIdx extends ST_ScreenNumEntry {
 
-	public ScreenInputPosRegIdx(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.INPUT_PREG_IDX1, prevState, r);
+	public ScreenInputPosRegIdx(RobotRun r) {
+		super(ScreenMode.INPUT_PREG_IDX1, r);
 	}
 
 	@Override

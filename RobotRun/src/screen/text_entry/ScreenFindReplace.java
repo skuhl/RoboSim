@@ -4,12 +4,11 @@ import core.RobotRun;
 import programming.Instruction;
 import programming.Program;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenFindReplace extends ST_ScreenTextEntry {
 
-	public ScreenFindReplace(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.FIND_REPL, prevState, r);
+	public ScreenFindReplace(RobotRun r) {
+		super(ScreenMode.FIND_REPL, r);
 	}
 	
 	@Override
@@ -19,7 +18,7 @@ public class ScreenFindReplace extends ST_ScreenTextEntry {
 	
 	@Override
 	protected void loadContents() {
-		contents.setLines(robotRun.loadInstructions(robotRun.getActiveProg(), true));
+		contents.setLines(robotRun.loadInstructions(robotRun.getActiveProg(), false));
 	}
 	
 	@Override
@@ -36,11 +35,6 @@ public class ScreenFindReplace extends ST_ScreenTextEntry {
 		labels[2] = "";
 		labels[3] = "[Confirm]";
 		labels[4] = "[Cancel]";
-	}
-	
-	@Override
-	protected void loadVars(ScreenState s) {
-		setScreenIndices(s.conLnIdx, 0, s.conRenIdx, -1, 0);
 	}
 
 	@Override
@@ -73,14 +67,14 @@ public class ScreenFindReplace extends ST_ScreenTextEntry {
 			lineIdx += 1;
 		}
 
-		robotRun.popScreenStack(1);
+		robotRun.lastScreen();
 		robotRun.setActiveInstIdx(lineIdx);
 		robotRun.updateInstructions();
 	}
 	
 	@Override
 	public void actionF5() {
-		robotRun.popScreenStack(1);
+		robotRun.lastScreen();
 		robotRun.updateInstructions();
 	}
 }

@@ -3,12 +3,11 @@ package screen.content_disp;
 import core.RobotRun;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenSetMacroProg extends ST_ScreenListContents {
-
-	public ScreenSetMacroProg(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.SET_MACRO_PROG, prevState, r);
+	
+	public ScreenSetMacroProg(RobotRun r) {
+		super(ScreenMode.SET_MACRO_PROG, r);
 	}
 
 	@Override

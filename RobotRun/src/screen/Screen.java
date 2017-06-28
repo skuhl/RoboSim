@@ -12,16 +12,13 @@ public abstract class Screen {
 	protected MenuScroll options;
 	protected String[] labels;
 	
-	public Screen(ScreenMode m, ScreenState prevState, RobotRun r) {
+	public Screen(ScreenMode m, RobotRun r) {
 		mode = m;
 		robotRun = r;
-		
 		header = loadHeader();
 		contents = new MenuScroll("cont", 8, 10, 20);
 		options = new MenuScroll("opt", 3, 10, 180);
 		labels = new String[5];
-		
-		loadVars(prevState);
 	}
 	
 	public void updateScreen() {
@@ -31,6 +28,13 @@ public abstract class Screen {
 		loadContents();
 		loadOptions();
 		loadLabels();
+	}
+	
+	public void updateScreen(ScreenState s) {
+		updateScreen();
+		loadVars(s);
+		
+		printScreenInfo();
 	}
 	
 	//Used for displaying screen text
@@ -63,12 +67,12 @@ public abstract class Screen {
 		options.setRenderStart(optRS);
 	}
 	
-	public static void printScreenInfo(Screen s) {
+	public void printScreenInfo() {
 		System.out.println("Current screen: ");
-		System.out.println("\tMode: " + s.mode.name());
-		System.out.println("\tRow: " + s.contents.getLineIdx() + ", col: " + s.contents.getColumnIdx() +
-				", RS: " + s.contents.getRenderStart());
-		System.out.println("\tOpt row: " + s.options.getLineIdx() + ", opt RS: " + s.options.getRenderStart());
+		System.out.println("\tMode: " + mode.name());
+		System.out.println("\tRow: " + contents.getLineIdx() + ", col: " + contents.getColumnIdx() +
+				", RS: " + contents.getRenderStart());
+		System.out.println("\tOpt row: " + options.getLineIdx() + ", opt RS: " + options.getRenderStart());
 	}
 	
 	//Sets text for each screen
@@ -91,9 +95,4 @@ public abstract class Screen {
 	public abstract void actionF3();
 	public abstract void actionF4();
 	public abstract void actionF5();
-	
-	@Override
-	public String toString() {
-		return (mode == null) ? "Mode=null" : mode.name();
-	}
 }

@@ -5,17 +5,16 @@ import global.DataManagement;
 import regs.Register;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenCopyDataRegComment extends ST_ScreenNumEntry {
 
-	public ScreenCopyDataRegComment(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.CP_DREG_COM, prevState, r);
+	public ScreenCopyDataRegComment(RobotRun r) {
+		super(ScreenMode.CP_DREG_COM, r);
 	}
 	
 	@Override
 	protected String loadHeader() {
-		Register reg = robotRun.getActiveRobot().getDReg(contents.getCurrentItemIdx());
+		Register reg = robotRun.getActiveRobot().getDReg(robotRun.getLastScreen().getContentIdx());
 		return String.format("%s: COMMENT COPY", reg.getLabel());
 	}
 	
@@ -27,7 +26,7 @@ public class ScreenCopyDataRegComment extends ST_ScreenNumEntry {
 
 	@Override
 	protected void loadOptions() {
-		options.addLine(String.format("Move R[%d]'s comment to:", contents.getCurrentItemIdx() + 1));
+		options.addLine(String.format("Move R[%d]'s comment to:", robotRun.getLastScreen().getContentIdx() + 1));
 		options.addLine(String.format("R[%s]", workingText));
 	}
 

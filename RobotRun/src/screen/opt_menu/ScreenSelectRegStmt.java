@@ -5,12 +5,11 @@ import regs.DataRegister;
 import regs.IORegister;
 import regs.PositionRegister;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenSelectRegStmt extends ST_ScreenOptionsMenu {
 
-	public ScreenSelectRegStmt(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.SELECT_REG_STMT, prevState, r);
+	public ScreenSelectRegStmt(RobotRun r) {
+		super(ScreenMode.SELECT_REG_STMT, r);
 	}
 
 	@Override
@@ -28,7 +27,8 @@ public class ScreenSelectRegStmt extends ST_ScreenOptionsMenu {
 
 	@Override
 	public void actionEntr() {
-		robotRun.popScreenStack(2);
+		robotRun.lastScreen();
+		robotRun.lastScreen();
 
 		if (options.getLineIdx() == 0) {
 			robotRun.newRegisterStatement(new DataRegister());

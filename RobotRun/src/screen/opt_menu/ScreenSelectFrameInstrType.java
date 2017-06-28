@@ -3,12 +3,11 @@ package screen.opt_menu;
 import core.RobotRun;
 import global.Fields;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenSelectFrameInstrType extends ST_ScreenOptionsMenu {
 
-	public ScreenSelectFrameInstrType(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.SELECT_FRAME_INSTR_TYPE, prevState, r);
+	public ScreenSelectFrameInstrType(RobotRun r) {
+		super(ScreenMode.SELECT_FRAME_INSTR_TYPE, r);
 	}
 
 	@Override
@@ -30,7 +29,7 @@ public class ScreenSelectFrameInstrType extends ST_ScreenOptionsMenu {
 			robotRun.newFrameInstruction(Fields.FTYPE_USER);
 		}
 
-		robotRun.popScreenStack(1);
+		robotRun.lastScreen();
 		robotRun.switchScreen(ScreenMode.SET_FRAME_INSTR_IDX);
 	}
 

@@ -4,12 +4,11 @@ import core.RobotRun;
 import expression.OperandBool;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenSetBoolConst extends ST_ScreenEditItem {
 
-	public ScreenSetBoolConst(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.SET_BOOL_CONST, prevState, r);
+	public ScreenSetBoolConst(RobotRun r) {
+		super(ScreenMode.SET_BOOL_CONST, r);
 	}
 	
 	@Override

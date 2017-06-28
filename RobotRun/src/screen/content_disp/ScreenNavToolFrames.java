@@ -3,12 +3,11 @@ package screen.content_disp;
 import core.RobotRun;
 import enums.CoordFrame;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenNavToolFrames extends ST_ScreenListContents {
 
-	public ScreenNavToolFrames(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.NAV_TOOL_FRAMES, prevState, r);
+	public ScreenNavToolFrames(RobotRun r) {
+		super(ScreenMode.NAV_TOOL_FRAMES, r);
 	}
 
 	@Override

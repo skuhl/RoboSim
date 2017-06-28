@@ -4,15 +4,11 @@ import core.RobotRun;
 import global.DataManagement;
 import programming.Program;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenProgramCopy extends ST_ScreenTextEntry {
-	
-	private Program originProg;
-	
-	public ScreenProgramCopy(ScreenState prevState, RobotRun r, Program prog) {
-		super(ScreenMode.PROG_COPY, prevState, r);
-		originProg = prog;
+
+	public ScreenProgramCopy(RobotRun r) {
+		super(ScreenMode.PROG_COPY, r);
 	}
 
 	@Override
@@ -28,10 +24,14 @@ public class ScreenProgramCopy extends ST_ScreenTextEntry {
 				workingText.deleteCharAt(workingText.length() - 1);
 			}
 
-			if (originProg != null) {
-				Program newProg = originProg.clone();
+			Program prog = robotRun.getActiveProg();
+
+			if (prog != null) {
+				Program newProg = prog.clone();
 				newProg.setName(workingText.toString());
-				robotRun.getActiveRobot().addProgram(newProg);
+				int new_prog = robotRun.getActiveRobot().addProgram(newProg);
+				robotRun.setActiveProgIdx(new_prog);
+				robotRun.setActiveInstIdx(0);
 				DataManagement.saveRobotData(robotRun.getActiveRobot(), 1);
 			}
 

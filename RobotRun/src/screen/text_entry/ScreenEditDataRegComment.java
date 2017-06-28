@@ -4,12 +4,11 @@ import core.RobotRun;
 import global.DataManagement;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenEditDataRegComment extends ST_ScreenTextEntry {
 
-	public ScreenEditDataRegComment(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.EDIT_DREG_COM, prevState, r);
+	public ScreenEditDataRegComment(RobotRun r) {
+		super(ScreenMode.EDIT_DREG_COM, r);
 	}
 
 	@Override

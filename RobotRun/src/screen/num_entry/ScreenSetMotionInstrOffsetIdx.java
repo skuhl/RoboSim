@@ -5,12 +5,11 @@ import global.Fields;
 import programming.PosMotionInst;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenSetMotionInstrOffsetIdx extends ST_ScreenNumEntry {
 
-	public ScreenSetMotionInstrOffsetIdx(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.SET_MINST_OFFIDX, prevState, r);
+	public ScreenSetMotionInstrOffsetIdx(RobotRun r) {
+		super(ScreenMode.SET_MINST_OFFIDX, r);
 	}
 
 	@Override

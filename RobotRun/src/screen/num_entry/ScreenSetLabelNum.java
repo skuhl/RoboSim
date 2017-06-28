@@ -4,12 +4,11 @@ import core.RobotRun;
 import programming.LabelInstruction;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenSetLabelNum extends ST_ScreenNumEntry {
 
-	public ScreenSetLabelNum(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.SET_LBL_NUM, prevState, r);
+	public ScreenSetLabelNum(RobotRun r) {
+		super(ScreenMode.SET_LBL_NUM, r);
 	}
 
 	@Override

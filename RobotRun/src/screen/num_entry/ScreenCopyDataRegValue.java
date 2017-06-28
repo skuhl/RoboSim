@@ -5,17 +5,16 @@ import global.DataManagement;
 import regs.Register;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenCopyDataRegValue extends ST_ScreenNumEntry {
 
-	public ScreenCopyDataRegValue(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.CP_DREG_VAL, prevState, r);
+	public ScreenCopyDataRegValue(RobotRun r) {
+		super(ScreenMode.CP_DREG_VAL, r);
 	}
 
 	@Override
 	protected String loadHeader() {
-		Register reg = robotRun.getActiveRobot().getDReg(contents.getCurrentItemIdx());
+		Register reg = robotRun.getActiveRobot().getDReg(robotRun.getLastScreen().getContentIdx());
 		return String.format("%s: VALUE COPY", reg.getLabel());
 	}
 	
@@ -27,7 +26,7 @@ public class ScreenCopyDataRegValue extends ST_ScreenNumEntry {
 	
 	@Override
 	protected void loadOptions() {
-		options.addLine(String.format("Move R[%d]'s value to:", contents.getCurrentItemIdx() + 1));
+		options.addLine(String.format("Move R[%d]'s value to:", robotRun.getLastScreen().getContentIdx() + 1));
 		options.addLine(String.format("R[%s]", workingText));
 	}
 

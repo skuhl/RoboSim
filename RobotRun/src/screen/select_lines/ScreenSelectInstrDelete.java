@@ -4,12 +4,11 @@ import core.RobotRun;
 import programming.Program;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenSelectInstrDelete extends ST_ScreenLineSelect {
 
-	public ScreenSelectInstrDelete(ScreenState prevState, int numOfLines, RobotRun r) {
-		super(ScreenMode.SELECT_INSTR_DELETE, prevState, numOfLines, r);
+	public ScreenSelectInstrDelete(RobotRun r) {
+		super(ScreenMode.SELECT_INSTR_DELETE, r);
 	}
 
 	@Override
@@ -34,20 +33,19 @@ public class ScreenSelectInstrDelete extends ST_ScreenLineSelect {
 		int instrIdx = 0;
 
 		for (int i = 0; i < lineSelectState.length; i += 1) {
-			if (isSelected(i)) {
+			if (lineSelectState[i]) {
 				r.rmInstAt(p, instrIdx);
 			} else {
 				instrIdx += 1;
 			}
 		}
 
-		robotRun.popScreenStack(1);
-		robotRun.updateInstructions();
+		robotRun.lastScreen();
+		robotRun.lastScreen();
 	}
 	
 	@Override
 	public void actionF5() {
-		robotRun.popScreenStack(1);
-		robotRun.updateInstructions();
+		robotRun.lastScreen();
 	}
 }

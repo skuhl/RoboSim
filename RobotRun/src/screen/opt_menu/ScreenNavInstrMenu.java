@@ -1,14 +1,12 @@
 package screen.opt_menu;
 
 import core.RobotRun;
-import programming.Program;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenNavInstrMenu extends ST_ScreenOptionsMenu {
 
-	public ScreenNavInstrMenu(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.NAV_INSTR_MENU, prevState, r);
+	public ScreenNavInstrMenu(RobotRun r) {
+		super(ScreenMode.NAV_INSTR_MENU, r);
 	}
 	
 	@Override
@@ -39,65 +37,24 @@ public class ScreenNavInstrMenu extends ST_ScreenOptionsMenu {
 			robotRun.nextScreen(ScreenMode.CONFIRM_INSERT);
 			break;
 		case 2: // Delete
-			Program prog = robotRun.getActiveProg();
-			
-			if (prog.getNumOfInst() > 0) {	
-				robotRun.nextScreen(ScreenMode.SELECT_INSTR_DELETE);
-				
-			} else {
-				System.err.println("No instructions to delete");
-				robotRun.lastScreen();
-			}
+			robotRun.nextScreen(ScreenMode.SELECT_INSTR_DELETE);
 			break;
 		case 3: // Cut/Copy
-			prog = robotRun.getActiveProg();
-			
-			if (prog.getNumOfInst() > 0) {	
-				robotRun.nextScreen(ScreenMode.SELECT_CUT_COPY);
-				
-			} else {
-				System.err.println("No instructions to cut or copy");
-				robotRun.lastScreen();
-			}
-			
+			robotRun.nextScreen(ScreenMode.SELECT_CUT_COPY);
 			break;
 		case 4: // Paste
-			if (robotRun.clipBoard.size() > 0) {
-				robotRun.nextScreen(ScreenMode.SELECT_PASTE_OPT);
-				
-			} else {
-				System.err.println("No instructions to paste");
-				robotRun.lastScreen();
-			}
-			
+			robotRun.nextScreen(ScreenMode.SELECT_PASTE_OPT);
 			break;
 		case 5: // Find/Replace
-			prog = robotRun.getActiveProg();
-			
-			if (prog.getNumOfInst() > 0) {	
-				robotRun.nextScreen(ScreenMode.FIND_REPL);
-				
-			} else {
-				System.err.println("Nothing to find");
-				robotRun.lastScreen();
-			}
-			
+			robotRun.nextScreen(ScreenMode.FIND_REPL);
 			break;
 		case 6: // Renumber
 			robotRun.nextScreen(ScreenMode.CONFIRM_RENUM);
 			break;
 		case 7: // Comment
-			prog = robotRun.getActiveProg();
-			
-			if (prog.getNumOfInst() > 0) {	
-				robotRun.nextScreen(ScreenMode.SELECT_COMMENT);
-				
-			} else {
-				System.err.println("No instructions to cut or copy");
-				robotRun.lastScreen();
-			}
-			
+			robotRun.nextScreen(ScreenMode.SELECT_COMMENT);
 			break;
+		case 8: // Remark
 		}
 	}
 }

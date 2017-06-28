@@ -2,12 +2,11 @@ package screen.opt_menu;
 
 import core.RobotRun;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenSelectContStmt extends ST_ScreenOptionsMenu {
 
-	public ScreenSelectContStmt(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.SELECT_COND_STMT, prevState, r);
+	public ScreenSelectContStmt(RobotRun r) {
+		super(ScreenMode.SELECT_COND_STMT, r);
 	}
 	
 	@Override
@@ -26,15 +25,15 @@ public class ScreenSelectContStmt extends ST_ScreenOptionsMenu {
 	public void actionEntr() {
 		if (options.getLineIdx() == 0) {
 			robotRun.newIfStatement();
-			robotRun.popScreenStack(1);
+			robotRun.lastScreen();
 			robotRun.switchScreen(ScreenMode.SET_EXPR_OP);
 		} else if (options.getLineIdx() == 1) {
 			robotRun.newIfExpression();
-			robotRun.popScreenStack(1);
 			robotRun.lastScreen();
-		} else {
+			robotRun.lastScreen();
+		} else if (options.getLineIdx() == 2) {
 			robotRun.newSelectStatement();
-			robotRun.popScreenStack(1);
+			robotRun.lastScreen();
 			robotRun.lastScreen();
 		}
 	}

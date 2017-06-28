@@ -7,12 +7,11 @@ import programming.CamMoveToObject;
 import programming.MotionInstruction;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenSetMotionInstrIdx extends ST_ScreenNumEntry {
 
-	public ScreenSetMotionInstrIdx(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.SET_MINST_IDX, prevState, r);
+	public ScreenSetMotionInstrIdx(RobotRun r) {
+		super(ScreenMode.SET_MINST_IDX, r);
 	}
 
 	@Override

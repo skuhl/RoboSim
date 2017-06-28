@@ -6,13 +6,12 @@ import core.RobotRun;
 import enums.CoordFrame;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 import ui.DisplayLine;
 
 public class ScreenTeach4Pt extends ST_ScreenTeachPoints {
 
-	public ScreenTeach4Pt(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.TEACH_4PT, prevState, r);
+	public ScreenTeach4Pt(RobotRun r) {
+		super(ScreenMode.TEACH_4PT, r);
 	}
 
 	@Override

@@ -3,22 +3,16 @@ package screen.cnfrm_cncl;
 import core.RobotRun;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenConfirmProgramDelete extends ST_ScreenConfirmCancel {
 
-	public ScreenConfirmProgramDelete(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.CONFIRM_PROG_DELETE, prevState, r);
+	public ScreenConfirmProgramDelete(RobotRun r) {
+		super(ScreenMode.CONFIRM_PROG_DELETE, r);
 	}
 
 	@Override
 	protected void loadOptions() {
 		options.addLine("Delete selected program?");
-	}
-	
-	@Override
-	protected void loadVars(ScreenState s) {
-		setScreenIndices(s.conLnIdx, 0, s.conRenIdx, -1, 0);
 	}
 	
 	@Override

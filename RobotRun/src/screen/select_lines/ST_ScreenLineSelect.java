@@ -3,31 +3,25 @@ package screen.select_lines;
 import core.RobotRun;
 import global.Fields;
 import programming.Instruction;
-import programming.MotionInstruction;
 import programming.SelectStatement;
 import screen.Screen;
 import screen.ScreenMode;
 import screen.ScreenState;
 
 public abstract class ST_ScreenLineSelect extends Screen {
+	public static final int UP = 0;
+	public static final int DN = 1;
 	
-	/**
-	 * Used for determining what lines are selected
-	 */
+	/** Used for determining what lines are selected */
 	protected boolean[] lineSelectState;
+	protected int direction;
 	
-	private int lastEnterIdx;
+	public ST_ScreenLineSelect(ScreenMode m, RobotRun r) {
+		super(m, r);
+	}
 	
-	public ST_ScreenLineSelect(ScreenMode m, ScreenState prevState, int numOfItems, RobotRun r) {
-		super(m, prevState, r);
-		
-		lineSelectState = new boolean[numOfItems];
-		
-		for (int idx = 0; idx < lineSelectState.length; ++idx) {
-			lineSelectState[idx] = false;
-		}
-		
-		lastEnterIdx = -1;
+	public boolean[] getLineSelectStates() {
+		return lineSelectState;
 	}
 	
 	@Override
@@ -43,6 +37,8 @@ public abstract class ST_ScreenLineSelect extends Screen {
 	@Override
 	protected void loadVars(ScreenState s) {
 		setScreenIndices(s.conLnIdx, 0, s.conRenIdx, 0, 0);
+		lineSelectState = new boolean[contents.size()];
+		direction = -1;
 	}
 	
 	@Override
@@ -53,18 +49,27 @@ public abstract class ST_ScreenLineSelect extends Screen {
 		if (!robotRun.isProgExec()) {
 			try {
 				// Lock movement when a program is running
-				Instruction i = robotRun.getActiveInstruction();
+				Instruction instr = robotRun.getActiveInstruction();
 				int prevLine = contents.getItemLineIdx();
+				int selectStart = contents.getLineIdx();
 				robotRun.setActiveInstIdx(contents.moveUp(robotRun.isShift()));
 				int curLine = contents.getItemLineIdx();
-
-				// special case for select statement column navigation
-				if ((i instanceof SelectStatement || i instanceof MotionInstruction) && curLine == 0) {
-					if (prevLine == 1) {
-						contents.setSelectedColumnIdx(contents.getColumnIdx() + 3);
+				
+				if(robotRun.isShift()) {
+					for(int i = selectStart; i >= contents.getLineIdx(); i -= 1) {
+						if(direction != UP || i < selectStart) {
+							lineSelectState[i] = !lineSelectState[i];
+						}
 					}
+					
+					direction = UP;
 				}
-
+				
+				// special case for select statement column navigation
+				if (instr instanceof SelectStatement && curLine == 0 && prevLine == 1) {
+					contents.setSelectedColumnIdx(contents.getColumnIdx() + 3);
+				}
+				
 			} catch (IndexOutOfBoundsException IOOBEx) {
 				// Issue with loading a program, not sure if this helps ...
 				IOOBEx.printStackTrace();
@@ -81,13 +86,24 @@ public abstract class ST_ScreenLineSelect extends Screen {
 	public void actionDn() {
 		if (!robotRun.isProgExec()) {
 			// Lock movement when a program is running
-			Instruction i = robotRun.getActiveInstruction();
+			Instruction instr = robotRun.getActiveInstruction();
 			int prevIdx = contents.getItemColumnIdx();
+			int selectStart = contents.getLineIdx();
 			robotRun.setActiveInstIdx(contents.moveDown(robotRun.isShift()));
 			int curLine = contents.getItemLineIdx();
+			
+			if(robotRun.isShift()) {
+				for(int i = selectStart; i <= contents.getLineIdx(); i += 1) {
+					if(direction != DN || i > selectStart) {
+						lineSelectState[i] = !lineSelectState[i];
+					}
+				}
+				
+				direction = DN;
+			}
 
 			// special case for select statement column navigation
-			if ((i instanceof SelectStatement || i instanceof MotionInstruction) && curLine == 1) {
+			if (instr instanceof SelectStatement && curLine > 0) {
 				if (prevIdx >= 3) {
 					contents.setSelectedColumnIdx(prevIdx - 3);
 				} else {
@@ -110,36 +126,9 @@ public abstract class ST_ScreenLineSelect extends Screen {
 	
 	@Override
 	public void actionEntr() {
-		int lineIdx = robotRun.getActiveInstIdx();
-		
-		if (robotRun.isShift() && lastEnterIdx != -1 && lastEnterIdx != lineIdx) {
-			/* Toggle all lines between the current line and the last line
-			 * selected, while shift was set */
-			int increment = (lineIdx < lastEnterIdx) ? -1 : 1;
-			int size = robotRun.getActiveProg().getNumOfInst();
-			
-			for (int idx = lastEnterIdx + increment; idx >= 0 && idx < size;
-					idx += increment) {
-					
-				lineSelectState[idx] = !lineSelectState[idx];
-				
-				if (idx == lineIdx) {
-					// Reached current index
-					break;
-				}
-			}
-			
-		} else {
-			// Toggle line select state for the active line
-			if (lineIdx >= 0 && lineIdx < lineSelectState.length) {
-				lineSelectState[lineIdx] = !lineSelectState[lineIdx];
-				//contents.toggleSelect(robotRun.getActiveInstIdx());
-				robotRun.updatePendantScreen();
-			}
-		}
-		
-		// Save a reference to this index
-		lastEnterIdx = lineIdx;
+		int idx = contents.getCurrentItemIdx();
+		lineSelectState[idx] = !lineSelectState[idx];
+		robotRun.updatePendantScreen();
 	}
 	
 	@Override
@@ -159,26 +148,4 @@ public abstract class ST_ScreenLineSelect extends Screen {
 
 	@Override
 	public void actionF5() {}
-	
-	/**
-	 * @return	A copy of the screen's line selection state list
-	 */
-	public boolean[] getLnSelectStates() {
-		return lineSelectState.clone();
-	}
-	
-	/**
-	 * TODO comment this
-	 * 
-	 * @param idx
-	 * @return
-	 */
-	public boolean isSelected(int idx) {
-		
-		if (idx >= 0 && idx < lineSelectState.length) {
-			return lineSelectState[idx];
-		}
-		
-		return false;
-	}
 }

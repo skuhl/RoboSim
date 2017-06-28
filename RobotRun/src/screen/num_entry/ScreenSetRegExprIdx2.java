@@ -5,12 +5,11 @@ import programming.RegisterStatement;
 import regs.PositionRegister;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenSetRegExprIdx2 extends ST_ScreenNumEntry {
 
-	public ScreenSetRegExprIdx2(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.SET_REG_EXPR_IDX2, prevState, r);
+	public ScreenSetRegExprIdx2(RobotRun r) {
+		super(ScreenMode.SET_REG_EXPR_IDX2, r);
 	}
 
 	@Override

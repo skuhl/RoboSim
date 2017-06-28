@@ -7,8 +7,8 @@ import screen.ScreenState;
 
 public abstract class ST_ScreenListContents extends Screen {
 
-	public ST_ScreenListContents(ScreenMode m, ScreenState prevState, RobotRun r) {
-		super(m, prevState, r);
+	public ST_ScreenListContents(ScreenMode m, RobotRun r) {
+		super(m, r);
 	}
 	
 	@Override

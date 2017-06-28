@@ -6,17 +6,16 @@ import regs.PositionRegister;
 import regs.Register;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenCopyPosRegPoint extends ST_ScreenNumEntry {
 
-	public ScreenCopyPosRegPoint(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.CP_PREG_PT, prevState, r);
+	public ScreenCopyPosRegPoint(RobotRun r) {
+		super(ScreenMode.CP_PREG_PT, r);
 	}
 
 	@Override
 	protected String loadHeader() {
-		Register reg = robotRun.getActiveRobot().getPReg(contents.getCurrentItemIdx());
+		Register reg = robotRun.getActiveRobot().getPReg(robotRun.getLastScreen().getContentIdx());
 		return String.format("%s: POSITION COPY", reg.getLabel());
 	}
 	
@@ -28,7 +27,7 @@ public class ScreenCopyPosRegPoint extends ST_ScreenNumEntry {
 	
 	@Override
 	protected void loadOptions() {
-		options.addLine(String.format("Move PR[%d]'s point to:", contents.getCurrentItemIdx() + 1));
+		options.addLine(String.format("Move PR[%d]'s point to:", robotRun.getLastScreen().getContentIdx() + 1));
 		options.addLine(String.format("PR[%s]", workingText));
 	}
 

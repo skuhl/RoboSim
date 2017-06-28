@@ -3,7 +3,6 @@ package screen;
 import java.util.Stack;
 
 import core.RobotRun;
-import programming.Program;
 import screen.cnfrm_cncl.ScreenConfirmProgramDelete;
 import screen.cnfrm_cncl.ScreenConfirmRenumber;
 import screen.content_disp.ScreenCreateMacro;
@@ -101,7 +100,7 @@ import screen.text_entry.ScreenUserFrameRename;
  */
 public class ScreenManager {
 	
-	private final RobotRun APP;
+	private final RobotRun robotRun;
 	private final Stack<Screen> screenStack;
 	private Screen activeScreen;
 	
@@ -111,7 +110,7 @@ public class ScreenManager {
 	 * @param app	A reference to the RobotRun class
 	 */
 	public ScreenManager(RobotRun app) {
-		APP = app;
+		robotRun = app;
 		screenStack = new Stack<>();
 		activeScreen = loadScreen(ScreenMode.DEFAULT);
 	}
@@ -120,22 +119,12 @@ public class ScreenManager {
 		return activeScreen;
 	}
 	
-	public Screen getPrevScreen(int depth) {
-		if (depth > 0 && depth <= screenStack.size()) {
-			return screenStack.get(screenStack.size() - depth);
-		}
-		
-		return null;
+	public Screen getPrevScreen() {
+		return screenStack.peek();
 	}
 	
-	public ScreenMode getPrevMode(int depth) {
-		Screen prev = getPrevScreen(depth);
-		
-		if (prev != null) {
-			return prev.mode;
-		}
-		
-		return null;
+	public ScreenMode getPrevMode() {		
+		return screenStack.peek().mode;
 	}
 	
 	public int getScreenStackSize() {
@@ -153,7 +142,7 @@ public class ScreenManager {
 			|| screenType == ScreenMode.CONFIRM_RENUM || screenType == ScreenMode.SELECT_COMMENT
 			|| screenType == ScreenMode.SELECT_CUT_COPY || screenType == ScreenMode.FIND_REPL
 			|| (screenType == ScreenMode.SELECT_PASTE_OPT &&
-			getPrevMode(1) != ScreenMode.SELECT_CUT_COPY)) {
+			getPrevMode() != ScreenMode.SELECT_CUT_COPY)) {
 			
 			if (screenStack.size() > 2) {
 				// Find the program navigation screen
@@ -165,184 +154,159 @@ public class ScreenManager {
 			}
 			
 		} else {
-			prevScreen = getPrevScreen(1);
+			prevScreen = screenStack.peek();
 		}
 		
-		Screen screen = initScreen(screenType, prevScreen);
-		screen.updateScreen();
-		
-		Screen.printScreenInfo(screen);
-		
+		Screen screen = initScreen(screenType, prevScreen);	
 		return screen;
 	}
 	
 	private Screen initScreen(ScreenMode screenType, Screen prevScreen) {
 		ScreenState prevState;
+		Screen nextScreen;
 		
-		if (prevScreen == null) {
-			prevState = null;
-			
+		if(prevScreen == null) {
+			prevState = new ScreenState(null, 0, 0, 0, 0, 0);
 		} else {
 			prevState = prevScreen.getScreenState();
 		}
 		
 		switch(screenType) {
-		case DEFAULT: return new ScreenDefault(prevState, APP);
+		case DEFAULT: nextScreen = new ScreenDefault(robotRun); break;
 
 		/*
 		 * Set of screens used to manipulate instruction parameters with a finite number of states
 		 */
-		case SET_BOOL_CONST: return new ScreenSetBoolConst(prevState, APP);
-		case SET_BOOL_EXPR_ARG: return new ScreenSetBoolExpressionArg(prevState, APP);
-		case SET_EXPR_ARG: return new ScreenSetExpressionArg(prevState, APP);
-		case SET_EXPR_OP: return new ScreenSetExpressionOp(prevState, APP);
-		case SET_FRAME_INSTR_TYPE: return new ScreenSetFrameInstrType(prevState, APP);
-		case SET_IF_STMT_ACT: return new ScreenSetIfStmtAction(prevState, APP);
-		case SET_IO_INSTR_STATE: return new ScreenSetIOInstrState(prevState, APP);
-		case SET_MINST_REG_TYPE: return new ScreenSetMostionInstrRegType(prevState, APP);
-		case SET_MINST_CREG_TYPE: return new ScreenSetMotionInstrCircRegType(prevState, APP);
-		case SET_MINST_OBJ: return new ScreenSetMotionInstrObj(prevState, APP);
-		case SET_MINST_OFF_TYPE: return new ScreenSetMotionInstrOffsetType(prevState, APP);
-		case SET_MINST_TYPE: return new ScreenSetMotionInstrType(prevState, APP);
-		case SET_REG_EXPR_TYPE: return new ScreenSetRegExpressionType(prevState, APP);
-		case SET_SELECT_STMT_ARG: return new ScreenSetSelectStmtArg(prevState, APP);
-		case SET_SELECT_STMT_ACT: return new ScreenSetSelectStmtAction(prevState, APP);
+		case SET_BOOL_CONST: nextScreen = new ScreenSetBoolConst(robotRun); break;
+		case SET_BOOL_EXPR_ARG: nextScreen = new ScreenSetBoolExpressionArg(robotRun); break;
+		case SET_EXPR_ARG: nextScreen = new ScreenSetExpressionArg(robotRun); break;
+		case SET_EXPR_OP: nextScreen = new ScreenSetExpressionOp(robotRun); break;
+		case SET_FRAME_INSTR_TYPE: nextScreen = new ScreenSetFrameInstrType(robotRun); break;
+		case SET_IF_STMT_ACT: nextScreen = new ScreenSetIfStmtAction(robotRun); break;
+		case SET_IO_INSTR_STATE: nextScreen = new ScreenSetIOInstrState(robotRun); break;
+		case SET_MINST_REG_TYPE: nextScreen = new ScreenSetMostionInstrRegType(robotRun); break;
+		case SET_MINST_CREG_TYPE: nextScreen = new ScreenSetMotionInstrCircRegType(robotRun); break;
+		case SET_MINST_OBJ: nextScreen = new ScreenSetMotionInstrObj(robotRun); break;
+		case SET_MINST_OFF_TYPE: nextScreen = new ScreenSetMotionInstrOffsetType(robotRun); break;
+		case SET_MINST_TYPE: nextScreen = new ScreenSetMotionInstrType(robotRun); break;
+		case SET_REG_EXPR_TYPE: nextScreen = new ScreenSetRegExpressionType(robotRun); break;
+		case SET_SELECT_STMT_ARG: nextScreen = new ScreenSetSelectStmtArg(robotRun); break;
+		case SET_SELECT_STMT_ACT: nextScreen = new ScreenSetSelectStmtAction(robotRun); break;
 
 		/*
 		 * Screens used to display a several list of contents for the user to
 		 * examine and interact with
 		 */
-		case CREATE_MACRO: return new ScreenCreateMacro(prevState, APP);
-		case NAV_DATA: return new ScreenNavData(prevState, APP);
-		case NAV_DREGS: return new ScreenNavDataRegs(prevState, APP);
-		case NAV_IOREGS: return new ScreenNavIORegs(prevState, APP);
-		case NAV_MACROS: return new ScreenNavMacros(prevState, APP);
-		case NAV_MAIN_MENU: return new ScreenNavMainMenu(prevState, APP);
-		case NAV_MF_MACROS: return new ScreenNavMFMacros(prevState, APP);
-		case NAV_PREGS: return new ScreenNavPosRegs(prevState, APP);
-		case NAV_PROG_INSTR: return new ScreenNavProgInstructions(prevState, APP);
-		case NAV_PROGRAMS: return new ScreenNavPrograms(prevState, APP);
-		case NAV_TOOL_FRAMES: return new ScreenNavToolFrames(prevState, APP);
-		case NAV_USER_FRAMES: return new ScreenNavUserFrames(prevState, APP);
-		case SET_MACRO_PROG: return new ScreenSetMacroProg(prevState, APP);
+		case CREATE_MACRO: nextScreen = new ScreenCreateMacro(robotRun); break;
+		case NAV_DATA: nextScreen = new ScreenNavData(robotRun); break;
+		case NAV_DREGS: nextScreen = new ScreenNavDataRegs(robotRun); break;
+		case NAV_IOREGS: nextScreen = new ScreenNavIORegs(robotRun); break;
+		case NAV_MACROS: nextScreen = new ScreenNavMacros(robotRun); break;
+		case NAV_MAIN_MENU: nextScreen = new ScreenNavMainMenu(robotRun); break;
+		case NAV_MF_MACROS: nextScreen = new ScreenNavMFMacros(robotRun); break;
+		case NAV_PREGS: nextScreen = new ScreenNavPosRegs(robotRun); break;
+		case NAV_PROG_INSTR: nextScreen = new ScreenNavProgInstructions(robotRun); break;
+		case NAV_PROGRAMS: nextScreen = new ScreenNavPrograms(robotRun); break;
+		case NAV_TOOL_FRAMES: nextScreen = new ScreenNavToolFrames(robotRun); break;
+		case NAV_USER_FRAMES: nextScreen = new ScreenNavUserFrames(robotRun); break;
+		case SET_MACRO_PROG: nextScreen = new ScreenSetMacroProg(robotRun); break;
 		
 		/*
 		 * Screens used to perform arbitrary line-wise selection on a list of
 		 * elements displayed on a screen of type 'TYPE_LIST_CONTENTS'
 		 */
-		case SELECT_COMMENT: 
-			Program prog = APP.getActiveProg();
-			
-			return new ScreenSelectComment(prevState, prog.getNumOfInst(), APP);
-		case SELECT_CUT_COPY:
-			prog = APP.getActiveProg();
-			
-			return new ScreenSelectCutCopy(prevState, prog.getNumOfInst(), APP);
-		case SELECT_INSTR_DELETE:
-			prog = APP.getActiveProg();
-			
-			return new ScreenSelectInstrDelete(prevState, prog.getNumOfInst(), APP);
+		case SELECT_COMMENT: nextScreen = new ScreenSelectComment(robotRun); break;
+		case SELECT_CUT_COPY: nextScreen = new ScreenSelectCutCopy(robotRun); break;
+		case SELECT_INSTR_DELETE: nextScreen = new ScreenSelectInstrDelete(robotRun); break;
 
 		/*
 		 * Screens used to confirm or cancel the execution of a selected function
 		 */
-		case CONFIRM_PROG_DELETE: return new ScreenConfirmProgramDelete(prevState, APP);
-		case CONFIRM_RENUM: return new ScreenConfirmRenumber(prevState, APP);
+		case CONFIRM_PROG_DELETE: nextScreen = new ScreenConfirmProgramDelete(robotRun); break;
+		case CONFIRM_RENUM: nextScreen = new ScreenConfirmRenumber(robotRun); break;
 
 		/*
 		 * Screens used to display a context-based list of options to the user
 		 */
-		case NAV_INSTR_MENU: return new ScreenNavInstrMenu(prevState, APP);
-		case SELECT_COND_STMT: return new ScreenSelectContStmt(prevState, APP);
-		case SELECT_FRAME_INSTR_TYPE: return new ScreenSelectFrameInstrType(prevState, APP);
-		case SELECT_FRAME_MODE: return new ScreenSelectFrameMode(prevState, APP);
-		case SELECT_INSTR_INSERT: return new ScreenSelectInstrInsert(prevState, APP);
-		case SELECT_IO_INSTR_REG: return new ScreenSelectIOInstrReg(prevState, APP);
-		case SELECT_JMP_LBL: return new ScreenSelectJumpLabel(prevState, APP);
-		case SELECT_PASTE_OPT: return new ScreenSelectPasteOpt(prevState, APP);
-		case SELECT_REG_STMT: return new ScreenSelectRegStmt(prevState, APP);
-		case SET_CALL_PROG: return new ScreenSetCallProg(prevState, APP);
-		case SET_DEF_TOOLTIP: return new ScreenSetDefaultTooltip(prevState, APP);
-		case SET_MACRO_BINDING: return new ScreenSetMacroBinding(prevState, APP);
-		case SET_MACRO_TYPE: return new ScreenSetMacroType(prevState, APP);
-		case TFRAME_DETAIL: return new ScreenToolFrameDetail(prevState, APP);
-		case UFRAME_DETAIL: return new ScreenUserFrameDetail(prevState, APP);
+		case NAV_INSTR_MENU: nextScreen = new ScreenNavInstrMenu(robotRun); break;
+		case SELECT_COND_STMT: nextScreen = new ScreenSelectContStmt(robotRun); break;
+		case SELECT_FRAME_INSTR_TYPE: nextScreen = new ScreenSelectFrameInstrType(robotRun); break;
+		case SELECT_FRAME_MODE: nextScreen = new ScreenSelectFrameMode(robotRun); break;
+		case SELECT_INSTR_INSERT: nextScreen = new ScreenSelectInstrInsert(robotRun); break;
+		case SELECT_IO_INSTR_REG: nextScreen = new ScreenSelectIOInstrReg(robotRun); break;
+		case SELECT_JMP_LBL: nextScreen = new ScreenSelectJumpLabel(robotRun); break;
+		case SELECT_PASTE_OPT: nextScreen = new ScreenSelectPasteOpt(robotRun); break;
+		case SELECT_REG_STMT: nextScreen = new ScreenSelectRegStmt(robotRun); break;
+		case SET_CALL_PROG: nextScreen = new ScreenSetCallProg(robotRun); break;
+		case SET_DEF_TOOLTIP: nextScreen = new ScreenSetDefaultTooltip(robotRun); break;
+		case SET_MACRO_BINDING: nextScreen = new ScreenSetMacroBinding(robotRun); break;
+		case SET_MACRO_TYPE: nextScreen = new ScreenSetMacroType(robotRun); break;
+		case TFRAME_DETAIL: nextScreen = new ScreenToolFrameDetail(robotRun); break;
+		case UFRAME_DETAIL: nextScreen = new ScreenUserFrameDetail(robotRun); break;
 		
 
 		/*
 		 * Screens involving the entry of text, either via keyboard input or function buttons
 		 */
-		case EDIT_DREG_COM: return new ScreenEditDataRegComment(prevState, APP);
-		case EDIT_PREG_COM: return new ScreenEditPosRegComment(prevState, APP);
-		case FIND_REPL: return new ScreenFindReplace(prevState, APP);
-		case PROG_COPY:
-			prog = null;
-			
-			if (prevScreen != null) {
-				prog = APP.getActiveRobot().getProgram( prevScreen.getContentIdx() );
-			}
-			
-			return new ScreenProgramCopy(prevState, APP, prog);
-		case PROG_CREATE: return new ScreenProgramCreate(prevState, APP);
-		case PROG_RENAME:
-			prog = null;
-			
-			if (prevScreen != null) {
-				prog= APP.getActiveRobot().getProgram( prevScreen.getContentIdx() );
-			}
-			
-			return new ScreenProgramRename(prevState, APP, prog);
-		case TFRAME_RENAME: return new ScreenToolFrameRename(prevState, APP);
-		case UFRAME_RENAME: return new ScreenUserFrameRename(prevState, APP);
+		case EDIT_DREG_COM: nextScreen = new ScreenEditDataRegComment(robotRun); break;
+		case EDIT_PREG_COM: nextScreen = new ScreenEditPosRegComment(robotRun); break;
+		case FIND_REPL: nextScreen = new ScreenFindReplace(robotRun); break;
+		case PROG_COPY: nextScreen = new ScreenProgramCopy(robotRun); break;
+		case PROG_CREATE: nextScreen = new ScreenProgramCreate(robotRun); break;
+		case PROG_RENAME: nextScreen = new ScreenProgramRename(robotRun); break;
+		case TFRAME_RENAME: nextScreen = new ScreenToolFrameRename(robotRun); break;
+		case UFRAME_RENAME: nextScreen = new ScreenUserFrameRename(robotRun); break;
 
 		/*
 		 * Screens involving the entry of numeric values via either a physical numpad or
 		 * the virtual numpad included in the simulator UI
 		 */
-		case ACTIVE_FRAMES: return new ScreenShowActiveFrames(prevState, APP);
-		case CONFIRM_INSERT: return new ScreenConfirmInsert(prevState, APP);
-		case EDIT_DREG_VAL: return new ScreenEditDataRegValue(prevState, APP);
-		case INPUT_DREG_IDX: return new ScreenInputDataRegIdx(prevState, APP);
-		case INPUT_IOREG_IDX: return new ScreenInputIORegIdx(prevState, APP);
-		case INPUT_PREG_IDX1: return new ScreenInputPosRegIdx(prevState, APP);
-		case INPUT_PREG_IDX2: return new ScreenInputPosRegSubIdx(prevState, APP);
-		case INPUT_CONST: return new ScreenInputConst(prevState, APP);
-		case JUMP_TO_LINE: return new ScreenJumpToLine(prevState, APP);
-		case SET_FRAME_INSTR_IDX: return new ScreenSetFramInstrIdx(prevState, APP);
-		case SET_IO_INSTR_IDX: return new ScreenSetIOInstrIdx(prevState, APP);
-		case SET_JUMP_TGT: return new ScreenSetJumpTgt(prevState, APP);
-		case SET_LBL_NUM: return new ScreenSetLabelNum(prevState, APP);
-		case SET_REG_EXPR_IDX1: return new ScreenSetRegExprIdx1(prevState, APP);
-		case SET_REG_EXPR_IDX2: return new ScreenSetRegExprIdx2(prevState, APP);
-		case SET_SELECT_ARGVAL: return new ScreenSetSelectArgValue(prevState, APP);
-		case SET_MINST_IDX: return new ScreenSetMotionInstrIdx(prevState, APP);
-		case SET_MINST_CIDX: return new ScreenSetMotionInstrCIdx(prevState, APP);
-		case SET_MINST_OFFIDX: return new ScreenSetMotionInstrOffsetIdx(prevState, APP);
-		case SET_MINST_SPD: return new ScreenSetMotionInstrSpeed(prevState, APP);
-		case SET_MINST_TERM: return new ScreenSetMotionInstrTerm(prevState, APP);
-		case CP_DREG_COM: return new ScreenCopyDataRegComment(prevState, APP);
-		case CP_DREG_VAL: return new ScreenCopyDataRegValue(prevState, APP);
-		case CP_PREG_COM: return new ScreenCopyPosRegComment(prevState, APP);
-		case CP_PREG_PT: return new ScreenCopyPosRegPoint(prevState, APP);
+		case ACTIVE_FRAMES: nextScreen = new ScreenShowActiveFrames(robotRun); break;
+		case CONFIRM_INSERT: nextScreen = new ScreenConfirmInsert(robotRun); break;
+		case EDIT_DREG_VAL: nextScreen = new ScreenEditDataRegValue(robotRun); break;
+		case INPUT_DREG_IDX: nextScreen = new ScreenInputDataRegIdx(robotRun); break;
+		case INPUT_IOREG_IDX: nextScreen = new ScreenInputIORegIdx(robotRun); break;
+		case INPUT_PREG_IDX1: nextScreen = new ScreenInputPosRegIdx(robotRun); break;
+		case INPUT_PREG_IDX2: nextScreen = new ScreenInputPosRegSubIdx(robotRun); break;
+		case INPUT_CONST: nextScreen = new ScreenInputConst(robotRun); break;
+		case JUMP_TO_LINE: nextScreen = new ScreenJumpToLine(robotRun); break;
+		case SET_FRAME_INSTR_IDX: nextScreen = new ScreenSetFramInstrIdx(robotRun); break;
+		case SET_IO_INSTR_IDX: nextScreen = new ScreenSetIOInstrIdx(robotRun); break;
+		case SET_JUMP_TGT: nextScreen = new ScreenSetJumpTgt(robotRun); break;
+		case SET_LBL_NUM: nextScreen = new ScreenSetLabelNum(robotRun); break;
+		case SET_REG_EXPR_IDX1: nextScreen = new ScreenSetRegExprIdx1(robotRun); break;
+		case SET_REG_EXPR_IDX2: nextScreen = new ScreenSetRegExprIdx2(robotRun); break;
+		case SET_SELECT_ARGVAL: nextScreen = new ScreenSetSelectArgValue(robotRun); break;
+		case SET_MINST_IDX: nextScreen = new ScreenSetMotionInstrIdx(robotRun); break;
+		case SET_MINST_CIDX: nextScreen = new ScreenSetMotionInstrCIdx(robotRun); break;
+		case SET_MINST_OFFIDX: nextScreen = new ScreenSetMotionInstrOffsetIdx(robotRun); break;
+		case SET_MINST_SPD: nextScreen = new ScreenSetMotionInstrSpeed(robotRun); break;
+		case SET_MINST_TERM: nextScreen = new ScreenSetMotionInstrTerm(robotRun); break;
+		case CP_DREG_COM: nextScreen = new ScreenCopyDataRegComment(robotRun); break;
+		case CP_DREG_VAL: nextScreen = new ScreenCopyDataRegValue(robotRun); break;
+		case CP_PREG_COM: nextScreen = new ScreenCopyPosRegComment(robotRun); break;
+		case CP_PREG_PT: nextScreen = new ScreenCopyPosRegPoint(robotRun); break;
 
 		/*
 		 * Frame input methods
 		 */
-		case TEACH_3PT_TOOL: return new ScreenTeach3PtTool(prevState, APP);
-		case TEACH_3PT_USER: return new ScreenTeach3PtUser(prevState, APP);
-		case TEACH_4PT: return new ScreenTeach4Pt(prevState, APP);
-		case TEACH_6PT: return new ScreenTeach6Pt(prevState, APP);
+		case TEACH_3PT_TOOL: nextScreen = new ScreenTeach3PtTool(robotRun); break;
+		case TEACH_3PT_USER: nextScreen = new ScreenTeach3PtUser(robotRun); break;
+		case TEACH_4PT: nextScreen = new ScreenTeach4Pt(robotRun); break;
+		case TEACH_6PT: nextScreen = new ScreenTeach6Pt(robotRun); break;
 
 		/*
 		 * Screens involving direct entry of point values
 		 */
-		case DIRECT_ENTRY_TOOL: return new ScreenDirectEntryTool(prevState, APP);
-		case DIRECT_ENTRY_USER: return new ScreenDirectEntryUser(prevState, APP);
-		case EDIT_PREG: return new ScreenEditPosReg(prevState, APP);
-		case EDIT_PROG_POS: return new ScreenEditProgramPos(prevState, APP);
-		
+		case DIRECT_ENTRY_TOOL: nextScreen = new ScreenDirectEntryTool(robotRun); break;
+		case DIRECT_ENTRY_USER: nextScreen = new ScreenDirectEntryUser(robotRun); break;
+		case EDIT_PREG: nextScreen = new ScreenEditPosReg(robotRun); break;
+		case EDIT_PROG_POS: nextScreen = new ScreenEditProgramPos(robotRun); break;
 		default: return null;
 		}
+		
+		nextScreen.updateScreen(prevState);
+		return nextScreen;
 	}
 	
 	public void lastScreen() {
@@ -354,17 +318,6 @@ public class ScreenManager {
 	public void nextScreen(ScreenMode nextScreenType) {
 		screenStack.push(activeScreen);
 		activeScreen = loadScreen(nextScreenType);
-	}
-	
-	public Screen[] popScreenStack(int depth) {
-		Screen[] poppedScreens = new Screen[Math.min(depth, screenStack.size())];
-		int idx = 0;
-		
-		while (!screenStack.isEmpty() && idx < depth) {
-			poppedScreens[idx++] = screenStack.pop();
-		}
-		
-		return poppedScreens;
 	}
 	
 	public void resetStack() {

@@ -4,12 +4,11 @@ import core.RobotRun;
 import enums.CoordFrame;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenUserFrameDetail extends ST_ScreenOptionsMenu {
 
-	public ScreenUserFrameDetail(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.UFRAME_DETAIL, prevState, r);
+	public ScreenUserFrameDetail(RobotRun r) {
+		super(ScreenMode.UFRAME_DETAIL, r);
 	}
 
 	@Override
