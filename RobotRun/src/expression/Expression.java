@@ -71,7 +71,7 @@ public class Expression extends AtomicExpression {
 			result = new OperandPoint(((RobotPoint) result).getPointValue());
 		}
 		
-		if (result.getValue() == null) {
+		if (result == null || result.getValue() == null) {
 			// Return a null operator, not an uninitialized operator
 			PApplet.println("Expression formatting error");
 			return null;

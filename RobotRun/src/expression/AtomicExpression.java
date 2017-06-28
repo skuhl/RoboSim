@@ -36,9 +36,10 @@ public class AtomicExpression extends Operand<Object> {
 	public Operand<?> evaluate() {
 		
 		if (arg1 instanceof AtomicExpression) {
-			arg1 = ((AtomicExpression)arg1).evaluate();
-			
-		} else if (arg2 instanceof AtomicExpression) {
+			arg1 = ((AtomicExpression)arg1).evaluate();	
+		}
+		
+		if (arg2 instanceof AtomicExpression) {
 			arg2 = ((AtomicExpression)arg2).evaluate();
 		}
 		
