@@ -9,6 +9,7 @@ public class ScreenSelectIOInstrReg extends ST_ScreenOptionsMenu {
 
 	public ScreenSelectIOInstrReg(RobotRun r) {
 		super(ScreenMode.SELECT_IO_INSTR_REG, r);
+		options.setSelectedColumnIdx(1);
 	}
 
 	@Override
