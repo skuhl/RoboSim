@@ -2,11 +2,12 @@ package screen.edit_item;
 
 import core.RobotRun;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenSetMacroBinding extends ST_ScreenEditItem {
 
-	public ScreenSetMacroBinding(RobotRun r) {
-		super(ScreenMode.SET_MACRO_BINDING, r);
+	public ScreenSetMacroBinding(ScreenState prevState, RobotRun r) {
+		super(ScreenMode.SET_MACRO_BINDING, prevState, r);
 	}
 
 	@Override

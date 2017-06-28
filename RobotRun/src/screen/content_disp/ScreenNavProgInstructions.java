@@ -22,11 +22,12 @@ import programming.SelectStatement;
 import regs.PositionRegister;
 import robot.RoboticArm;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenNavProgInstructions extends ST_ScreenListContents {
 
-	public ScreenNavProgInstructions(RobotRun r) {
-		super(ScreenMode.NAV_PROG_INSTR, r);
+	public ScreenNavProgInstructions(ScreenState prevState, RobotRun r) {
+		super(ScreenMode.NAV_PROG_INSTR, prevState, r);
 	}
 	
 	@Override

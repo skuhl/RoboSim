@@ -4,13 +4,14 @@ import core.RobotRun;
 import global.DataManagement;
 import programming.Program;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenProgramRename extends ST_ScreenTextEntry {
 
 	private Program tgtProg;
 	
-	public ScreenProgramRename(RobotRun r, Program prog) {
-		super(ScreenMode.PROG_RENAME, r);
+	public ScreenProgramRename(ScreenState prevState, RobotRun r, Program prog) {
+		super(ScreenMode.PROG_RENAME, prevState, r);
 		tgtProg = prog;
 	}
 

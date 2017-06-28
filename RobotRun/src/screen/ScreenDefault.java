@@ -4,8 +4,8 @@ import core.RobotRun;
 
 public class ScreenDefault extends Screen {
 	
-	public ScreenDefault(RobotRun r) {
-		super(ScreenMode.DEFAULT, r);
+	public ScreenDefault(ScreenState prevState, RobotRun r) {
+		super(ScreenMode.DEFAULT, prevState, r);
 	}
 
 	@Override

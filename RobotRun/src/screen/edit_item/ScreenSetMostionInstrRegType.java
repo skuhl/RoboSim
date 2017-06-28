@@ -7,11 +7,12 @@ import programming.MotionInstruction;
 import programming.PosMotionInst;
 import robot.RoboticArm;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenSetMostionInstrRegType extends ST_ScreenEditItem {
 
-	public ScreenSetMostionInstrRegType(RobotRun r) {
-		super(ScreenMode.SET_MINST_REG_TYPE, r);
+	public ScreenSetMostionInstrRegType(ScreenState prevState, RobotRun r) {
+		super(ScreenMode.SET_MINST_REG_TYPE, prevState, r);
 	}
 
 	@Override

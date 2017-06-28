@@ -11,8 +11,8 @@ import screen.ScreenState;
 
 public class ScreenConfirmRenumber extends ST_ScreenConfirmCancel {
 
-	public ScreenConfirmRenumber(RobotRun r) {
-		super(ScreenMode.CONFIRM_RENUM, r);
+	public ScreenConfirmRenumber(ScreenState prevState, RobotRun r) {
+		super(ScreenMode.CONFIRM_RENUM, prevState, r);
 	}
 
 	@Override

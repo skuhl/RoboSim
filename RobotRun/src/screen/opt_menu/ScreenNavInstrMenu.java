@@ -3,11 +3,12 @@ package screen.opt_menu;
 import core.RobotRun;
 import programming.Program;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenNavInstrMenu extends ST_ScreenOptionsMenu {
 
-	public ScreenNavInstrMenu(RobotRun r) {
-		super(ScreenMode.NAV_INSTR_MENU, r);
+	public ScreenNavInstrMenu(ScreenState prevState, RobotRun r) {
+		super(ScreenMode.NAV_INSTR_MENU, prevState, r);
 	}
 	
 	@Override

@@ -2247,7 +2247,7 @@ public class WGUI implements ControlListener {
 						txt = Fields.UI_LIGHT_C;
 						bg = Fields.UI_DARK_C;          
 					} 
-					else if(lineSelectStates != null && lineSelectStates[temp.getItemIdx()]) {
+					else if(validateAndGet(lineSelectStates, temp.getItemIdx())) {
 						//highlight selected line
 						txt = Fields.UI_LIGHT_C;
 						bg = Fields.UI_DARK_C;
@@ -2256,7 +2256,7 @@ public class WGUI implements ControlListener {
 						txt = Fields.UI_DARK_C;
 						bg = Fields.UI_LIGHT_C;
 					}
-				} else if(lineSelectStates != null && lineSelectStates[temp.getItemIdx()]) {
+				} else if(validateAndGet(lineSelectStates, temp.getItemIdx())) {
 					/* highlight any currently selected lines a different color
 					 * then the active line */
 					txt = Fields.UI_LIGHT_C;
@@ -2302,6 +2302,22 @@ public class WGUI implements ControlListener {
 		}//end display contents
 
 		return TAIdx;
+	}
+	
+	/**
+	 * Convenience method for checking the bounds and getting an element from a
+	 * boolean array. If the index is out of bounds, then false is returned.
+	 * 
+	 * @param arr
+	 * @param idx
+	 * @return
+	 */
+	private static boolean validateAndGet(boolean[] arr, int idx) {
+		if (arr != null && idx >= 0 && idx < arr.length) {
+			return arr[idx];
+		}
+		
+		return false;
 	}
 
 	/**

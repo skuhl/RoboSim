@@ -6,11 +6,12 @@ import expression.Expression;
 import expression.Operator;
 import programming.IfStatement;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenSetExpressionOp extends ST_ScreenEditItem {
 
-	public ScreenSetExpressionOp(RobotRun r) {
-		super(ScreenMode.SET_EXPR_OP, r);
+	public ScreenSetExpressionOp(ScreenState prevState, RobotRun r) {
+		super(ScreenMode.SET_EXPR_OP, prevState, r);
 	}
 
 	@Override

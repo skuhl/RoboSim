@@ -7,8 +7,8 @@ import screen.ScreenState;
 
 public abstract class ST_ScreenOptionsMenu extends Screen {
 
-	public ST_ScreenOptionsMenu(ScreenMode m, RobotRun r) {
-		super(m, r);
+	public ST_ScreenOptionsMenu(ScreenMode m, ScreenState prevState, RobotRun r) {
+		super(m, prevState, r);
 	}
 	
 	@Override

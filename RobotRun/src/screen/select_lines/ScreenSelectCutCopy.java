@@ -3,11 +3,12 @@ package screen.select_lines;
 import core.RobotRun;
 import programming.Program;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenSelectCutCopy extends ST_ScreenLineSelect {
 
-	public ScreenSelectCutCopy(RobotRun r) {
-		super(ScreenMode.SELECT_CUT_COPY, r);
+	public ScreenSelectCutCopy(ScreenState prevState, int numOfLines, RobotRun r) {
+		super(ScreenMode.SELECT_CUT_COPY, prevState, numOfLines, r);
 	}
 	
 	@Override

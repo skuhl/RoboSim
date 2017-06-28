@@ -18,10 +18,15 @@ public abstract class ST_ScreenLineSelect extends Screen {
 	
 	private int lastEnterIdx;
 	
-	public ST_ScreenLineSelect(ScreenMode m, RobotRun r) {
-		super(m, r);
+	public ST_ScreenLineSelect(ScreenMode m, ScreenState prevState, int numOfItems, RobotRun r) {
+		super(m, prevState, r);
 		
-		lineSelectState = null;
+		lineSelectState = new boolean[numOfItems];
+		
+		for (int idx = 0; idx < lineSelectState.length; ++idx) {
+			lineSelectState[idx] = false;
+		}
+		
 		lastEnterIdx = -1;
 	}
 	
@@ -38,12 +43,6 @@ public abstract class ST_ScreenLineSelect extends Screen {
 	@Override
 	protected void loadVars(ScreenState s) {
 		setScreenIndices(s.conLnIdx, 0, s.conRenIdx, 0, 0);
-		
-		lineSelectState = new boolean[ contents.size() ];
-		
-		for (int idx = 0; idx < lineSelectState.length; ++idx) {
-			lineSelectState[idx] = false;
-		}
 	}
 	
 	@Override

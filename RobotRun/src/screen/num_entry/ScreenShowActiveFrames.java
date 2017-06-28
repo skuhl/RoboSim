@@ -8,8 +8,8 @@ import ui.DisplayLine;
 
 public class ScreenShowActiveFrames extends ST_ScreenNumEntry {
 
-	public ScreenShowActiveFrames(RobotRun r) {
-		super(ScreenMode.ACTIVE_FRAMES, r);
+	public ScreenShowActiveFrames(ScreenState prevState, RobotRun r) {
+		super(ScreenMode.ACTIVE_FRAMES, prevState, r);
 		
 		contents.setSelectedLineIdx(0);
 		contents.setSelectedColumnIdx(1);

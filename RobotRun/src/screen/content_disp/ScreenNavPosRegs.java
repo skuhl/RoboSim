@@ -10,11 +10,12 @@ import global.RMath;
 import regs.PositionRegister;
 import robot.RoboticArm;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenNavPosRegs extends ST_ScreenListContents {
 
-	public ScreenNavPosRegs(RobotRun r) {
-		super(ScreenMode.NAV_PREGS, r);
+	public ScreenNavPosRegs(ScreenState prevState, RobotRun r) {
+		super(ScreenMode.NAV_PREGS, prevState, r);
 	}
 
 	@Override

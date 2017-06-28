@@ -7,8 +7,8 @@ import screen.ScreenState;
 
 public abstract class ST_ScreenEditItem extends Screen {
 
-	public ST_ScreenEditItem(ScreenMode m, RobotRun r) {
-		super(m, r);
+	public ST_ScreenEditItem(ScreenMode m, ScreenState prevState, RobotRun r) {
+		super(m, prevState, r);
 	}
 	
 	@Override

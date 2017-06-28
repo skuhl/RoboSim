@@ -4,11 +4,12 @@ import core.RobotRun;
 import expression.OperandIOReg;
 import robot.RoboticArm;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenInputIORegIdx extends ST_ScreenNumEntry {
 
-	public ScreenInputIORegIdx(RobotRun r) {
-		super(ScreenMode.INPUT_IOREG_IDX, r);
+	public ScreenInputIORegIdx(ScreenState prevState, RobotRun r) {
+		super(ScreenMode.INPUT_IOREG_IDX, prevState, r);
 	}
 
 	@Override

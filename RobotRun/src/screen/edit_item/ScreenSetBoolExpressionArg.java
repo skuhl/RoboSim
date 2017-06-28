@@ -8,11 +8,12 @@ import expression.OperandIOReg;
 import programming.IfStatement;
 import robot.RoboticArm;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenSetBoolExpressionArg extends ST_ScreenEditItem {
 
-	public ScreenSetBoolExpressionArg(RobotRun r) {
-		super(ScreenMode.SET_BOOL_EXPR_ARG, r);
+	public ScreenSetBoolExpressionArg(ScreenState prevState, RobotRun r) {
+		super(ScreenMode.SET_BOOL_EXPR_ARG, prevState, r);
 	}
 	
 	@Override

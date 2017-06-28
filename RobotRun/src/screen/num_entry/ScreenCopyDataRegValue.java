@@ -5,11 +5,12 @@ import global.DataManagement;
 import regs.Register;
 import robot.RoboticArm;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenCopyDataRegValue extends ST_ScreenNumEntry {
 
-	public ScreenCopyDataRegValue(RobotRun r) {
-		super(ScreenMode.CP_DREG_VAL, r);
+	public ScreenCopyDataRegValue(ScreenState prevState, RobotRun r) {
+		super(ScreenMode.CP_DREG_VAL, prevState, r);
 	}
 
 	@Override

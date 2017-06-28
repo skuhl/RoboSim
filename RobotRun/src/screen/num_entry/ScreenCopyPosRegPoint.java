@@ -6,11 +6,12 @@ import regs.PositionRegister;
 import regs.Register;
 import robot.RoboticArm;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenCopyPosRegPoint extends ST_ScreenNumEntry {
 
-	public ScreenCopyPosRegPoint(RobotRun r) {
-		super(ScreenMode.CP_PREG_PT, r);
+	public ScreenCopyPosRegPoint(ScreenState prevState, RobotRun r) {
+		super(ScreenMode.CP_PREG_PT, prevState, r);
 	}
 
 	@Override

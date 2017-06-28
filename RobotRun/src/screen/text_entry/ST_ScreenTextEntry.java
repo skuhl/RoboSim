@@ -27,8 +27,8 @@ public abstract class ST_ScreenTextEntry extends Screen {
 	protected int[] letterStates;
 	protected StringBuilder workingText;
 	
-	public ST_ScreenTextEntry(ScreenMode m, RobotRun r) {
-		super(m, r);
+	public ST_ScreenTextEntry(ScreenMode m, ScreenState prevState, RobotRun r) {
+		super(m, prevState, r);
 		letterStates = new int[5];
 		workingText = new StringBuilder("\0");
 	}
@@ -42,9 +42,11 @@ public abstract class ST_ScreenTextEntry extends Screen {
 		contents.addLine("\0");
 		DisplayLine line = new DisplayLine();
 		
-		// Give each letter in the name a separate column
-		for (int idx = 0; idx < workingText.length() && idx < TEXT_ENTRY_LEN; idx += 1) {
-			line.add(Character.toString(workingText.charAt(idx)));
+		if (workingText != null) {
+			// Give each letter in the name a separate column
+			for (int idx = 0; idx < workingText.length() && idx < TEXT_ENTRY_LEN; idx += 1) {
+				line.add(Character.toString(workingText.charAt(idx)));
+			}
 		}
 
 		contents.addLine(line);

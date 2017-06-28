@@ -4,13 +4,14 @@ import core.RobotRun;
 import global.DataManagement;
 import programming.Program;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenProgramCopy extends ST_ScreenTextEntry {
 	
 	private Program originProg;
 	
-	public ScreenProgramCopy(RobotRun r, Program prog) {
-		super(ScreenMode.PROG_COPY, r);
+	public ScreenProgramCopy(ScreenState prevState, RobotRun r, Program prog) {
+		super(ScreenMode.PROG_COPY, prevState, r);
 		originProg = prog;
 	}
 

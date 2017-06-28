@@ -3,11 +3,12 @@ package screen.opt_menu;
 import core.RobotRun;
 import global.Fields;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenSelectIOInstrReg extends ST_ScreenOptionsMenu {
 
-	public ScreenSelectIOInstrReg(RobotRun r) {
-		super(ScreenMode.SELECT_IO_INSTR_REG, r);
+	public ScreenSelectIOInstrReg(ScreenState prevState, RobotRun r) {
+		super(ScreenMode.SELECT_IO_INSTR_REG, prevState, r);
 	}
 
 	@Override

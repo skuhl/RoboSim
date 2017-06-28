@@ -2,11 +2,12 @@ package screen.opt_menu;
 
 import core.RobotRun;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenSelectContStmt extends ST_ScreenOptionsMenu {
 
-	public ScreenSelectContStmt(RobotRun r) {
-		super(ScreenMode.SELECT_COND_STMT, r);
+	public ScreenSelectContStmt(ScreenState prevState, RobotRun r) {
+		super(ScreenMode.SELECT_COND_STMT, prevState, r);
 	}
 	
 	@Override

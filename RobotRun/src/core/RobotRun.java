@@ -1725,7 +1725,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	public Screen getLastScreen() {
-		return screens.getLastScreen(1);
+		return screens.getPrevScreen(1);
 	}
 
 	public Macro getMacro(int idx) {
@@ -1913,6 +1913,10 @@ public class RobotRun extends PApplet {
 				// Update the coordinate frame
 				coordFrameTransition();
 				updatePendantScreen();
+				
+			} else if (keyCode == KeyEvent.VK_D) {
+				// Debug output
+				global.Fields.debug(screens.toString());
 				
 			} else if (keyCode == KeyEvent.VK_E) {
 				// Cycle End Effectors

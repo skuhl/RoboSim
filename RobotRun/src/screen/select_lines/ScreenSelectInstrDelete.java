@@ -4,11 +4,12 @@ import core.RobotRun;
 import programming.Program;
 import robot.RoboticArm;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenSelectInstrDelete extends ST_ScreenLineSelect {
 
-	public ScreenSelectInstrDelete(RobotRun r) {
-		super(ScreenMode.SELECT_INSTR_DELETE, r);
+	public ScreenSelectInstrDelete(ScreenState prevState, int numOfLines, RobotRun r) {
+		super(ScreenMode.SELECT_INSTR_DELETE, prevState, numOfLines, r);
 	}
 
 	@Override

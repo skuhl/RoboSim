@@ -7,8 +7,8 @@ import screen.ScreenState;
 
 public abstract class ST_ScreenConfirmCancel extends Screen {
 
-	public ST_ScreenConfirmCancel(ScreenMode m, RobotRun r) {
-		super(m, r);
+	public ST_ScreenConfirmCancel(ScreenMode m, ScreenState prevState, RobotRun r) {
+		super(m, prevState, r);
 	}
 	
 	@Override

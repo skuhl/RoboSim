@@ -13,11 +13,12 @@ import regs.DataRegister;
 import regs.IORegister;
 import regs.PositionRegister;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenSetExpressionArg extends ST_ScreenEditItem {
 
-	public ScreenSetExpressionArg(RobotRun r) {
-		super(ScreenMode.SET_EXPR_ARG, r);
+	public ScreenSetExpressionArg(ScreenState prevState, RobotRun r) {
+		super(ScreenMode.SET_EXPR_ARG, prevState, r);
 	}
 
 	@Override

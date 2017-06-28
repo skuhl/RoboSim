@@ -8,11 +8,12 @@ import regs.Register;
 import robot.RoboticArm;
 import screen.Screen;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenEditPosReg extends ST_ScreenPointEntry {
 
-	public ScreenEditPosReg(RobotRun r) {
-		super(ScreenMode.EDIT_PREG, r);
+	public ScreenEditPosReg(ScreenState prevState, RobotRun r) {
+		super(ScreenMode.EDIT_PREG, prevState, r);
 		
 	}
 	

@@ -7,11 +7,12 @@ import regs.IORegister;
 import regs.PositionRegister;
 import robot.RoboticArm;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenSetRegExpressionType extends ST_ScreenEditItem {
 
-	public ScreenSetRegExpressionType(RobotRun r) {
-		super(ScreenMode.SET_REG_EXPR_TYPE, r);
+	public ScreenSetRegExpressionType(ScreenState prevState, RobotRun r) {
+		super(ScreenMode.SET_REG_EXPR_TYPE, prevState, r);
 	}
 
 	@Override

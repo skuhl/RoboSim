@@ -4,11 +4,12 @@ import core.RobotRun;
 import programming.IOInstruction;
 import robot.RoboticArm;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenSetIOInstrIdx extends ST_ScreenNumEntry {
 
-	public ScreenSetIOInstrIdx(RobotRun r) {
-		super(ScreenMode.SET_IO_INSTR_IDX, r);
+	public ScreenSetIOInstrIdx(ScreenState prevState, RobotRun r) {
+		super(ScreenMode.SET_IO_INSTR_IDX, prevState, r);
 	}
 
 	@Override

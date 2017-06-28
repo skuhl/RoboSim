@@ -3,11 +3,12 @@ package screen.opt_menu;
 import core.RobotRun;
 import global.Fields;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenSelectFrameInstrType extends ST_ScreenOptionsMenu {
 
-	public ScreenSelectFrameInstrType(RobotRun r) {
-		super(ScreenMode.SELECT_FRAME_INSTR_TYPE, r);
+	public ScreenSelectFrameInstrType(ScreenState prevState, RobotRun r) {
+		super(ScreenMode.SELECT_FRAME_INSTR_TYPE, prevState, r);
 	}
 
 	@Override

@@ -2,11 +2,12 @@ package screen.opt_menu;
 
 import core.RobotRun;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenSelectJumpLabel extends ST_ScreenOptionsMenu {
 
-	public ScreenSelectJumpLabel(RobotRun r) {
-		super(ScreenMode.SELECT_JMP_LBL, r);
+	public ScreenSelectJumpLabel(ScreenState prevState, RobotRun r) {
+		super(ScreenMode.SELECT_JMP_LBL, prevState, r);
 	}
 
 	@Override

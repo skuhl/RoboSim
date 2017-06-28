@@ -3,11 +3,12 @@ package screen.edit_item;
 import core.RobotRun;
 import global.Fields;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenSetFrameInstrType extends ST_ScreenEditItem {
 	
-	public ScreenSetFrameInstrType(RobotRun r) {
-		super(ScreenMode.SELECT_FRAME_INSTR_TYPE, r);
+	public ScreenSetFrameInstrType(ScreenState prevState, RobotRun r) {
+		super(ScreenMode.SELECT_FRAME_INSTR_TYPE, prevState, r);
 		
 	}
 	

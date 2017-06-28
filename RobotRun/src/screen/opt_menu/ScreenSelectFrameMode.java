@@ -2,11 +2,12 @@ package screen.opt_menu;
 
 import core.RobotRun;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenSelectFrameMode extends ST_ScreenOptionsMenu {
 
-	public ScreenSelectFrameMode(RobotRun r) {
-		super(ScreenMode.SELECT_FRAME_MODE, r);
+	public ScreenSelectFrameMode(ScreenState prevState, RobotRun r) {
+		super(ScreenMode.SELECT_FRAME_MODE, prevState, r);
 	}
 
 	@Override
