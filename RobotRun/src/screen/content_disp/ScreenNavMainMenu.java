@@ -6,8 +6,8 @@ import screen.ScreenState;
 
 public class ScreenNavMainMenu extends ST_ScreenListContents {
 
-	public ScreenNavMainMenu(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.NAV_MAIN_MENU, prevState, r);
+	public ScreenNavMainMenu(RobotRun r) {
+		super(ScreenMode.NAV_MAIN_MENU, r);
 	}
 
 	@Override

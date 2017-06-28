@@ -14,8 +14,8 @@ import screen.ScreenState;
 
 public class ScreenNavPosRegs extends ST_ScreenListContents {
 
-	public ScreenNavPosRegs(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.NAV_PREGS, prevState, r);
+	public ScreenNavPosRegs(RobotRun r) {
+		super(ScreenMode.NAV_PREGS, r);
 	}
 
 	@Override

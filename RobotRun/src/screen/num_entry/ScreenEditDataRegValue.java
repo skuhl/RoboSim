@@ -11,8 +11,8 @@ import screen.ScreenState;
 
 public class ScreenEditDataRegValue extends ST_ScreenNumEntry {
 
-	public ScreenEditDataRegValue(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.EDIT_DREG_VAL, prevState, r);
+	public ScreenEditDataRegValue(RobotRun r) {
+		super(ScreenMode.EDIT_DREG_VAL, r);
 	}
 
 	@Override

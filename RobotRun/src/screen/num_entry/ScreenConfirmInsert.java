@@ -8,8 +8,8 @@ import screen.ScreenState;
 
 public class ScreenConfirmInsert extends ST_ScreenNumEntry {
 
-	public ScreenConfirmInsert(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.CONFIRM_INSERT, prevState, r);
+	public ScreenConfirmInsert(RobotRun r) {
+		super(ScreenMode.CONFIRM_INSERT, r);
 	}
 
 	@Override

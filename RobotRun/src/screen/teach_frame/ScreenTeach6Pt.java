@@ -11,8 +11,8 @@ import ui.DisplayLine;
 
 public class ScreenTeach6Pt extends ST_ScreenTeachPoints {
 
-	public ScreenTeach6Pt(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.TEACH_6PT, prevState, r);
+	public ScreenTeach6Pt(RobotRun r) {
+		super(ScreenMode.TEACH_6PT, r);
 	}
 
 	@Override

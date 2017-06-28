@@ -7,8 +7,8 @@ import screen.ScreenState;
 
 public class ScreenSetFrameInstrType extends ST_ScreenEditItem {
 	
-	public ScreenSetFrameInstrType(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.SELECT_FRAME_INSTR_TYPE, prevState, r);
+	public ScreenSetFrameInstrType(RobotRun r) {
+		super(ScreenMode.SELECT_FRAME_INSTR_TYPE, r);
 		
 	}
 	

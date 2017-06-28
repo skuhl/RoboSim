@@ -9,8 +9,8 @@ import screen.ScreenState;
 
 public class ScreenSetMotionInstrCIdx extends ST_ScreenNumEntry {
 
-	public ScreenSetMotionInstrCIdx(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.SET_MINST_CIDX, prevState, r);
+	public ScreenSetMotionInstrCIdx(RobotRun r) {
+		super(ScreenMode.SET_MINST_CIDX, r);
 	}
 
 	@Override

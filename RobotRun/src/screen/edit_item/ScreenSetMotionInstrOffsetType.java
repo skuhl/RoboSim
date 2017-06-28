@@ -9,8 +9,8 @@ import screen.ScreenState;
 
 public class ScreenSetMotionInstrOffsetType extends ST_ScreenEditItem {
 
-	public ScreenSetMotionInstrOffsetType(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.SET_MINST_OFF_TYPE, prevState, r);
+	public ScreenSetMotionInstrOffsetType(RobotRun r) {
+		super(ScreenMode.SET_MINST_OFF_TYPE, r);
 	}
 
 	@Override

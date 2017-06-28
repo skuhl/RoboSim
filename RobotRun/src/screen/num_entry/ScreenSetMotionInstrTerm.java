@@ -8,8 +8,8 @@ import screen.ScreenState;
 
 public class ScreenSetMotionInstrTerm extends ST_ScreenNumEntry {
 
-	public ScreenSetMotionInstrTerm(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.SET_MINST_TERM, prevState, r);
+	public ScreenSetMotionInstrTerm(RobotRun r) {
+		super(ScreenMode.SET_MINST_TERM, r);
 	}
 
 	@Override

@@ -10,10 +10,10 @@ import screen.ScreenState;
 
 public class ScreenCopyPosRegPoint extends ST_ScreenNumEntry {
 
-	public ScreenCopyPosRegPoint(ScreenState prevState, String header,
+	public ScreenCopyPosRegPoint(String header,
 			RobotRun r) {
 		
-		super(ScreenMode.CP_PREG_PT, prevState, header, r);
+		super(ScreenMode.CP_PREG_PT, header, r);
 	}
 	
 	@Override

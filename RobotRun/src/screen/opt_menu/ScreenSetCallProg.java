@@ -12,8 +12,8 @@ import screen.ScreenState;
 
 public class ScreenSetCallProg extends ST_ScreenOptionsMenu {
 
-	public ScreenSetCallProg(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.SET_CALL_PROG, prevState, r);
+	public ScreenSetCallProg(RobotRun r) {
+		super(ScreenMode.SET_CALL_PROG, r);
 	}
 
 	@Override

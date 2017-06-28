@@ -8,8 +8,8 @@ import screen.ScreenState;
 
 public class ScreenSelectInstrDelete extends ST_ScreenLineSelect {
 
-	public ScreenSelectInstrDelete(ScreenState prevState, int numOfLines, RobotRun r) {
-		super(ScreenMode.SELECT_INSTR_DELETE, prevState, numOfLines, r);
+	public ScreenSelectInstrDelete(int numOfLines, RobotRun r) {
+		super(ScreenMode.SELECT_INSTR_DELETE, numOfLines, r);
 	}
 
 	@Override

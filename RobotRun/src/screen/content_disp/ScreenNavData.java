@@ -6,8 +6,8 @@ import screen.ScreenState;
 
 public class ScreenNavData extends ST_ScreenListContents {
 
-	public ScreenNavData(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.NAV_DATA, prevState, r);
+	public ScreenNavData(RobotRun r) {
+		super(ScreenMode.NAV_DATA, r);
 	}
 
 	@Override

@@ -27,8 +27,8 @@ public abstract class ST_ScreenTextEntry extends Screen {
 	protected int[] letterStates;
 	protected StringBuilder workingText;
 	
-	public ST_ScreenTextEntry(ScreenMode m, ScreenState prevState, RobotRun r) {
-		super(m, prevState, r);
+	public ST_ScreenTextEntry(ScreenMode m, RobotRun r) {
+		super(m, r);
 		letterStates = new int[5];
 		workingText = new StringBuilder("\0");
 	}

@@ -8,8 +8,8 @@ import screen.ScreenState;
 
 public class ScreenFindReplace extends ST_ScreenTextEntry {
 
-	public ScreenFindReplace(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.FIND_REPL, prevState, r);
+	public ScreenFindReplace(RobotRun r) {
+		super(ScreenMode.FIND_REPL, r);
 	}
 	
 	@Override

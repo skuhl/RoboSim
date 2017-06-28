@@ -7,8 +7,8 @@ import screen.ScreenState;
 
 public class ScreenSelectCutCopy extends ST_ScreenLineSelect {
 
-	public ScreenSelectCutCopy(ScreenState prevState, int numOfLines, RobotRun r) {
-		super(ScreenMode.SELECT_CUT_COPY, prevState, numOfLines, r);
+	public ScreenSelectCutCopy(int numOfLines, RobotRun r) {
+		super(ScreenMode.SELECT_CUT_COPY, numOfLines, r);
 	}
 	
 	@Override

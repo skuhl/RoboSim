@@ -9,8 +9,8 @@ import screen.ScreenState;
 
 public class ScreenSetMotionInstrCircRegType extends ST_ScreenEditItem {
 
-	public ScreenSetMotionInstrCircRegType(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.SET_MINST_CREG_TYPE, prevState, r);
+	public ScreenSetMotionInstrCircRegType(RobotRun r) {
+		super(ScreenMode.SET_MINST_CREG_TYPE, r);
 	}
 
 	@Override

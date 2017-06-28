@@ -7,8 +7,8 @@ import screen.ScreenState;
 
 public class ScreenNavPrograms extends ST_ScreenListContents {
 
-	public ScreenNavPrograms(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.NAV_PROGRAMS, prevState, r);
+	public ScreenNavPrograms(RobotRun r) {
+		super(ScreenMode.NAV_PROGRAMS, r);
 	}
 	
 	@Override

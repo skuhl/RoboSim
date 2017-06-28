@@ -8,8 +8,8 @@ import screen.ScreenState;
 
 public class ScreenJumpToLine extends ST_ScreenNumEntry {
 
-	public ScreenJumpToLine(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.JUMP_TO_LINE, prevState, r);
+	public ScreenJumpToLine(RobotRun r) {
+		super(ScreenMode.JUMP_TO_LINE, r);
 	}
 
 	@Override

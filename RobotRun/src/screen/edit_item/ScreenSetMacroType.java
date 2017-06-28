@@ -6,8 +6,8 @@ import screen.ScreenState;
 
 public class ScreenSetMacroType extends ST_ScreenEditItem {
 
-	public ScreenSetMacroType(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.SET_MACRO_TYPE, prevState, r);
+	public ScreenSetMacroType(RobotRun r) {
+		super(ScreenMode.SET_MACRO_TYPE, r);
 	}
 
 	@Override

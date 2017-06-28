@@ -9,8 +9,8 @@ import screen.ScreenState;
 
 public class ScreenSetIOInstrState extends ST_ScreenEditItem {
 
-	public ScreenSetIOInstrState(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.SET_IO_INSTR_STATE, prevState, r);
+	public ScreenSetIOInstrState(RobotRun r) {
+		super(ScreenMode.SET_IO_INSTR_STATE, r);
 	}
 
 	@Override

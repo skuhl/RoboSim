@@ -12,8 +12,8 @@ import screen.ScreenState;
 
 public class ScreenSetRegExprIdx1 extends ST_ScreenNumEntry {
 
-	public ScreenSetRegExprIdx1(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.SET_REG_EXPR_IDX1, prevState, r);
+	public ScreenSetRegExprIdx1(RobotRun r) {
+		super(ScreenMode.SET_REG_EXPR_IDX1, r);
 	}
 
 	@Override

@@ -7,8 +7,8 @@ import screen.ScreenState;
 
 public class ScreenSelectComment extends ST_ScreenLineSelect {
 
-	public ScreenSelectComment(ScreenState prevState, int numOfLines, RobotRun r) {
-		super(ScreenMode.SELECT_COMMENT, prevState, numOfLines, r);
+	public ScreenSelectComment(int numOfLines, RobotRun r) {
+		super(ScreenMode.SELECT_COMMENT, numOfLines, r);
 	}
 
 	@Override

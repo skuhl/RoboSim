@@ -174,6 +174,10 @@ public class ScreenManager {
 		Screen screen = initScreen(screenType, prevScreen);
 		screen.updateScreen();
 		
+		if (prevScreen != null) {
+			screen.loadVars(prevScreen.getScreenState());
+		}
+		
 		Screen.printScreenInfo(screen);
 		
 		return screen;
@@ -190,44 +194,44 @@ public class ScreenManager {
 		}
 		
 		switch(screenType) {
-		case DEFAULT: return new ScreenDefault(prevState, APP);
+		case DEFAULT: return new ScreenDefault(APP);
 
 		/*
 		 * Set of screens used to manipulate instruction parameters with a finite number of states
 		 */
-		case SET_BOOL_CONST: return new ScreenSetBoolConst(prevState, APP);
-		case SET_BOOL_EXPR_ARG: return new ScreenSetBoolExpressionArg(prevState, APP);
-		case SET_EXPR_ARG: return new ScreenSetExpressionArg(prevState, APP);
-		case SET_EXPR_OP: return new ScreenSetExpressionOp(prevState, APP);
-		case SET_FRAME_INSTR_TYPE: return new ScreenSetFrameInstrType(prevState, APP);
-		case SET_IF_STMT_ACT: return new ScreenSetIfStmtAction(prevState, APP);
-		case SET_IO_INSTR_STATE: return new ScreenSetIOInstrState(prevState, APP);
-		case SET_MINST_REG_TYPE: return new ScreenSetMostionInstrRegType(prevState, APP);
-		case SET_MINST_CREG_TYPE: return new ScreenSetMotionInstrCircRegType(prevState, APP);
-		case SET_MINST_OBJ: return new ScreenSetMotionInstrObj(prevState, APP);
-		case SET_MINST_OFF_TYPE: return new ScreenSetMotionInstrOffsetType(prevState, APP);
-		case SET_MINST_TYPE: return new ScreenSetMotionInstrType(prevState, APP);
-		case SET_REG_EXPR_TYPE: return new ScreenSetRegExpressionType(prevState, APP);
-		case SET_SELECT_STMT_ARG: return new ScreenSetSelectStmtArg(prevState, APP);
-		case SET_SELECT_STMT_ACT: return new ScreenSetSelectStmtAction(prevState, APP);
+		case SET_BOOL_CONST: return new ScreenSetBoolConst(APP);
+		case SET_BOOL_EXPR_ARG: return new ScreenSetBoolExpressionArg(APP);
+		case SET_EXPR_ARG: return new ScreenSetExpressionArg(APP);
+		case SET_EXPR_OP: return new ScreenSetExpressionOp(APP);
+		case SET_FRAME_INSTR_TYPE: return new ScreenSetFrameInstrType(APP);
+		case SET_IF_STMT_ACT: return new ScreenSetIfStmtAction(APP);
+		case SET_IO_INSTR_STATE: return new ScreenSetIOInstrState(APP);
+		case SET_MINST_REG_TYPE: return new ScreenSetMostionInstrRegType(APP);
+		case SET_MINST_CREG_TYPE: return new ScreenSetMotionInstrCircRegType(APP);
+		case SET_MINST_OBJ: return new ScreenSetMotionInstrObj(APP);
+		case SET_MINST_OFF_TYPE: return new ScreenSetMotionInstrOffsetType(APP);
+		case SET_MINST_TYPE: return new ScreenSetMotionInstrType(APP);
+		case SET_REG_EXPR_TYPE: return new ScreenSetRegExpressionType(APP);
+		case SET_SELECT_STMT_ARG: return new ScreenSetSelectStmtArg(APP);
+		case SET_SELECT_STMT_ACT: return new ScreenSetSelectStmtAction(APP);
 
 		/*
 		 * Screens used to display a several list of contents for the user to
 		 * examine and interact with
 		 */
-		case CREATE_MACRO: return new ScreenCreateMacro(prevState, APP);
-		case NAV_DATA: return new ScreenNavData(prevState, APP);
-		case NAV_DREGS: return new ScreenNavDataRegs(prevState, APP);
-		case NAV_IOREGS: return new ScreenNavIORegs(prevState, APP);
-		case NAV_MACROS: return new ScreenNavMacros(prevState, APP);
-		case NAV_MAIN_MENU: return new ScreenNavMainMenu(prevState, APP);
-		case NAV_MF_MACROS: return new ScreenNavMFMacros(prevState, APP);
-		case NAV_PREGS: return new ScreenNavPosRegs(prevState, APP);
-		case NAV_PROG_INSTR: return new ScreenNavProgInstructions(prevState, APP);
-		case NAV_PROGRAMS: return new ScreenNavPrograms(prevState, APP);
-		case NAV_TOOL_FRAMES: return new ScreenNavToolFrames(prevState, APP);
-		case NAV_USER_FRAMES: return new ScreenNavUserFrames(prevState, APP);
-		case SET_MACRO_PROG: return new ScreenSetMacroProg(prevState, APP);
+		case CREATE_MACRO: return new ScreenCreateMacro(APP);
+		case NAV_DATA: return new ScreenNavData(APP);
+		case NAV_DREGS: return new ScreenNavDataRegs(APP);
+		case NAV_IOREGS: return new ScreenNavIORegs(APP);
+		case NAV_MACROS: return new ScreenNavMacros(APP);
+		case NAV_MAIN_MENU: return new ScreenNavMainMenu(APP);
+		case NAV_MF_MACROS: return new ScreenNavMFMacros(APP);
+		case NAV_PREGS: return new ScreenNavPosRegs(APP);
+		case NAV_PROG_INSTR: return new ScreenNavProgInstructions(APP);
+		case NAV_PROGRAMS: return new ScreenNavPrograms(APP);
+		case NAV_TOOL_FRAMES: return new ScreenNavToolFrames(APP);
+		case NAV_USER_FRAMES: return new ScreenNavUserFrames(APP);
+		case SET_MACRO_PROG: return new ScreenSetMacroProg(APP);
 		
 		/*
 		 * Screens used to perform arbitrary line-wise selection on a list of
@@ -236,48 +240,48 @@ public class ScreenManager {
 		case SELECT_COMMENT: 
 			Program prog = APP.getActiveProg();
 			
-			return new ScreenSelectComment(prevState, prog.getNumOfInst(), APP);
+			return new ScreenSelectComment(prog.getNumOfInst(), APP);
 		case SELECT_CUT_COPY:
 			prog = APP.getActiveProg();
 			
-			return new ScreenSelectCutCopy(prevState, prog.getNumOfInst(), APP);
+			return new ScreenSelectCutCopy(prog.getNumOfInst(), APP);
 		case SELECT_INSTR_DELETE:
 			prog = APP.getActiveProg();
 			
-			return new ScreenSelectInstrDelete(prevState, prog.getNumOfInst(), APP);
+			return new ScreenSelectInstrDelete(prog.getNumOfInst(), APP);
 
 		/*
 		 * Screens used to confirm or cancel the execution of a selected function
 		 */
-		case CONFIRM_PROG_DELETE: return new ScreenConfirmProgramDelete(prevState, APP);
-		case CONFIRM_RENUM: return new ScreenConfirmRenumber(prevState, APP);
+		case CONFIRM_PROG_DELETE: return new ScreenConfirmProgramDelete(APP);
+		case CONFIRM_RENUM: return new ScreenConfirmRenumber(APP);
 
 		/*
 		 * Screens used to display a context-based list of options to the user
 		 */
-		case NAV_INSTR_MENU: return new ScreenNavInstrMenu(prevState, APP);
-		case SELECT_COND_STMT: return new ScreenSelectContStmt(prevState, APP);
-		case SELECT_FRAME_INSTR_TYPE: return new ScreenSelectFrameInstrType(prevState, APP);
-		case SELECT_FRAME_MODE: return new ScreenSelectFrameMode(prevState, APP);
-		case SELECT_INSTR_INSERT: return new ScreenSelectInstrInsert(prevState, APP);
-		case SELECT_IO_INSTR_REG: return new ScreenSelectIOInstrReg(prevState, APP);
-		case SELECT_JMP_LBL: return new ScreenSelectJumpLabel(prevState, APP);
-		case SELECT_PASTE_OPT: return new ScreenSelectPasteOpt(prevState, APP);
-		case SELECT_REG_STMT: return new ScreenSelectRegStmt(prevState, APP);
-		case SET_CALL_PROG: return new ScreenSetCallProg(prevState, APP);
-		case SET_DEF_TOOLTIP: return new ScreenSetDefaultTooltip(prevState, APP);
-		case SET_MACRO_BINDING: return new ScreenSetMacroBinding(prevState, APP);
-		case SET_MACRO_TYPE: return new ScreenSetMacroType(prevState, APP);
-		case TFRAME_DETAIL: return new ScreenToolFrameDetail(prevState, APP);
-		case UFRAME_DETAIL: return new ScreenUserFrameDetail(prevState, APP);
+		case NAV_INSTR_MENU: return new ScreenNavInstrMenu(APP);
+		case SELECT_COND_STMT: return new ScreenSelectContStmt(APP);
+		case SELECT_FRAME_INSTR_TYPE: return new ScreenSelectFrameInstrType(APP);
+		case SELECT_FRAME_MODE: return new ScreenSelectFrameMode(APP);
+		case SELECT_INSTR_INSERT: return new ScreenSelectInstrInsert(APP);
+		case SELECT_IO_INSTR_REG: return new ScreenSelectIOInstrReg(APP);
+		case SELECT_JMP_LBL: return new ScreenSelectJumpLabel(APP);
+		case SELECT_PASTE_OPT: return new ScreenSelectPasteOpt(APP);
+		case SELECT_REG_STMT: return new ScreenSelectRegStmt(APP);
+		case SET_CALL_PROG: return new ScreenSetCallProg(APP);
+		case SET_DEF_TOOLTIP: return new ScreenSetDefaultTooltip(APP);
+		case SET_MACRO_BINDING: return new ScreenSetMacroBinding(APP);
+		case SET_MACRO_TYPE: return new ScreenSetMacroType(APP);
+		case TFRAME_DETAIL: return new ScreenToolFrameDetail(APP);
+		case UFRAME_DETAIL: return new ScreenUserFrameDetail(APP);
 		
 
 		/*
 		 * Screens involving the entry of text, either via keyboard input or function buttons
 		 */
-		case EDIT_DREG_COM: return new ScreenEditDataRegComment(prevState, APP);
-		case EDIT_PREG_COM: return new ScreenEditPosRegComment(prevState, APP);
-		case FIND_REPL: return new ScreenFindReplace(prevState, APP);
+		case EDIT_DREG_COM: return new ScreenEditDataRegComment(APP);
+		case EDIT_PREG_COM: return new ScreenEditPosRegComment(APP);
+		case FIND_REPL: return new ScreenFindReplace(APP);
 		case PROG_COPY:
 			prog = null;
 			
@@ -285,8 +289,8 @@ public class ScreenManager {
 				prog = APP.getActiveRobot().getProgram( prevScreen.getContentIdx() );
 			}
 			
-			return new ScreenProgramCopy(prevState, APP, prog);
-		case PROG_CREATE: return new ScreenProgramCreate(prevState, APP);
+			return new ScreenProgramCopy(APP, prog);
+		case PROG_CREATE: return new ScreenProgramCreate(APP);
 		case PROG_RENAME:
 			prog = null;
 			
@@ -294,56 +298,56 @@ public class ScreenManager {
 				prog= APP.getActiveRobot().getProgram( prevScreen.getContentIdx() );
 			}
 			
-			return new ScreenProgramRename(prevState, APP, prog);
-		case TFRAME_RENAME: return new ScreenToolFrameRename(prevState, APP);
-		case UFRAME_RENAME: return new ScreenUserFrameRename(prevState, APP);
+			return new ScreenProgramRename(APP, prog);
+		case TFRAME_RENAME: return new ScreenToolFrameRename(APP);
+		case UFRAME_RENAME: return new ScreenUserFrameRename(APP);
 
 		/*
 		 * Screens involving the entry of numeric values via either a physical numpad or
 		 * the virtual numpad included in the simulator UI
 		 */
-		case ACTIVE_FRAMES: return new ScreenShowActiveFrames(prevState, APP);
-		case CONFIRM_INSERT: return new ScreenConfirmInsert(prevState, APP);
-		case EDIT_DREG_VAL: return new ScreenEditDataRegValue(prevState, APP);
-		case INPUT_DREG_IDX: return new ScreenInputDataRegIdx(prevState, APP);
-		case INPUT_IOREG_IDX: return new ScreenInputIORegIdx(prevState, APP);
-		case INPUT_PREG_IDX1: return new ScreenInputPosRegIdx(prevState, APP);
-		case INPUT_PREG_IDX2: return new ScreenInputPosRegSubIdx(prevState, APP);
-		case INPUT_CONST: return new ScreenInputConst(prevState, APP);
-		case JUMP_TO_LINE: return new ScreenJumpToLine(prevState, APP);
-		case SET_FRAME_INSTR_IDX: return new ScreenSetFramInstrIdx(prevState, APP);
-		case SET_IO_INSTR_IDX: return new ScreenSetIOInstrIdx(prevState, APP);
-		case SET_JUMP_TGT: return new ScreenSetJumpTgt(prevState, APP);
-		case SET_LBL_NUM: return new ScreenSetLabelNum(prevState, APP);
-		case SET_REG_EXPR_IDX1: return new ScreenSetRegExprIdx1(prevState, APP);
-		case SET_REG_EXPR_IDX2: return new ScreenSetRegExprIdx2(prevState, APP);
-		case SET_SELECT_ARGVAL: return new ScreenSetSelectArgValue(prevState, APP);
-		case SET_MINST_IDX: return new ScreenSetMotionInstrIdx(prevState, APP);
-		case SET_MINST_CIDX: return new ScreenSetMotionInstrCIdx(prevState, APP);
-		case SET_MINST_OFFIDX: return new ScreenSetMotionInstrOffsetIdx(prevState, APP);
-		case SET_MINST_SPD: return new ScreenSetMotionInstrSpeed(prevState, APP);
-		case SET_MINST_TERM: return new ScreenSetMotionInstrTerm(prevState, APP);
+		case ACTIVE_FRAMES: return new ScreenShowActiveFrames(APP);
+		case CONFIRM_INSERT: return new ScreenConfirmInsert(APP);
+		case EDIT_DREG_VAL: return new ScreenEditDataRegValue(APP);
+		case INPUT_DREG_IDX: return new ScreenInputDataRegIdx(APP);
+		case INPUT_IOREG_IDX: return new ScreenInputIORegIdx(APP);
+		case INPUT_PREG_IDX1: return new ScreenInputPosRegIdx(APP);
+		case INPUT_PREG_IDX2: return new ScreenInputPosRegSubIdx(APP);
+		case INPUT_CONST: return new ScreenInputConst(APP);
+		case JUMP_TO_LINE: return new ScreenJumpToLine(APP);
+		case SET_FRAME_INSTR_IDX: return new ScreenSetFramInstrIdx(APP);
+		case SET_IO_INSTR_IDX: return new ScreenSetIOInstrIdx(APP);
+		case SET_JUMP_TGT: return new ScreenSetJumpTgt(APP);
+		case SET_LBL_NUM: return new ScreenSetLabelNum(APP);
+		case SET_REG_EXPR_IDX1: return new ScreenSetRegExprIdx1(APP);
+		case SET_REG_EXPR_IDX2: return new ScreenSetRegExprIdx2(APP);
+		case SET_SELECT_ARGVAL: return new ScreenSetSelectArgValue(APP);
+		case SET_MINST_IDX: return new ScreenSetMotionInstrIdx(APP);
+		case SET_MINST_CIDX: return new ScreenSetMotionInstrCIdx(APP);
+		case SET_MINST_OFFIDX: return new ScreenSetMotionInstrOffsetIdx(APP);
+		case SET_MINST_SPD: return new ScreenSetMotionInstrSpeed(APP);
+		case SET_MINST_TERM: return new ScreenSetMotionInstrTerm(APP);
 		case CP_DREG_COM:
 			// The header requires some pre-processing
 			RoboticArm r = APP.getActiveRobot();
 			DataRegister dReg = r.getDReg( prevScreen.getContentIdx() );
 			String header = String.format("%s: COMMENT COPY", dReg.getLabel());
 			
-			return new ScreenCopyDataRegComment(prevState, header, APP);
+			return new ScreenCopyDataRegComment(header, APP);
 		case CP_DREG_VAL:
 			// The header requires some pre-processing
 			r = APP.getActiveRobot();
 			dReg = r.getDReg( prevScreen.getContentIdx() );
 			header = String.format("%s: VALUE COPY", dReg.getLabel());
 			
-			return new ScreenCopyDataRegValue(prevState, header, APP);
+			return new ScreenCopyDataRegValue(header, APP);
 		case CP_PREG_COM:
 			// The header requires some pre-processing
 			r = APP.getActiveRobot();
 			PositionRegister pReg = r.getPReg( prevScreen.getContentIdx() );
 			header = String.format("%s: COMMENT COPY", pReg.getLabel());
 			
-			return new ScreenCopyPosRegComment(prevState, header, APP);
+			return new ScreenCopyPosRegComment(header, APP);
 		
 		case CP_PREG_PT:
 			// The header requires some pre-processing
@@ -351,23 +355,23 @@ public class ScreenManager {
 			pReg = r.getPReg( prevScreen.getContentIdx() );
 			header = String.format("%s: POINT COPY", pReg.getLabel());
 			
-			return new ScreenCopyPosRegPoint(prevState, header, APP);
+			return new ScreenCopyPosRegPoint(header, APP);
 
 		/*
 		 * Frame input methods
 		 */
-		case TEACH_3PT_TOOL: return new ScreenTeach3PtTool(prevState, APP);
-		case TEACH_3PT_USER: return new ScreenTeach3PtUser(prevState, APP);
-		case TEACH_4PT: return new ScreenTeach4Pt(prevState, APP);
-		case TEACH_6PT: return new ScreenTeach6Pt(prevState, APP);
+		case TEACH_3PT_TOOL: return new ScreenTeach3PtTool(APP);
+		case TEACH_3PT_USER: return new ScreenTeach3PtUser(APP);
+		case TEACH_4PT: return new ScreenTeach4Pt(APP);
+		case TEACH_6PT: return new ScreenTeach6Pt(APP);
 
 		/*
 		 * Screens involving direct entry of point values
 		 */
-		case DIRECT_ENTRY_TOOL: return new ScreenDirectEntryTool(prevState, APP);
-		case DIRECT_ENTRY_USER: return new ScreenDirectEntryUser(prevState, APP);
-		case EDIT_PREG: return new ScreenEditPosReg(prevState, APP);
-		case EDIT_PROG_POS: return new ScreenEditProgramPos(prevState, APP);
+		case DIRECT_ENTRY_TOOL: return new ScreenDirectEntryTool(APP);
+		case DIRECT_ENTRY_USER: return new ScreenDirectEntryUser(APP);
+		case EDIT_PREG: return new ScreenEditPosReg(APP);
+		case EDIT_PROG_POS: return new ScreenEditProgramPos(APP);
 		
 		default: return null;
 		}

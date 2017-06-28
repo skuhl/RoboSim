@@ -10,8 +10,8 @@ import screen.ScreenState;
 
 public class ScreenSetExpressionOp extends ST_ScreenEditItem {
 
-	public ScreenSetExpressionOp(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.SET_EXPR_OP, prevState, r);
+	public ScreenSetExpressionOp(RobotRun r) {
+		super(ScreenMode.SET_EXPR_OP, r);
 	}
 
 	@Override

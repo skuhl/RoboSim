@@ -12,8 +12,8 @@ import screen.ScreenState;
 
 public class ScreenSetBoolExpressionArg extends ST_ScreenEditItem {
 
-	public ScreenSetBoolExpressionArg(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.SET_BOOL_EXPR_ARG, prevState, r);
+	public ScreenSetBoolExpressionArg(RobotRun r) {
+		super(ScreenMode.SET_BOOL_EXPR_ARG, r);
 	}
 	
 	@Override

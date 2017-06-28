@@ -9,15 +9,15 @@ public abstract class ST_ScreenNumEntry extends Screen {
 	static final int NUM_ENTRY_LEN = 9;
 	protected StringBuilder workingText;
 	
-	public ST_ScreenNumEntry(ScreenMode m, ScreenState prevState, String header,
+	public ST_ScreenNumEntry(ScreenMode m, String header,
 			RobotRun r) {
 		
-		super(m, prevState, header,  r);
+		super(m, header,  r);
 		workingText = new StringBuilder("");
 	}
 	
-	public ST_ScreenNumEntry(ScreenMode m, ScreenState prevState, RobotRun r) {
-		super(m, prevState, r);
+	public ST_ScreenNumEntry(ScreenMode m, RobotRun r) {
+		super(m, r);
 		workingText = new StringBuilder("");
 	}
 	

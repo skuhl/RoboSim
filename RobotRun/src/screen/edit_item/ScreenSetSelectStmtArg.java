@@ -11,8 +11,8 @@ import screen.ScreenState;
 
 public class ScreenSetSelectStmtArg extends ST_ScreenEditItem {
 
-	public ScreenSetSelectStmtArg(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.SET_SELECT_STMT_ARG, prevState, r);
+	public ScreenSetSelectStmtArg(RobotRun r) {
+		super(ScreenMode.SET_SELECT_STMT_ARG, r);
 	}
 
 	@Override

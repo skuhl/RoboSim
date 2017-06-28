@@ -8,8 +8,8 @@ import screen.ScreenState;
 
 public class ScreenUserFrameRename extends ST_ScreenTextEntry {
 
-	public ScreenUserFrameRename(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.UFRAME_RENAME, prevState, r);
+	public ScreenUserFrameRename(RobotRun r) {
+		super(ScreenMode.UFRAME_RENAME, r);
 	}
 
 	@Override

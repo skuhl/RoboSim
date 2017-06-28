@@ -8,8 +8,8 @@ import screen.ScreenState;
 
 public class ScreenInputPosRegSubIdx extends ST_ScreenNumEntry {
 
-	public ScreenInputPosRegSubIdx(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.INPUT_PREG_IDX2, prevState, r);
+	public ScreenInputPosRegSubIdx(RobotRun r) {
+		super(ScreenMode.INPUT_PREG_IDX2, r);
 	}
 	
 	@Override

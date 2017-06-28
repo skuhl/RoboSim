@@ -18,8 +18,8 @@ public abstract class ST_ScreenLineSelect extends Screen {
 	
 	private int lastEnterIdx;
 	
-	public ST_ScreenLineSelect(ScreenMode m, ScreenState prevState, int numOfItems, RobotRun r) {
-		super(m, prevState, r);
+	public ST_ScreenLineSelect(ScreenMode m, int numOfItems, RobotRun r) {
+		super(m, r);
 		
 		lineSelectState = new boolean[numOfItems];
 		

@@ -10,8 +10,8 @@ import screen.ScreenState;
 
 public class ScreenSetMotionInstrObj extends ST_ScreenEditItem {
 
-	public ScreenSetMotionInstrObj(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.SET_MINST_OBJ, prevState, r);
+	public ScreenSetMotionInstrObj(RobotRun r) {
+		super(ScreenMode.SET_MINST_OBJ, r);
 	}
 
 	@Override

@@ -9,8 +9,8 @@ import screen.ScreenState;
 
 public class ScreenSetDefaultTooltip extends ST_ScreenOptionsMenu {
 
-	public ScreenSetDefaultTooltip(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.SET_DEF_TOOLTIP, prevState, r);
+	public ScreenSetDefaultTooltip(RobotRun r) {
+		super(ScreenMode.SET_DEF_TOOLTIP, r);
 	}
 
 	@Override

@@ -10,8 +10,8 @@ import screen.ScreenState;
 
 public abstract class ST_ScreenTeachPoints extends Screen {
 
-	public ST_ScreenTeachPoints(ScreenMode m, ScreenState prevState, RobotRun r) {
-		super(m, prevState, r);
+	public ST_ScreenTeachPoints(ScreenMode m, RobotRun r) {
+		super(m, r);
 	}
 	
 	@Override

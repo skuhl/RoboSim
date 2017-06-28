@@ -6,8 +6,8 @@ import screen.ScreenState;
 
 public class ScreenSetMacroBinding extends ST_ScreenEditItem {
 
-	public ScreenSetMacroBinding(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.SET_MACRO_BINDING, prevState, r);
+	public ScreenSetMacroBinding(RobotRun r) {
+		super(ScreenMode.SET_MACRO_BINDING, r);
 	}
 
 	@Override

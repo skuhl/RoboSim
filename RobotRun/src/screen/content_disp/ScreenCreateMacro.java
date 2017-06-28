@@ -8,8 +8,8 @@ import screen.ScreenState;
 
 public class ScreenCreateMacro extends ST_ScreenListContents {
 
-	public ScreenCreateMacro(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.CREATE_MACRO, prevState, r);
+	public ScreenCreateMacro(RobotRun r) {
+		super(ScreenMode.CREATE_MACRO, r);
 	}
 
 	@Override

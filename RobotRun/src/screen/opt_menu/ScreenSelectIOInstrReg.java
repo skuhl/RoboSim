@@ -7,8 +7,8 @@ import screen.ScreenState;
 
 public class ScreenSelectIOInstrReg extends ST_ScreenOptionsMenu {
 
-	public ScreenSelectIOInstrReg(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.SELECT_IO_INSTR_REG, prevState, r);
+	public ScreenSelectIOInstrReg(RobotRun r) {
+		super(ScreenMode.SELECT_IO_INSTR_REG, r);
 	}
 
 	@Override
@@ -22,8 +22,19 @@ public class ScreenSelectIOInstrReg extends ST_ScreenOptionsMenu {
 	}
 	
 	@Override
+	protected void loadVars(ScreenState s) {
+		setScreenIndices(0, 1, 0, 0, 0);
+	}
+	
+	@Override
 	public void actionLt() {
-		options.moveLeft();
+		/* Restrict the column index in the I/O instruction creation (first
+		 * column is the I/O register label) */
+		int colIdx = options.getColumnIdx();
+		
+		if (colIdx > 1) {
+			options.moveLeft();
+		}
 	}
 	
 	@Override

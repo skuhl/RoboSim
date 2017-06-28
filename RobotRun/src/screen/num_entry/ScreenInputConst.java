@@ -8,8 +8,8 @@ import screen.ScreenState;
 
 public class ScreenInputConst extends ST_ScreenNumEntry {
 
-	public ScreenInputConst(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.INPUT_CONST, prevState, r);
+	public ScreenInputConst(RobotRun r) {
+		super(ScreenMode.INPUT_CONST, r);
 	}
 
 	@Override

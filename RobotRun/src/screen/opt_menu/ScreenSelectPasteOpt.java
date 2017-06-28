@@ -8,8 +8,8 @@ import screen.ScreenState;
 
 public class ScreenSelectPasteOpt extends ST_ScreenOptionsMenu {
 
-	public ScreenSelectPasteOpt(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.SELECT_PASTE_OPT, prevState, r);
+	public ScreenSelectPasteOpt(RobotRun r) {
+		super(ScreenMode.SELECT_PASTE_OPT, r);
 	}
 
 	@Override

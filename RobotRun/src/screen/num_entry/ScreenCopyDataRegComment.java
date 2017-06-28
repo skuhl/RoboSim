@@ -9,10 +9,10 @@ import screen.ScreenState;
 
 public class ScreenCopyDataRegComment extends ST_ScreenNumEntry {
 
-	public ScreenCopyDataRegComment(ScreenState prevState, String header,
+	public ScreenCopyDataRegComment(String header,
 			RobotRun r) {
 		
-		super(ScreenMode.CP_DREG_COM, prevState, header, r);
+		super(ScreenMode.CP_DREG_COM, header, r);
 	}
 	
 	@Override

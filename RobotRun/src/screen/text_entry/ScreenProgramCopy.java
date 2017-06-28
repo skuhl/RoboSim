@@ -10,8 +10,8 @@ public class ScreenProgramCopy extends ST_ScreenTextEntry {
 	
 	private Program originProg;
 	
-	public ScreenProgramCopy(ScreenState prevState, RobotRun r, Program prog) {
-		super(ScreenMode.PROG_COPY, prevState, r);
+	public ScreenProgramCopy(RobotRun r, Program prog) {
+		super(ScreenMode.PROG_COPY, r);
 		originProg = prog;
 	}
 

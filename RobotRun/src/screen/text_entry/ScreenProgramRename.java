@@ -10,8 +10,8 @@ public class ScreenProgramRename extends ST_ScreenTextEntry {
 
 	private Program tgtProg;
 	
-	public ScreenProgramRename(ScreenState prevState, RobotRun r, Program prog) {
-		super(ScreenMode.PROG_RENAME, prevState, r);
+	public ScreenProgramRename(RobotRun r, Program prog) {
+		super(ScreenMode.PROG_RENAME, r);
 		tgtProg = prog;
 	}
 

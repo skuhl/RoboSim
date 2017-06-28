@@ -8,8 +8,8 @@ import screen.ScreenState;
 
 public class ScreenSetIOInstrIdx extends ST_ScreenNumEntry {
 
-	public ScreenSetIOInstrIdx(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.SET_IO_INSTR_IDX, prevState, r);
+	public ScreenSetIOInstrIdx(RobotRun r) {
+		super(ScreenMode.SET_IO_INSTR_IDX, r);
 	}
 
 	@Override

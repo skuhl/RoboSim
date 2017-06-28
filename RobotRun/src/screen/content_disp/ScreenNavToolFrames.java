@@ -7,8 +7,8 @@ import screen.ScreenState;
 
 public class ScreenNavToolFrames extends ST_ScreenListContents {
 
-	public ScreenNavToolFrames(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.NAV_TOOL_FRAMES, prevState, r);
+	public ScreenNavToolFrames(RobotRun r) {
+		super(ScreenMode.NAV_TOOL_FRAMES, r);
 	}
 
 	@Override

@@ -6,8 +6,8 @@ import screen.ScreenState;
 
 public class ScreenNavMacros extends ST_ScreenListContents {
 
-	public ScreenNavMacros(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.NAV_MACROS, prevState, r);
+	public ScreenNavMacros(RobotRun r) {
+		super(ScreenMode.NAV_MACROS, r);
 	}
 
 	@Override

@@ -6,8 +6,8 @@ import screen.ScreenState;
 
 public class ScreenSelectContStmt extends ST_ScreenOptionsMenu {
 
-	public ScreenSelectContStmt(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.SELECT_COND_STMT, prevState, r);
+	public ScreenSelectContStmt(RobotRun r) {
+		super(ScreenMode.SELECT_COND_STMT, r);
 	}
 	
 	@Override

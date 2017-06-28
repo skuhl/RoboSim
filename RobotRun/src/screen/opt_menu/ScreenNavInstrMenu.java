@@ -7,8 +7,8 @@ import screen.ScreenState;
 
 public class ScreenNavInstrMenu extends ST_ScreenOptionsMenu {
 
-	public ScreenNavInstrMenu(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.NAV_INSTR_MENU, prevState, r);
+	public ScreenNavInstrMenu(RobotRun r) {
+		super(ScreenMode.NAV_INSTR_MENU, r);
 	}
 	
 	@Override

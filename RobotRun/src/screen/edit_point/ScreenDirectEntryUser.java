@@ -8,8 +8,8 @@ import ui.DisplayLine;
 
 public class ScreenDirectEntryUser extends ST_ScreenPointEntry {
 
-	public ScreenDirectEntryUser(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.DIRECT_ENTRY_USER, prevState, r);
+	public ScreenDirectEntryUser(RobotRun r) {
+		super(ScreenMode.DIRECT_ENTRY_USER, r);
 	}
 	
 	@Override

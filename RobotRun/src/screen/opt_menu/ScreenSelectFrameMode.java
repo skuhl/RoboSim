@@ -6,8 +6,8 @@ import screen.ScreenState;
 
 public class ScreenSelectFrameMode extends ST_ScreenOptionsMenu {
 
-	public ScreenSelectFrameMode(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.SELECT_FRAME_MODE, prevState, r);
+	public ScreenSelectFrameMode(RobotRun r) {
+		super(ScreenMode.SELECT_FRAME_MODE, r);
 	}
 
 	@Override

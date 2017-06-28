@@ -9,8 +9,8 @@ import screen.ScreenState;
 
 public class ScreenSetFramInstrIdx extends ST_ScreenNumEntry {
 
-	public ScreenSetFramInstrIdx(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.SET_FRAME_INSTR_IDX, prevState, r);
+	public ScreenSetFramInstrIdx(RobotRun r) {
+		super(ScreenMode.SET_FRAME_INSTR_IDX, r);
 	}
 
 	@Override

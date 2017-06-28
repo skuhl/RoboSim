@@ -11,8 +11,8 @@ import screen.ScreenState;
 
 public class ScreenSetSelectArgValue extends ST_ScreenNumEntry {
 
-	public ScreenSetSelectArgValue(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.SET_SELECT_ARGVAL, prevState, r);
+	public ScreenSetSelectArgValue(RobotRun r) {
+		super(ScreenMode.SET_SELECT_ARGVAL, r);
 	}
 
 	@Override

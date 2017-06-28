@@ -9,8 +9,8 @@ import screen.ScreenState;
 
 public class ScreenNavIORegs extends ST_ScreenListContents {
 
-	public ScreenNavIORegs(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.NAV_IOREGS, prevState, r);
+	public ScreenNavIORegs(RobotRun r) {
+		super(ScreenMode.NAV_IOREGS, r);
 	}
 
 	@Override

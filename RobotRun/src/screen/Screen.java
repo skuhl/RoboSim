@@ -12,7 +12,7 @@ public abstract class Screen {
 	protected MenuScroll options;
 	protected String[] labels;
 	
-	public Screen(ScreenMode m, ScreenState prevState, String header, RobotRun r) {
+	public Screen(ScreenMode m, String header, RobotRun r) {
 		mode = m;
 		robotRun = r;
 		
@@ -20,11 +20,9 @@ public abstract class Screen {
 		contents = new MenuScroll("cont", 8, 10, 20);
 		options = new MenuScroll("opt", 3, 10, 180);
 		labels = new String[5];
-		
-		loadVars(prevState);
 	}
 	
-	public Screen(ScreenMode m, ScreenState prevState, RobotRun r) {
+	public Screen(ScreenMode m, RobotRun r) {
 		mode = m;
 		robotRun = r;
 		
@@ -32,8 +30,6 @@ public abstract class Screen {
 		contents = new MenuScroll("cont", 8, 10, 20);
 		options = new MenuScroll("opt", 3, 10, 180);
 		labels = new String[5];
-		
-		loadVars(prevState);
 	}
 	
 	public void updateScreen() {

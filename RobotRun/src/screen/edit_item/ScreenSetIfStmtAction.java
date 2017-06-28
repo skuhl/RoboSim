@@ -10,8 +10,8 @@ import screen.ScreenState;
 
 public class ScreenSetIfStmtAction extends ST_ScreenEditItem {
 
-	public ScreenSetIfStmtAction(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.SET_IF_STMT_ACT, prevState, r);
+	public ScreenSetIfStmtAction(RobotRun r) {
+		super(ScreenMode.SET_IF_STMT_ACT, r);
 	}
 
 	@Override

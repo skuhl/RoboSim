@@ -8,8 +8,8 @@ import screen.ScreenState;
 
 public class ScreenEditPosRegComment extends ST_ScreenTextEntry {
 
-	public ScreenEditPosRegComment(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.EDIT_PREG_COM, prevState, r);
+	public ScreenEditPosRegComment(RobotRun r) {
+		super(ScreenMode.EDIT_PREG_COM, r);
 	}
 
 	@Override

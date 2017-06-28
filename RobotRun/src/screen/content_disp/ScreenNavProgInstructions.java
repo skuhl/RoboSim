@@ -26,8 +26,8 @@ import screen.ScreenState;
 
 public class ScreenNavProgInstructions extends ST_ScreenListContents {
 
-	public ScreenNavProgInstructions(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.NAV_PROG_INSTR, prevState, r);
+	public ScreenNavProgInstructions(RobotRun r) {
+		super(ScreenMode.NAV_PROG_INSTR, r);
 	}
 	
 	@Override

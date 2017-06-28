@@ -11,8 +11,8 @@ import ui.DisplayLine;
 
 public class ScreenTeach3PtTool extends ST_ScreenTeachPoints {
 
-	public ScreenTeach3PtTool(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.TEACH_3PT_TOOL, prevState, r);
+	public ScreenTeach3PtTool(RobotRun r) {
+		super(ScreenMode.TEACH_3PT_TOOL, r);
 	}
 
 	@Override

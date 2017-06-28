@@ -17,8 +17,8 @@ import screen.ScreenState;
 
 public class ScreenSetExpressionArg extends ST_ScreenEditItem {
 
-	public ScreenSetExpressionArg(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.SET_EXPR_ARG, prevState, r);
+	public ScreenSetExpressionArg(RobotRun r) {
+		super(ScreenMode.SET_EXPR_ARG, r);
 	}
 
 	@Override

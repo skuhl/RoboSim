@@ -7,8 +7,8 @@ import screen.ScreenState;
 
 public class ScreenConfirmProgramDelete extends ST_ScreenConfirmCancel {
 
-	public ScreenConfirmProgramDelete(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.CONFIRM_PROG_DELETE, prevState, r);
+	public ScreenConfirmProgramDelete(RobotRun r) {
+		super(ScreenMode.CONFIRM_PROG_DELETE, r);
 	}
 
 	@Override

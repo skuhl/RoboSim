@@ -8,8 +8,8 @@ import screen.ScreenState;
 
 public class ScreenToolFrameDetail extends ST_ScreenOptionsMenu {
 
-	public ScreenToolFrameDetail(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.TFRAME_DETAIL, prevState, r);
+	public ScreenToolFrameDetail(RobotRun r) {
+		super(ScreenMode.TFRAME_DETAIL, r);
 	}
 
 	@Override

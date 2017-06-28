@@ -11,8 +11,8 @@ import screen.ScreenState;
 
 public class ScreenSetJumpTgt extends ST_ScreenNumEntry {
 
-	public ScreenSetJumpTgt(ScreenState prevState, RobotRun r) {
-		super(ScreenMode.SET_JUMP_TGT, prevState, r);
+	public ScreenSetJumpTgt(RobotRun r) {
+		super(ScreenMode.SET_JUMP_TGT, r);
 	}
 
 	@Override
