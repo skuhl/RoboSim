@@ -58,8 +58,10 @@ public class ScreenSelectPasteOpt extends ST_ScreenOptionsMenu {
 		case 7: robotRun.pasteInstructions(Fields.PASTE_REVERSE | Fields.NEW_POSITION | Fields.REVERSE_MOTION);
 				break;
 		}
-				
+		
+		/* TODO fix this *
 		Screen prev = null;
+		
 		while (!robotRun.getScreenStack().isEmpty()) {
 			prev = robotRun.getScreenStack().peek();
 			
@@ -69,6 +71,7 @@ public class ScreenSelectPasteOpt extends ST_ScreenOptionsMenu {
 			
 			robotRun.getScreenStack().pop();
 		}
+		/**/
 		
 		robotRun.lastScreen();
 	}

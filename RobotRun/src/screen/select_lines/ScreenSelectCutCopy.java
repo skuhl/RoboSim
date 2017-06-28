@@ -67,7 +67,7 @@ public class ScreenSelectCutCopy extends ST_ScreenLineSelect {
 	
 	@Override
 	public void actionF5() {
-		robotRun.getScreenStack().pop();
+		robotRun.popScreenStack(1);
 		robotRun.updateInstructions();
 	}
 }

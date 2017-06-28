@@ -31,7 +31,7 @@ public class ScreenSetRegExpressionType extends ST_ScreenEditItem {
 		if (options.getLineIdx() == 3) {
 			regStmt.setRegister(new PositionRegister(), 0);
 			
-			robotRun.getScreenStack().pop();
+			robotRun.popScreenStack(1);
 			robotRun.nextScreen(ScreenMode.SET_REG_EXPR_IDX2);
 			robotRun.nextScreen(ScreenMode.SET_REG_EXPR_IDX1);
 			

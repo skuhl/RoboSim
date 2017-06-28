@@ -6,9 +6,12 @@ import programming.Program;
 import screen.ScreenMode;
 
 public class ScreenProgramCopy extends ST_ScreenTextEntry {
-
-	public ScreenProgramCopy(RobotRun r) {
+	
+	private Program originProg;
+	
+	public ScreenProgramCopy(RobotRun r, Program prog) {
 		super(ScreenMode.PROG_COPY, r);
+		originProg = prog;
 	}
 
 	@Override
@@ -24,14 +27,10 @@ public class ScreenProgramCopy extends ST_ScreenTextEntry {
 				workingText.deleteCharAt(workingText.length() - 1);
 			}
 
-			Program prog = robotRun.getActiveProg();
-
-			if (prog != null) {
-				Program newProg = prog.clone();
+			if (originProg != null) {
+				Program newProg = originProg.clone();
 				newProg.setName(workingText.toString());
-				int new_prog = robotRun.getActiveRobot().addProgram(newProg);
-				robotRun.setActiveProgIdx(new_prog);
-				robotRun.setActiveInstIdx(0);
+				robotRun.getActiveRobot().addProgram(newProg);
 				DataManagement.saveRobotData(robotRun.getActiveRobot(), 1);
 			}
 

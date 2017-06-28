@@ -7,8 +7,11 @@ import screen.ScreenMode;
 
 public class ScreenProgramRename extends ST_ScreenTextEntry {
 
-	public ScreenProgramRename(RobotRun r) {
+	private Program tgtProg;
+	
+	public ScreenProgramRename(RobotRun r, Program prog) {
 		super(ScreenMode.PROG_RENAME, r);
+		tgtProg = prog;
 	}
 
 	@Override
@@ -23,14 +26,14 @@ public class ScreenProgramRename extends ST_ScreenTextEntry {
 				// Remove insert character
 				workingText.deleteCharAt(workingText.length() - 1);
 			}
-			// Rename the active program
-			Program prog = robotRun.getActiveProg();
-			if (prog != null) {
-				prog.setName(workingText.toString());
+			
+			// Rename the given program
+			if (tgtProg != null) {
+				tgtProg.setName(workingText.toString());
 				robotRun.getActiveRobot().reorderPrograms();
 				DataManagement.saveRobotData(robotRun.getActiveRobot(), 1);
 			}
-
+			
 			robotRun.lastScreen();
 		}
 	}

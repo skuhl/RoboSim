@@ -63,6 +63,7 @@ import regs.PositionRegister;
 import regs.Register;
 import robot.RoboticArm;
 import screen.Screen;
+import screen.ScreenManager;
 import screen.ScreenMode;
 import screen.content_disp.ScreenNavProgInstructions;
 import screen.content_disp.ScreenNavPrograms;
@@ -126,9 +127,9 @@ public class RobotRun extends PApplet {
 
 	private WGUI UI;
 	private KeyCodeMap keyCodeMap;
-	private Screen curScreen;
-
-	private Stack<Screen> screenStack;
+	private ScreenManager screens;
+	
+	
 	private ArrayList<Macro> macros = new ArrayList<>();
 	private Macro[] macroKeyBinds = new Macro[7];
 
@@ -244,7 +245,7 @@ public class RobotRun extends PApplet {
 	 * in either the content or options menu.
 	 */
 	public void button_arrowDn() {
-		curScreen.actionDn();
+		screens.getActiveScreen().actionDn();
 		updatePendantScreen();
 	}
 	
@@ -256,7 +257,7 @@ public class RobotRun extends PApplet {
 	 * either the content or options menu.
 	 */
 	public void button_arrowLt() {
-		curScreen.actionLt();
+		screens.getActiveScreen().actionLt();
 		updatePendantScreen();
 	}
 
@@ -270,7 +271,7 @@ public class RobotRun extends PApplet {
 	 * text, and point entry menus.
 	 */
 	public void button_arrowRt() {
-		curScreen.actionRt();
+		screens.getActiveScreen().actionRt();
 		updatePendantScreen();
 	}
 	
@@ -282,7 +283,7 @@ public class RobotRun extends PApplet {
 	 * in either the content or options menu.
 	 */
 	public void button_arrowUp() {
-		curScreen.actionUp();
+		screens.getActiveScreen().actionUp();
 		updatePendantScreen();
 	}
 
@@ -292,7 +293,7 @@ public class RobotRun extends PApplet {
 	 * Functions as a backspace key for number, text, and point input menus.
 	 */
 	public void button_bkspc() {
-		curScreen.actionBkspc();
+		screens.getActiveScreen().actionBkspc();
 		updatePendantScreen();
 	}
 	
@@ -305,9 +306,9 @@ public class RobotRun extends PApplet {
 	public void button_bwd() {
 		// Backwards is only functional when executing a program one instruction
 		// at a time
-		if (curScreen instanceof ScreenNavProgInstructions && isShift() && isStep()) {
+		if (screens.getActiveScreen() instanceof ScreenNavProgInstructions && isShift() && isStep()) {
 			// Safeguard against editing a program while it is running
-			curScreen.getContents().setSelectedColumnIdx(0);
+			screens.getActiveScreen().getContents().setSelectedColumnIdx(0);
 			progExecBwd();
 		}
 	}
@@ -429,7 +430,7 @@ public class RobotRun extends PApplet {
 	 * menus.
 	 */
 	public void button_dash() {
-		curScreen.actionKeyPress('-');
+		screens.getActiveScreen().actionKeyPress('-');
 	}
 
 	/**
@@ -450,9 +451,9 @@ public class RobotRun extends PApplet {
 	 * the selected program
 	 */
 	public void button_edit() {
-		if (curScreen instanceof ScreenNavPrograms) {
+		if (screens.getActiveScreen() instanceof ScreenNavPrograms) {
 			// Load the selected program
-			setActiveProgIdx(curScreen.getContentIdx());
+			setActiveProgIdx(screens.getActiveScreen().getContentIdx());
 			setActiveInstIdx(0);
 			nextScreen(ScreenMode.NAV_PROG_INSTR);
 			
@@ -461,7 +462,7 @@ public class RobotRun extends PApplet {
 			nextScreen(ScreenMode.NAV_PROG_INSTR);
 		} else {
 			// Load the program navigation menu
-			resetStack();
+			screens.resetStack();
 			nextScreen(ScreenMode.NAV_PROGRAMS);
 		}
 	}
@@ -472,7 +473,7 @@ public class RobotRun extends PApplet {
 	 * Functions as a confirmation button for almost all menus.
 	 */
 	public void button_enter() {
-		curScreen.actionEntr();
+		screens.getActiveScreen().actionEntr();
 		updatePendantScreen();
 	}
 	
@@ -484,7 +485,7 @@ public class RobotRun extends PApplet {
 	 * menu.
 	 */
 	public void button_F1() {
-		curScreen.actionF1();
+		screens.getActiveScreen().actionF1();
 		updatePendantScreen();
 	}
 
@@ -496,7 +497,7 @@ public class RobotRun extends PApplet {
 	 * menu.
 	 */
 	public void button_F2() {
-		curScreen.actionF2();
+		screens.getActiveScreen().actionF2();
 		updatePendantScreen();
 	}
 
@@ -508,7 +509,7 @@ public class RobotRun extends PApplet {
 	 * menu.
 	 */
 	public void button_F3() {
-		curScreen.actionF3();
+		screens.getActiveScreen().actionF3();
 		updatePendantScreen();
 	}
 
@@ -520,7 +521,7 @@ public class RobotRun extends PApplet {
 	 * menu.
 	 */
 	public void button_F4() {
-		curScreen.actionF4();
+		screens.getActiveScreen().actionF4();
 		updatePendantScreen();
 	}
   
@@ -532,7 +533,7 @@ public class RobotRun extends PApplet {
 	 * menu.
 	 */
 	public void button_F5() {
-		curScreen.actionF5();
+		screens.getActiveScreen().actionF5();
 		updatePendantScreen();
 	}
 
@@ -544,11 +545,11 @@ public class RobotRun extends PApplet {
 	 * otherwise the entire program is executed.
 	 */
 	public void button_fwd() {
-		if (curScreen instanceof ScreenNavProgInstructions && !isProgExec() && isShift()) {
+		if (screens.getActiveScreen() instanceof ScreenNavProgInstructions && !isProgExec() && isShift()) {
 			// Stop any prior Robot movement
 			button_hold();
 			// Safeguard against editing a program while it is running
-			curScreen.getContents().setSelectedColumnIdx(0);
+			screens.getActiveScreen().getContents().setSelectedColumnIdx(0);
 			progExec(isStep());
 		}
 	}
@@ -597,7 +598,7 @@ public class RobotRun extends PApplet {
 	 * Not sure what this does ...
 	 */
 	public void button_item() {
-		if (curScreen instanceof ScreenNavProgInstructions) {
+		if (screens.getActiveScreen() instanceof ScreenNavProgInstructions) {
 			nextScreen(ScreenMode.JUMP_TO_LINE);
 		}
 	}
@@ -761,7 +762,7 @@ public class RobotRun extends PApplet {
 	 * menus.
 	 */
 	public void button_num0() {
-		curScreen.actionKeyPress('0');
+		screens.getActiveScreen().actionKeyPress('0');
 	}
 
 	/**
@@ -771,7 +772,7 @@ public class RobotRun extends PApplet {
 	 * menus.
 	 */
 	public void button_num1() {
-		curScreen.actionKeyPress('1');
+		screens.getActiveScreen().actionKeyPress('1');
 	}
 
 	/**
@@ -781,7 +782,7 @@ public class RobotRun extends PApplet {
 	 * menus.
 	 */
 	public void button_num2() {
-		curScreen.actionKeyPress('2');
+		screens.getActiveScreen().actionKeyPress('2');
 	}
 
 	/**
@@ -791,7 +792,7 @@ public class RobotRun extends PApplet {
 	 * menus.
 	 */
 	public void button_num3() {
-		curScreen.actionKeyPress('3');
+		screens.getActiveScreen().actionKeyPress('3');
 	}
 
 	/**
@@ -801,7 +802,7 @@ public class RobotRun extends PApplet {
 	 * menus.
 	 */
 	public void button_num4() {
-		curScreen.actionKeyPress('4');
+		screens.getActiveScreen().actionKeyPress('4');
 	}
 	
 	/**
@@ -811,7 +812,7 @@ public class RobotRun extends PApplet {
 	 * menus.
 	 */
 	public void button_num5() {
-		curScreen.actionKeyPress('5');
+		screens.getActiveScreen().actionKeyPress('5');
 	}
 	
 	/**
@@ -821,7 +822,7 @@ public class RobotRun extends PApplet {
 	 * menus.
 	 */
 	public void button_num6() {
-		curScreen.actionKeyPress('6');
+		screens.getActiveScreen().actionKeyPress('6');
 	}
 	
 	/**
@@ -831,7 +832,7 @@ public class RobotRun extends PApplet {
 	 * menus.
 	 */
 	public void button_num7() {
-		curScreen.actionKeyPress('7');
+		screens.getActiveScreen().actionKeyPress('7');
 	}
 	
 	/**
@@ -841,7 +842,7 @@ public class RobotRun extends PApplet {
 	 * menus.
 	 */
 	public void button_num8() {
-		curScreen.actionKeyPress('8');
+		screens.getActiveScreen().actionKeyPress('8');
 	}
 
 	/**
@@ -851,7 +852,7 @@ public class RobotRun extends PApplet {
 	 * menus.
 	 */
 	public void button_num9() {
-		curScreen.actionKeyPress('9');
+		screens.getActiveScreen().actionKeyPress('9');
 	}
 	
 	/**
@@ -1059,7 +1060,7 @@ public class RobotRun extends PApplet {
 	 * menus.
 	 */
 	public void button_period() {
-		curScreen.actionKeyPress('.');
+		screens.getActiveScreen().actionKeyPress('.');
 	}
 
 	/**
@@ -1422,7 +1423,7 @@ public class RobotRun extends PApplet {
 				UI.updateJogButtons(jogMotion);
 			}
 			
-			if (teachFrame != null && curScreen instanceof ST_ScreenTeachPoints) {
+			if (teachFrame != null && screens.getActiveScreen() instanceof ST_ScreenTeachPoints) {
 				renderTeachPoints(teachFrame);
 			}
 	
@@ -1577,7 +1578,7 @@ public class RobotRun extends PApplet {
 		// Stop any prior Robot movement
 		button_hold();
 		// Safeguard against editing a program while it is running
-		curScreen.getContents().setSelectedColumnIdx(0);
+		screens.getActiveScreen().getContents().setSelectedColumnIdx(0);
 		progExec(m.getProgIdx(), 0, isStep());
 	}
 
@@ -1704,7 +1705,7 @@ public class RobotRun extends PApplet {
 		try {	
 			while (instr.get(row).getItemIdx() != instrIdx) {
 				row += 1;
-				if (curScreen.getContentIdx() >= curScreen.getContents().size() - 1)
+				if (screens.getActiveScreen().getContentIdx() >= screens.getActiveScreen().getContents().size() - 1)
 					break;
 			}
 		
@@ -1722,9 +1723,9 @@ public class RobotRun extends PApplet {
 	public KeyCodeMap getKeyCodeMap() {
 		return keyCodeMap;
 	}
-
+	
 	public Screen getLastScreen() {
-		return screenStack.get(screenStack.size() - 2);
+		return screens.getLastScreen(1);
 	}
 
 	public Macro getMacro(int idx) {
@@ -1740,7 +1741,7 @@ public class RobotRun extends PApplet {
 	}
 
 	public ScreenMode getMode() {
-		return curScreen.mode;
+		return screens.getActiveScreen().mode;
 	}
 	
 	/**
@@ -1787,10 +1788,6 @@ public class RobotRun extends PApplet {
 
 	public ArrayList<Scenario> getScenarios() {
 		return SCENARIOS;
-	}
-
-	public Stack<Screen> getScreenStack() {
-		return screenStack;
 	}
 
 	/**
@@ -1863,13 +1860,13 @@ public class RobotRun extends PApplet {
 			
 		}  else if (UI != null && UI.isPendantActive()) {
 			// Suppress other key events when entering text for the pendant
-			curScreen.actionKeyPress(key);
+			screens.getActiveScreen().actionKeyPress(key);
 			updatePendantScreen();
 			
 			// Pendant button shortcuts
-			if (!(curScreen instanceof ST_ScreenTextEntry) &&
-					!(curScreen instanceof ST_ScreenNumEntry) &&
-					!(curScreen instanceof ST_ScreenPointEntry)) {
+			if (!(screens.getActiveScreen() instanceof ST_ScreenTextEntry) &&
+					!(screens.getActiveScreen() instanceof ST_ScreenNumEntry) &&
+					!(screens.getActiveScreen() instanceof ST_ScreenPointEntry)) {
 				// Disable function shortcuts when entering in text or number input
 				if (keyCode == KeyEvent.VK_1) {
 					button_F1();
@@ -1965,7 +1962,7 @@ public class RobotRun extends PApplet {
 			
 			// Pendant button shortcuts
 			switch(keyCode) {
-			case KeyEvent.VK_SHIFT:		if (!(curScreen instanceof ST_ScreenTextEntry)) 
+			case KeyEvent.VK_SHIFT:		if (!(screens.getActiveScreen() instanceof ST_ScreenTextEntry)) 
 											setShift(true); break;
 			case KeyEvent.VK_U: 		button_jointNeg1(); break;
 			case KeyEvent.VK_I:			button_jointPos1(); break;
@@ -1994,7 +1991,7 @@ public class RobotRun extends PApplet {
 				!UIKeyboardUse()) {
 			
 			switch(keyCode) {
-			case KeyEvent.VK_SHIFT: 	if (!(curScreen instanceof ST_ScreenTextEntry))
+			case KeyEvent.VK_SHIFT: 	if (!(screens.getActiveScreen() instanceof ST_ScreenTextEntry))
 											setShift(false); break;
 			case KeyEvent.VK_U: 		button_jointNeg1(); break;
 			case KeyEvent.VK_I:			button_jointPos1(); break;
@@ -2019,15 +2016,13 @@ public class RobotRun extends PApplet {
 	 * @return	If a previous screen exists
 	 */
 	public void lastScreen() {
-		Screen cur = screenStack.peek();
+		Screen cur = screens.getActiveScreen();
 		
 		if (cur.mode != ScreenMode.DEFAULT) {
-			screenStack.pop();
-			curScreen = screenStack.peek();
-			
-			Fields.debug("\n%s <= %s\n", cur.mode, curScreen.mode);
-			
+			screens.lastScreen();
 			updatePendantScreen();
+			
+			Fields.debug("\n%s <= %s\n", cur.mode, screens.getActiveScreen().mode);
 		}		
 	}
 	
@@ -2786,7 +2781,7 @@ public class RobotRun extends PApplet {
 		}  else if (mInst.getPosType() == Fields.PTYPE_PROG) {
 			prog.setPosition(regNum, pt);
 			
-			if (curScreen.getContents().getItemLineIdx() > 0) {
+			if (screens.getActiveScreen().getContents().getItemLineIdx() > 0) {
 				mInst.setCircPosIdx(regNum);
 				
 			} else {
@@ -2854,36 +2849,11 @@ public class RobotRun extends PApplet {
 	 * @param nextScreen	The new screen mode
 	 */
 	public void nextScreen(ScreenMode nextScreen) {
-		Fields.debug("\n%s => %s\n", curScreen.mode, nextScreen);
-		
-		curScreen = Screen.getScreen(nextScreen, this);
-		Screen prevScreen = screenStack.peek();
-		System.out.println("Loaded screen " + nextScreen.name());
-		
-		// Give the previous program navigation screen to the option screens
-		if (nextScreen == ScreenMode.CONFIRM_INSERT || nextScreen == ScreenMode.SELECT_INSTR_DELETE
-				|| nextScreen == ScreenMode.CONFIRM_RENUM || nextScreen == ScreenMode.SELECT_COMMENT
-				|| nextScreen == ScreenMode.SELECT_CUT_COPY || nextScreen == ScreenMode.FIND_REPL
-				|| (nextScreen == ScreenMode.SELECT_PASTE_OPT &&
-				prevScreen.mode != ScreenMode.SELECT_CUT_COPY)) {
-			
-			if (screenStack.size() > 2) {
-				// Find the program navigation screen
-				prevScreen = screenStack.get( screenStack.size() - 2 );
-				
-				if (prevScreen.mode == ScreenMode.NAV_PROG_INSTR) {
-					curScreen.updateScreen(prevScreen.getScreenState());
-				}
-			}
-			
-		} else if (false) {
-			
-		} else {
-			curScreen.updateScreen(screenStack.peek().getScreenState());
-		}
-		
-		pushActiveScreen();
+		Screen prevScreen = screens.getActiveScreen();
+		screens.nextScreen(nextScreen);
 		updatePendantScreen();
+				
+		Fields.debug("\n%s => %s\n", prevScreen.mode, nextScreen);	
 	}
 	
 	public void pasteInstructions() {
@@ -2949,24 +2919,22 @@ public class RobotRun extends PApplet {
 			p.addInstAt(getActiveInstIdx() + i, instr);
 		}
 	}
-
-
+	
 	/**
-	 * Pushes a screen on the stack to allow us to return to the screen later.
+	 * Wrapper method for the ScreenManager.popScreenStack() of screens.
+	 * 
+	 * @param depth	The maximum number of screens to remove from the screen
+	 * 				stack
 	 */
-	public void pushScreen(Screen s) {
-		screenStack.push(s);
+	public void popScreenStack(int depth) {
+		screens.popScreenStack(depth);
 	}
 	
 	/**
-	 * Clears the screen state stack and sets the default screen as the active
-	 * screen.
+	 * Wrapper method for the ScreenManager.popScreenStack() of screens.
 	 */
 	public void resetStack() {
-		// Stop a program from executing when transition screens
-		screenStack.clear();
-		curScreen = Screen.getScreen(ScreenMode.DEFAULT, this);
-		pushScreen(curScreen);
+		screens.resetStack();
 	}
 	
 	/**
@@ -2981,12 +2949,12 @@ public class RobotRun extends PApplet {
 	 * 			0 anything else
 	 */
 	public int selectedMInstRegState() {
-		if (curScreen instanceof ScreenNavProgInstructions) {
+		if (screens.getActiveScreen() instanceof ScreenNavProgInstructions) {
 			Instruction inst = getActiveInstruction();
 			
 			if (inst instanceof PosMotionInst) {
 				PosMotionInst mInst = (PosMotionInst)inst;
-				int sdx = curScreen.getContents().getItemColumnIdx();
+				int sdx = screens.getActiveScreen().getContents().getItemColumnIdx();
 				
 				if (sdx == 3 || sdx == 4) {
 					// Primary register is selected
@@ -3225,9 +3193,7 @@ public class RobotRun extends PApplet {
 			
 			setManager(new WGUI(this, buttonImages));
 			
-			screenStack = new Stack<>();
-			curScreen = Screen.getScreen(ScreenMode.DEFAULT, this);
-			pushScreen(curScreen);
+			screens = new ScreenManager(this);
 			updatePendantScreen();
 			
 			progExecState = new ProgExecution();
@@ -3258,9 +3224,11 @@ public class RobotRun extends PApplet {
 	 * @param nextScreen	The new screen mode
 	 */
 	public void switchScreen(ScreenMode nextScreen) {
-		screenStack.pop();
-		// Load the new screen
-		nextScreen(nextScreen);
+		Screen prevScreen = screens.getActiveScreen();
+		screens.switchScreen(nextScreen);
+		updatePendantScreen();
+				
+		Fields.debug("\n%s => %s\n", prevScreen.mode, nextScreen);	
 	}
 
 	/**
@@ -3333,8 +3301,8 @@ public class RobotRun extends PApplet {
 	 * pendant.
 	 */
 	public void updatePendantScreen() {
-		curScreen.updateScreen();
-		UI.renderPendantScreen(curScreen);
+		screens.getActiveScreen().updateScreen();
+		UI.renderPendantScreen(screens.getActiveScreen());
 	}
 	
 	/**
@@ -3624,14 +3592,6 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Pushes the current state of the screen, contents, and options fields
-	 * onto the screen state stack.
-	 */
-	private void pushActiveScreen() {
-		pushScreen(curScreen);
-	}
-
-	/**
 	 * Updates the position and orientation of the Robot as well as all the
 	 * World Objects associated with the current scenario. Updates the bounding
 	 * box color, position and orientation of the Robot and all World Objects as
@@ -3864,9 +3824,9 @@ public class RobotRun extends PApplet {
 	private void renderTeachPoints(Frame frame) {
 		int size = 3;
 
-		if (curScreen instanceof ScreenTeach6Pt && teachFrame instanceof ToolFrame) {
+		if (screens.getActiveScreen() instanceof ScreenTeach6Pt && teachFrame instanceof ToolFrame) {
 			size = 6;
-		} else if (curScreen instanceof ScreenTeach4Pt && teachFrame instanceof UserFrame) {
+		} else if (screens.getActiveScreen() instanceof ScreenTeach4Pt && teachFrame instanceof UserFrame) {
 			size = 4;
 		}
 
@@ -4117,9 +4077,9 @@ public class RobotRun extends PApplet {
 	 */
 	private boolean UIKeyboardUse() {
 		
-		if (UI.isPendantActive() && (curScreen instanceof ST_ScreenTextEntry ||
-				curScreen instanceof ST_ScreenPointEntry ||
-				curScreen instanceof ST_ScreenNumEntry)) {
+		if (UI.isPendantActive() && (screens.getActiveScreen() instanceof ST_ScreenTextEntry ||
+				screens.getActiveScreen() instanceof ST_ScreenPointEntry ||
+				screens.getActiveScreen() instanceof ST_ScreenNumEntry)) {
 			
 			return true;
 			
@@ -4172,7 +4132,7 @@ public class RobotRun extends PApplet {
 							if (r.RID != activeRobot.RID) {
 								// Update the active robot
 								activeRobot = ROBOTS.get(progExecState.getRID());
-								curScreen.getContents().setSelectedColumnIdx(0);
+								screens.getActiveScreen().getContents().setSelectedColumnIdx(0);
 							}
 							
 							progExecState.setCurIdx( progExecState.getNextIdx() );
@@ -4195,7 +4155,7 @@ public class RobotRun extends PApplet {
 		}
 		
 		// Update the display
-		curScreen.getContents().setSelectedLineIdx(getInstrLine(getActiveInstIdx()) );
+		screens.getActiveScreen().getContents().setSelectedLineIdx(getInstrLine(getActiveInstIdx()) );
 		updatePendantScreen();
 	}
 
@@ -4207,7 +4167,7 @@ public class RobotRun extends PApplet {
 	 * instruction.
 	 */
 	private void updateInstList() {
-		if (curScreen instanceof ScreenNavProgInstructions) {
+		if (screens.getActiveScreen() instanceof ScreenNavProgInstructions) {
 			Program prog = getActiveProg();
 			Point robotPos = activeRobot.getToolTipNative();
 			boolean updatedLines = false;

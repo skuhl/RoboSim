@@ -5,6 +5,7 @@ import global.DataManagement;
 import regs.DataRegister;
 import regs.Register;
 import robot.RoboticArm;
+import screen.Screen;
 import screen.ScreenMode;
 
 public class ScreenEditDataRegValue extends ST_ScreenNumEntry {
@@ -15,7 +16,8 @@ public class ScreenEditDataRegValue extends ST_ScreenNumEntry {
 
 	@Override
 	protected String loadHeader() {
-		Register reg = robotRun.getActiveRobot().getDReg(robotRun.getScreenStack().peek().getContentIdx());
+		Screen prevScreen = robotRun.getLastScreen();
+		Register reg = robotRun.getActiveRobot().getDReg(prevScreen.getContentIdx());
 		return String.format("%s: VALUE EDIT", reg.getLabel());
 	}
 	
@@ -27,7 +29,8 @@ public class ScreenEditDataRegValue extends ST_ScreenNumEntry {
 	
 	@Override
 	protected void loadOptions() {
-		options.addLine(String.format("Input R[%d]'s value:", robotRun.getScreenStack().peek().getContentIdx() + 1));
+		Screen prevScreen = robotRun.getLastScreen();
+		options.addLine(String.format("Input R[%d]'s value:", prevScreen.getContentIdx() + 1));
 		options.addLine("\0" + workingText);
 	}
 	
