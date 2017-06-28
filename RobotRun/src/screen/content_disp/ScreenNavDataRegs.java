@@ -4,11 +4,12 @@ import core.RobotRun;
 import regs.DataRegister;
 import robot.RoboticArm;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenNavDataRegs extends ST_ScreenListContents {
 
-	public ScreenNavDataRegs(RobotRun r) {
-		super(ScreenMode.NAV_DREGS, r);
+	public ScreenNavDataRegs(ScreenState prevState, RobotRun r) {
+		super(ScreenMode.NAV_DREGS, prevState, r);
 	}
 
 	@Override

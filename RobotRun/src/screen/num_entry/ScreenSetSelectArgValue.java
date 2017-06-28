@@ -7,11 +7,12 @@ import expression.OperandFloat;
 import programming.SelectStatement;
 import robot.RoboticArm;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenSetSelectArgValue extends ST_ScreenNumEntry {
 
-	public ScreenSetSelectArgValue(RobotRun r) {
-		super(ScreenMode.SET_SELECT_ARGVAL, r);
+	public ScreenSetSelectArgValue(ScreenState prevState, RobotRun r) {
+		super(ScreenMode.SET_SELECT_ARGVAL, prevState, r);
 	}
 
 	@Override
@@ -43,7 +44,7 @@ public class ScreenSetSelectArgValue extends ST_ScreenNumEntry {
 			//TODO display error to user
 		}
 
-		robotRun.getScreenStack().pop();
+		robotRun.popScreenStack(1);
 		robotRun.lastScreen();
 	}
 }

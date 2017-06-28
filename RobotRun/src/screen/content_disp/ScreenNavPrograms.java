@@ -3,11 +3,12 @@ package screen.content_disp;
 import core.RobotRun;
 import robot.RoboticArm;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenNavPrograms extends ST_ScreenListContents {
 
-	public ScreenNavPrograms(RobotRun r) {
-		super(ScreenMode.NAV_PROGRAMS, r);
+	public ScreenNavPrograms(ScreenState prevState, RobotRun r) {
+		super(ScreenMode.NAV_PROGRAMS, prevState, r);
 	}
 	
 	@Override

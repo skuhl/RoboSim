@@ -5,11 +5,12 @@ import global.Fields;
 import regs.IORegister;
 import robot.RoboticArm;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenNavIORegs extends ST_ScreenListContents {
 
-	public ScreenNavIORegs(RobotRun r) {
-		super(ScreenMode.NAV_IOREGS, r);
+	public ScreenNavIORegs(ScreenState prevState, RobotRun r) {
+		super(ScreenMode.NAV_IOREGS, prevState, r);
 	}
 
 	@Override
@@ -20,6 +21,10 @@ public class ScreenNavIORegs extends ST_ScreenListContents {
 	@Override
 	protected void loadContents() {
 		contents.setLines(robotRun.loadIORegNav(robotRun.getActiveRobot()));
+	}
+	
+	protected void loadVars(ScreenState s) {
+		this.setScreenIndices(0, 1, 0, 0, 0);
 	}
 
 	@Override
@@ -33,5 +38,15 @@ public class ScreenNavIORegs extends ST_ScreenListContents {
 			ioReg.state = (ioReg.state == Fields.ON) ? Fields.OFF : Fields.ON;
 			robotRun.updatePendantScreen();
 		}
+	}
+	
+	@Override
+	public void actionLt() {
+		// Disable column navigation
+	}
+	
+	@Override
+	public void actionRt() {
+		// Disable column navigation
 	}
 }

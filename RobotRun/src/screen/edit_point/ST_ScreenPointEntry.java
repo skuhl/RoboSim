@@ -15,8 +15,8 @@ public abstract class ST_ScreenPointEntry extends Screen {
 	protected StringBuilder[] workingText;
 	protected String[] prefixes;
 
-	public ST_ScreenPointEntry(ScreenMode m, RobotRun r) {
-		super(m, r);
+	public ST_ScreenPointEntry(ScreenMode m, ScreenState prevState, RobotRun r) {
+		super(m, prevState, r);
 		workingText = new StringBuilder[6];
 		prefixes = new String[6];
 		loadWorkingText();

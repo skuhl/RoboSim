@@ -7,11 +7,12 @@ import programming.SelectStatement;
 import regs.DataRegister;
 import robot.RoboticArm;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenSetSelectStmtArg extends ST_ScreenEditItem {
 
-	public ScreenSetSelectStmtArg(RobotRun r) {
-		super(ScreenMode.SET_SELECT_STMT_ARG, r);
+	public ScreenSetSelectStmtArg(ScreenState prevState, RobotRun r) {
+		super(ScreenMode.SET_SELECT_STMT_ARG, prevState, r);
 	}
 
 	@Override

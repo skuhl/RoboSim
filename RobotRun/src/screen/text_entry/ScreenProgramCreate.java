@@ -5,11 +5,12 @@ import global.DataManagement;
 import programming.Program;
 import robot.RoboticArm;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenProgramCreate extends ST_ScreenTextEntry {
 
-	public ScreenProgramCreate(RobotRun r) {
-		super(ScreenMode.PROG_CREATE, r);
+	public ScreenProgramCreate(ScreenState prevState, RobotRun r) {
+		super(ScreenMode.PROG_CREATE, prevState, r);
 	}
 
 	@Override

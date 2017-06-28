@@ -6,11 +6,12 @@ import geom.WorldObject;
 import programming.CamMoveToObject;
 import robot.RoboticArm;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenSetMotionInstrObj extends ST_ScreenEditItem {
 
-	public ScreenSetMotionInstrObj(RobotRun r) {
-		super(ScreenMode.SET_MINST_OBJ, r);
+	public ScreenSetMotionInstrObj(ScreenState prevState, RobotRun r) {
+		super(ScreenMode.SET_MINST_OBJ, prevState, r);
 	}
 
 	@Override

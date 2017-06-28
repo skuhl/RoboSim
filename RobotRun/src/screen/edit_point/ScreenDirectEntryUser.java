@@ -3,12 +3,13 @@ package screen.edit_point;
 import core.RobotRun;
 import frame.UserFrame;
 import screen.ScreenMode;
+import screen.ScreenState;
 import ui.DisplayLine;
 
 public class ScreenDirectEntryUser extends ST_ScreenPointEntry {
 
-	public ScreenDirectEntryUser(RobotRun r) {
-		super(ScreenMode.DIRECT_ENTRY_USER, r);
+	public ScreenDirectEntryUser(ScreenState prevState, RobotRun r) {
+		super(ScreenMode.DIRECT_ENTRY_USER, prevState, r);
 	}
 	
 	@Override

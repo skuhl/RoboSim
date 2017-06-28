@@ -7,21 +7,27 @@ import programming.Instruction;
 import programming.PosMotionInst;
 import programming.Program;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenConfirmRenumber extends ST_ScreenConfirmCancel {
 
-	public ScreenConfirmRenumber(RobotRun r) {
-		super(ScreenMode.CONFIRM_RENUM, r);
+	public ScreenConfirmRenumber(ScreenState prevState, RobotRun r) {
+		super(ScreenMode.CONFIRM_RENUM, prevState, r);
 	}
 
 	@Override
 	protected void loadContents() {
-		contents.setLines(robotRun.loadInstructions(robotRun.getActiveProg()));
+		contents.setLines(robotRun.loadInstructions(robotRun.getActiveProg(), false));
 	}
 	
 	@Override
 	protected void loadOptions() {
 		options.addLine("Renumber program positions?");
+	}
+	
+	@Override
+	protected void loadVars(ScreenState s) {
+		setScreenIndices(s.conLnIdx, 0, s.conRenIdx, -1, 0);
 	}
 	
 	@Override
@@ -67,13 +73,13 @@ public class ScreenConfirmRenumber extends ST_ScreenConfirmCancel {
 			}
 		}
 
-		robotRun.getScreenStack().pop();
+		robotRun.popScreenStack(1);
 		robotRun.updateInstructions();
 	}
 	
 	@Override
 	public void actionF5() {
-		robotRun.getScreenStack().pop();
+		robotRun.popScreenStack(1);
 		robotRun.updateInstructions();
 	}
 }

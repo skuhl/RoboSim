@@ -3,11 +3,17 @@ package screen.select_lines;
 import core.RobotRun;
 import programming.Program;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenSelectCutCopy extends ST_ScreenLineSelect {
 
-	public ScreenSelectCutCopy(RobotRun r) {
-		super(ScreenMode.SELECT_CUT_COPY, r);
+	public ScreenSelectCutCopy(ScreenState prevState, int numOfLines, RobotRun r) {
+		super(ScreenMode.SELECT_CUT_COPY, prevState, numOfLines, r);
+	}
+	
+	@Override
+	protected void loadContents() {
+		contents.setLines(robotRun.loadInstructions(robotRun.getActiveProg(), true));
 	}
 
 	@Override
@@ -38,9 +44,10 @@ public class ScreenSelectCutCopy extends ST_ScreenLineSelect {
 		int remIdx = 0;
 		for (int i = 0; i < size; i += 1) {
 			
-			if (contents.isSelected(i)) {
+			if (isSelected(i)) {
 				robotRun.clipBoard.add(p.get(remIdx));
 				p.rmInstAt(remIdx);
+				lineSelectState[i] = false;
 				
 			} else {
 				remIdx += 1;
@@ -54,14 +61,14 @@ public class ScreenSelectCutCopy extends ST_ScreenLineSelect {
 		robotRun.clipBoard.clear();
 
 		for (int i = 0; i < p.getNumOfInst(); i += 1) {
-			if (contents.isSelected(i))
+			if (isSelected(i))
 				robotRun.clipBoard.add(p.get(i).clone());
 		}
 	}
 	
 	@Override
 	public void actionF5() {
-		robotRun.getScreenStack().pop();
+		robotRun.popScreenStack(1);
 		robotRun.updateInstructions();
 	}
 }

@@ -4,11 +4,12 @@ import core.RobotRun;
 import programming.MotionInstruction;
 import robot.RoboticArm;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenSetMotionInstrTerm extends ST_ScreenNumEntry {
 
-	public ScreenSetMotionInstrTerm(RobotRun r) {
-		super(ScreenMode.SET_MINST_TERM, r);
+	public ScreenSetMotionInstrTerm(ScreenState prevState, RobotRun r) {
+		super(ScreenMode.SET_MINST_TERM, prevState, r);
 	}
 
 	@Override

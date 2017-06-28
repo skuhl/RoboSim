@@ -7,11 +7,12 @@ import programming.Instruction;
 import programming.MotionInstruction;
 import robot.RoboticArm;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenSetMotionInstrSpeed extends ST_ScreenNumEntry {
 
-	public ScreenSetMotionInstrSpeed(RobotRun r) {
-		super(ScreenMode.SET_MINST_SPD, r);
+	public ScreenSetMotionInstrSpeed(ScreenState prevState, RobotRun r) {
+		super(ScreenMode.SET_MINST_SPD, prevState, r);
 	}
 
 	@Override

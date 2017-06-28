@@ -6,11 +6,12 @@ import programming.JumpInstruction;
 import programming.SelectStatement;
 import robot.RoboticArm;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenSetSelectStmtAction extends ST_ScreenEditItem {
 
-	public ScreenSetSelectStmtAction(RobotRun r) {
-		super(ScreenMode.SET_SELECT_STMT_ACT, r);
+	public ScreenSetSelectStmtAction(ScreenState prevState, RobotRun r) {
+		super(ScreenMode.SET_SELECT_STMT_ACT, prevState, r);
 	}
 
 	@Override

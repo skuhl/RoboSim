@@ -5,11 +5,12 @@ import enums.CoordFrame;
 import global.DataManagement;
 import robot.RoboticArm;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenSetDefaultTooltip extends ST_ScreenOptionsMenu {
 
-	public ScreenSetDefaultTooltip(RobotRun r) {
-		super(ScreenMode.SET_DEF_TOOLTIP, r);
+	public ScreenSetDefaultTooltip(ScreenState prevState, RobotRun r) {
+		super(ScreenMode.SET_DEF_TOOLTIP, prevState, r);
 	}
 
 	@Override

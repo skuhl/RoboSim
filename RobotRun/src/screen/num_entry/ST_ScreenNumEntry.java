@@ -9,8 +9,8 @@ public abstract class ST_ScreenNumEntry extends Screen {
 	static final int NUM_ENTRY_LEN = 9;
 	protected StringBuilder workingText;
 	
-	public ST_ScreenNumEntry(ScreenMode m, RobotRun r) {
-		super(m, r);
+	public ST_ScreenNumEntry(ScreenMode m, ScreenState prevState, RobotRun r) {
+		super(m, prevState, r);
 		workingText = new StringBuilder("");
 	}
 	
@@ -21,7 +21,7 @@ public abstract class ST_ScreenNumEntry extends Screen {
 	
 	@Override
 	protected void loadContents() {
-		contents.setLines(robotRun.loadInstructions(robotRun.getActiveProg()));
+		contents.setLines(robotRun.loadInstructions(robotRun.getActiveProg(), true));
 	}
 	
 	@Override

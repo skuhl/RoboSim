@@ -4,11 +4,12 @@ import core.RobotRun;
 import global.RMath;
 import programming.Program;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenJumpToLine extends ST_ScreenNumEntry {
 
-	public ScreenJumpToLine(RobotRun r) {
-		super(ScreenMode.JUMP_TO_LINE, r);
+	public ScreenJumpToLine(ScreenState prevState, RobotRun r) {
+		super(ScreenMode.JUMP_TO_LINE, prevState, r);
 	}
 
 	@Override

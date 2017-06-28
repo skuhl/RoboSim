@@ -5,11 +5,12 @@ import global.Fields;
 import programming.MotionInstruction;
 import robot.RoboticArm;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenSetMotionInstrType extends ST_ScreenEditItem {
 
-	public ScreenSetMotionInstrType(RobotRun r) {
-		super(ScreenMode.SET_MINST_TYPE, r);
+	public ScreenSetMotionInstrType(ScreenState prevState, RobotRun r) {
+		super(ScreenMode.SET_MINST_TYPE, prevState, r);
 	}
 
 	@Override

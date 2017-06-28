@@ -4,11 +4,12 @@ import core.RobotRun;
 import frame.UserFrame;
 import global.DataManagement;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenUserFrameRename extends ST_ScreenTextEntry {
 
-	public ScreenUserFrameRename(RobotRun r) {
-		super(ScreenMode.UFRAME_RENAME, r);
+	public ScreenUserFrameRename(ScreenState prevState, RobotRun r) {
+		super(ScreenMode.UFRAME_RENAME, prevState, r);
 	}
 
 	@Override

@@ -2,11 +2,12 @@ package screen.edit_item;
 
 import core.RobotRun;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenSetMacroType extends ST_ScreenEditItem {
 
-	public ScreenSetMacroType(RobotRun r) {
-		super(ScreenMode.SET_MACRO_TYPE, r);
+	public ScreenSetMacroType(ScreenState prevState, RobotRun r) {
+		super(ScreenMode.SET_MACRO_TYPE, prevState, r);
 	}
 
 	@Override

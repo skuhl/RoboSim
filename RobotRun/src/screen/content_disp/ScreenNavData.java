@@ -2,11 +2,12 @@ package screen.content_disp;
 
 import core.RobotRun;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenNavData extends ST_ScreenListContents {
 
-	public ScreenNavData(RobotRun r) {
-		super(ScreenMode.NAV_DATA, r);
+	public ScreenNavData(ScreenState prevState, RobotRun r) {
+		super(ScreenMode.NAV_DATA, prevState, r);
 	}
 
 	@Override

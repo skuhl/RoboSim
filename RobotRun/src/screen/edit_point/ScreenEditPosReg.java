@@ -6,12 +6,14 @@ import global.DataManagement;
 import regs.PositionRegister;
 import regs.Register;
 import robot.RoboticArm;
+import screen.Screen;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenEditPosReg extends ST_ScreenPointEntry {
 
-	public ScreenEditPosReg(RobotRun r) {
-		super(ScreenMode.EDIT_PREG, r);
+	public ScreenEditPosReg(ScreenState prevState, RobotRun r) {
+		super(ScreenMode.EDIT_PREG, prevState, r);
 		
 	}
 	
@@ -27,7 +29,8 @@ public class ScreenEditPosReg extends ST_ScreenPointEntry {
 
 	@Override
 	protected String loadHeader() {
-		Register reg = robotRun.getActiveRobot().getPReg(robotRun.getScreenStack().peek().getContentIdx());
+		Screen prevScreen = robotRun.getLastScreen();
+		Register reg = robotRun.getActiveRobot().getPReg(prevScreen.getContentIdx());
 		return String.format("%s: POSITION EDIT", reg.getLabel());
 	}
 	
@@ -42,8 +45,9 @@ public class ScreenEditPosReg extends ST_ScreenPointEntry {
 	
 	@Override
 	protected void loadWorkingText() {
+		Screen prevScreen = robotRun.getLastScreen();
 		RoboticArm r = robotRun.getActiveRobot();
-		PositionRegister pReg = r.getPReg(robotRun.getScreenStack().peek().getContentIdx());
+		PositionRegister pReg = r.getPReg(prevScreen.getContentIdx());
 		
 		// Initialize the point if it is null
 		if (pReg.point == null) {

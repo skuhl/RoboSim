@@ -4,11 +4,12 @@ import core.RobotRun;
 import expression.OperandFloat;
 import robot.RoboticArm;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenInputConst extends ST_ScreenNumEntry {
 
-	public ScreenInputConst(RobotRun r) {
-		super(ScreenMode.INPUT_CONST, r);
+	public ScreenInputConst(ScreenState prevState, RobotRun r) {
+		super(ScreenMode.INPUT_CONST, prevState, r);
 	}
 
 	@Override

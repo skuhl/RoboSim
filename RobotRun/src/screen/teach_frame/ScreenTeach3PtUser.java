@@ -6,12 +6,13 @@ import core.RobotRun;
 import enums.CoordFrame;
 import robot.RoboticArm;
 import screen.ScreenMode;
+import screen.ScreenState;
 import ui.DisplayLine;
 
 public class ScreenTeach3PtUser extends ST_ScreenTeachPoints {
 
-	public ScreenTeach3PtUser(RobotRun r) {
-		super(ScreenMode.TEACH_3PT_USER, r);
+	public ScreenTeach3PtUser(ScreenState prevState, RobotRun r) {
+		super(ScreenMode.TEACH_3PT_USER, prevState, r);
 	}
 
 	@Override

@@ -8,11 +8,12 @@ import programming.Program;
 import programming.SelectStatement;
 import robot.RoboticArm;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenSetCallProg extends ST_ScreenOptionsMenu {
 
-	public ScreenSetCallProg(RobotRun r) {
-		super(ScreenMode.SET_CALL_PROG, r);
+	public ScreenSetCallProg(ScreenState prevState, RobotRun r) {
+		super(ScreenMode.SET_CALL_PROG, prevState, r);
 	}
 
 	@Override
