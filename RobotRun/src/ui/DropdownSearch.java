@@ -28,12 +28,9 @@ public class DropdownSearch extends MyDropdownList {
 	
 	@Override
 	public DropdownSearch setValue(float newValue) {
+		super.setValue(newValue);
 		// Reset the search buffer
 		searchBuffer = new StringBuilder("");
-		reorderItems();
-		
-		super.setValue(newValue);
-		
 		return this;
 	}
 	
@@ -75,7 +72,9 @@ public class DropdownSearch extends MyDropdownList {
 			} else if (e.getKeyCode() == ControlP5.ENTER) {
 				// Set the item at index 0 as active
 				if (items.size() > 0) {
+					System.out.println( items.get(0).get("name") );
 					setValue(0);
+					close();
 				}
 			}
 		}

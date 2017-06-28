@@ -887,6 +887,32 @@ public class RobotRun extends PApplet {
 			System.err.println("No active scenario!");
 		}
 	}
+	
+	/**
+	 * Confirm button in the Edit window
+	 * 
+	 * Updates the dimensions of the selected world object based off the values
+	 * of the dimension input fields.
+	 */
+	public void button_objConfirmDims() {
+		if (activeScenario != null) {
+			WorldObject selectedWO = UI.getSelectedWO();
+			
+			if (selectedWO != null) {
+				WorldObject saveState = selectedWO.clone();
+				// Update the dimensions of the world object
+				boolean updated = UI.updateWODims(selectedWO);
+				
+				if (updated) {
+					// Save original world object onto the undo stack
+					updateScenarioUndo(saveState);
+				}
+			}
+			
+		} else {
+			System.err.println("No active scenario!");
+		}
+	}
 
 	/**
 	 * Delete button in the edit window

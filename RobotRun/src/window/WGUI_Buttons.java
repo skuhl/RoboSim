@@ -87,6 +87,7 @@ public interface WGUI_Buttons {
 	public static final String ObjMoveToDefault = "button_objMoveToDefault";
 	public static final String ObjSetDefault = "button_objUpdateDefault";
 	public static final String ObjResetDefault = "button_objResetDefault";
+	public static final String ObjConfirmDims = "button_objConfirmDims";
 	public static final String ObjToggleBounds = "button_objToggleBounds";
 	public static final String RobotToggleActive = "button_robotToggleActive";
 	public static final String RobotToggleTrace = "button_robotToggleTrace";
