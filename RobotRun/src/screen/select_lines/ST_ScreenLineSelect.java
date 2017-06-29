@@ -31,7 +31,7 @@ public abstract class ST_ScreenLineSelect extends Screen {
 
 	@Override
 	protected void loadContents() {
-		contents.setLines(robotRun.loadInstructions(robotRun.getActiveProg(), false));
+		contents.setLines(robotRun.loadInstructions(robotRun.getActiveProg(), true));
 	}
 	
 	@Override
@@ -51,12 +51,12 @@ public abstract class ST_ScreenLineSelect extends Screen {
 				// Lock movement when a program is running
 				Instruction instr = robotRun.getActiveInstruction();
 				int prevLine = contents.getItemLineIdx();
-				int selectStart = contents.getLineIdx();
+				int selectStart = contents.getCurrentItemIdx();
 				robotRun.setActiveInstIdx(contents.moveUp(robotRun.isShift()));
 				int curLine = contents.getItemLineIdx();
 				
 				if(robotRun.isShift()) {
-					for(int i = selectStart; i >= contents.getLineIdx(); i -= 1) {
+					for(int i = selectStart; i >= contents.getCurrentItemIdx(); i -= 1) {
 						if(direction != UP || i < selectStart) {
 							lineSelectState[i] = !lineSelectState[i];
 						}
@@ -88,12 +88,12 @@ public abstract class ST_ScreenLineSelect extends Screen {
 			// Lock movement when a program is running
 			Instruction instr = robotRun.getActiveInstruction();
 			int prevIdx = contents.getItemColumnIdx();
-			int selectStart = contents.getLineIdx();
+			int selectStart = contents.getCurrentItemIdx();
 			robotRun.setActiveInstIdx(contents.moveDown(robotRun.isShift()));
 			int curLine = contents.getItemLineIdx();
 			
 			if(robotRun.isShift()) {
-				for(int i = selectStart; i <= contents.getLineIdx(); i += 1) {
+				for(int i = selectStart; i <= contents.getCurrentItemIdx(); i += 1) {
 					if(direction != DN || i > selectStart) {
 						lineSelectState[i] = !lineSelectState[i];
 					}
