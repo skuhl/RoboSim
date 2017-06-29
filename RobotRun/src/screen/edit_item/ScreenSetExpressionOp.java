@@ -3,8 +3,10 @@ package screen.edit_item;
 import core.RobotRun;
 import expression.AtomicExpression;
 import expression.Expression;
+import expression.ExpressionElement;
 import expression.Operator;
 import programming.IfStatement;
+import programming.RegisterStatement;
 import screen.ScreenMode;
 
 public class ScreenSetExpressionOp extends ST_ScreenEditItem {
@@ -16,7 +18,12 @@ public class ScreenSetExpressionOp extends ST_ScreenEditItem {
 	@Override
 	protected void loadOptions() {
 		if (robotRun.opEdit instanceof Expression) {
+			int[] elements = ((Expression)robotRun.opEdit).mapToEdit();
+			
 			if (robotRun.getActiveInstruction() instanceof IfStatement) {
+				int idx = elements[contents.getItemColumnIdx() - 2];
+				ExpressionElement e = ((Expression)robotRun.opEdit).get(idx);
+				
 				options.addLine("1. + ");
 				options.addLine("2. - ");
 				options.addLine("3. * ");
@@ -32,7 +39,12 @@ public class ScreenSetExpressionOp extends ST_ScreenEditItem {
 				options.addLine("13. AND ");
 				options.addLine("14. OR ");
 				options.addLine("15. NOT ");
-			} else {
+			} else if(robotRun.getActiveInstruction() instanceof RegisterStatement) {
+				RegisterStatement stmt = (RegisterStatement)robotRun.getActiveInstruction();
+				int rLen = (stmt.getPosIdx() == -1) ? 2 : 3;
+				int idx = elements[contents.getItemColumnIdx() - rLen - 2];
+				ExpressionElement e = ((Expression)robotRun.opEdit).get(idx);
+				
 				options.addLine("1. + ");
 				options.addLine("2. - ");
 				options.addLine("3. * ");

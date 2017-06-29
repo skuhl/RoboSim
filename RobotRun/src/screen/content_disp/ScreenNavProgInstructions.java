@@ -576,9 +576,6 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 					editExpression((Expression) e, selectIdx - startIdx - 1);
 				}
 			} else if (e instanceof Operand) {
-				int startIdx = expr.getStartingIdx(elements[selectIdx]);
-				System.out.println("cursor at: " + selectIdx);
-				System.out.println("operand starts at: " + startIdx);
 				editOperand((Operand<?>) e, selectIdx, elements[selectIdx]);
 			} else {
 				robotRun.editIdx = elements[selectIdx];
