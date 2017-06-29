@@ -4,6 +4,9 @@ import core.RobotRun;
 import enums.CoordFrame;
 import expression.AtomicExpression;
 import expression.Expression;
+import expression.ExpressionElement;
+import expression.Operand;
+import expression.RobotPoint;
 import geom.Point;
 import global.Fields;
 import programming.CallInstruction;
@@ -328,8 +331,7 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 		Instruction ins = robotRun.getActiveInstruction();
 
 		if (ins != null) {
-			int selectIdx = contents.getItemColumnIdx();
-			getEditScreen(ins, selectIdx);
+			getEditScreen(ins);
 		}
 	}
 	
@@ -373,20 +375,21 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 		}
 	}
 	
-	private void getEditScreen(Instruction ins, int selectIdx) {
+	private void getEditScreen(Instruction ins) {
+		int sdx = contents.getItemColumnIdx();
+		
 		if (ins instanceof MotionInstruction) {
 			MotionInstruction mInst = (MotionInstruction)ins;
-			int sdx = contents.getItemColumnIdx();
 			
-			if (sdx == 2) {
+			if(sdx == 2) {
 				// Motion type
 				robotRun.nextScreen(ScreenMode.SET_MINST_TYPE);
-				
-			} else if (sdx == 3) {
+			} 
+			else if(sdx == 3) {
 				// Position type
-				robotRun.nextScreen(ScreenMode.SET_MINST_REG_TYPE);
-				
-			} else if (sdx == 4) {
+				robotRun.nextScreen(ScreenMode.SET_MINST_REG_TYPE);	
+			} 
+			else if(sdx == 4) {
 				
 				if (mInst instanceof CamMoveToObject) {
 					CamMoveToObject cMInst = (CamMoveToObject)mInst;
@@ -397,7 +400,8 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 					
 					// Set World Object reference
 					robotRun.nextScreen(ScreenMode.SET_MINST_OBJ);
-				} else {
+				} 
+				else {
 					// Position index
 					robotRun.nextScreen(ScreenMode.SET_MINST_IDX);
 				}
@@ -418,36 +422,33 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 				PosMotionInst pMInst = (PosMotionInst)mInst;
 				
 				if (pMInst.getOffsetType() == Fields.OFFSET_PREG) {
-					
 					if (sdx == 8) {
 						// Offset index
 						robotRun.nextScreen(ScreenMode.SET_MINST_OFFIDX);
-						
-					} else if (sdx == 9) {
+					} 
+					else if (sdx == 9) {
 						// Circular position type
 						robotRun.nextScreen(ScreenMode.SET_MINST_CREG_TYPE);
-						
-					} else if (sdx == 10) {
+					} 
+					else if (sdx == 10) {
 						// Circular position index
 						robotRun.nextScreen(ScreenMode.SET_MINST_CIDX);
 					}
-					
-				} else if (pMInst.getOffsetType() == Fields.OFFSET_NONE) {
-					
+				} 
+				else if (pMInst.getOffsetType() == Fields.OFFSET_NONE) {
 					if (sdx == 8) {
 						// Circular position type
 						robotRun.nextScreen(ScreenMode.SET_MINST_CREG_TYPE);
-						
-					} else if (sdx == 9) {
+					} 
+					else if (sdx == 9) {
 						// Circular position index
 						robotRun.nextScreen(ScreenMode.SET_MINST_CIDX);
 					}
 				}
-				
 			}
-			
-		} else if (ins instanceof FrameInstruction) {
-			switch (selectIdx) {
+		} 
+		else if (ins instanceof FrameInstruction) {
+			switch (sdx) {
 			case 1:
 				robotRun.nextScreen(ScreenMode.SET_FRAME_INSTR_TYPE);
 				break;
@@ -455,8 +456,9 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 				robotRun.nextScreen(ScreenMode.SET_FRAME_INSTR_IDX);
 				break;
 			}
-		} else if (ins instanceof IOInstruction) {
-			switch (selectIdx) {
+		} 
+		else if (ins instanceof IOInstruction) {
+			switch (sdx) {
 			case 1:
 				robotRun.nextScreen(ScreenMode.SET_IO_INSTR_IDX);
 				break;
@@ -464,11 +466,14 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 				robotRun.nextScreen(ScreenMode.SET_IO_INSTR_STATE);
 				break;
 			}
-		} else if (ins instanceof LabelInstruction) {
+		} 
+		else if (ins instanceof LabelInstruction) {
 			robotRun.nextScreen(ScreenMode.SET_LBL_NUM);
-		} else if (ins instanceof JumpInstruction) {
+		} 
+		else if (ins instanceof JumpInstruction) {
 			robotRun.nextScreen(ScreenMode.SET_JUMP_TGT);
-		} else if (ins instanceof CallInstruction) {
+		} 
+		else if (ins instanceof CallInstruction) {
 			if (((CallInstruction) ins).getTgtDevice() != null) {
 				robotRun.editIdx = ((CallInstruction) ins).getTgtDevice().RID;
 
@@ -483,11 +488,11 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 			if (stmt.getExpr() instanceof Expression) {
 				int len = stmt.getExpr().getLength();
 
-				if (selectIdx >= 3 && selectIdx < len + 1) {
-					robotRun.editExpression((Expression) stmt.getExpr(), selectIdx - 3);
-				} else if (selectIdx == len + 2) {
+				if (sdx >= 3 && sdx < len + 1) {
+					editExpression((Expression) stmt.getExpr(), sdx - 3);
+				} else if (sdx == len + 2) {
 					robotRun.nextScreen(ScreenMode.SET_IF_STMT_ACT);
-				} else if (selectIdx == len + 3) {
+				} else if (sdx == len + 3) {
 					if (stmt.getInstr() instanceof JumpInstruction) {
 						robotRun.nextScreen(ScreenMode.SET_JUMP_TGT);
 					} else if (stmt.getInstr() instanceof CallInstruction) {
@@ -495,20 +500,20 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 					}
 				}
 			} else if (stmt.getExpr() instanceof AtomicExpression) {
-				if (selectIdx == 2) {
+				if (sdx == 2) {
 					robotRun.opEdit = stmt.getExpr().getArg1();
 					robotRun.editIdx = 0;
 					robotRun.nextScreen(ScreenMode.SET_BOOL_EXPR_ARG);
-				} else if (selectIdx == 3) {
+				} else if (sdx == 3) {
 					robotRun.opEdit = stmt.getExpr();
 					robotRun.nextScreen(ScreenMode.SET_EXPR_OP);
-				} else if (selectIdx == 4) {
+				} else if (sdx == 4) {
 					robotRun.opEdit = stmt.getExpr().getArg2();
 					robotRun.editIdx = 2;
 					robotRun.nextScreen(ScreenMode.SET_BOOL_EXPR_ARG);
-				} else if (selectIdx == 5) {
+				} else if (sdx == 5) {
 					robotRun.nextScreen(ScreenMode.SET_IF_STMT_ACT);
-				} else if (selectIdx == 6) {
+				} else if (sdx == 6) {
 					if (stmt.getInstr() instanceof JumpInstruction) {
 						robotRun.nextScreen(ScreenMode.SET_JUMP_TGT);
 					} else if (stmt.getInstr() instanceof CallInstruction) {
@@ -518,18 +523,18 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 			}
 		} else if (ins instanceof SelectStatement) {
 			SelectStatement stmt = (SelectStatement) ins;
-			robotRun.editIdx = (selectIdx - 3) / 3;
+			robotRun.editIdx = (sdx - 3) / 3;
 			
-			if (selectIdx == 2) {
+			if (sdx == 2) {
 				robotRun.opEdit = stmt.getArg();
 				robotRun.editIdx = -1;
 				robotRun.nextScreen(ScreenMode.SET_SELECT_STMT_ARG);
-			} else if ((selectIdx - 3) % 3 == 0 && selectIdx > 2) {
-				robotRun.opEdit = stmt.getCases().get((selectIdx - 3) / 3);
+			} else if ((sdx - 3) % 3 == 0 && sdx > 2) {
+				robotRun.opEdit = stmt.getCases().get((sdx - 3) / 3);
 				robotRun.nextScreen(ScreenMode.SET_SELECT_STMT_ARG);
-			} else if ((selectIdx - 3) % 3 == 1) {
+			} else if ((sdx - 3) % 3 == 1) {
 				robotRun.nextScreen(ScreenMode.SET_SELECT_STMT_ACT);
-			} else if ((selectIdx - 3) % 3 == 2) {
+			} else if ((sdx - 3) % 3 == 2) {
 				Instruction toExec = stmt.getInstrs().get(robotRun.editIdx);
 				if (toExec instanceof JumpInstruction) {
 					robotRun.nextScreen(ScreenMode.SET_JUMP_TGT);
@@ -542,15 +547,97 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 			int len = stmt.getExpr().getLength();
 			int rLen = (stmt.getPosIdx() == -1) ? 2 : 3;
 			
-			if (selectIdx == 1) {
+			if (sdx == 1) {
 				robotRun.nextScreen(ScreenMode.SET_REG_EXPR_TYPE);
-			} else if (selectIdx == 2) {
+			} else if (sdx == 2) {
 				robotRun.nextScreen(ScreenMode.SET_REG_EXPR_IDX1);
-			} else if (selectIdx == 3 && stmt.getPosIdx() != -1) {
+			} else if (sdx == 3 && stmt.getPosIdx() != -1) {
 				robotRun.nextScreen(ScreenMode.SET_REG_EXPR_IDX2);
-			} else if (selectIdx >= rLen + 1 && selectIdx <= len + rLen) {
-				robotRun.editExpression(stmt.getExpr(), selectIdx - (rLen + 2));
+			} else if (sdx >= rLen + 1 && sdx <= len + rLen) {
+				editExpression(stmt.getExpr(), sdx - (rLen + 2));
 			}
+		}
+	}
+	
+	private void editExpression(Expression expr, int selectIdx) {
+		int[] elements = expr.mapToEdit();
+		
+		try {
+			robotRun.opEdit = expr;
+			ExpressionElement e = expr.get(elements[selectIdx]);
+	
+			if (e instanceof Expression) {
+				// if selecting the open or close paren
+				if (selectIdx == 0 || selectIdx == e.getLength() || elements[selectIdx - 1] != elements[selectIdx]
+						|| elements[selectIdx + 1] != elements[selectIdx]) {
+					robotRun.nextScreen(ScreenMode.SET_EXPR_ARG);
+				} else {
+					int startIdx = expr.getStartingIdx(elements[selectIdx]);
+					editExpression((Expression) e, selectIdx - startIdx - 1);
+				}
+			} else if (e instanceof Operand) {
+				int startIdx = expr.getStartingIdx(elements[selectIdx]);
+				System.out.println("cursor at: " + selectIdx);
+				System.out.println("operand starts at: " + startIdx);
+				editOperand((Operand<?>) e, selectIdx, elements[selectIdx]);
+			} else {
+				robotRun.editIdx = elements[selectIdx];
+				robotRun.nextScreen(ScreenMode.SET_EXPR_OP);
+			}
+			
+		} catch (ArrayIndexOutOfBoundsException AIOOBEx) {
+			System.err.printf("Invalid expression index: %d!\n", selectIdx);
+		}
+	}
+	
+	/**
+	 * Accepts an ExpressionOperand object and forwards the UI to the
+	 * appropriate menu to edit said object based on the operand type.
+	 *
+	 * @param o
+	 *            - The operand to be edited.
+	 * @ins_idx - The index of the operand's container ExpressionElement list
+	 *          into which this operand is stored.
+	 *
+	 */
+	private void editOperand(Operand<?> o, int selectIdx, int startIdx) {
+		robotRun.editIdx = startIdx;
+		
+		switch (o.getType()) {
+		case Operand.UNINIT: // Uninit
+			robotRun.nextScreen(ScreenMode.SET_EXPR_ARG);
+			break;
+		case Operand.FLOAT: // Float const
+			robotRun.opEdit = o;
+			robotRun.nextScreen(ScreenMode.INPUT_CONST);
+			break;
+		case Operand.BOOL: // Bool const
+			robotRun.opEdit = o;
+			robotRun.nextScreen(ScreenMode.SET_BOOL_CONST);
+			break;
+		case Operand.DREG: // Data reg
+			robotRun.opEdit = o;
+			robotRun.nextScreen(ScreenMode.INPUT_DREG_IDX);
+			break;
+		case Operand.IOREG: // IO reg
+			robotRun.opEdit = o;
+			robotRun.nextScreen(ScreenMode.INPUT_IOREG_IDX);
+			break;
+		case Operand.PREG: // Pos reg
+			robotRun.opEdit = o;
+			robotRun.nextScreen(ScreenMode.INPUT_PREG_IDX1);
+			break;
+		case Operand.PREG_IDX: // Pos reg at index
+			robotRun.opEdit = o;
+			if(selectIdx == startIdx)
+				robotRun.nextScreen(ScreenMode.INPUT_PREG_IDX1);
+			else
+				robotRun.nextScreen(ScreenMode.INPUT_PREG_IDX2);
+			break;
+		case Operand.ROBOT: // Robot point
+			RobotPoint rp = (RobotPoint)o;
+			rp.setType(!rp.isCartesian());
+			break;
 		}
 	}
 }

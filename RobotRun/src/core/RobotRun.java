@@ -12,11 +12,8 @@ import enums.CoordFrame;
 import enums.ExecState;
 import enums.ExecType;
 import enums.WindowTab;
-import expression.Expression;
-import expression.ExpressionElement;
 import expression.Operand;
 import expression.Operator;
-import expression.RobotPoint;
 import frame.Frame;
 import frame.ToolFrame;
 import frame.UserFrame;
@@ -1488,83 +1485,6 @@ public class RobotRun extends PApplet {
 		} catch (Exception Ex) {
 			DataManagement.errLog(Ex);
 			throw Ex;
-		}
-	}
-	
-	public void editExpression(Expression expr, int selectIdx) {
-		int[] elements = expr.mapToEdit();
-		
-		try {
-			opEdit = expr;
-			ExpressionElement e = expr.get(elements[selectIdx]);
-	
-			if (e instanceof Expression) {
-				// if selecting the open or close paren
-				if (selectIdx == 0 || selectIdx == e.getLength() || elements[selectIdx - 1] != elements[selectIdx]
-						|| elements[selectIdx + 1] != elements[selectIdx]) {
-					nextScreen(ScreenMode.SET_EXPR_ARG);
-				} else {
-					int startIdx = expr.getStartingIdx(elements[selectIdx]);
-					editExpression((Expression) e, selectIdx - startIdx - 1);
-				}
-			} else if (e instanceof Operand) {
-				editOperand((Operand<?>) e, elements[selectIdx]);
-			} else {
-				editIdx = elements[selectIdx];
-				nextScreen(ScreenMode.SET_EXPR_OP);
-			}
-			
-		} catch (ArrayIndexOutOfBoundsException AIOOBEx) {
-			System.err.printf("Invalid expression index: %d!\n", selectIdx);
-		}
-	}
-
-	/**
-	 * Accepts an ExpressionOperand object and forwards the UI to the
-	 * appropriate menu to edit said object based on the operand type.
-	 *
-	 * @param o
-	 *            - The operand to be edited.
-	 * @ins_idx - The index of the operand's container ExpressionElement list
-	 *          into which this operand is stored.
-	 *
-	 */
-	public void editOperand(Operand<?> o, int ins_idx) {
-		editIdx = ins_idx;
-		
-		switch (o.getType()) {
-		case Operand.UNINIT: // Uninit
-			nextScreen(ScreenMode.SET_EXPR_ARG);
-			break;
-		case Operand.FLOAT: // Float const
-			opEdit = o;
-			nextScreen(ScreenMode.INPUT_CONST);
-			break;
-		case Operand.BOOL: // Bool const
-			opEdit = o;
-			nextScreen(ScreenMode.SET_BOOL_CONST);
-			break;
-		case Operand.DREG: // Data reg
-			opEdit = o;
-			nextScreen(ScreenMode.INPUT_DREG_IDX);
-			break;
-		case Operand.IOREG: // IO reg
-			opEdit = o;
-			nextScreen(ScreenMode.INPUT_IOREG_IDX);
-			break;
-		case Operand.PREG: // Pos reg
-			opEdit = o;
-			nextScreen(ScreenMode.INPUT_PREG_IDX1);
-			break;
-		case Operand.PREG_IDX: // Pos reg at index
-			opEdit = o;
-			nextScreen(ScreenMode.INPUT_PREG_IDX2);
-			nextScreen(ScreenMode.INPUT_PREG_IDX1);
-			break;
-		case Operand.ROBOT: // Robot point
-			RobotPoint rp = (RobotPoint)o;
-			rp.setType(!rp.isCartesian());
-			break;
 		}
 	}
 
