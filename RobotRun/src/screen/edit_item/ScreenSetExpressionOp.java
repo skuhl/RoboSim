@@ -6,7 +6,6 @@ import expression.Expression;
 import expression.Operator;
 import programming.IfStatement;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenSetExpressionOp extends ST_ScreenEditItem {
 

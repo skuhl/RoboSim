@@ -5,7 +5,6 @@ import programming.RegisterStatement;
 import regs.PositionRegister;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenSetRegExprIdx2 extends ST_ScreenNumEntry {
 

@@ -4,7 +4,6 @@ import core.RobotRun;
 import enums.CoordFrame;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenUserFrameDetail extends ST_ScreenOptionsMenu {
 

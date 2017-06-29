@@ -4,7 +4,6 @@ import core.RobotRun;
 import global.RMath;
 import programming.Program;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenJumpToLine extends ST_ScreenNumEntry {
 

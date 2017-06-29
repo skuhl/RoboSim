@@ -4,7 +4,6 @@ import core.RobotRun;
 import global.DataManagement;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenEditDataRegComment extends ST_ScreenTextEntry {
 

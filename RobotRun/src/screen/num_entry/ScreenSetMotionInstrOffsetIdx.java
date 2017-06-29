@@ -5,7 +5,6 @@ import global.Fields;
 import programming.PosMotionInst;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenSetMotionInstrOffsetIdx extends ST_ScreenNumEntry {
 

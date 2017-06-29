@@ -4,7 +4,6 @@ import core.RobotRun;
 import programming.MotionInstruction;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenSetMotionInstrTerm extends ST_ScreenNumEntry {
 

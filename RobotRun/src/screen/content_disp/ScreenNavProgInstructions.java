@@ -22,7 +22,6 @@ import programming.SelectStatement;
 import regs.PositionRegister;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenNavProgInstructions extends ST_ScreenListContents {
 

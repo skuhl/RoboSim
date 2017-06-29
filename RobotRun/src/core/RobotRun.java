@@ -415,7 +415,6 @@ public class RobotRun extends PApplet {
 	public void button_coord() {
 		if (isShift()) {
 			nextScreen(ScreenMode.ACTIVE_FRAMES);
-
 		} else {
 			// Update the coordinate frame
 			coordFrameTransition();
@@ -866,30 +865,6 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Create button in the Create window
-	 * 
-	 * Pulls the user's input from the input fields (name, shape type,
-	 * dimensions, colors, etc.) in the Create window and attempts to create a
-	 * new world object from the user's input. If creation of a world object
-	 * was successful, then the new object is added to the active scenario and
-	 * all data is saved.
-	 */
-	public void button_objCreate() {
-		if (activeScenario != null) {
-			WorldObject newObject = UI.createWorldObject();
-
-			if (newObject != null) {
-				newObject.setLocalCenter(new PVector(-500f, 0f, 0f));
-				activeScenario.addWorldObject(newObject);
-				DataManagement.saveScenarios(this);
-			}
-		}
-		else {
-			System.err.println("No active scenario!");
-		}
-	}
-	
-	/**
 	 * Confirm button in the Edit window
 	 * 
 	 * Updates the dimensions of the selected world object based off the values
@@ -911,6 +886,30 @@ public class RobotRun extends PApplet {
 			}
 			
 		} else {
+			System.err.println("No active scenario!");
+		}
+	}
+	
+	/**
+	 * Create button in the Create window
+	 * 
+	 * Pulls the user's input from the input fields (name, shape type,
+	 * dimensions, colors, etc.) in the Create window and attempts to create a
+	 * new world object from the user's input. If creation of a world object
+	 * was successful, then the new object is added to the active scenario and
+	 * all data is saved.
+	 */
+	public void button_objCreate() {
+		if (activeScenario != null) {
+			WorldObject newObject = UI.createWorldObject();
+
+			if (newObject != null) {
+				newObject.setLocalCenter(new PVector(-500f, 0f, 0f));
+				activeScenario.addWorldObject(newObject);
+				DataManagement.saveScenarios(this);
+			}
+		}
+		else {
 			System.err.println("No active scenario!");
 		}
 	}
@@ -1725,7 +1724,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	public Screen getLastScreen() {
-		return screens.getPrevScreen(1);
+		return screens.getPrevScreen();
 	}
 
 	public Macro getMacro(int idx) {
@@ -2159,7 +2158,7 @@ public class RobotRun extends PApplet {
 		
 		return lines;
 	}
-	
+
 	// prepare for displaying motion instructions on screen
 	public ArrayList<DisplayLine> loadInstructions(Program p, boolean includeEND) {
 		ArrayList<DisplayLine> instruct_list = new ArrayList<>();
@@ -2282,7 +2281,7 @@ public class RobotRun extends PApplet {
 		
 		return lines;
 	}
-
+	
 	public ArrayList<DisplayLine> loadMacros() {
 		ArrayList<DisplayLine> disp = new ArrayList<DisplayLine>();
 		
@@ -2293,7 +2292,7 @@ public class RobotRun extends PApplet {
 		
 		return disp;
 	}
-	
+
 	public ArrayList<DisplayLine> loadManualFunct() {
 		ArrayList<DisplayLine> disp = new ArrayList<DisplayLine>();
 		int macroNum = 0;
@@ -2369,7 +2368,7 @@ public class RobotRun extends PApplet {
 		
 		return lines;
 	}
-
+	
 	/**
 	 * TODO
 	 * 
@@ -2392,7 +2391,7 @@ public class RobotRun extends PApplet {
 		
 		return lines;
 	}
-	
+
 	/**
 	 * TODO comment
 	 * 
@@ -2415,7 +2414,7 @@ public class RobotRun extends PApplet {
 		
 		return progList;
 	}
-
+	
 	/**
 	 * Build a PShape object from the contents of the given .stl source file
 	 * stored in /RobotRun/data/.
@@ -2639,7 +2638,7 @@ public class RobotRun extends PApplet {
 			camera.scale(0.95f);
 		}
 	}
-	
+
 	public void newCallInstruction() {
 		RoboticArm r = activeRobot;
 		Program p = getActiveProg();
@@ -2675,7 +2674,7 @@ public class RobotRun extends PApplet {
 			p.addInstAtEnd(stmt);
 		}
 	}
-
+	
 	public void newIfStatement() {
 		RoboticArm r = activeRobot;
 		Program p = getActiveProg();
@@ -2688,7 +2687,7 @@ public class RobotRun extends PApplet {
 			p.addInstAtEnd(stmt);
 		}
 	}
-	
+
 	public void newIOInstruction(int ioIdx, int state) {
 		RoboticArm r = activeRobot;
 		Program p = getActiveProg();
@@ -2833,7 +2832,7 @@ public class RobotRun extends PApplet {
 			p.addInstAtEnd(rcall);
 		}
 	}
-
+	
 	public void newSelectStatement() {
 		RoboticArm r = activeRobot;
 		Program p = getActiveProg();
@@ -2863,7 +2862,7 @@ public class RobotRun extends PApplet {
 	public void pasteInstructions() {
 		pasteInstructions(0);
 	}
-
+	
 	public void pasteInstructions(int options) {
 		ArrayList<Instruction> pasteList = new ArrayList<>();
 		Program p = getActiveProg();
@@ -2922,16 +2921,6 @@ public class RobotRun extends PApplet {
 			
 			p.addInstAt(getActiveInstIdx() + i, instr);
 		}
-	}
-	
-	/**
-	 * Wrapper method for the ScreenManager.popScreenStack() of screens.
-	 * 
-	 * @param depth	The maximum number of screens to remove from the screen
-	 * 				stack
-	 */
-	public void popScreenStack(int depth) {
-		screens.popScreenStack(depth);
 	}
 	
 	/**
@@ -3059,7 +3048,7 @@ public class RobotRun extends PApplet {
 		
 		return exists;
 	}
-	
+
 	/**
 	 * Sets the scenario with the given name as the active scenario in the
 	 * application, if a scenario with the given name exists.
@@ -3085,11 +3074,11 @@ public class RobotRun extends PApplet {
 		return false;
 
 	}
-	
+
 	public void setMacroBindings(Macro[] usrKeyBinds) {
 		macroKeyBinds = usrKeyBinds;
 	}
-
+	
 	public void setRecord(boolean state) {
 		record = state;
 	}
@@ -3135,12 +3124,12 @@ public class RobotRun extends PApplet {
 		UI.updateShiftButton(shift);
 		updatePendantScreen();
 	}
-
+	
 	public void setStep(boolean step) {
 		this.step = step;
 		UI.updateStepButton(this.step);
 	}
-	
+
 	@Override
 	public void settings() {
 		size(1080, 720, P3D);
@@ -3220,19 +3209,19 @@ public class RobotRun extends PApplet {
 		System.out.printf("%s\n%s\n%s\n", rx, ry, rz);
 		/**/
 	}
-
+	
 	/**
 	 * Removes the current screen from the screen state stack and loads the
 	 * given screen mode.
 	 * 
-	 * @param nextScreen	The new screen mode
+	 * @param nextScreen The new screen mode
 	 */
 	public void switchScreen(ScreenMode nextScreen) {
 		Screen prevScreen = screens.getActiveScreen();
 		screens.switchScreen(nextScreen);
 		updatePendantScreen();
 				
-		Fields.debug("\n%s => %s\n", prevScreen.mode, nextScreen);	
+		Fields.debug("\n%s => %s\n", prevScreen.mode, nextScreen);
 	}
 
 	/**
@@ -3282,12 +3271,6 @@ public class RobotRun extends PApplet {
 			/* Since objects are copied onto the undo stack, the robot may be
 			 * reference the wrong copy of an undone object. */
 			activeRobot.releaseHeldObject();
-		}
-	}
-
-	public void UpdateCam() {
-		if (rCamera != null) {
-			UI.updateCameraCurrent();
 		}
 	}
 

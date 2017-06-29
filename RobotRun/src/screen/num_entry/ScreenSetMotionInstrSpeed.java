@@ -7,7 +7,6 @@ import programming.Instruction;
 import programming.MotionInstruction;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenSetMotionInstrSpeed extends ST_ScreenNumEntry {
 

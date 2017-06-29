@@ -2,7 +2,6 @@ package screen.content_disp;
 
 import core.RobotRun;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenNavMainMenu extends ST_ScreenListContents {
 

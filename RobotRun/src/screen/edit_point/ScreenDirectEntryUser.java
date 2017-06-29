@@ -3,7 +3,6 @@ package screen.edit_point;
 import core.RobotRun;
 import frame.UserFrame;
 import screen.ScreenMode;
-import screen.ScreenState;
 import ui.DisplayLine;
 
 public class ScreenDirectEntryUser extends ST_ScreenPointEntry {
@@ -76,7 +75,7 @@ public class ScreenDirectEntryUser extends ST_ScreenPointEntry {
 			}
 
 			robotRun.createFrameDirectEntry(robotRun.teachFrame, inputs);
-			robotRun.nextScreen(ScreenMode.UFRAME_DETAIL);
+			robotRun.lastScreen();
 		} catch (NumberFormatException NFEx) {
 			// Invalid number
 			System.err.println("Entries must be real numbers!");

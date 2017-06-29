@@ -4,7 +4,6 @@ import core.RobotRun;
 import programming.LabelInstruction;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenSetLabelNum extends ST_ScreenNumEntry {
 

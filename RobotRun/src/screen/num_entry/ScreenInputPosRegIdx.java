@@ -5,7 +5,6 @@ import expression.OperandPReg;
 import expression.OperandPRegIdx;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenInputPosRegIdx extends ST_ScreenNumEntry {
 

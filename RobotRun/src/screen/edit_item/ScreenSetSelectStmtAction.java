@@ -6,7 +6,6 @@ import programming.JumpInstruction;
 import programming.SelectStatement;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenSetSelectStmtAction extends ST_ScreenEditItem {
 

@@ -8,7 +8,6 @@ import expression.OperandIOReg;
 import programming.IfStatement;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenSetBoolExpressionArg extends ST_ScreenEditItem {
 

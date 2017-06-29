@@ -9,6 +9,7 @@ public class ScreenSelectIOInstrReg extends ST_ScreenOptionsMenu {
 
 	public ScreenSelectIOInstrReg(RobotRun r) {
 		super(ScreenMode.SELECT_IO_INSTR_REG, r);
+		// Restrict column index to the second column
 		options.setSelectedColumnIdx(1);
 	}
 
@@ -48,7 +49,7 @@ public class ScreenSelectIOInstrReg extends ST_ScreenOptionsMenu {
 		// IO registers are 1 indexed!
 		int state = (options.getColumnIdx() == 1) ? Fields.ON : Fields.OFF;
 		robotRun.newIOInstruction(options.getLineIdx() + 1, state);
-		robotRun.popScreenStack(1);
+		robotRun.lastScreen();
 		robotRun.lastScreen();
 	}
 

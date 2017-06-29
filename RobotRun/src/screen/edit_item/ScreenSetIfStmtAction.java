@@ -6,7 +6,6 @@ import programming.IfStatement;
 import programming.JumpInstruction;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenSetIfStmtAction extends ST_ScreenEditItem {
 

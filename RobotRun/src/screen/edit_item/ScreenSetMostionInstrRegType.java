@@ -7,7 +7,6 @@ import programming.MotionInstruction;
 import programming.PosMotionInst;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenSetMostionInstrRegType extends ST_ScreenEditItem {
 

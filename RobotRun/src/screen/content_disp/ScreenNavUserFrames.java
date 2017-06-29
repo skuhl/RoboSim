@@ -3,7 +3,6 @@ package screen.content_disp;
 import core.RobotRun;
 import enums.CoordFrame;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenNavUserFrames extends ST_ScreenListContents {
 

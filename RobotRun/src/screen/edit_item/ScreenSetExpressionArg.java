@@ -13,7 +13,6 @@ import regs.DataRegister;
 import regs.IORegister;
 import regs.PositionRegister;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenSetExpressionArg extends ST_ScreenEditItem {
 
@@ -57,7 +56,7 @@ public class ScreenSetExpressionArg extends ST_ScreenEditItem {
 		} else if (options.getLineIdx() == 3) {
 			operand = new OperandPRegIdx(new PositionRegister(), 0);
 			robotRun.opEdit = expr.setOperand(robotRun.editIdx, operand);
-			robotRun.popScreenStack(1);
+			robotRun.lastScreen();
 			robotRun.nextScreen(ScreenMode.INPUT_PREG_IDX2);
 			robotRun.nextScreen(ScreenMode.INPUT_PREG_IDX1);
 			

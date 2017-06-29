@@ -5,7 +5,6 @@ import global.Fields;
 import programming.FrameInstruction;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenSetFramInstrIdx extends ST_ScreenNumEntry {
 

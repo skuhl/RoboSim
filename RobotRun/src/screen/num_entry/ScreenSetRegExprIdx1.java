@@ -8,7 +8,6 @@ import regs.PositionRegister;
 import regs.Register;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenSetRegExprIdx1 extends ST_ScreenNumEntry {
 
@@ -42,7 +41,7 @@ public class ScreenSetRegExprIdx1 extends ST_ScreenNumEntry {
 					regStmt.setRegister(r.getDReg(idx - 1));
 
 				} else if (regStmt.getReg() instanceof IORegister) {
-					regStmt.setRegister(r.getIOReg(idx - 1));
+					regStmt.setRegister(r.getIOReg(idx));
 
 				} else if (regStmt.getReg() instanceof PositionRegister) {
 					if (regStmt.getPosIdx() < 0) {

@@ -4,7 +4,6 @@ import core.RobotRun;
 import regs.DataRegister;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenNavDataRegs extends ST_ScreenListContents {
 

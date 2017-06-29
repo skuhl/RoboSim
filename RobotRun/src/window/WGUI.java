@@ -42,8 +42,6 @@ import processing.core.PImage;
 import processing.core.PVector;
 import robot.RoboticArm;
 import screen.Screen;
-import screen.ScreenMode;
-import screen.ScreenType;
 import screen.select_lines.ST_ScreenLineSelect;
 import ui.DisplayLine;
 import ui.DropdownSearch;
@@ -2178,7 +2176,7 @@ public class WGUI implements ControlListener {
 		boolean[] lnSelectState = null;
 		
 		if (screen instanceof ST_ScreenLineSelect) {
-			lnSelectState = ((ST_ScreenLineSelect) screen).getLnSelectStates();
+			lnSelectState = ((ST_ScreenLineSelect)screen).getLineSelectStates();
 		}
 
 		/* Keep track of the pendant display text-field indexes last used by
