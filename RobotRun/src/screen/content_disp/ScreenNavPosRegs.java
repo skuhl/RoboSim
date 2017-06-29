@@ -10,7 +10,6 @@ import global.RMath;
 import regs.PositionRegister;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenNavPosRegs extends ST_ScreenListContents {
 

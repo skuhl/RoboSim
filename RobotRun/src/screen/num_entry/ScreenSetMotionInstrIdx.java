@@ -7,7 +7,6 @@ import programming.CamMoveToObject;
 import programming.MotionInstruction;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenSetMotionInstrIdx extends ST_ScreenNumEntry {
 

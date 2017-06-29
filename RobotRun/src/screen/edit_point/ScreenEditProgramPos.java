@@ -8,7 +8,6 @@ import programming.PosMotionInst;
 import programming.Program;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenEditProgramPos extends ST_ScreenPointEntry {
 

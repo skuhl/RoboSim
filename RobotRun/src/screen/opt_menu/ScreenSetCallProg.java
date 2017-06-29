@@ -8,7 +8,6 @@ import programming.Program;
 import programming.SelectStatement;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenSetCallProg extends ST_ScreenOptionsMenu {
 

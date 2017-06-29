@@ -4,7 +4,6 @@ import core.RobotRun;
 import frame.UserFrame;
 import global.DataManagement;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenUserFrameRename extends ST_ScreenTextEntry {
 

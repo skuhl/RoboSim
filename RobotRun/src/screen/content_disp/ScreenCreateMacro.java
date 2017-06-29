@@ -4,7 +4,6 @@ import core.RobotRun;
 import programming.Macro;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenCreateMacro extends ST_ScreenListContents {
 

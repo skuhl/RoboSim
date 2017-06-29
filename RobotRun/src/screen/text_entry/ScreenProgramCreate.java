@@ -5,7 +5,6 @@ import global.DataManagement;
 import programming.Program;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenProgramCreate extends ST_ScreenTextEntry {
 

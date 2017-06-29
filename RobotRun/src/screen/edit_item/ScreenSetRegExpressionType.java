@@ -7,7 +7,6 @@ import regs.IORegister;
 import regs.PositionRegister;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenSetRegExpressionType extends ST_ScreenEditItem {
 
@@ -32,7 +31,7 @@ public class ScreenSetRegExpressionType extends ST_ScreenEditItem {
 		if (options.getLineIdx() == 3) {
 			regStmt.setRegister(new PositionRegister(), 0);
 			
-			robotRun.popScreenStack(1);
+			robotRun.lastScreen();
 			robotRun.nextScreen(ScreenMode.SET_REG_EXPR_IDX2);
 			robotRun.nextScreen(ScreenMode.SET_REG_EXPR_IDX1);
 			

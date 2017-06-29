@@ -2,7 +2,6 @@ package screen.edit_item;
 
 import core.RobotRun;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenSetMacroBinding extends ST_ScreenEditItem {
 

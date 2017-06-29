@@ -5,7 +5,6 @@ import enums.CoordFrame;
 import global.DataManagement;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenSetDefaultTooltip extends ST_ScreenOptionsMenu {
 

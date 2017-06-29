@@ -6,7 +6,6 @@ import core.RobotRun;
 import enums.CoordFrame;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 import ui.DisplayLine;
 
 public class ScreenTeach6Pt extends ST_ScreenTeachPoints {

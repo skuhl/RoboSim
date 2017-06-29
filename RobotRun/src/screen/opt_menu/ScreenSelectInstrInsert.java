@@ -3,7 +3,6 @@ package screen.opt_menu;
 import core.RobotRun;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenSelectInstrInsert extends ST_ScreenOptionsMenu {
 

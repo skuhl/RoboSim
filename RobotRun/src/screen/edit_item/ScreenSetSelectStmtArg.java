@@ -7,7 +7,6 @@ import programming.SelectStatement;
 import regs.DataRegister;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenSetSelectStmtArg extends ST_ScreenEditItem {
 

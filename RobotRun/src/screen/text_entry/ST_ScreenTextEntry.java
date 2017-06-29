@@ -42,11 +42,9 @@ public abstract class ST_ScreenTextEntry extends Screen {
 		contents.addLine("\0");
 		DisplayLine line = new DisplayLine();
 		
-		if (workingText != null) {
-			// Give each letter in the name a separate column
-			for (int idx = 0; idx < workingText.length() && idx < TEXT_ENTRY_LEN; idx += 1) {
-				line.add(Character.toString(workingText.charAt(idx)));
-			}
+		// Give each letter in the name a separate column
+		for (int idx = 0; idx < workingText.length() && idx < TEXT_ENTRY_LEN; idx += 1) {
+			line.add(Character.toString(workingText.charAt(idx)));
 		}
 
 		contents.addLine(line);
@@ -78,7 +76,7 @@ public abstract class ST_ScreenTextEntry extends Screen {
 
 	@Override
 	protected void loadVars(ScreenState s) {
-		setScreenIndices(1, 0, 0, -1, 0);
+		setScreenIndices(1, 0, 0, 0, 0);
 	}
 	
 	@Override

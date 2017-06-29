@@ -3,7 +3,6 @@ package screen.edit_item;
 import core.RobotRun;
 import global.Fields;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenSetFrameInstrType extends ST_ScreenEditItem {
 	
@@ -26,7 +25,7 @@ public class ScreenSetFrameInstrType extends ST_ScreenEditItem {
 			robotRun.newFrameInstruction(Fields.FTYPE_USER);
 		}
 
-		robotRun.popScreenStack(1);
+		robotRun.lastScreen();
 		robotRun.switchScreen(ScreenMode.SET_FRAME_INSTR_IDX);
 	}
 }

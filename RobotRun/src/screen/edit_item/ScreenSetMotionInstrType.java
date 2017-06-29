@@ -5,7 +5,6 @@ import global.Fields;
 import programming.MotionInstruction;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenSetMotionInstrType extends ST_ScreenEditItem {
 

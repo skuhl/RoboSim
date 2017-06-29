@@ -4,7 +4,6 @@ import core.RobotRun;
 import expression.OperandBool;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenSetBoolConst extends ST_ScreenEditItem {
 

@@ -2,7 +2,6 @@ package screen.opt_menu;
 
 import core.RobotRun;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenSelectJumpLabel extends ST_ScreenOptionsMenu {
 
@@ -23,7 +22,7 @@ public class ScreenSelectJumpLabel extends ST_ScreenOptionsMenu {
 
 	@Override
 	public void actionEntr() {
-		robotRun.popScreenStack(1);
+		robotRun.lastScreen();
 
 		if (options.getLineIdx() == 0) {
 			robotRun.newLabel();

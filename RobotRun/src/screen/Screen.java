@@ -41,6 +41,13 @@ public abstract class Screen {
 		loadLabels();
 	}
 	
+	public void updateScreen(ScreenState s) {
+		updateScreen();
+		loadVars(s);
+		
+		printScreenInfo();
+	}
+	
 	//Used for displaying screen text
 	public String getHeader() { return header; }
 	public MenuScroll getContents() { return contents; }
@@ -71,12 +78,12 @@ public abstract class Screen {
 		options.setRenderStart(optRS);
 	}
 	
-	public static void printScreenInfo(Screen s) {
+	public void printScreenInfo() {
 		System.out.println("Current screen: ");
-		System.out.println("\tMode: " + s.mode.name());
-		System.out.println("\tRow: " + s.contents.getLineIdx() + ", col: " + s.contents.getColumnIdx() +
-				", RS: " + s.contents.getRenderStart());
-		System.out.println("\tOpt row: " + s.options.getLineIdx() + ", opt RS: " + s.options.getRenderStart());
+		System.out.println("\tMode: " + mode.name());
+		System.out.println("\tRow: " + contents.getLineIdx() + ", col: " + contents.getColumnIdx() +
+				", RS: " + contents.getRenderStart());
+		System.out.println("\tOpt row: " + options.getLineIdx() + ", opt RS: " + options.getRenderStart());
 	}
 	
 	//Sets text for each screen
@@ -99,9 +106,4 @@ public abstract class Screen {
 	public abstract void actionF3();
 	public abstract void actionF4();
 	public abstract void actionF5();
-	
-	@Override
-	public String toString() {
-		return (mode == null) ? "Mode=null" : mode.name();
-	}
 }

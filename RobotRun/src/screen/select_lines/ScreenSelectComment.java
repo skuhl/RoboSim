@@ -3,12 +3,11 @@ package screen.select_lines;
 import core.RobotRun;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenSelectComment extends ST_ScreenLineSelect {
 
-	public ScreenSelectComment(int numOfLines, RobotRun r) {
-		super(ScreenMode.SELECT_COMMENT, numOfLines, r);
+	public ScreenSelectComment(RobotRun r) {
+		super(ScreenMode.SELECT_COMMENT, r);
 	}
 
 	@Override
@@ -34,7 +33,7 @@ public class ScreenSelectComment extends ST_ScreenLineSelect {
 	
 	@Override
 	public void actionF4() {
-		robotRun.popScreenStack(1);
-		robotRun.updateInstructions();
+		robotRun.lastScreen();
+		robotRun.lastScreen();
 	}
 }

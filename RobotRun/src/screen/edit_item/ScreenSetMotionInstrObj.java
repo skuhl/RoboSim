@@ -6,7 +6,6 @@ import geom.WorldObject;
 import programming.CamMoveToObject;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenSetMotionInstrObj extends ST_ScreenEditItem {
 

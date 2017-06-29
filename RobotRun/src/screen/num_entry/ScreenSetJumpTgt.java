@@ -7,7 +7,6 @@ import programming.JumpInstruction;
 import programming.SelectStatement;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenSetJumpTgt extends ST_ScreenNumEntry {
 

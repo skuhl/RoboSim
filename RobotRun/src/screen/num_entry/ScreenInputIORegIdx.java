@@ -4,7 +4,6 @@ import core.RobotRun;
 import expression.OperandIOReg;
 import robot.RoboticArm;
 import screen.ScreenMode;
-import screen.ScreenState;
 
 public class ScreenInputIORegIdx extends ST_ScreenNumEntry {
 
