@@ -72,6 +72,7 @@ public class ScreenNavPrograms extends ST_ScreenListContents {
 	@Override
 	public void actionF2() {
 		if (robotRun.getActiveRobot().numOfPrograms() > 0) {
+			robotRun.setActiveProgIdx(contents.getCurrentItemIdx());
 			robotRun.nextScreen(ScreenMode.PROG_RENAME);
 		}
 	}
@@ -87,6 +88,7 @@ public class ScreenNavPrograms extends ST_ScreenListContents {
 	@Override
 	public void actionF4() {
 		if (robotRun.getActiveRobot().numOfPrograms() > 0) {
+			robotRun.setActiveProgIdx(contents.getCurrentItemIdx());
 			robotRun.nextScreen(ScreenMode.PROG_COPY);
 		}
 	}
