@@ -289,6 +289,7 @@ public class ComplexShape extends RShape {
 	@Override
 	public void setFillValue(Integer newVal) {
 		if (newVal != null) {
+			super.setFillValue(newVal);
 			model.setFill((int)newVal);
 		}
 	}

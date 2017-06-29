@@ -76,6 +76,9 @@ import screen.text_entry.ST_ScreenTextEntry;
 import ui.Camera;
 import ui.DisplayLine;
 import ui.KeyCodeMap;
+import undo.WOUndoCurrent;
+import undo.WOUndoDelete;
+import undo.WOUndoState;
 import window.WGUI;
 
 /**
@@ -113,7 +116,7 @@ public class RobotRun extends PApplet {
 	}
 
 	private final ArrayList<Scenario> SCENARIOS = new ArrayList<>();
-	private final Stack<WorldObject> SCENARIO_UNDO = new Stack<>();
+	private final Stack<WOUndoState> SCENARIO_UNDO = new Stack<>();
 	private final HashMap<Integer, RoboticArm> ROBOTS = new HashMap<>();
 
 	private Scenario activeScenario;
@@ -875,13 +878,12 @@ public class RobotRun extends PApplet {
 			WorldObject selectedWO = UI.getSelectedWO();
 			
 			if (selectedWO != null) {
-				WorldObject saveState = selectedWO.clone();
 				// Update the dimensions of the world object
-				boolean updated = UI.updateWODims(selectedWO);
+				WOUndoState undoState = UI.updateWODims(selectedWO);
 				
-				if (updated) {
+				if (undoState != null) {
 					// Save original world object onto the undo stack
-					updateScenarioUndo(saveState);
+					updateScenarioUndo(undoState);
 				}
 			}
 			
@@ -922,8 +924,9 @@ public class RobotRun extends PApplet {
 	public void button_objDelete() {
 		// Delete focused world object and add to the scenario undo stack
 		WorldObject selected = UI.getSelectedWO();
+		
 		if (selected != null) {
-			updateScenarioUndo( selected );
+			updateScenarioUndo(new WOUndoDelete(selected, activeScenario));
 			int ret = getActiveScenario().removeWorldObject( selected );
 			
 			if (ret == 0) {
@@ -951,29 +954,14 @@ public class RobotRun extends PApplet {
 			if (selectedWO instanceof Fixture || (selectedWO instanceof Part &&
 					(r == null || !r.isHeld((Part)selectedWO)))) {
 				
-				WorldObject savedState = selectedWO.clone();
-	
-				if (UI.updateWOCurrent(selectedWO)) {
+				WOUndoState undoState = UI.updateWOCurrent(selectedWO);
+				
+				if (undoState != null) {
 					/*
 					 * If the object was modified, then save the previous state
 					 * of the object
 					 */
-					updateScenarioUndo(savedState);
-					
-					/* If the edited object is a fixture, then update the orientation
-					 * of all parts, which reference this fixture, in this scenario. */
-					if (selectedWO instanceof Fixture && getActiveScenario() != null) {
-
-						for (WorldObject wldObj : getActiveScenario()) {
-							if (wldObj instanceof Part) {
-								Part p = (Part)wldObj;
-
-								if (p.getFixtureRef() == selectedWO) {
-									p.updateAbsoluteOrientation();
-								}
-							}
-						}
-					}
+					updateScenarioUndo(undoState);
 				}
 	
 				DataManagement.saveScenarios(this);
@@ -994,12 +982,12 @@ public class RobotRun extends PApplet {
 			WorldObject selectedWO = UI.getSelectedWO();
 			
 			if (selectedWO instanceof Part && (r == null || !r.isHeld((Part)selectedWO))) {
-				WorldObject savedState = (WorldObject) selectedWO.clone();
+				WOUndoState undoState = UI.updateWOCurrent(selectedWO);
 				UI.fillCurWithDef( (Part)selectedWO );
 
-				if (UI.updateWOCurrent(selectedWO)) {
+				if (undoState != null) {
 					// If the part was modified, then save its previous state
-					updateScenarioUndo(savedState);
+					updateScenarioUndo(undoState);
 				}
 
 				DataManagement.saveScenarios(this);
@@ -1016,7 +1004,8 @@ public class RobotRun extends PApplet {
 		for (WorldObject wo : activeScenario) {
 			// Only applies to parts
 			if (wo instanceof Part) {
-				updateScenarioUndo((WorldObject) wo.clone());
+				updateScenarioUndo(new WOUndoCurrent(wo));
+				
 				Part p = (Part) wo;
 				p.setLocalCenter(p.getDefaultCenter());
 				p.setLocalOrientation(p.getDefaultOrientation());
@@ -1043,11 +1032,11 @@ public class RobotRun extends PApplet {
 		WorldObject selectedWO = UI.getSelectedWO();
 		// Only parts have a default position and orientation
 		if (selectedWO instanceof Part) {
-			WorldObject saveState = selectedWO.clone();
+			WOUndoState undoState = UI.updateWODefault( (Part)selectedWO );
 			
-			if (UI.updateWODefault( (Part)selectedWO )) {
+			if (undoState != null) {
 				// If the part was modified, then save its previous state
-				updateScenarioUndo(saveState);
+				updateScenarioUndo(undoState);
 			}
 		}
 	}
@@ -2496,7 +2485,7 @@ public class RobotRun extends PApplet {
 			
 			if (!mouseDragWO && (mouseButton == CENTER || mouseButton == RIGHT)) {
 				// Save the selected world object's current state
-				SCENARIO_UNDO.push(selectedWO.clone());
+				updateScenarioUndo(new WOUndoCurrent(selectedWO));
 			}
 			
 			mouseDragWO = true;
@@ -3260,8 +3249,9 @@ public class RobotRun extends PApplet {
 	 */
 	public void undoScenarioEdit() {
 		if (!SCENARIO_UNDO.empty()) {
-			activeScenario.put( SCENARIO_UNDO.pop() );
+			SCENARIO_UNDO.pop().undo();
 			UI.updateListContents();
+			
 			WorldObject wo = UI.getSelectedWO();
 			
 			if (wo != null) {
@@ -3339,16 +3329,17 @@ public class RobotRun extends PApplet {
 	/**
 	 * Push a world object onto the undo stack for world objects.
 	 * 
-	 * @param saveState
-	 *            The world object to save
+	 * @param undoState	The world object to save
 	 */
-	public void updateScenarioUndo(WorldObject saveState) {
-		// Only the latest 40 world object save states can be undone
-		if (SCENARIO_UNDO.size() >= 40) {
-			SCENARIO_UNDO.remove(0);
+	public void updateScenarioUndo(WOUndoState undoState) {
+		if (undoState != null) {
+			// Only the latest 40 world object save states can be undone
+			if (SCENARIO_UNDO.size() >= 40) {
+				SCENARIO_UNDO.remove(0);
+			}
+	
+			SCENARIO_UNDO.push(undoState);
 		}
-
-		SCENARIO_UNDO.push(saveState);
 	}
 	
 	/**
