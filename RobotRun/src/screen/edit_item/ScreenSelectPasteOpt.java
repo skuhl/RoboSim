@@ -44,6 +44,10 @@ public class ScreenSelectPasteOpt extends ST_ScreenEditItem {
 				
 		robotRun.lastScreen();
 		robotRun.lastScreen();
-		robotRun.lastScreen();
+		
+		if(robotRun.getLastScreen().mode == ScreenMode.NAV_PROG_INSTR) {
+			robotRun.getLastScreen().setContentIdx(contents.getLineIdx());
+			robotRun.lastScreen();
+		}
 	}
 }

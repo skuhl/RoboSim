@@ -2,8 +2,6 @@ package screen.select_lines;
 
 import core.RobotRun;
 import global.Fields;
-import programming.Instruction;
-import programming.SelectStatement;
 import screen.Screen;
 import screen.ScreenMode;
 import screen.ScreenState;
@@ -49,11 +47,12 @@ public abstract class ST_ScreenLineSelect extends Screen {
 		if (!robotRun.isProgExec()) {
 			try {
 				// Lock movement when a program is running
-				Instruction instr = robotRun.getActiveInstruction();
-				int prevLine = contents.getItemLineIdx();
 				int selectStart = contents.getCurrentItemIdx();
-				robotRun.setActiveInstIdx(contents.moveUp(robotRun.isShift()));
-				int curLine = contents.getItemLineIdx();
+				
+				do {
+					robotRun.setActiveInstIdx(contents.moveUp(robotRun.isShift()));
+				} while(contents.getItemLineIdx() != 0);
+				
 				
 				if(robotRun.isShift()) {
 					for(int i = selectStart; i >= contents.getCurrentItemIdx(); i -= 1) {
@@ -63,11 +62,6 @@ public abstract class ST_ScreenLineSelect extends Screen {
 					}
 					
 					direction = UP;
-				}
-				
-				// special case for select statement column navigation
-				if (instr instanceof SelectStatement && curLine == 0 && prevLine == 1) {
-					contents.setSelectedColumnIdx(contents.getColumnIdx() + 3);
 				}
 				
 			} catch (IndexOutOfBoundsException IOOBEx) {
@@ -86,11 +80,12 @@ public abstract class ST_ScreenLineSelect extends Screen {
 	public void actionDn() {
 		if (!robotRun.isProgExec()) {
 			// Lock movement when a program is running
-			Instruction instr = robotRun.getActiveInstruction();
-			int prevIdx = contents.getItemColumnIdx();
 			int selectStart = contents.getCurrentItemIdx();
-			robotRun.setActiveInstIdx(contents.moveDown(robotRun.isShift()));
-			int curLine = contents.getItemLineIdx();
+			
+			do {
+				robotRun.setActiveInstIdx(contents.moveDown(robotRun.isShift()));
+			} while(contents.getItemLineIdx() != 0);
+				
 			
 			if(robotRun.isShift()) {
 				for(int i = selectStart; i <= contents.getCurrentItemIdx(); i += 1) {
@@ -100,15 +95,6 @@ public abstract class ST_ScreenLineSelect extends Screen {
 				}
 				
 				direction = DN;
-			}
-
-			// special case for select statement column navigation
-			if (instr instanceof SelectStatement && curLine > 0) {
-				if (prevIdx >= 3) {
-					contents.setSelectedColumnIdx(prevIdx - 3);
-				} else {
-					contents.setSelectedColumnIdx(0);
-				}
 			}
 
 			Fields.debug("line=%d col=%d inst=%d TRS=%d\n",
