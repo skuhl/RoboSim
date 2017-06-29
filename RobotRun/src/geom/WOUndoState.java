@@ -19,4 +19,9 @@ public abstract class WOUndoState {
 	public WorldObject getWORef() {
 		return woRef;
 	}
+	
+	/**
+	 * Reverts the change defined by this undo state.
+	 */
+	public abstract void undo();
 }
