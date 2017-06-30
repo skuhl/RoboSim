@@ -1,6 +1,8 @@
 package screen.edit_item;
 
 import core.RobotRun;
+import global.DataManagement;
+import robot.RoboticArm;
 import screen.ScreenMode;
 
 public class ScreenSetMacroType extends ST_ScreenEditItem {
@@ -16,7 +18,7 @@ public class ScreenSetMacroType extends ST_ScreenEditItem {
 	
 	@Override
 	protected void loadContents() {
-		contents.setLines(robotRun.loadMacros());
+		contents.setLines(loadMacros());
 	}
 
 	@Override
@@ -27,15 +29,19 @@ public class ScreenSetMacroType extends ST_ScreenEditItem {
 
 	@Override
 	public void actionEntr() {
+		RoboticArm r = robotRun.getActiveRobot();
 		int idx = robotRun.getLastScreen().getContentIdx();
+		System.out.println(idx);
 		if (options.getLineIdx() == 0) {
-			robotRun.getMacro(idx).setManual(false);
+			r.getMacro(idx).setManual(false);
 			robotRun.switchScreen(ScreenMode.SET_MACRO_BINDING);
 		} else if (options.getLineIdx() == 1) {
-			robotRun.getMacro(idx).setManual(true);
-			robotRun.getMacro(idx).clearNum();
+			r.getMacro(idx).setManual(true);
+			r.getMacro(idx).clearNum();
 			robotRun.lastScreen();
 		}
+		
+		DataManagement.saveRobotData(r, 8);
 	}
 
 }

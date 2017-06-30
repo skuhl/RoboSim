@@ -143,11 +143,11 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 	}
 	
 	public void actionFwd() {
-		contents.setSelectedColumnIdx(0);
+		contents.setColumnIdx(0);
 	}
 	
 	public void actionBwd() {
-		contents.setSelectedColumnIdx(0);
+		contents.setColumnIdx(0);
 	}
 	
 	public void actionItem() {
@@ -167,7 +167,7 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 				// special case for select statement column navigation
 				if ((i instanceof SelectStatement || i instanceof MotionInstruction) && curLine == 0) {
 					if (prevLine == 1) {
-						contents.setSelectedColumnIdx(contents.getColumnIdx() + 3);
+						contents.setColumnIdx(contents.getColumnIdx() + 3);
 					}
 				}
 
@@ -195,9 +195,9 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 			// special case for select statement column navigation
 			if ((i instanceof SelectStatement || i instanceof MotionInstruction) && curLine == 1) {
 				if (prevIdx >= 3) {
-					contents.setSelectedColumnIdx(prevIdx - 3);
+					contents.setColumnIdx(prevIdx - 3);
 				} else {
-					contents.setSelectedColumnIdx(0);
+					contents.setColumnIdx(0);
 				}
 			}
 
@@ -230,10 +230,10 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 	public void actionF1() {
 		if (robotRun.isShift()) {
 			robotRun.newPosMotionInst();
-			contents.setSelectedColumnIdx(0);
+			contents.setColumnIdx(0);
 
 			if (contents.getItemLineIdx() == 0) {
-				contents.setSelectedLineIdx(contents.getLineIdx() + 1);
+				contents.setLineIdx(contents.getLineIdx() + 1);
 				robotRun.updatePendantScreen();
 				if (contents.getItemLineIdx() == 0) {
 					robotRun.setActiveInstIdx(robotRun.getActiveInstIdx() + 1);

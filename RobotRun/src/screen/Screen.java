@@ -1,6 +1,10 @@
 package screen;
 
+import java.util.ArrayList;
+
 import core.RobotRun;
+import robot.RoboticArm;
+import ui.DisplayLine;
 import ui.MenuScroll;
 
 public abstract class Screen {
@@ -50,7 +54,7 @@ public abstract class Screen {
 	public int getOptionIdx() { return options.getLineIdx(); }
 	public int getOptionStart() { return options.getRenderStart(); }
 	
-	public void setContentIdx(int i) { contents.setSelectedLineIdx(i); }
+	public void setContentIdx(int i) { contents.setLineIdx(i); }
 	
 	public ScreenState getScreenState() {
 		ScreenState s = new ScreenState(mode, contents.getLineIdx(), contents.getColumnIdx(),
@@ -61,11 +65,11 @@ public abstract class Screen {
 		
 	//Loads given set of screen state variables 
 	public void setScreenIndices(int contLine, int col, int contRS, int optLine, int optRS) {
-		contents.setSelectedLineIdx(contLine);
-		contents.setSelectedColumnIdx(col);
+		contents.setLineIdx(contLine);
+		contents.setColumnIdx(col);
 		contents.setRenderStart(contRS);
 		
-		options.setSelectedLineIdx(optLine);
+		options.setLineIdx(optLine);
 		options.setRenderStart(optRS);
 	}
 	
@@ -97,4 +101,32 @@ public abstract class Screen {
 	public abstract void actionF3();
 	public abstract void actionF4();
 	public abstract void actionF5();
+	
+	public ArrayList<DisplayLine> loadMacros() {
+		ArrayList<DisplayLine> disp = new ArrayList<DisplayLine>();
+		RoboticArm r = robotRun.getActiveRobot();
+		
+		for (int i = 0; i < r.getMacroList().size(); i += 1) {
+			String[] strArray = r.getMacroList().get(i).toStringArray();
+			disp.add(new DisplayLine(i, Integer.toString(i + 1), strArray[0], strArray[1], strArray[2]));
+		}
+		
+		return disp;
+	}
+
+	public ArrayList<DisplayLine> loadManualFunct() {
+		ArrayList<DisplayLine> disp = new ArrayList<DisplayLine>();
+		RoboticArm r = robotRun.getActiveRobot();
+		int macroNum = 0;
+
+		for (int i = 0; i < r.getMacroList().size(); i += 1) {
+			if (r.getMacroList().get(i).isManual()) {
+				String manFunct = r.getMacroList().get(i).toString();
+				disp.add(new DisplayLine(macroNum, (macroNum + 1) + " " + manFunct));
+				macroNum += 1;
+			}
+		}
+		
+		return disp;
+	}
 }

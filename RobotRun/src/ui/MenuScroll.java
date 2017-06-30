@@ -242,11 +242,11 @@ public class MenuScroll {
 		renderStart = renStart;
 	}
 
-	public void setSelectedColumnIdx(int i) {
+	public void setColumnIdx(int i) {
 		columnIdx = i;
 	}
 	
-	public void setSelectedLineIdx(int i) {
+	public void setLineIdx(int i) {
 		lineIdx = i;
 	}
 	

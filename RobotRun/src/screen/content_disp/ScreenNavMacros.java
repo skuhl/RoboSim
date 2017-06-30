@@ -1,6 +1,8 @@
 package screen.content_disp;
 
 import core.RobotRun;
+import programming.Macro;
+import robot.RoboticArm;
 import screen.ScreenMode;
 
 public class ScreenNavMacros extends ST_ScreenListContents {
@@ -16,7 +18,7 @@ public class ScreenNavMacros extends ST_ScreenListContents {
 
 	@Override
 	protected void loadContents() {
-		contents.setLines(robotRun.loadMacros());
+		contents.setLines(loadMacros());
 	}
 
 	@Override
@@ -25,7 +27,7 @@ public class ScreenNavMacros extends ST_ScreenListContents {
 		labels[1] = "";
 		labels[2] = "";
 		labels[3] = "[Edit]";
-		labels[4] = "";
+		labels[4] = robotRun.isShift() ? "[Delete]" : "";
 	}
 	
 	@Override
@@ -38,14 +40,26 @@ public class ScreenNavMacros extends ST_ScreenListContents {
 
 	@Override
 	public void actionF4() {
-		if(robotRun.getMacroList().size() > 0) {			
+		if(robotRun.getActiveRobot().getMacroList().size() > 0) {			
 			if (contents.getColumnIdx() == 1) {
 				robotRun.nextScreen(ScreenMode.SET_MACRO_PROG);
 			} else if (contents.getColumnIdx() == 2) {
 				robotRun.nextScreen(ScreenMode.SET_MACRO_TYPE);
 			} else if (contents.getColumnIdx() == 3){
-				if (!robotRun.getMacro(contents.getLineIdx()).isManual())
+				RoboticArm r = robotRun.getActiveRobot();
+				if (!r.getMacro(contents.getLineIdx()).isManual())
 					robotRun.nextScreen(ScreenMode.SET_MACRO_BINDING);
+			}
+		}
+	}
+	
+	@Override
+	public void actionF5() {
+		if(robotRun.isShift()) {
+			RoboticArm r = robotRun.getActiveRobot();
+			Macro m = r.getMacroList().remove(contents.getCurrentItemIdx());
+			if(m.getKeyNum() != -1) {
+				r.getMacroKeyBinds()[m.getKeyNum()] = null;
 			}
 		}
 	}

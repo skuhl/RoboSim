@@ -125,10 +125,6 @@ public class RobotRun extends PApplet {
 	private WGUI UI;
 	private KeyCodeMap keyCodeMap;
 	private ScreenManager screens;
-	
-	
-	private ArrayList<Macro> macros = new ArrayList<>();
-	private Macro[] macroKeyBinds = new Macro[7];
 
 	private boolean shift = false; // Is shift button pressed or not?
 	private boolean step = false; // Is step button pressed or not?
@@ -305,7 +301,7 @@ public class RobotRun extends PApplet {
 		// at a time
 		if (screens.getActiveScreen() instanceof ScreenNavProgInstructions && isShift() && isStep()) {
 			// Safeguard against editing a program while it is running
-			screens.getActiveScreen().getContents().setSelectedColumnIdx(0);
+			screens.getActiveScreen().getContents().setColumnIdx(0);
 			progExecBwd();
 		}
 	}
@@ -545,7 +541,7 @@ public class RobotRun extends PApplet {
 			// Stop any prior Robot movement
 			button_hold();
 			// Safeguard against editing a program while it is running
-			screens.getActiveScreen().getContents().setSelectedColumnIdx(0);
+			screens.getActiveScreen().getContents().setColumnIdx(0);
 			progExec(isStep());
 		}
 	}
@@ -576,8 +572,8 @@ public class RobotRun extends PApplet {
 	 */
 	public void button_io() {
 		if (isShift()) {
-			if (getMacroKeyBinds()[6] != null) {
-				execute(getMacroKeyBinds()[6]);
+			if (activeRobot.getMacroKeyBinds()[6] != null) {
+				execute(activeRobot.getMacroKeyBinds()[6]);
 			}
 
 		} else {
@@ -746,8 +742,8 @@ public class RobotRun extends PApplet {
 	 * A button used for macro binding
 	 */
 	public void button_mvmu() {
-		if (getMacroKeyBinds()[2] != null && isShift()) {
-			execute(getMacroKeyBinds()[2]);
+		if (activeRobot.getMacroKeyBinds()[2] != null && isShift()) {
+			execute(activeRobot.getMacroKeyBinds()[2]);
 		}
 	}
 	
@@ -1065,8 +1061,8 @@ public class RobotRun extends PApplet {
 	 * A button used for marcos binding.
 	 */
 	public void button_posn() {
-		if (getMacroKeyBinds()[5] != null && isShift()) {
-			execute(getMacroKeyBinds()[5]);
+		if (activeRobot.getMacroKeyBinds()[5] != null && isShift()) {
+			execute(activeRobot.getMacroKeyBinds()[5]);
 		}
 	}
 
@@ -1160,8 +1156,8 @@ public class RobotRun extends PApplet {
 	 * A button used for binding macros.
 	 */
 	public void button_setup() {
-		if (getMacroKeyBinds()[3] != null && isShift()) {
-			execute(getMacroKeyBinds()[3]);
+		if (activeRobot.getMacroKeyBinds()[3] != null && isShift()) {
+			execute(activeRobot.getMacroKeyBinds()[3]);
 		}
 	}
 
@@ -1235,8 +1231,8 @@ public class RobotRun extends PApplet {
 	 * A button used for macros.
 	 */
 	public void button_status() {
-		if (getMacroKeyBinds()[4] != null && isShift()) {
-			execute(getMacroKeyBinds()[4]);
+		if (activeRobot.getMacroKeyBinds()[4] != null && isShift()) {
+			execute(activeRobot.getMacroKeyBinds()[4]);
 		}
 	}
 	
@@ -1256,8 +1252,8 @@ public class RobotRun extends PApplet {
 	 * A button used for binding marcos.
 	 */
 	public void button_tool1() {
-		if (getMacroKeyBinds()[0] != null && isShift()) {
-			execute(getMacroKeyBinds()[0]);
+		if (activeRobot.getMacroKeyBinds()[0] != null && isShift()) {
+			execute(activeRobot.getMacroKeyBinds()[0]);
 		}
 	}
 	
@@ -1267,8 +1263,8 @@ public class RobotRun extends PApplet {
 	 * A button used for binding marcos.
 	 */
 	public void button_tool2() {
-		if (getMacroKeyBinds()[1] != null && isShift()) {
-			execute(getMacroKeyBinds()[1]);
+		if (activeRobot.getMacroKeyBinds()[1] != null && isShift()) {
+			execute(activeRobot.getMacroKeyBinds()[1]);
 		}
 	}
 	
@@ -1497,8 +1493,8 @@ public class RobotRun extends PApplet {
 		// Stop any prior Robot movement
 		button_hold();
 		// Safeguard against editing a program while it is running
-		screens.getActiveScreen().getContents().setSelectedColumnIdx(0);
-		progExec(m.getProgIdx(), 0, isStep());
+		screens.getActiveScreen().getContents().setColumnIdx(0);
+		progExec(m.getRobotID(), m.getProgIdx(), 0, ExecType.EXEC_FULL);
 	}
 
 	/**
@@ -1645,18 +1641,6 @@ public class RobotRun extends PApplet {
 	
 	public Screen getLastScreen() {
 		return screens.getPrevScreen();
-	}
-
-	public Macro getMacro(int idx) {
-		return macros.get(idx);
-	}
-	
-	public Macro[] getMacroKeyBinds() {
-		return macroKeyBinds;
-	}
-
-	public ArrayList<Macro> getMacroList() {
-		return macros;
 	}
 
 	public ScreenMode getMode() {
@@ -2200,32 +2184,6 @@ public class RobotRun extends PApplet {
 		}
 		
 		return lines;
-	}
-	
-	public ArrayList<DisplayLine> loadMacros() {
-		ArrayList<DisplayLine> disp = new ArrayList<DisplayLine>();
-		
-		for (int i = 0; i < macros.size(); i += 1) {
-			String[] strArray = macros.get(i).toStringArray();
-			disp.add(new DisplayLine(i, Integer.toString(i + 1), strArray[0], strArray[1], strArray[2]));
-		}
-		
-		return disp;
-	}
-
-	public ArrayList<DisplayLine> loadManualFunct() {
-		ArrayList<DisplayLine> disp = new ArrayList<DisplayLine>();
-		int macroNum = 0;
-
-		for (int i = 0; i < macros.size(); i += 1) {
-			if (macros.get(i).isManual()) {
-				String manFunct = macros.get(i).toString();
-				disp.add(new DisplayLine(macroNum, (macroNum + 1) + " " + manFunct));
-				macroNum += 1;
-			}
-		}
-		
-		return disp;
 	}
 
 	/**
@@ -2993,10 +2951,6 @@ public class RobotRun extends PApplet {
 
 		return false;
 
-	}
-
-	public void setMacroBindings(Macro[] usrKeyBinds) {
-		macroKeyBinds = usrKeyBinds;
 	}
 	
 	public void setRecord(boolean state) {
@@ -4039,7 +3993,7 @@ public class RobotRun extends PApplet {
 							if (r.RID != activeRobot.RID) {
 								// Update the active robot
 								activeRobot = ROBOTS.get(progExecState.getRID());
-								screens.getActiveScreen().getContents().setSelectedColumnIdx(0);
+								screens.getActiveScreen().getContents().setColumnIdx(0);
 							}
 							
 							progExecState.setCurIdx( progExecState.getNextIdx() );
@@ -4062,7 +4016,10 @@ public class RobotRun extends PApplet {
 		}
 		
 		// Update the display
-		screens.getActiveScreen().getContents().setSelectedLineIdx(getInstrLine(getActiveInstIdx()) );
+		if(screens.getActiveScreen().mode == ScreenMode.NAV_PROG_INSTR) {
+			screens.getActiveScreen().getContents().setLineIdx(getInstrLine(getActiveInstIdx()));
+		}
+		
 		updatePendantScreen();
 	}
 

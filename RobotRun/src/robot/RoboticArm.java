@@ -25,6 +25,7 @@ import processing.core.PVector;
 import programming.CamMoveToObject;
 import programming.InstState;
 import programming.Instruction;
+import programming.Macro;
 import programming.MotionInstruction;
 import programming.PosMotionInst;
 import programming.Program;
@@ -161,6 +162,9 @@ public class RoboticArm {
 	 * Defines the last orientation and position of the robot's tool tip.
 	 */
 	private RMatrix lastTipTMatrix;
+	
+	private ArrayList<Macro> macros = new ArrayList<>();
+	private Macro[] macroKeyBinds = new Macro[7];
 	
 	/**
 	 * Creates a robotic arm with the given ID, segment models, and end
@@ -344,6 +348,22 @@ public class RoboticArm {
 		
 		// Initializes the old transformation matrix for the arm model
 		lastTipTMatrix = getFaceplateTMat( getJointAngles() );	
+	}
+	
+	public Macro getMacro(int idx) {
+		return macros.get(idx);
+	}
+	
+	public Macro[] getMacroKeyBinds() {
+		return macroKeyBinds;
+	}
+
+	public ArrayList<Macro> getMacroList() {
+		return macros;
+	}
+	
+	public void setMacroBindings(Macro[] usrKeyBinds) {
+		macroKeyBinds = usrKeyBinds;
 	}
 	
 	/**

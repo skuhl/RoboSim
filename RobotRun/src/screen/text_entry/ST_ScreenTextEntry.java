@@ -100,7 +100,7 @@ public abstract class ST_ScreenTextEntry extends Screen {
 				columnIdx += 2;
 			}
 
-			contents.setSelectedColumnIdx(Math.min(columnIdx, workingText.length() - 1));
+			contents.setColumnIdx(Math.min(columnIdx, workingText.length() - 1));
 			robotRun.updatePendantScreen();
 		}
 	}
@@ -120,17 +120,17 @@ public abstract class ST_ScreenTextEntry extends Screen {
 	@Override
 	public void actionLt() {
 		if (mode.getType() == ScreenType.TYPE_TEXT_ENTRY) {
-			contents.setSelectedColumnIdx(Math.max(0, contents.getColumnIdx() - 1));
+			contents.setColumnIdx(Math.max(0, contents.getColumnIdx() - 1));
 			// Reset function key states
 			for (int idx = 0; idx < letterStates.length; ++idx) {
 				letterStates[idx] = 0;
 			}
 
 		} else if (mode.getType() == ScreenType.TYPE_POINT_ENTRY) {
-			contents.setSelectedColumnIdx(Math.max(1, contents.getColumnIdx() - 1));
+			contents.setColumnIdx(Math.max(1, contents.getColumnIdx() - 1));
 
 		} else if (mode.getType() == ScreenType.TYPE_EXPR_EDIT) {
-			contents.setSelectedColumnIdx(
+			contents.setColumnIdx(
 					contents.getColumnIdx() - ((contents.getColumnIdx() - 4 >= options.size()) ? 4 : 0));
 		}
 	}
@@ -141,11 +141,11 @@ public abstract class ST_ScreenTextEntry extends Screen {
 			// Delete key function
 			if (workingText.length() >= 1) {
 				workingText.deleteCharAt(contents.getColumnIdx());
-				contents.setSelectedColumnIdx(Math.max(0, Math.min(contents.getColumnIdx(), workingText.length() - 1)));
+				contents.setColumnIdx(Math.max(0, Math.min(contents.getColumnIdx(), workingText.length() - 1)));
 			}
 
 		} else if (mode.getType() == ScreenType.TYPE_EXPR_EDIT) {
-			contents.setSelectedColumnIdx(
+			contents.setColumnIdx(
 					contents.getColumnIdx() + ((contents.getColumnIdx() + 4 < options.size()) ? 4 : 0));
 
 		} else {
@@ -160,7 +160,7 @@ public abstract class ST_ScreenTextEntry extends Screen {
 				workingText.append('\0');
 			}
 
-			contents.setSelectedColumnIdx(Math.min(columnIdx + 1,  workingText.length() - 1));
+			contents.setColumnIdx(Math.min(columnIdx + 1,  workingText.length() - 1));
 			robotRun.updatePendantScreen();
 		}
 		
@@ -182,7 +182,7 @@ public abstract class ST_ScreenTextEntry extends Screen {
 				workingText.deleteCharAt(colIdx - 1);
 			}
 
-			contents.setSelectedColumnIdx(Math.max(0, Math.min(colIdx - 1, workingText.length() - 1)));
+			contents.setColumnIdx(Math.max(0, Math.min(colIdx - 1, workingText.length() - 1)));
 		}
 
 		for (int idx = 0; idx < letterStates.length; ++idx) {

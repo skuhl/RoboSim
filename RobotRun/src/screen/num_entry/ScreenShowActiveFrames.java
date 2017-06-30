@@ -11,8 +11,8 @@ public class ScreenShowActiveFrames extends ST_ScreenNumEntry {
 	public ScreenShowActiveFrames(RobotRun r) {
 		super(ScreenMode.ACTIVE_FRAMES, r);
 		
-		contents.setSelectedLineIdx(0);
-		contents.setSelectedColumnIdx(1);
+		contents.setLineIdx(0);
+		contents.setColumnIdx(1);
 		String initialText = Integer.toString(robotRun.getActiveRobot().getActiveToolIdx() + 1);
 		workingText = new StringBuilder(initialText);
 	}

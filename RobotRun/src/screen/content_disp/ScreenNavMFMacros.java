@@ -1,6 +1,7 @@
 package screen.content_disp;
 
 import core.RobotRun;
+import robot.RoboticArm;
 import screen.ScreenMode;
 
 public class ScreenNavMFMacros extends ST_ScreenListContents {
@@ -16,7 +17,7 @@ public class ScreenNavMFMacros extends ST_ScreenListContents {
 
 	@Override
 	protected void loadContents() {
-		contents.setLines(robotRun.loadManualFunct());
+		contents.setLines(loadManualFunct());
 	}
 
 	@Override
@@ -31,8 +32,10 @@ public class ScreenNavMFMacros extends ST_ScreenListContents {
 	@Override
 	public void actionEntr() {
 		if(robotRun.isShift()) {
-			int macro_idx = contents.getCurrentItemIdx();
-			robotRun.execute(robotRun.getMacro(macro_idx));
+			RoboticArm r = robotRun.getActiveRobot();
+			int idx = contents.getCurrentItemIdx();
+			
+			robotRun.execute(r.getMacro(idx));
 		}
 	}
 }

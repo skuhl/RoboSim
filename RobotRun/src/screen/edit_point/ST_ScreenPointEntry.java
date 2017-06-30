@@ -189,7 +189,7 @@ public abstract class ST_ScreenPointEntry extends Screen {
 		if (entry.length() > 1) {
 			
 			if (idx > 0) {
-				contents.setSelectedColumnIdx(idx--);
+				contents.setColumnIdx(idx--);
 			}
 			
 			entry.deleteCharAt(idx);
