@@ -63,6 +63,8 @@ public abstract class ST_ScreenLineSelect extends Screen {
 					}
 					
 					direction = UP;
+				} else {
+					direction = -1;
 				}
 				
 				// special case for select statement column navigation
@@ -100,6 +102,8 @@ public abstract class ST_ScreenLineSelect extends Screen {
 				}
 				
 				direction = DN;
+			} else {
+				direction = -1;
 			}
 
 			// special case for select statement column navigation
