@@ -23,6 +23,7 @@ import processing.core.PConstants;
 import processing.core.PGraphics;
 import processing.core.PVector;
 import programming.CamMoveToObject;
+import programming.InstElement;
 import programming.InstState;
 import programming.Instruction;
 import programming.MotionInstruction;
@@ -1106,7 +1107,7 @@ public class RoboticArm {
 	public Instruction getInstToEdit(Program p, int idx) {
 		// Valid active program and instruction index
 		if (p != null && idx >= 0 && idx < p.getNumOfInst()) {
-			Instruction inst = p.get(idx);
+			Instruction inst = p.getInstAt(idx);
 			
 			pushInstState(InstOp.REPLACED, idx, inst.clone());
 			
@@ -1888,17 +1889,18 @@ public class RoboticArm {
 	 * @return		The instruction, which was removed
 	 */
 	public Instruction rmInstAt(Program p, int idx) {
-		Instruction removed = null;
-		
 		if (p != null && idx >= 0 && idx < p.getNumOfInst()) {
-			removed = p.rmInstAt(idx);
+			InstElement e = p.rmInstAt(idx);
+			Instruction removed = e.getInst();
 			
-			if (removed != null) {
+			if (e != null) {
 				pushInstState(InstOp.REMOVED, idx, removed);
 			}
+			
+			return removed;
 		}
 		
-		return removed;
+		return null;
 	}
 	
 	/**
@@ -2236,7 +2238,7 @@ public class RoboticArm {
 		ClassCastException, NullPointerException {
 		
 		if (newPt != null) {
-			PosMotionInst mInst = (PosMotionInst) p.get(instIdx);
+			PosMotionInst mInst = (PosMotionInst) p.getInstAt(instIdx);
 			int posNum = mInst.getCircPosIdx();
 			
 			if (mInst.getCircPosType() == Fields.PTYPE_PREG) {
@@ -2285,7 +2287,7 @@ public class RoboticArm {
 		ClassCastException, NullPointerException {
 		
 		if (newPt != null) {
-			PosMotionInst mInst = (PosMotionInst)p.get(instIdx);
+			PosMotionInst mInst = (PosMotionInst)p.getInstAt(instIdx);
 			int posNum = mInst.getPosIdx();
 			
 			if (mInst.getPosType() == Fields.PTYPE_PREG) {

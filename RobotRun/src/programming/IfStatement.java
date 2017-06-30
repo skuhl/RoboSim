@@ -97,7 +97,7 @@ public class IfStatement extends Instruction implements ExpressionEvaluation {
 
 	@Override
 	public String toString() {
-		return "IF " + expr.toString() + " : " + instr.toString();
+		return String.format("IF %s : %s\n", expr, instr);
 	}
 
 	@Override
