@@ -34,7 +34,7 @@ public class ScreenSelectInstrDelete extends ST_ScreenLineSelect {
 
 		for (int i = 0; i < lineSelectState.length; i += 1) {
 			if (lineSelectState[i]) {
-				r.rmInstAt(p, instrIdx);
+				r.rmInstAt(p, instrIdx, true);
 			} else {
 				instrIdx += 1;
 			}

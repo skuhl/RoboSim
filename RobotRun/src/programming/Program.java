@@ -244,7 +244,8 @@ public class Program implements Iterable<InstElement> {
 	}
 	
 	/**
-	 * Removes an instruction based off its ID.
+	 * Removes the instruction with the given ID, if such an instruction exists
+	 * in this program.
 	 * 
 	 * @param id	The ID of the instruction to remove
 	 * @return		The removed instruction

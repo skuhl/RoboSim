@@ -3,6 +3,7 @@ package screen.num_entry;
 import core.RobotRun;
 import programming.Instruction;
 import programming.Program;
+import robot.RoboticArm;
 import screen.ScreenMode;
 
 public class ScreenConfirmInsert extends ST_ScreenNumEntry {
@@ -29,12 +30,13 @@ public class ScreenConfirmInsert extends ST_ScreenNumEntry {
 	
 	@Override
 	public void actionEntr() {
+		RoboticArm r = robotRun.getActiveRobot();
 		Program p = robotRun.getActiveProg();
 		
 		try {
 			int lines_to_insert = Integer.parseInt(workingText.toString());
 			for (int i = 0; i < lines_to_insert; i += 1) {
-				p.addInstAt(robotRun.getActiveInstIdx(), new Instruction());
+				r.addAt(p, robotRun.getActiveInstIdx() + i, new Instruction(), i == 0);
 			}
 			
 			robotRun.updateInstructions();

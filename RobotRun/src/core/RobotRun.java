@@ -2566,7 +2566,7 @@ public class RobotRun extends PApplet {
 		if (getActiveInstIdx() != p.getNumOfInst()) {
 			r.replaceInstAt(p, getActiveInstIdx(), call);
 		} else {
-			p.addInstAtEnd(call);
+			r.addInstAtEnd(p, call, false);
 		}
 	}
 
@@ -2578,7 +2578,7 @@ public class RobotRun extends PApplet {
 		if (getActiveInstIdx() != p.getNumOfInst()) {
 			r.replaceInstAt(p, getActiveInstIdx(), f);
 		} else {
-			p.addInstAtEnd(f);
+			r.addInstAtEnd(p, f, false);
 		}
 	}
 
@@ -2590,7 +2590,7 @@ public class RobotRun extends PApplet {
 		if (getActiveInstIdx() != p.getNumOfInst()) {
 			r.replaceInstAt(p, getActiveInstIdx(), stmt);
 		} else {
-			p.addInstAtEnd(stmt);
+			r.addInstAtEnd(p, stmt, false);
 		}
 	}
 	
@@ -2603,7 +2603,7 @@ public class RobotRun extends PApplet {
 		if (getActiveInstIdx() != p.getNumOfInst()) {
 			r.replaceInstAt(p, getActiveInstIdx(), stmt);
 		} else {
-			p.addInstAtEnd(stmt);
+			r.addInstAtEnd(p, stmt, false);
 		}
 	}
 
@@ -2616,7 +2616,7 @@ public class RobotRun extends PApplet {
 			r.replaceInstAt(p, getActiveInstIdx(), io);
 
 		} else {
-			p.addInstAtEnd(io);
+			r.addInstAtEnd(p, io, false);
 		}
 	}
 
@@ -2628,7 +2628,7 @@ public class RobotRun extends PApplet {
 		if (getActiveInstIdx() != p.getNumOfInst()) {
 			r.replaceInstAt(p, getActiveInstIdx(), j);
 		} else {
-			p.addInstAtEnd(j);
+			r.addInstAtEnd(p, j, false);
 		}
 	}
 
@@ -2641,7 +2641,7 @@ public class RobotRun extends PApplet {
 		if (getActiveInstIdx() != p.getNumOfInst()) {
 			r.replaceInstAt(p, getActiveInstIdx(), l);
 		} else {
-			p.addInstAtEnd(l);
+			r.addInstAtEnd(p, l, false);
 		}
 	}
 
@@ -2674,7 +2674,7 @@ public class RobotRun extends PApplet {
 			} 
 			else {
 				// Insert the new motion instruction
-				getActiveProg().addInstAt(prog.getNumOfInst(), mInst);
+				activeRobot.addInstAtEnd(prog, mInst, false);
 			}
 		}
 		
@@ -2724,7 +2724,7 @@ public class RobotRun extends PApplet {
 		if (getActiveInstIdx() != p.getNumOfInst()) {
 			r.replaceInstAt(p, getActiveInstIdx(), stmt);
 		} else {
-			p.addInstAtEnd(stmt);
+			r.addInstAtEnd(p, stmt, false);
 		}
 	}
 
@@ -2736,7 +2736,7 @@ public class RobotRun extends PApplet {
 		if (getActiveInstIdx() != p.getNumOfInst()) {
 			r.replaceInstAt(p, getActiveInstIdx(), stmt);
 		} else {
-			p.addInstAtEnd(stmt);
+			r.addInstAtEnd(p, stmt, false);
 		}
 	}
 
@@ -2748,7 +2748,7 @@ public class RobotRun extends PApplet {
 		if (getActiveInstIdx() != p.getNumOfInst()) {
 			r.replaceInstAt(p, getActiveInstIdx(), rcall);
 		} else {
-			p.addInstAtEnd(rcall);
+			r.addInstAtEnd(p, rcall, false);
 		}
 	}
 	
@@ -2760,7 +2760,7 @@ public class RobotRun extends PApplet {
 		if (getActiveInstIdx() != p.getNumOfInst()) {
 			r.replaceInstAt(p, getActiveInstIdx(), stmt);
 		} else {
-			p.addInstAtEnd(stmt);
+			r.addInstAtEnd(p, stmt, false);
 		}
 	}
 
@@ -2783,6 +2783,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	public void pasteInstructions(int options) {
+		RoboticArm r = activeRobot;
 		ArrayList<Instruction> pasteList = new ArrayList<>();
 		Program p = getActiveProg();
 
@@ -2838,7 +2839,7 @@ public class RobotRun extends PApplet {
 				instr = pasteList.get(i);
 			}
 			
-			p.addInstAt(getActiveInstIdx() + i, instr);
+			r.addAt(p, getActiveInstIdx() + i, instr, i == 0);
 		}
 	}
 	

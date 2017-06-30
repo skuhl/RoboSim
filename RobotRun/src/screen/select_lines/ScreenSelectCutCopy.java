@@ -42,7 +42,7 @@ public class ScreenSelectCutCopy extends ST_ScreenLineSelect {
 			
 			if (lineSelectState[i]) {
 				robotRun.clipBoard.add(p.getInstAt(remIdx));
-				r.rmInstAt(p, remIdx);
+				r.rmInstAt(p, remIdx, true);
 				
 			} else {
 				remIdx += 1;
