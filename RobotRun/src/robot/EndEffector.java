@@ -113,11 +113,11 @@ public class EndEffector extends RSegment {
 	}
 	
 	public int getState() {
-		return reg.state;
+		return reg.getState();
 	}
 	
 	public void setState(int newState) {
-		reg.state = newState;
+		reg.setState(newState);
 	}
 	
 }

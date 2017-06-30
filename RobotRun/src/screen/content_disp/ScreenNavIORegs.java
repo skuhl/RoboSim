@@ -29,6 +29,18 @@ public class ScreenNavIORegs extends ST_ScreenListContents {
 	}
 	
 	@Override
+	public void actionUp() {
+		// Disable page up functionality
+		contents.moveUp(false);
+	}
+	
+	@Override
+	public void actionDn() {
+		// Disable page down functionality
+		contents.moveDown(false);
+	}
+	
+	@Override
 	public void actionLt() {
 		// Disable the ability to change columns
 	}
@@ -46,7 +58,8 @@ public class ScreenNavIORegs extends ST_ScreenListContents {
 		
 		if (ioReg != null) {
 			// Toggle the state of the I/O register
-			ioReg.state = (ioReg.state == Fields.ON) ? Fields.OFF : Fields.ON;
+			int curState = ioReg.getState();
+			ioReg.setState( (curState == Fields.ON) ? Fields.OFF : Fields.ON );
 			robotRun.updatePendantScreen();
 		}
 	}

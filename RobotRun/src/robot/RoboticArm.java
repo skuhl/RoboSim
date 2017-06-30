@@ -1605,6 +1605,26 @@ public class RoboticArm {
 	}
 	
 	/**
+	 * Certain end effectors have a trace functionality associated with certain
+	 * states of the end effector. This method evaluates the state of and the
+	 * active end effector of this robot and determines if the trace
+	 * functionality is active.
+	 * 
+	 * @return	If the trace functionality is active based on the robot's end
+	 * 			effector is enabled
+	 */
+	public boolean isEETraceEnabled() {
+		if (getEEState() == Fields.ON) {
+			/* The trace functionality is active when the wielder or glue gun
+			 * end effectors are active for a robot and the end effector state
+			 * is on. */
+			return activeEEIdx == 4 || activeEEIdx == 5;
+		}
+		
+		return false;
+	}
+	
+	/**
 	 * @return	Is the given part being held by the robot
 	 */
 	public boolean isHeld(Part p) {
@@ -1964,7 +1984,7 @@ public class RoboticArm {
 		IORegister ioReg = getIOReg(rdx);
 		
 		if (ioReg != null) {
-			ioReg.state = newState;
+			ioReg.setState(newState);
 		}
 	}
 	

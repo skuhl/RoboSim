@@ -77,6 +77,7 @@ import undo.WOUndoCurrent;
 import undo.WOUndoDelete;
 import undo.WOUndoState;
 import window.WGUI;
+import window.WGUI_Buttons;
 
 /**
  * TODO general comments
@@ -1726,7 +1727,7 @@ public class RobotRun extends PApplet {
 	 * @return Whether or not bounding boxes are displayed
 	 */
 	public boolean isOBBRendered() {
-		return !UI.getButtonState("ToggleOBBs");
+		return !UI.getButtonState(WGUI_Buttons.ObjToggleBounds);
 	}
 
 	/**
@@ -2184,7 +2185,7 @@ public class RobotRun extends PApplet {
 			IORegister ioReg = r.getIOReg(idx);
 			String col0 = String.format("IO[%2d:%-10s] = ", idx,
 					ioReg.comment);
-			lines.add(new DisplayLine(idx, 0, col0, (ioReg.state == 0) ?
+			lines.add(new DisplayLine(idx, 0, col0, (ioReg.getState() == 0) ?
 					"OFF" : "ON") );
 		}
 		
@@ -3156,12 +3157,15 @@ public class RobotRun extends PApplet {
 
 	/**
 	 * Is the trace function enabled. The user can enable/disable this function
-	 * with a button in the miscellaneous window.
+	 * with a button in the miscellaneous window. In addition, the active
+	 * robot's end effector trace overrides the state of the trace toggle
+	 * button ( see RoboticArm.isEETraceEnabled() ).
 	 * 
 	 * @return	If the trace functionality is enabled
 	 */
 	public boolean traceEnabled() {
-		return UI.getButtonState("ToggleTrace");
+		return activeRobot.isEETraceEnabled() ||
+				UI.getButtonState(WGUI_Buttons.RobotToggleTrace);
 	}
 	
 	/**
@@ -3392,15 +3396,19 @@ public class RobotRun extends PApplet {
 	 */
 	private void drawTrace(PGraphics g) {		
 		if (tracePts.size() > 1) {
-			PVector lastPt = tracePts.getFirst();
+			PVector lastPt = null;
 			
 			g.pushStyle();
 			g.stroke(0);
 			g.strokeWeight(3);
 			
 			for(PVector curPt : tracePts) {
-				
-				g.line(lastPt.x, lastPt.y, lastPt.z, curPt.x, curPt.y, curPt.z);
+				if (lastPt != null) {
+					/* Draw lines between each non-null point stored in the
+					 * trace buffer */
+					g.line(lastPt.x, lastPt.y, lastPt.z, curPt.x, curPt.y,
+							curPt.z);
+				}
 				
 				lastPt = curPt;
 			}
@@ -3688,9 +3696,7 @@ public class RobotRun extends PApplet {
 			}
 		}
 		
-		if (traceEnabled()) {
-			drawTrace(g);
-		}
+		drawTrace(g);
 		
 		/* Render the axes of the selected World Object */
 		

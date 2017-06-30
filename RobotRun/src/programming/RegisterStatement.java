@@ -119,7 +119,7 @@ public class RegisterStatement extends Instruction implements ExpressionEvaluati
 			// Update an I/O register
 			boolean b = ((OperandBool)result).getBoolValue();
 			if(reg instanceof IORegister) {
-				((IORegister)reg).state = b ? Fields.ON : Fields.OFF;
+				((IORegister)reg).setState( (b) ? Fields.ON : Fields.OFF );
 				return 0;
 			}
 		}
