@@ -58,17 +58,34 @@ public class Program implements Iterable<InstElement> {
 	}
 	
 	public int addInstAt(int idx, Instruction inst) {
-		int nextID = getNextID();
-		
-		if (nextID >= 0) {
-			InstElement e = new InstElement(nextID, inst);
-			instructions.add(idx, e);
+		if (idx >= 0 && idx <= instructions.size()) {
+			int nextID = getNextID();
 			
-		} else {
-			System.err.print("Program is full!");
+			if (nextID >= 0) {
+				InstElement e = new InstElement(nextID, inst);
+				instructions.add(idx, e);
+				
+			} else {
+				System.err.print("Program is full!");
+			}
+			
+			return nextID;
 		}
 		
-		return nextID;
+		return -1;
+	}
+	
+	/**
+	 * Adds the given instruction element to the program's list of instruction
+	 * elements at the given index.
+	 * 
+	 * @param idx	The index at which to add the given instruction element
+	 * @param e		The element to add to this program
+	 */
+	protected void addAt(int idx, InstElement e) {
+		if (idx >= 0 && idx < instructions.size()) {
+			instructions.add(idx, e);
+		}
 	}
 
 	/**
@@ -244,13 +261,26 @@ public class Program implements Iterable<InstElement> {
 	}
 	
 	/**
+	 * Replaces the instruction element at the given index with the given
+	 * instruction element.
+	 * 
+	 * @param idx	The index at which to put the given instruction element
+	 * @param e		The element to put in this program
+	 */
+	protected void replace(int idx, InstElement e) {
+		if (idx >= 0 && idx < instructions.size()) {
+			instructions.set(idx, e);
+		}
+	}
+	
+	/**
 	 * Removes the instruction with the given ID, if such an instruction exists
 	 * in this program.
 	 * 
 	 * @param id	The ID of the instruction to remove
-	 * @return		The removed instruction
+	 * @return		The removed instruction element
 	 */
-	public Instruction rmInst(int id) {
+	public InstElement rmInst(int id) {
 		for (int idx = 0; idx < instructions.size(); ++idx) {
 			InstElement e = instructions.get(idx);
 			if (e.getID() == id) {
@@ -258,7 +288,7 @@ public class Program implements Iterable<InstElement> {
 				instructions.remove(idx);
 				// Save past ID for later use
 				pastInstIDs.addLast(id);
-				return e.getInst();
+				return e;
 			}
 		}
 		

@@ -24,6 +24,7 @@ import processing.core.PGraphics;
 import processing.core.PVector;
 import programming.CamMoveToObject;
 import programming.InstElement;
+import programming.InstUndoState;
 import programming.Instruction;
 import programming.MotionInstruction;
 import programming.PosMotionInst;
@@ -34,7 +35,6 @@ import regs.IORegister;
 import regs.PositionRegister;
 import regs.RTrace;
 import ui.DisplayLine;
-import undo.InstUndoState;
 
 public class RoboticArm {
 	
@@ -402,8 +402,8 @@ public class RoboticArm {
 	 */
 	public void addAt(Program p, int idx, Instruction inst, boolean group) {
 		if (p != null && inst != null && idx >= 0 && idx <= p.getNumOfInst()) {
-			int id = p.addInstAt(idx, inst);
-			pushUndoState(InstUndoType.INSERTED, id, p, inst, group);
+			p.addInstAt(idx, inst);
+			pushUndoState(InstUndoType.INSERTED, p, idx, p.get(idx), group);
 		}
 	}
 	
@@ -1141,9 +1141,10 @@ public class RoboticArm {
 	public Instruction getInstToEdit(Program p, int idx) {
 		// Valid active program and instruction index
 		if (p != null && idx >= 0 && idx < p.getNumOfInst()) {
-			Instruction inst = p.getInstAt(idx);
+			InstElement e = p.get(idx);
 			
-			pushUndoState(InstUndoType.EDITED, idx, p, inst.clone(), false);
+			pushUndoState(InstUndoType.EDITED, p, idx, new InstElement(e.getID(),
+					e.getInst().clone()), false);
 			
 			/* TEST CODE *
 			try {
@@ -1154,7 +1155,7 @@ public class RoboticArm {
 			}
 			/**/
 			
-			return inst;
+			return e.getInst();
 		}
 		
 		return null;
@@ -1771,7 +1772,6 @@ public class RoboticArm {
 				
 				undoState.undo();
 				PROG_UNDO.pop();
-				undoState = PROG_UNDO.peek();
 			}
 			
 		} else if (Fields.DEBUG) {
@@ -1809,8 +1809,8 @@ public class RoboticArm {
 	 * @param inst
 	 * @param group
 	 */
-	private void pushUndoState(InstUndoType type, int idx, Program prog,
-			Instruction inst, boolean group) {
+	private void pushUndoState(InstUndoType type, Program prog, int idx,
+			InstElement inst, boolean group) {
 		
 		if (PROG_UNDO.size() > Program.MAX_UNDO_SIZE) {
 			PROG_UNDO.remove(0);
@@ -1832,7 +1832,7 @@ public class RoboticArm {
 			}
 		}
 		
-		InstUndoState undoState = new InstUndoState(type, gid, prog, inst, idx);
+		InstUndoState undoState = new InstUndoState(type, gid, prog, idx, inst);
 		PROG_UNDO.push(undoState);
 		Fields.debug("%s\n", undoState);
 	}
@@ -1887,20 +1887,19 @@ public class RoboticArm {
 	 * 				instruction
 	 */
 	public Instruction replaceInstAt(Program p, int idx, Instruction inst) {
-		Instruction replaced = null;
-		
 		// Valid active program and instruction index
-		if (p != null && idx >= 0 && idx < p.getNumOfInst()) {	
-			replaced = p.replaceInstAt(idx, inst);
+		if (p != null && idx >= 0 && idx < p.getNumOfInst()) {
+			InstElement e = p.get(idx);
+			InstElement replaced = new InstElement(e.getID(), e.getInst());
+			p.replaceInstAt(idx, inst);
 			
 			if (replaced != null) {
-				pushUndoState(InstUndoType.REPLACED, idx, p, replaced, false);
-				
-				Fields.debug("\nREPLACE %d %s\n\n", idx, inst.getClass());
+				pushUndoState(InstUndoType.REPLACED, p, idx, replaced, false);
+				return replaced.getInst();
 			}
 		}
 		
-		return replaced;
+		return null;
 	}
 	
 	/**
@@ -1951,12 +1950,8 @@ public class RoboticArm {
 			InstElement e = p.rmInstAt(idx);
 			
 			if (e != null) {
-				Instruction removed = e.getInst();
-				pushUndoState(InstUndoType.REMOVED, idx, p, removed, group);
-				
-				Fields.debug("\nREMOVE %d %s\n\n", idx, removed.getClass());
-				
-				return removed;
+				pushUndoState(InstUndoType.REMOVED,  p, idx, e, group);
+				return e.getInst();
 			}
 		}
 		

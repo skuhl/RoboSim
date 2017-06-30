@@ -1,8 +1,7 @@
-package undo;
+package programming;
 
 import enums.InstUndoType;
-import programming.Instruction;
-import programming.Program;
+import global.Fields;
 
 public class InstUndoState {
 	private InstUndoType type;
@@ -10,17 +9,18 @@ public class InstUndoState {
 	
 	private Program parent;
 	
-	private Instruction instRef;
-	private int ID;
+	private int idx;
+	private InstElement elemRef;
 	
 	public InstUndoState(InstUndoType type, int groupID, Program parent,
-			Instruction ref, int ID) {
+			int idx, InstElement ref) {
 		
 		this.type = type;
 		this.groupID = groupID;
 		this.parent = parent;
-		this.instRef = ref;
-		this.ID = ID;
+		this.idx = idx;
+		this.elemRef = ref;
+		
 	}
 	
 	public int getGID() {
@@ -32,25 +32,27 @@ public class InstUndoState {
 	 * state.
 	 */
 	public void undo() {
+		Fields.debug("UNDO %s\n", this);
+		
 		if (type == InstUndoType.EDITED || type == InstUndoType.REPLACED) {
 			// Undo an edit or replacement
-			parent.replaceInstAt(ID, instRef);
+			parent.replace(idx, elemRef);
 			
 		} else if (type == InstUndoType.INSERTED) {
 			// Undo an insertion
-			parent.rmInst(ID);
+			parent.rmInst(elemRef.getID());
 			
 		} else if (type == InstUndoType.REMOVED) {
 			// Undo a deletion
-			parent.addInstAt(ID, instRef);
+			parent.addAt(idx, elemRef);
 		}
-		
 	}
 	
 	@Override
 	public String toString() {
-		return String.format("%s %d %s %s %d", type.name(), groupID,
-				parent.getName(), instRef.getClass(), ID);
+		return String.format("%s %d %s %d %s %d", type.name(), groupID,
+				parent.getName(), idx, elemRef.getInst().getClass(),
+				elemRef.getID());
 	}
 	
 }

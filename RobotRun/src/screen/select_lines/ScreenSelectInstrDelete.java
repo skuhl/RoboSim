@@ -31,10 +31,13 @@ public class ScreenSelectInstrDelete extends ST_ScreenLineSelect {
 		Program p = robotRun.getActiveProg();
 		RoboticArm r = robotRun.getActiveRobot();
 		int instrIdx = 0;
+		boolean isFirst = true;
 
 		for (int i = 0; i < lineSelectState.length; i += 1) {
 			if (lineSelectState[i]) {
-				r.rmInstAt(p, instrIdx, true);
+				r.rmInstAt(p, instrIdx, !isFirst);
+				isFirst = false;
+				
 			} else {
 				instrIdx += 1;
 			}

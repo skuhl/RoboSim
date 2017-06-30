@@ -2839,7 +2839,7 @@ public class RobotRun extends PApplet {
 				instr = pasteList.get(i);
 			}
 			
-			r.addAt(p, getActiveInstIdx() + i, instr, i == 0);
+			r.addAt(p, getActiveInstIdx() + i, instr, i != 0);
 		}
 	}
 	
