@@ -50,6 +50,8 @@ public abstract class Screen {
 	public int getOptionIdx() { return options.getLineIdx(); }
 	public int getOptionStart() { return options.getRenderStart(); }
 	
+	public void setContentIdx(int i) { contents.setSelectedLineIdx(i); }
+	
 	public ScreenState getScreenState() {
 		ScreenState s = new ScreenState(mode, contents.getLineIdx(), contents.getColumnIdx(),
 				contents.getRenderStart(), options.getLineIdx(), options.getRenderStart());

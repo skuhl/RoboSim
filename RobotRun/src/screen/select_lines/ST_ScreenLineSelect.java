@@ -2,8 +2,6 @@ package screen.select_lines;
 
 import core.RobotRun;
 import global.Fields;
-import programming.Instruction;
-import programming.SelectStatement;
 import screen.Screen;
 import screen.ScreenMode;
 import screen.ScreenState;
@@ -31,7 +29,7 @@ public abstract class ST_ScreenLineSelect extends Screen {
 
 	@Override
 	protected void loadContents() {
-		contents.setLines(robotRun.loadInstructions(robotRun.getActiveProg(), false));
+		contents.setLines(robotRun.loadInstructions(robotRun.getActiveProg(), true));
 	}
 	
 	@Override
@@ -49,14 +47,15 @@ public abstract class ST_ScreenLineSelect extends Screen {
 		if (!robotRun.isProgExec()) {
 			try {
 				// Lock movement when a program is running
-				Instruction instr = robotRun.getActiveInstruction();
-				int prevLine = contents.getItemLineIdx();
-				int selectStart = contents.getLineIdx();
-				robotRun.setActiveInstIdx(contents.moveUp(robotRun.isShift()));
-				int curLine = contents.getItemLineIdx();
+				int selectStart = contents.getCurrentItemIdx();
+				
+				do {
+					robotRun.setActiveInstIdx(contents.moveUp(robotRun.isShift()));
+				} while(contents.getItemLineIdx() != 0);
+				
 				
 				if(robotRun.isShift()) {
-					for(int i = selectStart; i >= contents.getLineIdx(); i -= 1) {
+					for(int i = selectStart; i >= contents.getCurrentItemIdx(); i -= 1) {
 						if(direction != UP || i < selectStart) {
 							lineSelectState[i] = !lineSelectState[i];
 						}
@@ -65,11 +64,6 @@ public abstract class ST_ScreenLineSelect extends Screen {
 					direction = UP;
 				} else {
 					direction = -1;
-				}
-				
-				// special case for select statement column navigation
-				if (instr instanceof SelectStatement && curLine == 0 && prevLine == 1) {
-					contents.setSelectedColumnIdx(contents.getColumnIdx() + 3);
 				}
 				
 			} catch (IndexOutOfBoundsException IOOBEx) {
@@ -88,14 +82,15 @@ public abstract class ST_ScreenLineSelect extends Screen {
 	public void actionDn() {
 		if (!robotRun.isProgExec()) {
 			// Lock movement when a program is running
-			Instruction instr = robotRun.getActiveInstruction();
-			int prevIdx = contents.getItemColumnIdx();
-			int selectStart = contents.getLineIdx();
-			robotRun.setActiveInstIdx(contents.moveDown(robotRun.isShift()));
-			int curLine = contents.getItemLineIdx();
+			int selectStart = contents.getCurrentItemIdx();
+			
+			do {
+				robotRun.setActiveInstIdx(contents.moveDown(robotRun.isShift()));
+			} while(contents.getItemLineIdx() != 0);
+				
 			
 			if(robotRun.isShift()) {
-				for(int i = selectStart; i <= contents.getLineIdx(); i += 1) {
+				for(int i = selectStart; i <= contents.getCurrentItemIdx(); i += 1) {
 					if(direction != DN || i > selectStart) {
 						lineSelectState[i] = !lineSelectState[i];
 					}
@@ -104,15 +99,6 @@ public abstract class ST_ScreenLineSelect extends Screen {
 				direction = DN;
 			} else {
 				direction = -1;
-			}
-
-			// special case for select statement column navigation
-			if (instr instanceof SelectStatement && curLine > 0) {
-				if (prevIdx >= 3) {
-					contents.setSelectedColumnIdx(prevIdx - 3);
-				} else {
-					contents.setSelectedColumnIdx(0);
-				}
 			}
 
 			Fields.debug("line=%d col=%d inst=%d TRS=%d\n",

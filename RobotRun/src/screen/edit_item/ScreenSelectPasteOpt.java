@@ -1,23 +1,13 @@
-package screen.opt_menu;
+package screen.edit_item;
 
 import core.RobotRun;
 import global.Fields;
 import screen.ScreenMode;
 
-public class ScreenSelectPasteOpt extends ST_ScreenOptionsMenu {
+public class ScreenSelectPasteOpt extends ST_ScreenEditItem {
 
 	public ScreenSelectPasteOpt(RobotRun r) {
 		super(ScreenMode.SELECT_PASTE_OPT, r);
-	}
-
-	@Override
-	protected String loadHeader() {
-		return robotRun.getActiveProg().getName();
-	}
-	
-	@Override
-	protected void loadContents() {
-		contents.setLines(robotRun.loadInstructions(robotRun.getActiveProg(), false));
 	}
 
 	@Override
@@ -54,6 +44,10 @@ public class ScreenSelectPasteOpt extends ST_ScreenOptionsMenu {
 				
 		robotRun.lastScreen();
 		robotRun.lastScreen();
-		robotRun.lastScreen();
+		
+		if(robotRun.getLastScreen().mode == ScreenMode.NAV_PROG_INSTR) {
+			robotRun.getLastScreen().setContentIdx(contents.getLineIdx());
+			robotRun.lastScreen();
+		}
 	}
 }
