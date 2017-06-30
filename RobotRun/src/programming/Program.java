@@ -3,12 +3,9 @@ package programming;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.Queue;
 import java.util.Set;
 
 import geom.Point;
-import robot.RoboticArm;
 
 public class Program implements Iterable<InstElement> {
 	
@@ -23,8 +20,8 @@ public class Program implements Iterable<InstElement> {
 	public static final int MAX_UNDO_SIZE;
 	
 	static {
-		MAX_SIZE = Integer.MAX_VALUE;
-		MAX_UNDO_SIZE = 40;
+		MAX_SIZE = 2000;
+		MAX_UNDO_SIZE = 50;
 	}
 	
 	private String name;
@@ -36,7 +33,6 @@ public class Program implements Iterable<InstElement> {
 	private final HashMap<Integer, Point> LPosReg;
 	
 	private final ArrayList<InstElement> instructions;
-	private final LinkedList<Integer> pastInstIDs;
 	
 	private int nextID;
 	private int nextPosition;
@@ -47,7 +43,6 @@ public class Program implements Iterable<InstElement> {
 		LPosReg = new HashMap<>();
 		
 		instructions = new ArrayList<>();
-		pastInstIDs = new LinkedList<>();
 		
 		nextID = 0;
 		nextPosition = 0;
@@ -58,7 +53,9 @@ public class Program implements Iterable<InstElement> {
 	}
 	
 	public int addInstAt(int idx, Instruction inst) {
-		if (idx >= 0 && idx <= instructions.size()) {
+		if (instructions.size() < MAX_SIZE && idx >= 0 &&
+				idx <= instructions.size()) {
+			
 			int nextID = getNextID();
 			
 			if (nextID >= 0) {
@@ -250,7 +247,6 @@ public class Program implements Iterable<InstElement> {
 			InstElement e = get(idx);
 			// Remove current instruction
 			Instruction old = e.getInst();
-			pastInstIDs.addLast(e.getID());
 			// Add the new instruction
 			e.setElement(getNextID(), inst);
 			
@@ -286,8 +282,6 @@ public class Program implements Iterable<InstElement> {
 			if (e.getID() == id) {
 				// Remove the instruction's ID from the list ordering
 				instructions.remove(idx);
-				// Save past ID for later use
-				pastInstIDs.addLast(id);
 				return e;
 			}
 		}
@@ -305,12 +299,6 @@ public class Program implements Iterable<InstElement> {
 	 */
 	public InstElement rmInstAt(int idx) {
 		InstElement removed = instructions.remove(idx);
-		
-		if (removed != null) {
-			// Save past ID for later use
-			pastInstIDs.addLast(removed.getID());
-		}
-		
 		return removed;
 	}
 	
@@ -352,11 +340,7 @@ public class Program implements Iterable<InstElement> {
 	 * @return	The next unique ID for an instruction
 	 */
 	private int getNextID() {
-		if (pastInstIDs.size() > MAX_UNDO_SIZE) {
-			// Use IDs of instructions removed from the program
-			return pastInstIDs.removeFirst();
-			
-		} else if (nextID < Integer.MAX_VALUE) {
+		if (nextID < Integer.MAX_VALUE) {
 			// Update the ID counter
 			return nextID++;
 		}

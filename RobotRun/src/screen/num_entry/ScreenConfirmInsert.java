@@ -35,11 +35,14 @@ public class ScreenConfirmInsert extends ST_ScreenNumEntry {
 		
 		try {
 			int lines_to_insert = Integer.parseInt(workingText.toString());
-			for (int i = 0; i < lines_to_insert; i += 1) {
-				r.addAt(p, robotRun.getActiveInstIdx() + i, new Instruction(), i != 0);
-			}
 			
-			robotRun.updateInstructions();
+			if (lines_to_insert <= 100) {
+				for (int i = 0; i < lines_to_insert; i += 1) {
+					r.addAt(p, robotRun.getActiveInstIdx() + i, new Instruction(), i != 0);
+				}
+				
+				robotRun.updateInstructions();
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

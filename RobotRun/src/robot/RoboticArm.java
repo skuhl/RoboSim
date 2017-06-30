@@ -1754,7 +1754,7 @@ public class RoboticArm {
 	 * Reverts the active program's undo states that have the same group ID as
 	 * the undo state on the top of the program undo stack.
 	 */
-	public void progUndo() {
+	public void undoProgramEdit() {
 		
 		if (!PROG_UNDO.isEmpty()) {
 			InstUndoState undoState = PROG_UNDO.pop();
@@ -1801,21 +1801,24 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Adds the undo state defined the given parameters to the program undo
+	 * stack.
 	 * 
-	 * @param type
-	 * @param idx
-	 * @param prog
-	 * @param inst
-	 * @param group
+	 * @param type	The undo state type (i.e. edit, remove, etc.)
+	 * @param idx	The index in the program of the modified instruction
+	 * @param prog	The program referenced by the undo state
+	 * @param inst	The instruction related to the undo state
+	 * @param group	Whether to group this undo state with previous undo states
 	 */
 	private void pushUndoState(InstUndoType type, Program prog, int idx,
 			InstElement inst, boolean group) {
 		
-		if (PROG_UNDO.size() > Program.MAX_UNDO_SIZE) {
+		if (PROG_UNDO.size() >= Program.MAX_UNDO_SIZE) {
+			// Remove old unused undo states to make room for new undo states
 			PROG_UNDO.remove(0);
 		}
 		
+		// Determine the group ID of the undo state
 		int gid;
 		
 		if (PROG_UNDO.isEmpty()) {
