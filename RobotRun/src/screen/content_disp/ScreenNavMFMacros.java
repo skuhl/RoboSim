@@ -30,7 +30,9 @@ public class ScreenNavMFMacros extends ST_ScreenListContents {
 
 	@Override
 	public void actionEntr() {
-		int macro_idx = contents.getCurrentItemIdx();
-		robotRun.execute(robotRun.getMacro(macro_idx));
+		if(robotRun.isShift()) {
+			int macro_idx = contents.getCurrentItemIdx();
+			robotRun.execute(robotRun.getMacro(macro_idx));
+		}
 	}
 }
