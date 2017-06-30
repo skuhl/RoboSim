@@ -35,8 +35,12 @@ public abstract class ST_ScreenLineSelect extends Screen {
 	@Override
 	protected void loadVars(ScreenState s) {
 		setScreenIndices(s.conLnIdx, 0, s.conRenIdx, 0, 0);
-		lineSelectState = new boolean[contents.size()];
+		lineSelectState = new boolean[robotRun.getActiveProg().size() + 1];
 		direction = -1;
+	}
+	
+	protected void clearSelection() {
+		lineSelectState = new boolean[robotRun.getActiveProg().size() + 1];
 	}
 	
 	@Override
@@ -62,6 +66,8 @@ public abstract class ST_ScreenLineSelect extends Screen {
 					}
 					
 					direction = UP;
+				} else {
+					direction = -1;
 				}
 				
 			} catch (IndexOutOfBoundsException IOOBEx) {
@@ -95,6 +101,8 @@ public abstract class ST_ScreenLineSelect extends Screen {
 				}
 				
 				direction = DN;
+			} else {
+				direction = -1;
 			}
 
 			Fields.debug("line=%d col=%d inst=%d TRS=%d\n",

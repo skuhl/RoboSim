@@ -48,6 +48,8 @@ public class ScreenSelectCutCopy extends ST_ScreenLineSelect {
 				remIdx += 1;
 			}
 		}
+		
+		clearSelection();
 	}
 	
 	@Override
@@ -59,6 +61,8 @@ public class ScreenSelectCutCopy extends ST_ScreenLineSelect {
 			if (lineSelectState[i])
 				robotRun.clipBoard.add(p.getInstAt(i).clone());
 		}
+		
+		clearSelection();
 	}
 	
 	@Override
