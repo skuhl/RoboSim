@@ -35,8 +35,12 @@ public abstract class ST_ScreenLineSelect extends Screen {
 	@Override
 	protected void loadVars(ScreenState s) {
 		setScreenIndices(s.conLnIdx, 0, s.conRenIdx, 0, 0);
-		lineSelectState = new boolean[contents.size()];
+		lineSelectState = new boolean[robotRun.getActiveProg().size() + 1];
 		direction = -1;
+	}
+	
+	protected void clearSelection() {
+		lineSelectState = new boolean[robotRun.getActiveProg().size() + 1];
 	}
 	
 	@Override
