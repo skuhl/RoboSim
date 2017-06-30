@@ -4,7 +4,6 @@ import java.awt.event.KeyEvent;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Stack;
 
 import enums.AxesDisplay;
@@ -34,7 +33,6 @@ import global.Fields;
 import global.RMath;
 import global.RegisteredModels;
 import processing.core.PApplet;
-import processing.core.PGraphics;
 import processing.core.PImage;
 import processing.core.PShape;
 import processing.core.PVector;
@@ -58,6 +56,7 @@ import regs.DataRegister;
 import regs.IORegister;
 import regs.PositionRegister;
 import regs.Register;
+import regs.RTrace;
 import robot.RoboticArm;
 import screen.Screen;
 import screen.ScreenManager;
@@ -166,7 +165,7 @@ public class RobotRun extends PApplet {
 	 * Defines a set of tool tip positions that are drawn to form a trace of
 	 * the robot's motion overtime.
 	 */
-	private LinkedList<PVector> tracePts;
+	private RTrace robotTrace;
 	
 	/**
 	 * Keeps track of the world object that the mouse was over, when the mouse
@@ -1109,7 +1108,7 @@ public class RobotRun extends PApplet {
 		
 		if (!traceEnabled()) {
 			// Empty trace when it is disabled
-			tracePts.clear();
+			robotTrace.clear();
 		}
 	}
 
@@ -3081,10 +3080,14 @@ public class RobotRun extends PApplet {
 			keyCodeMap = new KeyCodeMap();
 			DataManagement.initialize(this);
 			
-			RoboticArm r = createRobot(0, new PVector(200, Fields.FLOOR_Y, 200));
+			robotTrace = new RTrace();
+			
+			RoboticArm r = createRobot(0, new PVector(200, Fields.FLOOR_Y, 200),
+					robotTrace);
 			ROBOTS.put(r.RID, r);
 			
-			r = createRobot(1, new PVector(200, Fields.FLOOR_Y, -750));
+			r = createRobot(1, new PVector(200, Fields.FLOOR_Y, -750),
+					robotTrace);
 			ROBOTS.put(r.RID, r);
 
 			activeRobot = ROBOTS.get(0);
@@ -3101,8 +3104,6 @@ public class RobotRun extends PApplet {
 			
 			progExecState = new ProgExecution();
 			progCallStack = new Stack<>();
-			
-			tracePts = new LinkedList<PVector>();
 			
 			mInstRobotAt = new HashMap<Integer, Boolean>();
 			
@@ -3364,9 +3365,10 @@ public class RobotRun extends PApplet {
 	 * @param rid			The id of the robot, which must be unique amongst
 	 * 						all other robots
 	 * @param basePosition	The position of the robot's base segment
+	 * @param robotTrace	A reference to this.robotTrace
 	 * @return				The initialized robot
 	 */
-	private RoboticArm createRobot(int rid, PVector basePosition) {
+	private RoboticArm createRobot(int rid, PVector basePosition, RTrace robotTrace) {
 		MyPShape[] segModels = new MyPShape[6];
 		MyPShape[] eeModels = new MyPShape[7];
 		
@@ -3386,35 +3388,7 @@ public class RobotRun extends PApplet {
 		eeModels[5] = loadSTLModel("robot/EE/GLUE_GUN.stl", color(108, 206, 214));
 		eeModels[6] = loadSTLModel("robot/EE/WIELDER.stl", color(108, 206, 214));
 		
-		return new RoboticArm(rid, basePosition, segModels, eeModels);
-	}
-	/**
-	 * Draws the points stored for this robot's trace function with respect to
-	 * the given graphics object's coordinate frame.
-	 * 
-	 * @param g	The graphics object used to drawn the trace
-	 */
-	private void drawTrace(PGraphics g) {		
-		if (tracePts.size() > 1) {
-			PVector lastPt = null;
-			
-			g.pushStyle();
-			g.stroke(0);
-			g.strokeWeight(3);
-			
-			for(PVector curPt : tracePts) {
-				if (lastPt != null) {
-					/* Draw lines between each non-null point stored in the
-					 * trace buffer */
-					g.line(lastPt.x, lastPt.y, lastPt.z, curPt.x, curPt.y,
-							curPt.z);
-				}
-				
-				lastPt = curPt;
-			}
-			
-			g.popStyle();
-		}
+		return new RoboticArm(rid, basePosition, segModels, eeModels, robotTrace);
 	}
 	
 	/**
@@ -3677,26 +3651,21 @@ public class RobotRun extends PApplet {
 		if (activeRobot.inMotion() && traceEnabled()) {
 			Point tipPosNative = activeRobot.getToolTipNative();
 			// Update the robots trace points
-			if(tracePts.isEmpty()) {
-				tracePts.add(tipPosNative.position);
+			if(robotTrace.isEmpty()) {
+				robotTrace.addPt(tipPosNative.position);
 				
 			} else {
-				PVector lastTracePt = tracePts.getLast();
+				PVector lastTracePt = robotTrace.getLastPt();
 				
-				if (PVector.sub(tipPosNative.position, lastTracePt).mag()
-						> 0.5f) {
+				if (lastTracePt == null || PVector.sub(tipPosNative.position,
+						lastTracePt).mag() > 0.5f) {
 					
-					tracePts.addLast(tipPosNative.position);
+					robotTrace.addPt(tipPosNative.position);
 				}
-			}
-			
-			if (tracePts.size() > 10000f) {
-				// Begin to remove points after the limit is reached
-				tracePts.removeFirst();
 			}
 		}
 		
-		drawTrace(g);
+		robotTrace.draw(g);
 		
 		/* Render the axes of the selected World Object */
 		

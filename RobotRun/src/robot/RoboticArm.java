@@ -31,6 +31,7 @@ import programming.Program;
 import regs.DataRegister;
 import regs.IORegister;
 import regs.PositionRegister;
+import regs.RTrace;
 import ui.DisplayLine;
 
 public class RoboticArm {
@@ -172,9 +173,10 @@ public class RoboticArm {
 	 * @param basePos			The position of the robot's base segment
 	 * @param segmentModels		The list of models for the robot's segment
 	 * @param endEffectorModels	The list of models for the robot's end effectors
+	 * @param robotTrace		A reference to the trace in the robotRun application
 	 */
 	public RoboticArm(int rid, PVector basePos, MyPShape[] segmentModels,
-			MyPShape[] endEffectorModels) {
+			MyPShape[] endEffectorModels, RTrace robotTrace) {
 		
 		
 		RID = rid;
@@ -299,10 +301,10 @@ public class RoboticArm {
 				new BoundingBox[0], 3, "POINTER");
 		
 		EE_LIST[4] = new EndEffector(endEffectorModels[5], new BoundingBox[0],
-				new BoundingBox[0], 4, "GLUE GUN");
+				new BoundingBox[0], 4, "GLUE GUN", robotTrace);
 		
 		EE_LIST[5] = new EndEffector(endEffectorModels[6], new BoundingBox[0],
-				new BoundingBox[0], 5, "WIELDER");
+				new BoundingBox[0], 5, "WIELDER", robotTrace);
 		
 		activeEEIdx = 0;
 		

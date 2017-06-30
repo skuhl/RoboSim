@@ -4,7 +4,9 @@ import geom.BoundingBox;
 import geom.MyPShape;
 import geom.Part;
 import global.Fields;
+import regs.IORegTrace;
 import regs.IORegister;
+import regs.RTrace;
 
 /**
  * Defines an end effector for a robotic arm.
@@ -24,15 +26,6 @@ public class EndEffector extends RSegment {
 	 */
 	protected final IORegister reg;
 	
-	/**
-	 * TODO comment this
-	 * 
-	 * @param model
-	 * @param obbs
-	 * @param pickupOBBs
-	 * @param idx
-	 * @param name
-	 */
 	public EndEffector(MyPShape model, BoundingBox[] obbs,
 			BoundingBox[] pickupOBBs, int idx, String name) {
 		
@@ -47,15 +40,20 @@ public class EndEffector extends RSegment {
 		}
 	}
 	
-	/**
-	 * TODO comment this
-	 * 
-	 * @param modelSet
-	 * @param obbs
-	 * @param pickupOBBs
-	 * @param idx
-	 * @param name
-	 */
+	public EndEffector(MyPShape model, BoundingBox[] obbs,
+			BoundingBox[] pickupOBBs, int idx, String name, RTrace robotTrace) {
+		
+		super(model, obbs);
+		
+		PICKUP_OBBS = pickupOBBs;
+		reg = new IORegTrace(idx, name, robotTrace);
+		
+		// Set pickup OBB colors
+		for (BoundingBox obb : PICKUP_OBBS) {
+			obb.setColor(Fields.OBB_HELD);
+		}
+	}
+	
 	public EndEffector(MyPShape[] modelSet, BoundingBox[] obbs,
 			BoundingBox[] pickupOBBs, int idx, String name) {
 		
@@ -63,6 +61,20 @@ public class EndEffector extends RSegment {
 		
 		PICKUP_OBBS = pickupOBBs;
 		reg = new IORegister(idx, name);
+		
+		// Set pickup OBB colors
+		for (BoundingBox obb : PICKUP_OBBS) {
+			obb.setColor(Fields.OBB_HELD);
+		}
+	}
+	
+	public EndEffector(MyPShape[] modelSet, BoundingBox[] obbs,
+			BoundingBox[] pickupOBBs, int idx, String name, RTrace robotTrace) {
+		
+		super(modelSet, obbs);
+		
+		PICKUP_OBBS = pickupOBBs;
+		reg = new IORegTrace(idx, name, robotTrace);
 		
 		// Set pickup OBB colors
 		for (BoundingBox obb : PICKUP_OBBS) {
