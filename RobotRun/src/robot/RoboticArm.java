@@ -29,6 +29,7 @@ import programming.MotionInstruction;
 import programming.PosMotionInst;
 import programming.Program;
 import regs.DataRegister;
+import regs.IORegTrace;
 import regs.IORegister;
 import regs.PositionRegister;
 import regs.RTrace;
@@ -1616,11 +1617,14 @@ public class RoboticArm {
 	 * 			effector is enabled
 	 */
 	public boolean isEETraceEnabled() {
-		if (getEEState() == Fields.ON) {
-			/* The trace functionality is active when the wielder or glue gun
-			 * end effectors are active for a robot and the end effector state
-			 * is on. */
-			return activeEEIdx == 4 || activeEEIdx == 5;
+		EndEffector activeEE = getActiveEE();
+		
+		if (activeEE != null) {
+			/* The trace functionality is active when the active end effector's
+			 * I/O register is associated with the trace functionality and its
+			 * state is ON. */
+			IORegister ioReg = activeEE.getIORegister();
+			return ioReg instanceof IORegTrace && ioReg.getState() == Fields.ON;
 		}
 		
 		return false;
