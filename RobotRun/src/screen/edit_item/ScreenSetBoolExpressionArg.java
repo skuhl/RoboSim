@@ -1,11 +1,11 @@
 package screen.edit_item;
 
 import core.RobotRun;
-import expression.Expression;
 import expression.OperandDReg;
 import expression.OperandFloat;
-import expression.OperandIOReg;
+import expression.OperandPRegIdx;
 import programming.IfStatement;
+import regs.PositionRegister;
 import robot.RoboticArm;
 import screen.ScreenMode;
 
@@ -18,12 +18,7 @@ public class ScreenSetBoolExpressionArg extends ST_ScreenEditItem {
 	@Override
 	protected void loadOptions() {
 		options.addLine("R[x]");
-		options.addLine("IO[x]");
-		if (robotRun.opEdit instanceof Expression) {
-			options.addLine("PR[x]");
-			options.addLine("PR[x, y]");
-			options.addLine("(...)");
-		}
+		//options.addLine("PR[x, y]"); //TODO
 		options.addLine("Const");
 	}
 
@@ -33,17 +28,18 @@ public class ScreenSetBoolExpressionArg extends ST_ScreenEditItem {
 		IfStatement stmt = (IfStatement) r.getInstToEdit(robotRun.getActiveProg(), 
 				robotRun.getActiveInstIdx());
 		
-		if (options.getLineIdx() == 0) {
+		if(options.getLineIdx() == 0) {
 			// set arg to new data reg
 			robotRun.opEdit = new OperandDReg();
 			stmt.setOperand(robotRun.editIdx, robotRun.opEdit);
 			robotRun.switchScreen(ScreenMode.INPUT_DREG_IDX);
-		} else if (options.getLineIdx() == 1) {
-			// set arg to new io reg
-			robotRun.opEdit = new OperandIOReg();
+		} else if(options.getLineIdx() == 2) {
+			// set arg to new preg idx
+			robotRun.opEdit = new OperandPRegIdx(new PositionRegister(), 0);
 			stmt.setOperand(robotRun.editIdx, robotRun.opEdit);
-			robotRun.switchScreen(ScreenMode.INPUT_IOREG_IDX);
-		} else {
+			robotRun.switchScreen(ScreenMode.INPUT_PREG_IDX2);
+			robotRun.nextScreen(ScreenMode.INPUT_PREG_IDX1);
+		} else if(options.getLineIdx() == 1) {
 			// set arg to new constant
 			robotRun.opEdit = new OperandFloat();
 			stmt.setOperand(robotRun.editIdx, robotRun.opEdit);

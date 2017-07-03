@@ -198,6 +198,9 @@ public class Expression extends AtomicExpression {
 				}
 			}
 		}
+		else {
+			elementList.set(0, new OperandGeneric());
+		}
 	}
 
 	public Operand<?> setOperand(int idx, Operand<?> o) {

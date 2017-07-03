@@ -46,20 +46,15 @@ public class AtomicExpression extends Operand<Object> {
 			if (arg1 instanceof FloatMath && arg2 instanceof FloatMath) {
 				// Arithmetic operands
 				return evaluateFloat((FloatMath)arg1, (FloatMath)arg2, op);
-				
 			} else if (arg1 instanceof PointMath && arg2 instanceof PointMath) {
 				// Point operands
 				return evaluatePoint((PointMath)arg1, (PointMath)arg2, op);
-				
 			} else if (arg1 instanceof BoolMath && arg2 instanceof BoolMath) {
 				// Boolean operands
-				return evaluateBoolean((BoolMath)arg1, (BoolMath)arg2, op);
-				
-			} else {
-				// Input combination is invalid
+				return evaluateBoolean((BoolMath)arg1, (BoolMath)arg2, op);	
 			}
-		
-		} catch (NullPointerException NPEx) {}
+		} 
+		catch (NullPointerException NPEx) {}
 		
 		return null;
 	}

@@ -31,18 +31,16 @@ public class ScreenSetExpressionOp extends ST_ScreenEditItem {
 			Expression expr = (Expression)robotRun.opEdit;
 			int idx = contents.getItemColumnIdx() - ((ExpressionEvaluation)instr).getHeaderLength();
 			int[] elements = expr.mapToEdit();
-			ExpressionElement right;
-			
-			System.out.println(idx);
+			ExpressionElement prev;
 			
 			if(idx > 0 && idx < elements.length) {
-				System.out.println(elements[idx - 1]);
-				right = expr.get(elements[idx - 1]);
-				if(right instanceof Expression) {
-					right = ((Expression)right).evaluate();
+				prev = expr.get(elements[idx - 1]);
+				
+				if(prev instanceof Expression) {
+					prev = ((Expression)prev).evaluate();
 				}
 			} else {
-				right = null;
+				prev = null;
 			}
 			
 			if(instr instanceof RegisterStatement) {
@@ -51,14 +49,14 @@ public class ScreenSetExpressionOp extends ST_ScreenEditItem {
 				if(r.getReg() instanceof DataRegister) {
 					loadArithOps();
 				} else if(r.getReg() instanceof IORegister) {
-					if(right == null || right instanceof PointMath || right instanceof OperandGeneric) {
+					if(prev == null || prev instanceof PointMath || prev instanceof OperandGeneric) {
 						loadArithOps();
 						loadBoolOps();
 						loadLogicOps();
-					} else if(right instanceof FloatMath) {
+					} else if(prev instanceof FloatMath) {
 						loadArithOps();
 						loadBoolOps();
-					} else if(right instanceof BoolMath) {
+					} else if(prev instanceof BoolMath) {
 						loadLogicOps();
 					}
 				} 
@@ -71,14 +69,14 @@ public class ScreenSetExpressionOp extends ST_ScreenEditItem {
 				}
 			}
 			else if(instr instanceof IfStatement) {
-				if(right == null || right instanceof PointMath || right instanceof OperandGeneric) {
+				if(prev == null || prev instanceof PointMath || prev instanceof OperandGeneric) {
 					loadArithOps();
 					loadBoolOps();
 					loadLogicOps();
-				} else if(right instanceof FloatMath) {
+				} else if(prev instanceof FloatMath) {
 					loadArithOps();
 					loadBoolOps();
-				} else if(right instanceof BoolMath) {
+				} else if(prev instanceof BoolMath) {
 					loadLogicOps();
 				}
 			}
