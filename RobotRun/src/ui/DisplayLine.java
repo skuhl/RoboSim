@@ -8,20 +8,20 @@ public class DisplayLine {
 
 	public DisplayLine() {
 		fields = new ArrayList<>();
-		setItemIdx(-1);
-		setxAlign(0);
+		itemIdx = -1;
+		xAlign = 0;
 	}
 
 	public DisplayLine(int idx) {
 		fields = new ArrayList<>();
-		setItemIdx(idx);
-		setxAlign(0);
+		itemIdx = idx;
+		xAlign = 0;
 	}
 	
 	public DisplayLine(int idx, int align) {
 		fields = new ArrayList<>();
-		setItemIdx(idx);
-		setxAlign(align);
+		itemIdx = idx;
+		xAlign = align;
 	}
 
 	public DisplayLine(int idx, int align, String... strings) {
@@ -30,8 +30,8 @@ public class DisplayLine {
 			fields.add(col);
 		}
 		
-		setItemIdx(idx);
-		setxAlign(align);
+		itemIdx = idx;
+		xAlign = align;
 	}
 	
 	public DisplayLine(int idx, String... strings) {
@@ -40,8 +40,8 @@ public class DisplayLine {
 			fields.add(col);
 		}
 		
-		setItemIdx(idx);
-		setxAlign(0);
+		itemIdx = idx;
+		xAlign = 0;
 	}
 
 	public void add(int i, String s) {
@@ -83,12 +83,12 @@ public class DisplayLine {
 		return fields.set(i, s);
 	}
 
-	public void setItemIdx(int itemIdx) {
-		this.itemIdx = itemIdx;
+	public void setItemIdx(int idx) {
+		itemIdx = idx;
 	}
 
-	public void setxAlign(int xAlign) {
-		this.xAlign = xAlign;
+	public void setxAlign(int offset) {
+		xAlign = offset;
 	}
 
 	public int size() {

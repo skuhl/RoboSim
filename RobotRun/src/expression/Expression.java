@@ -111,7 +111,7 @@ public class Expression extends AtomicExpression {
 	/**
 	 * Returns the number of elements in the top level of the expression
 	 */
-	public int getSize() {
+	public int size() {
 		return elementList.size();
 	}
 

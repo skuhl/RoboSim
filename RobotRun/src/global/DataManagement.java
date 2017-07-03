@@ -1249,7 +1249,7 @@ public abstract class DataManagement {
 				
 				out.writeByte(2);
 				
-				int exprLen = expr.getSize();
+				int exprLen = expr.size();
 				// Save the length of the expression
 				out.writeInt(exprLen);
 		

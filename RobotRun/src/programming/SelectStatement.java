@@ -201,4 +201,10 @@ public class SelectStatement extends Instruction implements ExpressionEvaluation
 	public Operator getOperator(int idx) {
 		return null;
 	}
+	
+	@Override
+	public int getHeaderLength() {
+		//Number of elements before expression start
+		return 2;
+	}
 }

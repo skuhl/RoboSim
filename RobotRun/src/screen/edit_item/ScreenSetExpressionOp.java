@@ -2,15 +2,24 @@ package screen.edit_item;
 
 import core.RobotRun;
 import expression.AtomicExpression;
+import expression.BoolMath;
 import expression.Expression;
 import expression.ExpressionElement;
+import expression.FloatMath;
+import expression.OperandGeneric;
 import expression.Operator;
+import expression.PointMath;
+import programming.ExpressionEvaluation;
 import programming.IfStatement;
+import programming.Instruction;
 import programming.RegisterStatement;
+import regs.DataRegister;
+import regs.IORegister;
+import regs.PositionRegister;
 import screen.ScreenMode;
 
 public class ScreenSetExpressionOp extends ST_ScreenEditItem {
-
+	
 	public ScreenSetExpressionOp(RobotRun r) {
 		super(ScreenMode.SET_EXPR_OP, r);
 	}
@@ -18,41 +27,62 @@ public class ScreenSetExpressionOp extends ST_ScreenEditItem {
 	@Override
 	protected void loadOptions() {
 		if (robotRun.opEdit instanceof Expression) {
-			int[] elements = ((Expression)robotRun.opEdit).mapToEdit();
+			Instruction instr = robotRun.getActiveInstruction();
+			Expression expr = (Expression)robotRun.opEdit;
+			int idx = contents.getItemColumnIdx() - ((ExpressionEvaluation)instr).getHeaderLength();
+			int[] elements = expr.mapToEdit();
+			ExpressionElement right;
 			
-			if (robotRun.getActiveInstruction() instanceof IfStatement) {
-				int idx = elements[contents.getItemColumnIdx() - 2];
-				ExpressionElement e = ((Expression)robotRun.opEdit).get(idx);
-				
-				options.addLine("1. + ");
-				options.addLine("2. - ");
-				options.addLine("3. * ");
-				options.addLine("4. / (Division)");
-				options.addLine("5. | (Integer Division)");
-				options.addLine("6. % (Modulus)");
-				options.addLine("7. = ");
-				options.addLine("8. <> (Not Equal)");
-				options.addLine("9. > ");
-				options.addLine("10. < ");
-				options.addLine("11. >= ");
-				options.addLine("12. <= ");
-				options.addLine("13. AND ");
-				options.addLine("14. OR ");
-				options.addLine("15. NOT ");
-			} else if(robotRun.getActiveInstruction() instanceof RegisterStatement) {
-				RegisterStatement stmt = (RegisterStatement)robotRun.getActiveInstruction();
-				int rLen = (stmt.getPosIdx() == -1) ? 2 : 3;
-				int idx = elements[contents.getItemColumnIdx() - rLen - 2];
-				ExpressionElement e = ((Expression)robotRun.opEdit).get(idx);
-				
-				options.addLine("1. + ");
-				options.addLine("2. - ");
-				options.addLine("3. * ");
-				options.addLine("4. / (Division)");
-				options.addLine("5. | (Integer Division)");
-				options.addLine("6. % (Modulus)");
+			System.out.println(idx);
+			
+			if(idx > 0 && idx < elements.length) {
+				System.out.println(elements[idx - 1]);
+				right = expr.get(elements[idx - 1]);
+				if(right instanceof Expression) {
+					right = ((Expression)right).evaluate();
+				}
+			} else {
+				right = null;
 			}
-		} else {
+			
+			if(instr instanceof RegisterStatement) {
+				RegisterStatement r = (RegisterStatement)instr;
+				
+				if(r.getReg() instanceof DataRegister) {
+					loadArithOps();
+				} else if(r.getReg() instanceof IORegister) {
+					if(right == null || right instanceof PointMath || right instanceof OperandGeneric) {
+						loadArithOps();
+						loadBoolOps();
+						loadLogicOps();
+					} else if(right instanceof FloatMath) {
+						loadArithOps();
+						loadBoolOps();
+					} else if(right instanceof BoolMath) {
+						loadLogicOps();
+					}
+				} 
+				else if(r.getReg() instanceof PositionRegister) {
+					if(r.getPosIdx() == -1) {
+						loadPointOps();
+					} else {
+						loadArithOps();
+					}
+				}
+			}
+			else if(instr instanceof IfStatement) {
+				if(right == null || right instanceof PointMath || right instanceof OperandGeneric) {
+					loadArithOps();
+					loadBoolOps();
+					loadLogicOps();
+				} else if(right instanceof FloatMath) {
+					loadArithOps();
+					loadBoolOps();
+				} else if(right instanceof BoolMath) {
+					loadLogicOps();
+				}
+			}
+		} else if(robotRun.opEdit instanceof AtomicExpression) {
 			options.addLine("1. ... =  ...");
 			options.addLine("2. ... <> ...");
 			options.addLine("3. ... >  ...");
@@ -61,13 +91,50 @@ public class ScreenSetExpressionOp extends ST_ScreenEditItem {
 			options.addLine("6. ... <= ...");
 		}
 	}
+	
+	private void loadArithOps() {
+		int idx = (options.size() + 1);
+		
+		options.addLine(0, idx++ + ". + ");
+		options.addLine(1, idx++ + ". - ");
+		options.addLine(2, idx++ + ". * ");
+		options.addLine(3, idx++ + ". / (Division)");
+		options.addLine(4, idx++ + ". | (Integer Division)");
+		options.addLine(5, idx++ + ". % (Modulus)");
+	}
+	
+	private void loadBoolOps() {
+		int idx = (options.size() + 1);
+		
+		options.addLine(6, idx++ + ". = ");
+		options.addLine(7, idx++ + ". <> (Not Equal)");
+		options.addLine(8, idx++ + ". > ");
+		options.addLine(9, idx++ + ". < ");
+		options.addLine(10, idx++ + ". >= ");
+		options.addLine(11, idx++ + ". <= ");
+	}
+	
+	private void loadLogicOps() {
+		int idx = (options.size() + 1);
+		
+		options.addLine(12, idx++ + ". AND ");
+		options.addLine(13, idx++ + ". OR ");
+		options.addLine(14, idx++ + ". NOT ");
+	}
+		
+	private void loadPointOps() {
+		int idx = (options.size() + 1);
+		
+		options.addLine(15, idx++ + ". + ");
+		options.addLine(16, idx++ + ". - ");
+	}
 
 	@Override
 	public void actionEntr() {
 		if (robotRun.opEdit instanceof Expression) {
 			Expression expr = (Expression)robotRun.opEdit;
 			
-			switch (options.getLineIdx()) {
+			switch (options.getCurrentItemIdx()) {
 			case 0: expr.setOperator(robotRun.editIdx, Operator.ADD); break;
 			case 1: expr.setOperator(robotRun.editIdx, Operator.SUB); break;
 			case 2: expr.setOperator(robotRun.editIdx, Operator.MULT); break;
@@ -83,6 +150,8 @@ public class ScreenSetExpressionOp extends ST_ScreenEditItem {
 			case 12: expr.setOperator(robotRun.editIdx, Operator.AND); break;
 			case 13: expr.setOperator(robotRun.editIdx, Operator.OR); break;
 			case 14: expr.setOperator(robotRun.editIdx, Operator.NOT); break;
+			case 15: expr.setOperator(robotRun.editIdx, Operator.PT_ADD); break;
+			case 16: expr.setOperator(robotRun.editIdx, Operator.PT_SUB); break;
 			}
 		}
 		else if (robotRun.opEdit instanceof AtomicExpression) {

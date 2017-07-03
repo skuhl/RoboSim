@@ -179,4 +179,10 @@ public class IfStatement extends Instruction implements ExpressionEvaluation {
 			return expr.getOp();
 		}
 	}
+	
+	@Override
+	public int getHeaderLength() {
+		//Number of elements before expression start
+		return expr instanceof Expression ? 3 : 2;
+	}
 }

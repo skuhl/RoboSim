@@ -268,4 +268,10 @@ public class RegisterStatement extends Instruction implements ExpressionEvaluati
 			return expr.getOp();
 		}
 	}
+	
+	@Override
+	public int getHeaderLength() {
+		//Number of elements before expression start
+		return posIdx == -1 ? 4 : 5;
+	}
 }
