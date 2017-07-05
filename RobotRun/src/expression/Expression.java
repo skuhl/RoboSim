@@ -34,7 +34,7 @@ public class Expression extends AtomicExpression {
 		ExpressionElement e = elementList.get(0);
 		
 		if(e == null || e instanceof Operator || elementList.size() % 2 != 1) { 
-			PApplet.println("Expression formatting error");
+			System.err.println("Expression formatting error");
 			return null;
 		}
 
@@ -42,7 +42,7 @@ public class Expression extends AtomicExpression {
 		
 		for(int i = 1; i < elementList.size(); i += 2) {
 			if(!(elementList.get(i) instanceof Operator) || !(elementList.get(i + 1) instanceof Operand<?>)) {
-				PApplet.println("Expression formatting error");
+				System.err.println("Expression formatting error");
 				return null;
 			} 
 			else {
@@ -51,6 +51,7 @@ public class Expression extends AtomicExpression {
 				AtomicExpression expr = new AtomicExpression(result, nextOperand, op);
 
 				result = expr.evaluate();
+				System.out.println("rolling result: " + result.getValue().toString());
 			}
 		}
 		
