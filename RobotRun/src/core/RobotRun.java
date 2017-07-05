@@ -54,8 +54,6 @@ import programming.ProgExecution;
 import programming.Program;
 import programming.RegisterStatement;
 import programming.SelectStatement;
-import regs.DataRegister;
-import regs.IORegister;
 import regs.PositionRegister;
 import regs.Register;
 import robot.RoboticArm;
@@ -110,50 +108,60 @@ public class RobotRun extends PApplet {
 		}
 	}
 
-	private final ArrayList<Scenario> SCENARIOS = new ArrayList<>();
-	private final Stack<WorldObject> SCENARIO_UNDO = new Stack<>();
-	private final HashMap<Integer, RoboticArm> ROBOTS = new HashMap<>();
-
-	private Scenario activeScenario;
-	private RoboticArm activeRobot;
-	
-	private ProgExecution progExecState;
-	private Stack<ProgExecution> progCallStack;
-	
-	private RobotCamera rCamera;
-	private Camera camera;
-
-	private WGUI UI;
-	private KeyCodeMap keyCodeMap;
-	private ScreenManager screens;
-
-	private boolean shift = false; // Is shift button pressed or not?
-	private boolean step = false; // Is step button pressed or not?
-	private boolean camEnable = false;
-	private boolean record;
-
+	// container for instructions being copied/ cut and pasted
+	public ArrayList<Instruction> clipBoard = new ArrayList<>();
 	/**
 	 * Index of the current frame (Tool or User) selecting when in the Frame
 	 * menus
 	 */
 	public int curFrameIdx = -1;
+	public int editIdx = -1;
 
+	public Operand<?> opEdit = null;
 	/**
 	 * The Frame being taught, during a frame teaching process
 	 */
 	public Frame teachFrame = null;
-	public Operand<?> opEdit = null;
-	public int editIdx = -1;
-
-	// container for instructions being copied/ cut and pasted
-	public ArrayList<Instruction> clipBoard = new ArrayList<>();
 	
+	private RoboticArm activeRobot;
+	private Scenario activeScenario;
+	
+	private boolean camEnable = false;
+	private Camera camera;
+
+	private KeyCodeMap keyCodeMap;
 	/**
 	 * A list of instruction indexes for the active program, which point to
 	 * motion instructions, whose position and orientation (or joint angles)
 	 * are close enough to the robot's current position.
 	 */
 	private HashMap<Integer, Boolean> mInstRobotAt;
+	/**
+	 * Keeps track of when the mouse is being dragged to update the position or
+	 * orientation of a world object.
+	 */
+	private boolean mouseDragWO;
+
+	/**
+	 * Keeps track of the world object that the mouse was over, when the mouse
+	 * was first pressed down.
+	 */
+	private WorldObject mouseOverWO;
+	private Stack<ProgExecution> progCallStack;
+	private ProgExecution progExecState;
+	private RobotCamera rCamera;
+
+	private boolean record;
+
+	private final HashMap<Integer, RoboticArm> ROBOTS = new HashMap<>();
+	private final Stack<WorldObject> SCENARIO_UNDO = new Stack<>();
+	private final ArrayList<Scenario> SCENARIOS = new ArrayList<>();
+
+	private ScreenManager screens;
+	
+	private boolean shift = false; // Is shift button pressed or not?
+	
+	private boolean step = false; // Is step button pressed or not?
 	
 	/**
 	 * Defines a set of tool tip positions that are drawn to form a trace of
@@ -161,17 +169,7 @@ public class RobotRun extends PApplet {
 	 */
 	private LinkedList<PVector> tracePts;
 	
-	/**
-	 * Keeps track of the world object that the mouse was over, when the mouse
-	 * was first pressed down.
-	 */
-	private WorldObject mouseOverWO;
-	
-	/**
-	 * Keeps track of when the mouse is being dragged to update the position or
-	 * orientation of a world object.
-	 */
-	private boolean mouseDragWO;
+	private WGUI UI;
 	
 	/**
 	 * Applies the active camera to the matrix stack.
@@ -1732,13 +1730,17 @@ public class RobotRun extends PApplet {
 		return !progExecState.isDone();
 	}
 
+	public Boolean isRobotAtPostn(int i) {
+		return mInstRobotAt.get(new Integer(i));
+	}
+
 	/**
 	 * @return Whether or not the second robot is used in the application
 	 */
 	public boolean isSecondRobotUsed() {
 		return UI.getRobotButtonState();
 	}
-
+	
 	public boolean isShift() {
 		return shift;
 	}
@@ -2140,7 +2142,7 @@ public class RobotRun extends PApplet {
 		mouseOverWO = null;
 		mouseDragWO = false;
 	}
-	
+
 	@Override
 	public void mouseWheel(MouseEvent event) {
 		if (UI != null && UI.isMouseOverUIElement()) {
@@ -2181,7 +2183,7 @@ public class RobotRun extends PApplet {
 			p.addInstAtEnd(f);
 		}
 	}
-
+	
 	public void newIfExpression() {
 		RoboticArm r = activeRobot;
 		Program p = getActiveProg();
@@ -2193,7 +2195,7 @@ public class RobotRun extends PApplet {
 			p.addInstAtEnd(stmt);
 		}
 	}
-	
+
 	public void newIfStatement() {
 		RoboticArm r = activeRobot;
 		Program p = getActiveProg();
@@ -2339,7 +2341,7 @@ public class RobotRun extends PApplet {
 			p.addInstAtEnd(stmt);
 		}
 	}
-
+	
 	public void newRobotCallInstruction() {
 		RoboticArm r = activeRobot;
 		Program p = getActiveProg();
@@ -2351,7 +2353,7 @@ public class RobotRun extends PApplet {
 			p.addInstAtEnd(rcall);
 		}
 	}
-	
+
 	public void newSelectStatement() {
 		RoboticArm r = activeRobot;
 		Program p = getActiveProg();
@@ -2363,7 +2365,7 @@ public class RobotRun extends PApplet {
 			p.addInstAtEnd(stmt);
 		}
 	}
-
+	
 	/**
 	 * Updates the save state of the active screen and loads the given screen
 	 * mode afterwards.
@@ -2549,7 +2551,7 @@ public class RobotRun extends PApplet {
 		
 		return exists;
 	}
-	
+
 	/**
 	 * Sets the active program of this Robot corresponding to the index value
 	 * given.
@@ -2567,7 +2569,7 @@ public class RobotRun extends PApplet {
 		
 		return exists;
 	}
-
+	
 	/**
 	 * Sets the scenario with the given name as the active scenario in the
 	 * application, if a scenario with the given name exists.
@@ -2593,11 +2595,11 @@ public class RobotRun extends PApplet {
 		return false;
 
 	}
-	
+
 	public void setRecord(boolean state) {
 		record = state;
 	}
-
+	
 	/**
 	 * Update the active Robot to the Robot at the given index in the list of
 	 * Robots.
@@ -2639,12 +2641,12 @@ public class RobotRun extends PApplet {
 		UI.updateShiftButton(shift);
 		updatePendantScreen();
 	}
-	
+
 	public void setStep(boolean step) {
 		this.step = step;
 		UI.updateStepButton(this.step);
 	}
-
+	
 	@Override
 	public void settings() {
 		size(1080, 720, P3D);
@@ -2724,7 +2726,7 @@ public class RobotRun extends PApplet {
 		System.out.printf("%s\n%s\n%s\n", rx, ry, rz);
 		/**/
 	}
-	
+
 	/**
 	 * Removes the current screen from the screen state stack and loads the
 	 * given screen mode.
@@ -2759,7 +2761,7 @@ public class RobotRun extends PApplet {
 		// Check pickup collisions in active scenario
 		robot.checkPickupCollision(activeScenario);
 	}
-
+	
 	/**
 	 * Is the trace function enabled. The user can enable/disable this function
 	 * with a button in the miscellaneous window.
@@ -2769,7 +2771,7 @@ public class RobotRun extends PApplet {
 	public boolean traceEnabled() {
 		return UI.getButtonState("ToggleTrace");
 	}
-	
+
 	/**
 	 * Revert the most recent change to the active scenario
 	 */
@@ -2797,7 +2799,7 @@ public class RobotRun extends PApplet {
 		setActiveInstIdx(min(getActiveInstIdx(), instSize));
 		lastScreen();
 	}
-
+	
 	/**
 	 * Update the header, contents, options, and function button labels on the
 	 * pendant.
@@ -2819,7 +2821,7 @@ public class RobotRun extends PApplet {
 	public void updateRobotEEState(int edx, int newState) {
 		updateRobotEEState(activeRobot, edx, newState);
 	}
-	
+
 	/**
 	 * Updates the end effector state of the given robot's end effector
 	 * associated with the given index and checks for pickup collisions
@@ -2837,7 +2839,7 @@ public class RobotRun extends PApplet {
 			r.checkPickupCollision(activeScenario);
 		}
 	}
-
+	
 	public void updateRobotJogMotion(int set, int direction) {
 		if (isShift() && !isProgExec()) {
 			boolean robotInMotion = activeRobot.inMotion();
@@ -2956,7 +2958,6 @@ public class RobotRun extends PApplet {
 		
 		return collidedWith;
 	}
-	
 	/**
 	 * Creates a robot with the given id and base position and initializes all
 	 * its segment and end effector data.
@@ -2988,6 +2989,7 @@ public class RobotRun extends PApplet {
 		
 		return new RoboticArm(rid, basePosition, segModels, eeModels);
 	}
+	
 	/**
 	 * Draws the points stored for this robot's trace function with respect to
 	 * the given graphics object's coordinate frame.
@@ -3034,7 +3036,7 @@ public class RobotRun extends PApplet {
 	private void progExec(int instIdx, boolean singleExec) {
 		progExec(progExecState.getProgIdx(), instIdx, singleExec);
 	}
-	
+
 	/**
 	 * TODO comment this
 	 * 
@@ -3052,7 +3054,7 @@ public class RobotRun extends PApplet {
 			progExec(activeRobot.RID, progIdx, instIdx, pExec);
 		}
 	}
-
+	
 	/**
 	 * TODO comment this
 	 * 
@@ -3081,7 +3083,7 @@ public class RobotRun extends PApplet {
 			}
 		}
 	}
-	
+
 	/**
 	 * Pushes the active program onto the call stack and resets the active
 	 * program and instruction indices.
@@ -3092,7 +3094,7 @@ public class RobotRun extends PApplet {
 		setActiveProgIdx(-1);
 		setActiveInstIdx(-1);
 	}
-
+	
 	/**
 	 * Updates the position and orientation of the Robot as well as all the
 	 * World Objects associated with the current scenario. Updates the bounding
@@ -3571,7 +3573,7 @@ public class RobotRun extends PApplet {
 	private void setManager(WGUI ui) {
 		this.UI = ui;
 	}
-	
+
 	/**
 	 * Detemines if the active menu uses keyboard input.
 	 * 
@@ -3911,9 +3913,5 @@ public class RobotRun extends PApplet {
 		progExecState.setNextIdx(nextIdx);
 		
 		return 0;
-	}
-
-	public Boolean isRobotAtPostn(int i) {
-		return mInstRobotAt.get(new Integer(i));
 	}
 }
