@@ -21,7 +21,7 @@ public class ScreenCopyPosRegComment extends ST_ScreenNumEntry {
 	@Override
 	protected void loadContents() {
 		RoboticArm r = robotRun.getActiveRobot();
-		contents.setLines(robotRun.loadPositionRegisters(r));
+		contents.setLines(loadPositionRegisters(r));
 	}
 	
 	@Override

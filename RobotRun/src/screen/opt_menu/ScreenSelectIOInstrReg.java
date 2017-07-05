@@ -17,7 +17,7 @@ public class ScreenSelectIOInstrReg extends ST_ScreenOptionsMenu {
 
 	@Override
 	protected void loadOptions() {
-		options.setLines(robotRun.loadIORegInst(robotRun.getActiveRobot()));
+		options.setLines(loadIORegInst(robotRun.getActiveRobot()));
 	}
 	
 	@Override

@@ -16,7 +16,7 @@ public class ScreenConfirmRenumber extends ST_ScreenConfirmCancel {
 
 	@Override
 	protected void loadContents() {
-		contents.setLines(robotRun.loadInstructions(robotRun.getActiveProg(), false));
+		contents.setLines(loadInstructions(robotRun.getActiveProg(), false));
 	}
 	
 	@Override

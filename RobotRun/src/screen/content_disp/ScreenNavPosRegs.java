@@ -25,7 +25,7 @@ public class ScreenNavPosRegs extends ST_ScreenListContents {
 	@Override
 	protected void loadContents() {
 		RoboticArm r = robotRun.getActiveRobot();
-		contents.setLines(robotRun.loadPositionRegisters(r));
+		contents.setLines(loadPositionRegisters(r));
 	}
 	
 	@Override

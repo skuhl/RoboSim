@@ -22,14 +22,13 @@ public class ScreenTeach4Pt extends ST_ScreenTeachPoints {
 	@Override
 	protected void loadContents() {
 		RoboticArm r = robotRun.getActiveRobot();
-		contents.setLines(robotRun.loadFrameDetail(r, CoordFrame.USER, robotRun.curFrameIdx));
+		contents.setLines(loadFrameDetail(r, CoordFrame.USER, robotRun.curFrameIdx));
 	}
 
 	@Override
 	protected void loadOptions() {
 		RoboticArm r = robotRun.getActiveRobot();
-		ArrayList<DisplayLine> lines = 
-				robotRun.loadPointList(r.getUserFrame(robotRun.curFrameIdx), 1);
+		ArrayList<DisplayLine> lines = loadPointList(r.getUserFrame(robotRun.curFrameIdx), 1);
 		options.setLines(lines);
 	}
 

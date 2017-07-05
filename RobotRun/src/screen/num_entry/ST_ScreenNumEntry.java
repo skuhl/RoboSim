@@ -21,7 +21,7 @@ public abstract class ST_ScreenNumEntry extends Screen {
 	
 	@Override
 	protected void loadContents() {
-		contents.setLines(robotRun.loadInstructions(robotRun.getActiveProg(), false));
+		contents.setLines(loadInstructions(robotRun.getActiveProg(), false));
 	}
 	
 	@Override

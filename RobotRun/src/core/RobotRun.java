@@ -73,6 +73,7 @@ import screen.text_entry.ST_ScreenTextEntry;
 import ui.Camera;
 import ui.DisplayLine;
 import ui.KeyCodeMap;
+import ui.MenuScroll;
 import window.WGUI;
 
 /**
@@ -1613,8 +1614,8 @@ public class RobotRun extends PApplet {
 	 * Returns the first line in the current list of contents that the
 	 * instruction matching the given index appears on.
 	 */
-	public int getInstrLine(int instrIdx) {
-		ArrayList<DisplayLine> instr = loadInstructions(getActiveProg(), false);
+	public int getInstrLine(MenuScroll instrMenu, int instrIdx) {
+		ArrayList<DisplayLine> instr = instrMenu.copyContents();
 		int row = instrIdx;
 		
 		try {	
@@ -1931,366 +1932,6 @@ public class RobotRun extends PApplet {
 			
 			Fields.debug("\n%s <= %s\n", cur.mode, screens.getActiveScreen().mode);
 		}		
-	}
-	
-	/**
-	 * Loads the data registers of the given robotic arm into a list of display
-	 * lines, which can be rendered onto the pendant screen.
-	 * 
-	 * @param r	The robotic arm, from which to load the data registers
-	 * @return	The list of display lines representing the given robot's data
-	 * 			registers
-	 */
-	public ArrayList<DisplayLine> loadDataRegisters(RoboticArm r) {
-		ArrayList<DisplayLine> lines = new ArrayList<>();
-		
-		// Display a subset of the list of registers
-		for (int idx = 0; idx < Fields.DPREG_NUM; ++idx) {
-			DataRegister reg = r.getDReg(idx);
-
-			// Display the comment associated with a specific Register entry
-			String regLbl = reg.toStringWithComm();
-			// Display Register value (* if uninitialized)
-			String regEntry = "*";
-
-			if (reg.value != null) {
-				// Display Register value
-				regEntry = String.format("%4.3f", reg.value);
-
-			} else {
-				regEntry = "*";
-			}
-
-			lines.add(new DisplayLine(idx, 0 , regLbl, regEntry));
-		}
-		
-		return lines;
-	}
-	
-	/**
-	 * TODO comment this
-	 * 
-	 * @param robot
-	 * @return
-	 */
-	public ArrayList<DisplayLine> loadEEToolTipDefaults(RoboticArm robot) {
-		ArrayList<DisplayLine> lines = new ArrayList<>();
-		
-		for (int idx = 0; idx < activeRobot.numOfEndEffectors(); ++idx) {
-			IORegister ioReg = activeRobot.getIOReg(idx + 1);
-			PVector defToolTip = activeRobot.getToolTipDefault(idx);
-			String lineStr = String.format("%s = (%4.3f, %4.3f, %4.3f)",
-					ioReg.comment, defToolTip.x, defToolTip.y, defToolTip.z); 
-			
-			lines.add(new DisplayLine(idx, 0, lineStr));
-		}
-		
-		return lines;
-	}
-	
-	/**
-	 * TODO
-	 * 
-	 * @param r
-	 * @param coordFrame
-	 * @param fdx
-	 * @return
-	 */
-	public ArrayList<DisplayLine> loadFrameDetail(RoboticArm r, CoordFrame coordFrame, int fdx) {
-		
-		ArrayList<DisplayLine> lines = new ArrayList<>();
-		Frame f = null;
-		
-		if (coordFrame == CoordFrame.TOOL) {
-			f = r.getToolFrame(fdx);
-			
-		} else if (coordFrame == CoordFrame.USER) {
-			f = r.getUserFrame(fdx);
-		}
-		
-		if (f != null) {
-			String[] fields = f.toLineStringArray();
-			
-			for (String field : fields) {
-				lines.add(new DisplayLine(-1, 0, field));
-			}
-			
-		} else {
-			// Invalid coordFrame or frame index
-			lines.add(new DisplayLine(-1, 0, String.format("CoordFrame=%s", coordFrame) ));
-			lines.add(new DisplayLine(-1, 0, String.format("Frame Index=%d", fdx) ));
-		}
-		
-		return lines;
-	}
-	
-	/**
-	 * TODO
-	 * 
-	 * @param r
-	 * @param coordFrame
-	 * @return
-	 */
-	public ArrayList<DisplayLine> loadFrames(RoboticArm r, CoordFrame coordFrame) {
-		ArrayList<DisplayLine> lines = new ArrayList<>();
-		
-		if (coordFrame == CoordFrame.TOOL) {
-			// Display Tool frames
-			for (int idx = 0; idx < Fields.FRAME_NUM; idx += 1) {
-				// Display each frame on its own line
-				String[] strArray = r.getToolFrame(idx).toLineStringArray();
-				String line = String.format("%-4s %s", String.format("%d)",
-						idx + 1), strArray[0]);
-				
-				lines.add(new DisplayLine(idx, 0, line));
-				lines.add(new DisplayLine(idx, 38, String.format("%s",
-						strArray[1])));
-			}
-
-		} else {
-			// Display User frames
-			for (int idx = 0; idx < Fields.FRAME_NUM; idx += 1) {
-				// Display each frame on its own line
-				String[] strArray = r.getUserFrame(idx).toLineStringArray();
-				String line = String.format("%-4s %s", String.format("%d)",
-						idx + 1), strArray[0]);
-				
-				lines.add(new DisplayLine(idx, 0, line));
-				lines.add(new DisplayLine(idx, 38, String.format("%s", strArray[1])));
-			}
-		}
-		
-		return lines;
-	}
-
-	// prepare for displaying motion instructions on screen
-	public ArrayList<DisplayLine> loadInstructions(Program p, boolean includeEND) {
-		ArrayList<DisplayLine> instruct_list = new ArrayList<>();
-		int tokenOffset = Fields.TXT_PAD - Fields.PAD_OFFSET;
-		
-		int size = p.getNumOfInst();
-		
-		for (int i = 0; i < size; i += 1) {
-			DisplayLine line = new DisplayLine(i);
-			Instruction instr = p.get(i);
-			int xPos = 10;
-
-			// Add line number
-			if (instr == null) {
-				line.add(String.format("%d) ...", i + 1));
-				instruct_list.add(line);
-				continue;
-			} else if (instr.isCommented()) {
-				line.add("//" + Integer.toString(i + 1) + ")");
-			} else {
-				line.add(Integer.toString(i + 1) + ")");
-			}
-
-			int numWdth = line.get(line.size() - 1).length();
-			xPos += numWdth * Fields.CHAR_WDTH + tokenOffset;
-			
-			if (instr instanceof MotionInstruction) {
-				Boolean isRobotAt = mInstRobotAt.get(new Integer(i));
-				
-				if (isRobotAt != null && isRobotAt) {
-					line.add("@");
-					
-				} else {
-					// Add a placeholder for the '@' symbol
-					line.add("\0");
-				}
-				
-				xPos += Fields.CHAR_WDTH + tokenOffset;
-			}
-			
-			String[] fields = instr.toStringArray();
-
-			for (int j = 0; j < fields.length; j += 1) {
-				String field = fields[j];
-				xPos += field.length() * Fields.CHAR_WDTH + tokenOffset;
-
-				if (field.equals("\n") && j != fields.length - 1) {
-					instruct_list.add(line);
-					if (instr instanceof SelectStatement) {
-						xPos = 11 * Fields.CHAR_WDTH + 3 * tokenOffset;
-					} else {
-						xPos = 3 * Fields.CHAR_WDTH + 3 * tokenOffset;
-					}
-
-					line = new DisplayLine(i, xPos);
-					xPos += field.length() * Fields.CHAR_WDTH + tokenOffset;
-				} else if (xPos > Fields.PENDANT_SCREEN_WIDTH - 10) {
-					instruct_list.add(line);
-					xPos = 2 * Fields.CHAR_WDTH + tokenOffset;
-
-					line = new DisplayLine(i, xPos);
-					field = ": " + field;
-					xPos += field.length() * Fields.CHAR_WDTH + tokenOffset;
-				}
-
-				if (!field.equals("\n")) {
-					line.add(field);
-				}
-			}
-
-			instruct_list.add(line);
-		}
-		
-		if (includeEND) {
-			DisplayLine endl = new DisplayLine(size);
-			endl.add("[End]");
-	
-			instruct_list.add(endl);
-		}
-		
-		return instruct_list;
-	}
-
-	/**
-	 * TODO
-	 * 
-	 * @param r
-	 * @return
-	 */
-	public ArrayList<DisplayLine> loadIORegInst(RoboticArm r) {
-		ArrayList<DisplayLine> lines = new ArrayList<>();
-		
-		for (int idx = 1; idx <= r.numOfEndEffectors(); idx += 1) {
-			IORegister ioReg = r.getIOReg(idx);
-			
-			String col0 = String.format("IO[%2d:%-10s] = ", idx,
-					ioReg.comment);
-			lines.add(new DisplayLine(idx, 0, col0, "ON", "OFF"));
-		}
-		
-		return lines;
-	}
-
-	/**
-	 * TODO
-	 * 
-	 * @param r
-	 * @return
-	 */
-	public ArrayList<DisplayLine> loadIORegNav(RoboticArm r) {
-		ArrayList<DisplayLine> lines = new ArrayList<>();
-		
-		for (int idx = 1; idx <= r.numOfEndEffectors(); ++idx) {
-			IORegister ioReg = r.getIOReg(idx);
-			String col0 = String.format("IO[%2d:%-10s] = ", idx,
-					ioReg.comment);
-			lines.add(new DisplayLine(idx, 0, col0, (ioReg.state == 0) ?
-					"OFF" : "ON") );
-		}
-		
-		return lines;
-	}
-
-	/**
-	 * TODO
-	 * 
-	 * @param f
-	 * @param teachMethod
-	 * @return
-	 */
-	public ArrayList<DisplayLine> loadPointList(Frame f, int teachMethod) {
-		ArrayList<DisplayLine> lines = new ArrayList<>();
-		boolean validMethod = teachMethod == 0 || teachMethod == 1;
-		
-		
-		if (f instanceof ToolFrame && validMethod) {
-			
-			String out = (f.getPoint(0) == null) ? "UNINIT" : "RECORDED";
-			lines.add(new DisplayLine(0, 0, "First Approach Point: " + out));
-			
-			out = (f.getPoint(1) == null) ? "UNINIT" : "RECORDED";
-			lines.add(new DisplayLine(1, 0, "Second Approach Point: " + out));
-			
-			out = (f.getPoint(2) == null) ? "UNINIT" : "RECORDED";
-			lines.add(new DisplayLine(2, 0, "Third Approach Point: " + out));
-			
-			if (teachMethod == 1) {
-				out = (f.getPoint(3) == null) ? "UNINIT" : "RECORDED";
-				lines.add(new DisplayLine(3, 0, "Orient Origin Point: " + out));
-				
-				out = (f.getPoint(4) == null) ? "UNINIT" : "RECORDED";
-				lines.add(new DisplayLine(4, 0, "X Axis Point: " + out));
-				
-				out = (f.getPoint(5) == null) ? "UNINIT" : "RECORDED";
-				lines.add(new DisplayLine(5, 0, "Y Axis Point: " + out));
-			}
-			
-		} else if (f instanceof UserFrame && validMethod) {
-			
-			String out = (f.getPoint(0) == null) ? "UNINIT" : "RECORDED";
-			lines.add(new DisplayLine(0, 0, "Orient Origin Point: " + out));
-			
-			out = (f.getPoint(1) == null) ? "UNINIT" : "RECORDED";
-			lines.add(new DisplayLine(1, 0, "X Axis Point: " + out));
-			
-			out = (f.getPoint(2) == null) ? "UNINIT" : "RECORDED";
-			lines.add(new DisplayLine(2, 0, "Y Axis Point: " + out));
-			
-			if (teachMethod == 1) {
-				out = (f.getPoint(3) == null) ? "UNINIT" : "RECORDED";
-				lines.add(new DisplayLine(3, 0, "Origin: " + out));
-			}
-			
-		} else {
-			lines.add(new DisplayLine(-1, 0,
-					(f == null) ? "Null frame" : f.getClass().toString())
-					);
-			lines.add(new DisplayLine(-1, 0, String.format("Method: %d",
-					teachMethod)));
-		}
-		
-		return lines;
-	}
-	
-	/**
-	 * TODO
-	 * 
-	 * @param r
-	 * @return
-	 */
-	public ArrayList<DisplayLine> loadPositionRegisters(RoboticArm r) {
-		ArrayList<DisplayLine> lines = new ArrayList<>();
-		
-		// Display a subset of the list of registers
-		for (int idx = 0; idx < Fields.DPREG_NUM; ++idx) {
-			PositionRegister reg = r.getPReg(idx);
-			// Display the comment associated with a specific Register entry
-			String regLbl = reg.toStringWithComm();
-			// Display Register edit prompt (* if uninitialized)
-			String regEntry = (reg.point == null) ? "*" : "...Edit...";
-			
-			lines.add( new DisplayLine(idx, 0, regLbl, regEntry) );
-		}
-		
-		return lines;
-	}
-
-	/**
-	 * TODO comment
-	 * 
-	 * @param rid
-	 * @return
-	 */
-	public ArrayList<DisplayLine> loadPrograms(RoboticArm r) {
-		ArrayList<DisplayLine> progList = null;
-		
-		if (r != null) {
-			progList = new ArrayList<>();
-			// Get a list of program names for the given robot
-			for (int idx = 0; idx < r.numOfPrograms(); ++idx) {
-				DisplayLine line = new DisplayLine(idx, 0,
-						r.getProgram(idx).getName());
-				progList.add(line);
-			}
-			
-		}
-		
-		return progList;
 	}
 	
 	/**
@@ -4017,7 +3658,8 @@ public class RobotRun extends PApplet {
 		
 		// Update the display
 		if(screens.getActiveScreen().mode == ScreenMode.NAV_PROG_INSTR) {
-			screens.getActiveScreen().getContents().setLineIdx(getInstrLine(getActiveInstIdx()));
+			Screen s = screens.getActiveScreen();
+			s.setContentIdx(getInstrLine(s.getContents(), getActiveInstIdx()));
 		}
 		
 		updatePendantScreen();
@@ -4269,5 +3911,9 @@ public class RobotRun extends PApplet {
 		progExecState.setNextIdx(nextIdx);
 		
 		return 0;
+	}
+
+	public Boolean isRobotAtPostn(int i) {
+		return mInstRobotAt.get(new Integer(i));
 	}
 }

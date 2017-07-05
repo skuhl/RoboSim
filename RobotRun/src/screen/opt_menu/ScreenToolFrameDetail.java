@@ -19,7 +19,7 @@ public class ScreenToolFrameDetail extends ST_ScreenOptionsMenu {
 	@Override
 	protected void loadContents() {
 		RoboticArm r = robotRun.getActiveRobot();
-		contents.setLines(robotRun.loadFrameDetail(r, CoordFrame.TOOL, robotRun.curFrameIdx));
+		contents.setLines(loadFrameDetail(r, CoordFrame.TOOL, robotRun.curFrameIdx));
 	}
 	
 	@Override

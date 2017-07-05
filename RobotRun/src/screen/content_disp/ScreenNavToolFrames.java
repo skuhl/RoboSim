@@ -17,7 +17,7 @@ public class ScreenNavToolFrames extends ST_ScreenListContents {
 
 	@Override
 	protected void loadContents() {
-		contents.setLines(robotRun.loadFrames(robotRun.getActiveRobot(), CoordFrame.TOOL));
+		contents.setLines(loadFrames(robotRun.getActiveRobot(), CoordFrame.TOOL));
 	}
 
 	@Override

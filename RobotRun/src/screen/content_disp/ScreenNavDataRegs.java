@@ -19,7 +19,7 @@ public class ScreenNavDataRegs extends ST_ScreenListContents {
 	@Override
 	protected void loadContents() {
 		RoboticArm r = robotRun.getActiveRobot();
-		contents.setLines(robotRun.loadDataRegisters(r));
+		contents.setLines(loadDataRegisters(r));
 	}
 	
 	@Override

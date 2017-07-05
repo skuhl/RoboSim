@@ -21,7 +21,7 @@ public class ScreenCopyDataRegValue extends ST_ScreenNumEntry {
 	@Override
 	protected void loadContents() {
 		RoboticArm r = robotRun.getActiveRobot();
-		contents.setLines(robotRun.loadDataRegisters(r));
+		contents.setLines(loadDataRegisters(r));
 	}
 	
 	@Override

@@ -20,12 +20,12 @@ public class ScreenSetDefaultTooltip extends ST_ScreenOptionsMenu {
 	@Override
 	protected void loadContents() {
 		RoboticArm r = robotRun.getActiveRobot();
-		contents.setLines(robotRun.loadFrameDetail(r, CoordFrame.TOOL, robotRun.curFrameIdx));
+		contents.setLines(loadFrameDetail(r, CoordFrame.TOOL, robotRun.curFrameIdx));
 	}
 
 	@Override
 	protected void loadOptions() {
-		options.setLines(robotRun.loadEEToolTipDefaults(robotRun.getActiveRobot()));
+		options.setLines(loadEEToolTipDefaults(robotRun.getActiveRobot()));
 	}
 
 	@Override

@@ -39,7 +39,7 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 
 	@Override
 	protected void loadContents() {
-		contents.setLines(robotRun.loadInstructions(robotRun.getActiveProg(), true));
+		contents.setLines(loadInstructions(robotRun.getActiveProg(), true));
 	}
 
 	@Override
@@ -157,24 +157,18 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 	@Override
 	public void actionUp() {
 		if (!robotRun.isProgExec()) {
-			try {
-				// Lock movement when a program is running
-				Instruction i = robotRun.getActiveInstruction();
-				int prevLine = contents.getItemLineIdx();
-				robotRun.setActiveInstIdx(contents.moveUp(robotRun.isShift()));
-				int curLine = contents.getItemLineIdx();
+			// Lock movement when a program is running
+			Instruction i = robotRun.getActiveInstruction();
+			int prevLine = contents.getItemLineIdx();
+			robotRun.setActiveInstIdx(contents.moveUp(robotRun.isShift()));
+			int curLine = contents.getItemLineIdx();
 
-				// special case for select statement column navigation
-				if ((i instanceof SelectStatement || i instanceof MotionInstruction) && curLine == 0) {
-					if (prevLine == 1) {
-						contents.setColumnIdx(contents.getColumnIdx() + 3);
-					}
+			// special case for select statement column navigation
+			if ((i instanceof SelectStatement || i instanceof MotionInstruction) && curLine == 0) {
+				if (prevLine == 1) {
+					contents.setColumnIdx(contents.getColumnIdx() + 3);
 				}
-
-			} catch (IndexOutOfBoundsException IOOBEx) {
-				// Issue with loading a program, not sure if this helps ...
-				IOOBEx.printStackTrace();
-			}
+			} 
 
 			Fields.debug("line=%d col=%d inst=%d TRS=%d\n",
 				contents.getLineIdx(), contents.getColumnIdx(),

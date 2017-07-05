@@ -40,7 +40,7 @@ public class ScreenSetCallProg extends ST_ScreenOptionsMenu {
 		}
 					
 		// List the robot's program names
-		options.setLines(robotRun.loadPrograms(cInst.getTgtDevice()));
+		options.setLines(loadPrograms(cInst.getTgtDevice()));
 	}
 
 	@Override

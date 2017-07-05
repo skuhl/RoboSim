@@ -19,7 +19,7 @@ public class ScreenNavIORegs extends ST_ScreenListContents {
 
 	@Override
 	protected void loadContents() {
-		contents.setLines(robotRun.loadIORegNav(robotRun.getActiveRobot()));
+		contents.setLines(loadIORegNav(robotRun.getActiveRobot()));
 	}
 
 	@Override

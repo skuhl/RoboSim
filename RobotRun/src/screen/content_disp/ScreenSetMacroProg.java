@@ -19,7 +19,7 @@ public class ScreenSetMacroProg extends ST_ScreenListContents {
 	@Override
 	protected void loadContents() {
 		RoboticArm r = robotRun.getActiveRobot();
-		contents.setLines(robotRun.loadPrograms(r));
+		contents.setLines(loadPrograms(r));
 	}
 
 	@Override
