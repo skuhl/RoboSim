@@ -202,6 +202,7 @@ public abstract class DataManagement {
 		if ((dataFlag & 0x1) != 0) {
 			// Save the robot's programs
 			saveProgramBytes(robot, String.format("%s/programs.bin", destDir.getAbsolutePath()));
+			exportProgsToTxt(robot, destDir.getAbsolutePath());
 		}
 		
 		if ((dataFlag & 0x2) != 0) {
@@ -236,6 +237,48 @@ public abstract class DataManagement {
 				null : process.getActiveScenario().getName(), scenarioDirPath);
 		saveRobotData(process.getRobot(0), 15);
 		saveRobotData(process.getRobot(1), 15);
+	}
+	
+	public static void exportProgsToTxt(RoboticArm r, String directory) {
+		for(int i = 0; i < r.numOfPrograms(); i += 1) {
+			Program p = r.getProgram(i);
+			File textfile = new File(directory + "/" + p.getName() + ".txt");
+			
+			try {
+				PrintWriter out = new PrintWriter(textfile);
+				out.write(p.getName() + ":");
+				out.write(System.lineSeparator());
+				out.write(System.lineSeparator());
+				
+				for(int j = 0; j < p.getNumOfInst(); j += 1) {
+					Instruction instr = p.get(j);
+					String[] text = instr.toStringArray();
+					
+					out.write((j + 1) + ") ");
+					
+					for(int k = 0; k < text.length; k += 1) {
+						String str = text[k];
+						
+						if(str.compareTo("\n") != 0) {
+							out.write(str + " ");
+						}
+						
+						if(instr instanceof SelectStatement && k >= 5 && (k - 1) % 4 == 0 && k < text.length - 1) {
+							out.write(System.lineSeparator());
+							out.write("    ");
+						}
+					}
+					
+					out.write(System.lineSeparator());
+				}
+				
+				out.write("[END]");
+				out.close();
+			} 
+			catch (FileNotFoundException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 	
 	private static double[][] load2DDoubleArray(DataInputStream in) throws IOException {
