@@ -56,51 +56,6 @@ public class RobotCamera {
 		camOrient = RMath.matrixToQuat(coord);
 	}
 	
-	/**
-	 * Examines a given WorldObject to determine whether it is recognized by the
-	 * camera based on how much of the object is in view, the camera's brightness
-	 * and exposure values, and the current sensitivity of the camera.
-	 * 
-	 * @param o The WorldObject to be tested
-	 * @return Whether or not the object is recognized.
-	 */
-	public boolean isObjectVisible(WorldObject o) {
-		PVector objCenter = o.getLocalCenter();
-		float[] dims = o.getForm().getDimArray();
-		float len = dims[0];
-		float hgt = dims[1];
-		float wid = dims[2];
-		
-		PVector s = new PVector(objCenter.x - len/2, objCenter.y - hgt/2, objCenter.z - wid/2);
-		int inView = 0;
-		for(int i = 0; i < RES; i += 1) {
-			for(int j = 0; j < RES; j += 1) {
-				for(int k = 0; k < RES; k += 1) {
-					PVector test = new PVector(s.x + i*(len/(RES-1)), s.y + j*(hgt/(RES-1)), s.z + k*(wid/(RES-1)));
-					if(isPointInFrame(test)) {
-						inView += 1;
-					}
-				}
-			}
-		}
-		
-		return (inView / (float)(RES*RES*RES)) * brightness * exposure >= sensitivity;
-	}
-	
-	public boolean isPointInFrame(PVector p) {
-		RMatrix vMat = getViewMat();
-		RMatrix pMat = getPerspProjMat();
-		
-		PVector tp = pMat.multiply(vMat.multiply(p));
-		
-		if(Math.abs(tp.x) < 1 && Math.abs(tp.y) < 1) {
-			return true;
-		}
-		else {
-			return false;
-		}
-	}
-	
 	public float getAspectRatio() {
 		return camAspectRatio;
 	}
@@ -165,7 +120,7 @@ public class RobotCamera {
 	public float getFarClipDist() {
 		return camClipFar;
 	}
-		
+	
 	public float getFOV() {
 		return camFOV;
 	}
@@ -173,7 +128,7 @@ public class RobotCamera {
 	public float getNearClipDist() {
 		return camClipNear;
 	}
-	
+		
 	public WorldObject getNearestObjectInFrame(Scenario scene) {
 		float minDist = Float.MAX_VALUE;
 		WorldObject closeObj = null;
@@ -216,24 +171,6 @@ public class RobotCamera {
 	
 	public RMatrix getOrientationMat() {
 		return new RMatrix(camOrient.toMatrix());
-	}
-	
-	private RMatrix getPerspProjMat() {
-		float r = getPlaneWidth(camClipNear)/2;
-		float l = -r;
-		float t = getPlaneHeight(camClipNear)/2;
-		float b = -t;
-		float n = camClipNear;
-		float f = camClipFar;
-		
-		RMatrix pMat = new RMatrix(new float[][] {
-			{2*n/(r-l), 0, (r+l)/(r-l), 0},
-			{0, 2*n/(t-b), (t+b)/(t-b), 0},
-			{0, 0, -(f+n)/(f-n), -(2*f*n)/(f-n)},
-			{0, 0, -1, 0}
-		});
-		
-		return pMat;
 	}
 	
 	/**
@@ -327,34 +264,56 @@ public class RobotCamera {
 		
 		return new PVector((float)x, (float)y, (float)z);
 	}
-
-	private RMatrix getViewMat() {
-		float[][] rot = getOrientationMat().getDataF();
-		
-		float tPosX = -camPos.x*rot[0][0] - camPos.y*rot[1][0] - camPos.z*rot[2][0];
-		float tPosY = -camPos.x*rot[0][1] - camPos.y*rot[1][1] - camPos.z*rot[2][1];
-		float tPosZ =  camPos.x*rot[0][2] + camPos.y*rot[1][2] + camPos.z*rot[2][2];
-		
-		float[][] vMat = new float[][] {
-			{ rot[0][0],  rot[1][0],  rot[2][0], tPosX},
-			{ rot[0][1],  rot[1][1],  rot[2][1], tPosY},
-			{-rot[0][2], -rot[1][2], -rot[2][2], tPosZ},
-			{0, 0, 0, 1}
-		};
-				
-		return new RMatrix(vMat);
+	
+	public boolean isObjectInScene(WorldObject proto, Scenario s) {
+		return matchTaughtObject(proto, s).size() != 0;
 	}
 	
-	public boolean taughtObjectInFrame(int objIdx, Scenario scene) {
-		ArrayList<WorldObject> objects = matchTaughtObject(objIdx, scene); 
-		if(objects != null && objects.size() > 0) {
+	/**
+	 * Examines a given WorldObject to determine whether it is recognized by the
+	 * camera based on how much of the object is in view, the camera's brightness
+	 * and exposure values, and the current sensitivity of the camera.
+	 * 
+	 * @param o The WorldObject to be tested
+	 * @return Whether or not the object is recognized.
+	 */
+	public boolean isObjectVisible(WorldObject o) {
+		PVector objCenter = o.getLocalCenter();
+		float[] dims = o.getForm().getDimArray();
+		float len = dims[0];
+		float hgt = dims[1];
+		float wid = dims[2];
+		
+		PVector s = new PVector(objCenter.x - len/2, objCenter.y - hgt/2, objCenter.z - wid/2);
+		int inView = 0;
+		for(int i = 0; i < RES; i += 1) {
+			for(int j = 0; j < RES; j += 1) {
+				for(int k = 0; k < RES; k += 1) {
+					PVector test = new PVector(s.x + i*(len/(RES-1)), s.y + j*(hgt/(RES-1)), s.z + k*(wid/(RES-1)));
+					if(isPointInFrame(test)) {
+						inView += 1;
+					}
+				}
+			}
+		}
+		
+		return (inView / (float)(RES*RES*RES)) * brightness * exposure >= sensitivity;
+	}
+	
+	public boolean isPointInFrame(PVector p) {
+		RMatrix vMat = getViewMat();
+		RMatrix pMat = getPerspProjMat();
+		
+		PVector tp = pMat.multiply(vMat.multiply(p));
+		
+		if(Math.abs(tp.x) < 1 && Math.abs(tp.y) < 1) {
 			return true;
 		}
 		else {
 			return false;
 		}
 	}
-	
+
 	public ArrayList<WorldObject> matchTaughtObject(int objIdx, Scenario scene) {
 		if(objIdx >= 0 && objIdx < taughtObjects.size()) {
 			WorldObject objProto = taughtObjects.get(objIdx);
@@ -364,10 +323,10 @@ public class RobotCamera {
 			return null;
 		}
 	}
-		
+	
 	public ArrayList<WorldObject> matchTaughtObject(WorldObject objProto, Scenario scene) {
 		RMatrix objProtoOrient = objProto.getLocalOrientation();
-				
+		
 		ArrayList<WorldObject> inFrame = getObjectsInFrame(scene);
 		ArrayList<WorldObject> objMatches = new ArrayList<WorldObject>();
 		
@@ -414,23 +373,29 @@ public class RobotCamera {
 		return objMatches;
 	}
 	
-	public boolean isObjectInScene(WorldObject proto, Scenario s) {
-		return matchTaughtObject(proto, s).size() != 0;
-	}
-
 	public RobotCamera setOrientation(PVector o) {
 		camOrient = RMath.eulerToQuat(o);
 		return this;
 	}
-	
+		
 	public RobotCamera setOrientation(RQuaternion o) {
 		camOrient = o;
 		return this;
 	}
-
+	
 	public RobotCamera setPosition(PVector p) {
 		camPos = p;
 		return this;
+	}
+
+	public boolean taughtObjectInFrame(int objIdx, Scenario scene) {
+		ArrayList<WorldObject> objects = matchTaughtObject(objIdx, scene); 
+		if(objects != null && objects.size() > 0) {
+			return true;
+		}
+		else {
+			return false;
+		}
 	}
 	
 	public ArrayList<WorldObject> teachObjectToCamera(Scenario scene) {
@@ -468,5 +433,40 @@ public class RobotCamera {
 		brightness = br;
 		exposure = exp;
 		return this;
+	}
+	
+	private RMatrix getPerspProjMat() {
+		float r = getPlaneWidth(camClipNear)/2;
+		float l = -r;
+		float t = getPlaneHeight(camClipNear)/2;
+		float b = -t;
+		float n = camClipNear;
+		float f = camClipFar;
+		
+		RMatrix pMat = new RMatrix(new float[][] {
+			{2*n/(r-l), 0, (r+l)/(r-l), 0},
+			{0, 2*n/(t-b), (t+b)/(t-b), 0},
+			{0, 0, -(f+n)/(f-n), -(2*f*n)/(f-n)},
+			{0, 0, -1, 0}
+		});
+		
+		return pMat;
+	}
+
+	private RMatrix getViewMat() {
+		float[][] rot = getOrientationMat().getDataF();
+		
+		float tPosX = -camPos.x*rot[0][0] - camPos.y*rot[1][0] - camPos.z*rot[2][0];
+		float tPosY = -camPos.x*rot[0][1] - camPos.y*rot[1][1] - camPos.z*rot[2][1];
+		float tPosZ =  camPos.x*rot[0][2] + camPos.y*rot[1][2] + camPos.z*rot[2][2];
+		
+		float[][] vMat = new float[][] {
+			{ rot[0][0],  rot[1][0],  rot[2][0], tPosX},
+			{ rot[0][1],  rot[1][1],  rot[2][1], tPosY},
+			{-rot[0][2], -rot[1][2], -rot[2][2], tPosZ},
+			{0, 0, 0, 1}
+		};
+				
+		return new RMatrix(vMat);
 	}
 }
