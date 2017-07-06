@@ -15,7 +15,8 @@ public class RegisteredModels {
 	public static final HashMap<Integer, CamSelectArea[]> modelAreasOfInterest = new HashMap<Integer, CamSelectArea[]>();
 		
 	public static void loadModelDefs() {
-		JSONObject root = RobotRun.loadJSONObject(new File("data/defs/models.json"));
+		String path = RobotRun.getInstance().sketchPath();
+		JSONObject root = RobotRun.loadJSONObject(new File(path + "/data/defs/models.json"));
 		JSONArray objList = root.getJSONArray("objList");
 		
 		for(int i = 0; i < objList.size(); i += 1) {
