@@ -1,8 +1,7 @@
+*.bin
 *.out
 *.log
-.classpath
-.project
-bin/
 RobotRun/img/Thumbs.db
+RobotRun/bin/*
 RobotRun/tmp/robot0
 RobotRun/tmp/robot1
