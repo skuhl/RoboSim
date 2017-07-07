@@ -2361,7 +2361,7 @@ public class RobotRun extends PApplet {
 		screens.nextScreen(nextScreen);
 		updatePendantScreen();
 				
-		Fields.debug("\n%s => %s\n", prevScreen.mode, nextScreen);	
+		Fields.debug("\n%s => %s\n", prevScreen.mode, nextScreen);
 	}
 	
 	public void pasteInstructions() {

@@ -34,6 +34,7 @@ public class ScreenSelectComment extends ST_ScreenLineSelect {
 	@Override
 	public void actionF4() {
 		robotRun.lastScreen();
+		robotRun.getLastScreen().setContentIdx(contents.getLineIdx());
 		robotRun.lastScreen();
 	}
 }

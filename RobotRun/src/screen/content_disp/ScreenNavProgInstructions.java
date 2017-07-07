@@ -40,6 +40,7 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 	@Override
 	protected void loadContents() {
 		contents.setLines(loadInstructions(robotRun.getActiveProg(), true));
+		robotRun.setActiveInstIdx(contents.getCurrentItemIdx());
 	}
 
 	@Override
@@ -160,7 +161,7 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 			// Lock movement when a program is running
 			Instruction i = robotRun.getActiveInstruction();
 			int prevLine = contents.getItemLineIdx();
-			robotRun.setActiveInstIdx(contents.moveUp(robotRun.isShift()));
+			contents.moveUp(robotRun.isShift());
 			int curLine = contents.getItemLineIdx();
 
 			// special case for select statement column navigation
@@ -183,7 +184,7 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 			// Lock movement when a program is running
 			Instruction i = robotRun.getActiveInstruction();
 			int prevIdx = contents.getItemColumnIdx();
-			robotRun.setActiveInstIdx(contents.moveDown(robotRun.isShift()));
+			contents.moveDown(robotRun.isShift());
 			int curLine = contents.getItemLineIdx();
 
 			// special case for select statement column navigation
