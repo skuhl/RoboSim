@@ -42,7 +42,13 @@ public class ScreenCopyPosRegPoint extends ST_ScreenNumEntry {
 			PositionRegister src = robotRun.getActiveRobot().getPReg(contents.getCurrentItemIdx());
 			PositionRegister dest = robotRun.getActiveRobot().getPReg(regIdx);
 			
-			dest.point = src.point.clone();
+			if (src.point != null) {
+				dest.point = src.point.clone();
+				
+			} else {
+				dest.point = null;
+			}
+			
 			dest.isCartesian = src.isCartesian;
 			DataManagement.saveRobotData(robotRun.getActiveRobot(), 3);
 

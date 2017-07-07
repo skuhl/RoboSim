@@ -29,9 +29,20 @@ public abstract class Screen {
 	protected MenuScroll options;
 	protected String[] labels;
 	
+	public Screen(ScreenMode m, String header, RobotRun r) {
+		mode = m;
+		robotRun = r;
+		
+		this.header = header;
+		contents = new MenuScroll("cont", 8, 10, 20);
+		options = new MenuScroll("opt", 3, 10, 180);
+		labels = new String[5];
+	}
+	
 	public Screen(ScreenMode m, RobotRun r) {
 		mode = m;
 		robotRun = r;
+		
 		header = loadHeader();
 		contents = new MenuScroll("cont", 8, 10, 20);
 		options = new MenuScroll("opt", 3, 10, 180);
@@ -389,7 +400,7 @@ public abstract class Screen {
 			IORegister ioReg = r.getIOReg(idx);
 			String col0 = String.format("IO[%2d:%-10s] = ", idx,
 					ioReg.comment);
-			lines.add(new DisplayLine(idx, 0, col0, (ioReg.state == 0) ?
+			lines.add(new DisplayLine(idx, 0, col0, (ioReg.getState() == 0) ?
 					"OFF" : "ON") );
 		}
 		

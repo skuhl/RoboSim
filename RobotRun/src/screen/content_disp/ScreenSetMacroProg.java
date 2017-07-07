@@ -6,7 +6,7 @@ import robot.RoboticArm;
 import screen.ScreenMode;
 
 public class ScreenSetMacroProg extends ST_ScreenListContents {
-	
+
 	public ScreenSetMacroProg(RobotRun r) {
 		super(ScreenMode.SET_MACRO_PROG, r);
 	}

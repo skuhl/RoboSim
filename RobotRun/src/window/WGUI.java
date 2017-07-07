@@ -56,6 +56,11 @@ import ui.MyRadioButton;
 import ui.MySlider;
 import ui.MyTextfield;
 import ui.UIInputElement;
+import undo.PartUndoDefault;
+import undo.PartUndoFixRef;
+import undo.WOUndoCurrent;
+import undo.WOUndoDim;
+import undo.WOUndoState;
 
 public class WGUI implements ControlListener {
 
@@ -1160,9 +1165,9 @@ public class WGUI implements ControlListener {
 					Fixture refFixture = (Fixture)getDropdown("Fixture").getSelectedItem();
 
 					if (p.getFixtureRef() != refFixture) {
-						/* Save the previous version of the world object on the
-						 * undo stack */
-						app.updateScenarioUndo( (WorldObject)p.clone() );
+						/* Update the scenario undo stack for the part's
+						 * fixture reference change */
+						app.updateScenarioUndo(new PartUndoFixRef(p));
 						p.setFixtureRef(refFixture);
 					}
 				}
@@ -3640,13 +3645,14 @@ public class WGUI implements ControlListener {
 	 * 
 	 * @param selectedWO	The object of which to update the position and
 	 * 						orientation
-	 * @return				If the selected world object was successfully
-	 * 						modified 
+	 * @return				The undo state for the given world object
 	 */
-	public boolean updateWOCurrent(WorldObject selectWO) {
-		boolean edited = false;
-
+	public WOUndoState updateWOCurrent(WorldObject selectWO) {
+		
 		try {
+			boolean edited = false;
+			WOUndoState undoState = new WOUndoCurrent(selectWO);
+			
 			// Convert origin position into the World Frame
 			PVector oPosition = RMath.vToWorld( selectWO.getLocalCenter() );
 			PVector oWPR = RMath.nRMatToWEuler( selectWO.getLocalOrientation() );
@@ -3688,14 +3694,17 @@ public class WGUI implements ControlListener {
 			// Update the Objects position and orientation
 			selectWO.setLocalCenter(position);
 			selectWO.setLocalOrientation(orientation);
-
+			
+			if (edited) {
+				return undoState;
+			}
+			
 		} catch (NullPointerException NPEx) {
 			PApplet.println("Missing parameter!");
 			NPEx.printStackTrace();
-			return false;
 		}
-
-		return edited;
+		
+		return null;
 	}
 
 	/**
@@ -3704,10 +3713,12 @@ public class WGUI implements ControlListener {
 	 * 
 	 * @param selectedPart	The part, of which to update the default position
 	 * 						and orientation
-	 * @return				If the part was successfully modified
+	 * @return				The undo state for the given part
 	 */
-	public boolean updateWODefault(Part selectedPart) {
+	public WOUndoState updateWODefault(Part selectedPart) {
 		boolean edited = false;
+		WOUndoState undoState = new PartUndoDefault(selectedPart);
+		
 		// Pull the object's current position and orientation
 		PVector defaultPos = RMath.vToWorld( selectedPart.getDefaultCenter() );
 		PVector defaultWPR = RMath.nRMatToWEuler( selectedPart.getDefaultOrientation() );
@@ -3753,7 +3764,11 @@ public class WGUI implements ControlListener {
 
 		fillDefWithDef(selectedPart);
 		
-		return edited;
+		if (edited) {
+			return undoState;
+		}
+		
+		return null;
 	}
 	
 	/**
@@ -3764,8 +3779,9 @@ public class WGUI implements ControlListener {
 	 * @param selectedWO	The world object, of which to update the dimensions	
 	 * @return				If the world object's dimensions were updated
 	 */
-	public boolean updateWODims(WorldObject selectedWO) {
+	public WOUndoState updateWODims(WorldObject selectedWO) {
 		boolean dimChanged = false;
+		WOUndoState undoState = new WOUndoDim(selectedWO);
 		RShape s = selectedWO.getForm();
 
 		if (s instanceof RBox) {
@@ -3819,7 +3835,11 @@ public class WGUI implements ControlListener {
 			((Part)selectedWO).updateOBBDims();
 		}
 		
-		return dimChanged;
+		if (dimChanged) {
+			return undoState;
+		}
+		
+		return null;
 	}
 
 	/**

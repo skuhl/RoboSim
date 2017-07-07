@@ -19,6 +19,6 @@ public class OperandIOReg extends OperandRegister<IORegister> implements BoolMat
 
 	@Override
 	public Boolean getBoolValue() {
-		return value.state == Fields.ON;
+		return value.getState() == Fields.ON;
 	}
 }

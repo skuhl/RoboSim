@@ -4,7 +4,6 @@ import java.awt.event.KeyEvent;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Stack;
 
 import enums.AxesDisplay;
@@ -34,7 +33,6 @@ import global.Fields;
 import global.RMath;
 import global.RegisteredModels;
 import processing.core.PApplet;
-import processing.core.PGraphics;
 import processing.core.PImage;
 import processing.core.PShape;
 import processing.core.PVector;
@@ -56,6 +54,7 @@ import programming.RegisterStatement;
 import programming.SelectStatement;
 import regs.PositionRegister;
 import regs.Register;
+import regs.RTrace;
 import robot.RoboticArm;
 import screen.Screen;
 import screen.ScreenManager;
@@ -72,7 +71,11 @@ import ui.Camera;
 import ui.DisplayLine;
 import ui.KeyCodeMap;
 import ui.MenuScroll;
+import undo.WOUndoCurrent;
+import undo.WOUndoDelete;
+import undo.WOUndoState;
 import window.WGUI;
+import window.WGUI_Buttons;
 
 /**
  * TODO general comments
@@ -152,22 +155,17 @@ public class RobotRun extends PApplet {
 	private RobotCamera rCamera;
 
 	private boolean record;
-
 	private final HashMap<Integer, RoboticArm> ROBOTS = new HashMap<>();
-	private final Stack<WorldObject> SCENARIO_UNDO = new Stack<>();
-	private final ArrayList<Scenario> SCENARIOS = new ArrayList<>();
 
-	private ScreenManager screens;
+	private RTrace robotTrace;
+	private final Stack<WOUndoState> SCENARIO_UNDO = new Stack<>();
 	
+	private final ArrayList<Scenario> SCENARIOS = new ArrayList<>();
+	private ScreenManager screens;
+
 	private boolean shift = false; // Is shift button pressed or not?
 	
 	private boolean step = false; // Is step button pressed or not?
-	
-	/**
-	 * Defines a set of tool tip positions that are drawn to form a trace of
-	 * the robot's motion overtime.
-	 */
-	private LinkedList<PVector> tracePts;
 	
 	private WGUI UI;
 	
@@ -867,13 +865,12 @@ public class RobotRun extends PApplet {
 			WorldObject selectedWO = UI.getSelectedWO();
 			
 			if (selectedWO != null) {
-				WorldObject saveState = selectedWO.clone();
 				// Update the dimensions of the world object
-				boolean updated = UI.updateWODims(selectedWO);
+				WOUndoState undoState = UI.updateWODims(selectedWO);
 				
-				if (updated) {
+				if (undoState != null) {
 					// Save original world object onto the undo stack
-					updateScenarioUndo(saveState);
+					updateScenarioUndo(undoState);
 				}
 			}
 			
@@ -914,8 +911,9 @@ public class RobotRun extends PApplet {
 	public void button_objDelete() {
 		// Delete focused world object and add to the scenario undo stack
 		WorldObject selected = UI.getSelectedWO();
+		
 		if (selected != null) {
-			updateScenarioUndo( selected );
+			updateScenarioUndo(new WOUndoDelete(selected, activeScenario));
 			int ret = getActiveScenario().removeWorldObject( selected );
 			
 			if (ret == 0) {
@@ -943,29 +941,14 @@ public class RobotRun extends PApplet {
 			if (selectedWO instanceof Fixture || (selectedWO instanceof Part &&
 					(r == null || !r.isHeld((Part)selectedWO)))) {
 				
-				WorldObject savedState = selectedWO.clone();
-	
-				if (UI.updateWOCurrent(selectedWO)) {
+				WOUndoState undoState = UI.updateWOCurrent(selectedWO);
+				
+				if (undoState != null) {
 					/*
 					 * If the object was modified, then save the previous state
 					 * of the object
 					 */
-					updateScenarioUndo(savedState);
-					
-					/* If the edited object is a fixture, then update the orientation
-					 * of all parts, which reference this fixture, in this scenario. */
-					if (selectedWO instanceof Fixture && getActiveScenario() != null) {
-
-						for (WorldObject wldObj : getActiveScenario()) {
-							if (wldObj instanceof Part) {
-								Part p = (Part)wldObj;
-
-								if (p.getFixtureRef() == selectedWO) {
-									p.updateAbsoluteOrientation();
-								}
-							}
-						}
-					}
+					updateScenarioUndo(undoState);
 				}
 	
 				DataManagement.saveScenarios(this);
@@ -986,12 +969,12 @@ public class RobotRun extends PApplet {
 			WorldObject selectedWO = UI.getSelectedWO();
 			
 			if (selectedWO instanceof Part && (r == null || !r.isHeld((Part)selectedWO))) {
-				WorldObject savedState = (WorldObject) selectedWO.clone();
+				WOUndoState undoState = UI.updateWOCurrent(selectedWO);
 				UI.fillCurWithDef( (Part)selectedWO );
 
-				if (UI.updateWOCurrent(selectedWO)) {
+				if (undoState != null) {
 					// If the part was modified, then save its previous state
-					updateScenarioUndo(savedState);
+					updateScenarioUndo(undoState);
 				}
 
 				DataManagement.saveScenarios(this);
@@ -1008,7 +991,8 @@ public class RobotRun extends PApplet {
 		for (WorldObject wo : activeScenario) {
 			// Only applies to parts
 			if (wo instanceof Part) {
-				updateScenarioUndo((WorldObject) wo.clone());
+				updateScenarioUndo(new WOUndoCurrent(wo));
+				
 				Part p = (Part) wo;
 				p.setLocalCenter(p.getDefaultCenter());
 				p.setLocalOrientation(p.getDefaultOrientation());
@@ -1035,11 +1019,11 @@ public class RobotRun extends PApplet {
 		WorldObject selectedWO = UI.getSelectedWO();
 		// Only parts have a default position and orientation
 		if (selectedWO instanceof Part) {
-			WorldObject saveState = selectedWO.clone();
+			WOUndoState undoState = UI.updateWODefault( (Part)selectedWO );
 			
-			if (UI.updateWODefault( (Part)selectedWO )) {
+			if (undoState != null) {
 				// If the part was modified, then save its previous state
-				updateScenarioUndo(saveState);
+				updateScenarioUndo(undoState);
 			}
 		}
 	}
@@ -1114,7 +1098,7 @@ public class RobotRun extends PApplet {
 		
 		if (!traceEnabled()) {
 			// Empty trace when it is disabled
-			tracePts.clear();
+			robotTrace.clear();
 		}
 	}
 
@@ -1720,7 +1704,7 @@ public class RobotRun extends PApplet {
 	 * @return Whether or not bounding boxes are displayed
 	 */
 	public boolean isOBBRendered() {
-		return !UI.getButtonState("ToggleOBBs");
+		return !UI.getButtonState(WGUI_Buttons.ObjToggleBounds);
 	}
 
 	/**
@@ -2017,7 +2001,7 @@ public class RobotRun extends PApplet {
 			
 			if (!mouseDragWO && (mouseButton == CENTER || mouseButton == RIGHT)) {
 				// Save the selected world object's current state
-				SCENARIO_UNDO.push(selectedWO.clone());
+				updateScenarioUndo(new WOUndoCurrent(selectedWO));
 			}
 			
 			mouseDragWO = true;
@@ -2688,10 +2672,14 @@ public class RobotRun extends PApplet {
 			keyCodeMap = new KeyCodeMap();
 			DataManagement.initialize(this);
 			
-			RoboticArm r = createRobot(0, new PVector(200, Fields.FLOOR_Y, 200));
+			robotTrace = new RTrace();
+			
+			RoboticArm r = createRobot(0, new PVector(200, Fields.FLOOR_Y, 200),
+					robotTrace);
 			ROBOTS.put(r.RID, r);
 			
-			r = createRobot(1, new PVector(200, Fields.FLOOR_Y, -750));
+			r = createRobot(1, new PVector(200, Fields.FLOOR_Y, -750),
+					robotTrace);
 			ROBOTS.put(r.RID, r);
 
 			activeRobot = ROBOTS.get(0);
@@ -2708,8 +2696,6 @@ public class RobotRun extends PApplet {
 			
 			progExecState = new ProgExecution();
 			progCallStack = new Stack<>();
-			
-			tracePts = new LinkedList<PVector>();
 			
 			mInstRobotAt = new HashMap<Integer, Boolean>();
 			
@@ -2764,12 +2750,15 @@ public class RobotRun extends PApplet {
 	
 	/**
 	 * Is the trace function enabled. The user can enable/disable this function
-	 * with a button in the miscellaneous window.
+	 * with a button in the miscellaneous window. In addition, the active
+	 * robot's end effector trace overrides the state of the trace toggle
+	 * button ( see RoboticArm.isEETraceEnabled() ).
 	 * 
 	 * @return	If the trace functionality is enabled
 	 */
 	public boolean traceEnabled() {
-		return UI.getButtonState("ToggleTrace");
+		return activeRobot.isEETraceEnabled() ||
+				UI.getButtonState(WGUI_Buttons.RobotToggleTrace);
 	}
 
 	/**
@@ -2777,8 +2766,9 @@ public class RobotRun extends PApplet {
 	 */
 	public void undoScenarioEdit() {
 		if (!SCENARIO_UNDO.empty()) {
-			activeScenario.put( SCENARIO_UNDO.pop() );
+			SCENARIO_UNDO.pop().undo();
 			UI.updateListContents();
+			
 			WorldObject wo = UI.getSelectedWO();
 			
 			if (wo != null) {
@@ -2856,16 +2846,17 @@ public class RobotRun extends PApplet {
 	/**
 	 * Push a world object onto the undo stack for world objects.
 	 * 
-	 * @param saveState
-	 *            The world object to save
+	 * @param undoState	The world object to save
 	 */
-	public void updateScenarioUndo(WorldObject saveState) {
-		// Only the latest 40 world object save states can be undone
-		if (SCENARIO_UNDO.size() >= 40) {
-			SCENARIO_UNDO.remove(0);
+	public void updateScenarioUndo(WOUndoState undoState) {
+		if (undoState != null) {
+			// Only the latest 40 world object save states can be undone
+			if (SCENARIO_UNDO.size() >= 40) {
+				SCENARIO_UNDO.remove(0);
+			}
+	
+			SCENARIO_UNDO.push(undoState);
 		}
-
-		SCENARIO_UNDO.push(saveState);
 	}
 	
 	/**
@@ -2965,9 +2956,10 @@ public class RobotRun extends PApplet {
 	 * @param rid			The id of the robot, which must be unique amongst
 	 * 						all other robots
 	 * @param basePosition	The position of the robot's base segment
+	 * @param robotTrace	A reference to this.robotTrace
 	 * @return				The initialized robot
 	 */
-	private RoboticArm createRobot(int rid, PVector basePosition) {
+	private RoboticArm createRobot(int rid, PVector basePosition, RTrace robotTrace) {
 		MyPShape[] segModels = new MyPShape[6];
 		MyPShape[] eeModels = new MyPShape[7];
 		
@@ -2987,32 +2979,7 @@ public class RobotRun extends PApplet {
 		eeModels[5] = loadSTLModel("robot/EE/GLUE_GUN.stl", color(108, 206, 214));
 		eeModels[6] = loadSTLModel("robot/EE/WIELDER.stl", color(108, 206, 214));
 		
-		return new RoboticArm(rid, basePosition, segModels, eeModels);
-	}
-	
-	/**
-	 * Draws the points stored for this robot's trace function with respect to
-	 * the given graphics object's coordinate frame.
-	 * 
-	 * @param g	The graphics object used to drawn the trace
-	 */
-	private void drawTrace(PGraphics g) {		
-		if (tracePts.size() > 1) {
-			PVector lastPt = tracePts.getFirst();
-			
-			g.pushStyle();
-			g.stroke(0);
-			g.strokeWeight(3);
-			
-			for(PVector curPt : tracePts) {
-				
-				g.line(lastPt.x, lastPt.y, lastPt.z, curPt.x, curPt.y, curPt.z);
-				
-				lastPt = curPt;
-			}
-			
-			g.popStyle();
-		}
+		return new RoboticArm(rid, basePosition, segModels, eeModels, robotTrace);
 	}
 	
 	/**
@@ -3275,28 +3242,21 @@ public class RobotRun extends PApplet {
 		if (activeRobot.inMotion() && traceEnabled()) {
 			Point tipPosNative = activeRobot.getToolTipNative();
 			// Update the robots trace points
-			if(tracePts.isEmpty()) {
-				tracePts.add(tipPosNative.position);
+			if(robotTrace.isEmpty()) {
+				robotTrace.addPt(tipPosNative.position);
 				
 			} else {
-				PVector lastTracePt = tracePts.getLast();
+				PVector lastTracePt = robotTrace.getLastPt();
 				
-				if (PVector.sub(tipPosNative.position, lastTracePt).mag()
-						> 0.5f) {
+				if (lastTracePt == null || PVector.sub(tipPosNative.position,
+						lastTracePt).mag() > 0.5f) {
 					
-					tracePts.addLast(tipPosNative.position);
+					robotTrace.addPt(tipPosNative.position);
 				}
-			}
-			
-			if (tracePts.size() > 10000f) {
-				// Begin to remove points after the limit is reached
-				tracePts.removeFirst();
 			}
 		}
 		
-		if (traceEnabled()) {
-			drawTrace(g);
-		}
+		robotTrace.draw(g);
 		
 		/* Render the axes of the selected World Object */
 		

@@ -30,8 +30,10 @@ import programming.MotionInstruction;
 import programming.PosMotionInst;
 import programming.Program;
 import regs.DataRegister;
+import regs.IORegTrace;
 import regs.IORegister;
 import regs.PositionRegister;
+import regs.RTrace;
 import ui.DisplayLine;
 
 public class RoboticArm {
@@ -176,9 +178,10 @@ public class RoboticArm {
 	 * @param basePos			The position of the robot's base segment
 	 * @param segmentModels		The list of models for the robot's segment
 	 * @param endEffectorModels	The list of models for the robot's end effectors
+	 * @param robotTrace		A reference to the trace in the robotRun application
 	 */
 	public RoboticArm(int rid, PVector basePos, MyPShape[] segmentModels,
-			MyPShape[] endEffectorModels) {
+			MyPShape[] endEffectorModels, RTrace robotTrace) {
 		
 		
 		RID = rid;
@@ -303,10 +306,10 @@ public class RoboticArm {
 				new BoundingBox[0], 3, "POINTER");
 		
 		EE_LIST[4] = new EndEffector(endEffectorModels[5], new BoundingBox[0],
-				new BoundingBox[0], 4, "GLUE GUN");
+				new BoundingBox[0], 4, "GLUE GUN", robotTrace);
 		
 		EE_LIST[5] = new EndEffector(endEffectorModels[6], new BoundingBox[0],
-				new BoundingBox[0], 5, "WIELDER");
+				new BoundingBox[0], 5, "WIELDER", robotTrace);
 		
 		activeEEIdx = 0;
 		
@@ -1625,6 +1628,29 @@ public class RoboticArm {
 	}
 	
 	/**
+	 * Certain end effectors have a trace functionality associated with certain
+	 * states of the end effector. This method evaluates the state of and the
+	 * active end effector of this robot and determines if the trace
+	 * functionality is active.
+	 * 
+	 * @return	If the trace functionality is active based on the robot's end
+	 * 			effector is enabled
+	 */
+	public boolean isEETraceEnabled() {
+		EndEffector activeEE = getActiveEE();
+		
+		if (activeEE != null) {
+			/* The trace functionality is active when the active end effector's
+			 * I/O register is associated with the trace functionality and its
+			 * state is ON. */
+			IORegister ioReg = activeEE.getIORegister();
+			return ioReg instanceof IORegTrace && ioReg.getState() == Fields.ON;
+		}
+		
+		return false;
+	}
+	
+	/**
 	 * @return	Is the given part being held by the robot
 	 */
 	public boolean isHeld(Part p) {
@@ -1984,7 +2010,7 @@ public class RoboticArm {
 		IORegister ioReg = getIOReg(rdx);
 		
 		if (ioReg != null) {
-			ioReg.state = newState;
+			ioReg.setState(newState);
 		}
 	}
 	

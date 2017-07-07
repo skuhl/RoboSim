@@ -30,8 +30,9 @@ public class ScreenSetDefaultTooltip extends ST_ScreenOptionsMenu {
 
 	@Override
 	public void actionEntr() {
-		robotRun.getInactiveRobot().setDefToolTip(robotRun.curFrameIdx, options.getLineIdx());
-		robotRun.getInactiveRobot().setActiveToolFrame(robotRun.curFrameIdx);
+		RoboticArm r = robotRun.getActiveRobot();
+		r.setDefToolTip(robotRun.curFrameIdx, options.getLineIdx());
+		r.setActiveToolFrame(robotRun.curFrameIdx);
 		DataManagement.saveRobotData(robotRun.getActiveRobot(), 2);
 		robotRun.lastScreen();
 	}
