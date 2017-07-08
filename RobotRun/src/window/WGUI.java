@@ -659,6 +659,7 @@ public class WGUI implements ControlListener {
 		addButton(WGUI_Buttons.RobotToggleActive, "Add Robot", miscellaneous, mdropItemWidth, sButtonHeight, Fields.small);
 		addButton(WGUI_Buttons.CamToggleActive, "Enable RCam", miscellaneous, mdropItemWidth, sButtonHeight, Fields.small);
 		addButton(WGUI_Buttons.RobotToggleTrace, "Enable Trace", miscellaneous, mdropItemWidth, sButtonHeight, Fields.small);
+		addButton(WGUI_Buttons.RobotClearTrace, "Clear Trace", miscellaneous, mdropItemWidth, sButtonHeight, Fields.small);
 		
 		/* Initialize dropdown list elements
 		 * 
@@ -1349,7 +1350,6 @@ public class WGUI implements ControlListener {
 				// Create a fixture
 				String name = getTextField("WOName").getText();
 				int typeID = (int)getRadioButton("Shape").getValue();
-
 				int fill = getFillColor();
 
 				switch(typeID) {
@@ -3391,11 +3391,16 @@ public class WGUI implements ControlListener {
 		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
 		getDropdown("AxesDisplay").setPosition(relPos[0], relPos[1]);
 
-		// Bounding box display toggle button
+		// Robot Camera toggle button
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		Button b = getButton(WGUI_Buttons.ObjToggleBounds).setPosition(relPos[0], relPos[1]);
+		Button b = getButton(WGUI_Buttons.CamToggleActive).setPosition(relPos[0], relPos[1]);
+		updateButtonBgColor(b.getName(), b.isOn());
 		c = b;
 		
+		// Bounding box display toggle button
+		relPos = getAbsPosFrom(b, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
+		b = getButton(WGUI_Buttons.ObjToggleBounds).setPosition(relPos[0], relPos[1]);
+				
 		// Update button color based on the state of the button
 		if (b.isOn()) {
 			b.setLabel("Show OBBs");
@@ -3406,19 +3411,10 @@ public class WGUI implements ControlListener {
 		
 		updateButtonBgColor(b.getName(), b.isOn());
 		
-		// Robot Camera toggle button
-		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
-		b = getButton(WGUI_Buttons.CamToggleActive).setPosition(relPos[0], relPos[1]);
-		updateButtonBgColor(b.getName(), b.isOn());
-
-		// Second robot toggle button
-		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		c = b = getButton(WGUI_Buttons.RobotToggleActive).setPosition(relPos[0], relPos[1]);
-		updateButtonBgColor(b.getName(), b.isOn());
-		
 		// Trace Robot Tool Tip button
-		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
-		c = b = getButton(WGUI_Buttons.RobotToggleTrace).setPosition(relPos[0], relPos[1]);
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		b = getButton(WGUI_Buttons.RobotToggleTrace).setPosition(relPos[0], relPos[1]);
+		c = b;
 		
 		if (b.isOn()) {
 			b.setLabel("Disable Trace");
@@ -3428,9 +3424,18 @@ public class WGUI implements ControlListener {
 		}
 		
 		updateButtonBgColor(b.getName(), b.isOn());
-
+		
+		// Second robot toggle button
+		relPos = getAbsPosFrom(b, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
+		b = getButton(WGUI_Buttons.RobotToggleActive).setPosition(relPos[0], relPos[1]);
+		updateButtonBgColor(b.getName(), b.isOn());
+		
+		// Clear trace button
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		b = getButton(WGUI_Buttons.RobotClearTrace).setPosition(relPos[0], relPos[1]);
+		
 		// Update window background display
-		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY + 60);
+		relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY + 60);
 		background.setPosition(miscellaneous.getPosition())
 		.setBackgroundHeight(relPos[1])
 		.setHeight(relPos[1])

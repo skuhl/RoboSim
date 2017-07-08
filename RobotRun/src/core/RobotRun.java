@@ -1101,6 +1101,10 @@ public class RobotRun extends PApplet {
 			robotTrace.clear();
 		}
 	}
+	
+	public void button_robotClearTrace() {
+		robotTrace.clear();
+	}
 
 	/**
 	 * The scenario window confirmation button
@@ -1814,7 +1818,10 @@ public class RobotRun extends PApplet {
 					activeRobot.cycleEndEffector();
 					UI.updateListContents();
 				}
-				
+			} else if (keyCode == KeyEvent.VK_F) {
+				if (activeRobot.getActiveEE() != null) {
+					activeRobot.getActiveEE().getIORegister().toggleState();
+				}
 			} else if (keyCode == KeyEvent.VK_P) {
 				// Toggle the Robot's End Effector state
 				if (!isProgExec()) {

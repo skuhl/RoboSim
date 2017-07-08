@@ -91,5 +91,6 @@ public interface WGUI_Buttons {
 	public static final String ObjToggleBounds = "button_objToggleBounds";
 	public static final String RobotToggleActive = "button_robotToggleActive";
 	public static final String RobotToggleTrace = "button_robotToggleTrace";
+	public static final String RobotClearTrace = "button_robotClearTrace";
 	public static final String ScenarioConfirm = "button_scenarioConfirm";
 }
