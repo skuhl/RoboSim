@@ -21,6 +21,7 @@ import expression.ExpressionElement;
 import expression.FloatMath;
 import expression.Operand;
 import expression.OperandBool;
+import expression.OperandCamObj;
 import expression.OperandDReg;
 import expression.OperandFloat;
 import expression.OperandGeneric;
@@ -1325,6 +1326,9 @@ public abstract class DataManagement {
 						// Specific portion of a point
 						out.writeInt( ((OperandPRegIdx)eo).getSubIdx() );
 					}
+				} else if(eo instanceof OperandCamObj) {
+					// Object match operand
+					//out.writeInt(0);
 				} else if (eo instanceof FloatMath) {
 					// Constant float
 					out.writeFloat( ((FloatMath)eo).getArithValue() );
