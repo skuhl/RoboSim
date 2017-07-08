@@ -34,6 +34,7 @@ import screen.edit_item.ScreenSetMotionInstrCircRegType;
 import screen.edit_item.ScreenSetMotionInstrObj;
 import screen.edit_item.ScreenSetMotionInstrOffsetType;
 import screen.edit_item.ScreenSetMotionInstrType;
+import screen.edit_item.ScreenSetObjectOperandTgt;
 import screen.edit_item.ScreenSetRegExpressionType;
 import screen.edit_item.ScreenSetSelectStmtAction;
 import screen.edit_item.ScreenSetSelectStmtArg;
@@ -232,6 +233,7 @@ public class ScreenManager {
 		case SET_REG_EXPR_TYPE: nextScreen = new ScreenSetRegExpressionType(robotRun); break;
 		case SET_SELECT_STMT_ARG: nextScreen = new ScreenSetSelectStmtArg(robotRun); break;
 		case SET_SELECT_STMT_ACT: nextScreen = new ScreenSetSelectStmtAction(robotRun); break;
+		case SET_OBJ_OPERAND_TGT: nextScreen = new ScreenSetObjectOperandTgt(robotRun); break;
 
 		/*
 		 * Screens used to display a several list of contents for the user to

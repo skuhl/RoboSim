@@ -3,6 +3,8 @@ package screen.edit_item;
 import core.RobotRun;
 import expression.Expression;
 import expression.Operand;
+import expression.OperandBool;
+import expression.OperandCamObj;
 import expression.OperandDReg;
 import expression.OperandFloat;
 import expression.OperandIOReg;
@@ -46,7 +48,7 @@ public class ScreenSetExpressionArg extends ST_ScreenEditItem {
 				if(r.getReg() instanceof DataRegister) {
 					loadFloatArgs();
 				} else if(r.getReg() instanceof IORegister) {
-					if(prev == null) {
+					if(prev == null || prev.getType() == Operator.NO_OP) {
 						loadFloatArgs();
 						loadBoolArgs();
 					} else if(prev.getType() == Operator.ARITH_OP || prev.getType() == Operator.BOOL_OP) {
@@ -64,7 +66,7 @@ public class ScreenSetExpressionArg extends ST_ScreenEditItem {
 				}
 			}
 			else if(instr instanceof IfStatement) {
-				if(prev == null) {
+				if(prev == null || prev.getType() == Operator.NO_OP) {
 					loadFloatArgs();
 					loadBoolArgs();
 				} else if(prev.getType() == Operator.ARITH_OP || prev.getType() == Operator.BOOL_OP) {
@@ -74,7 +76,7 @@ public class ScreenSetExpressionArg extends ST_ScreenEditItem {
 				}
 			}
 			
-			options.addLine(7, "(...)");
+			options.addLine(9, "(...)");
 		}
 	}
 	
@@ -86,12 +88,14 @@ public class ScreenSetExpressionArg extends ST_ScreenEditItem {
 	
 	private void loadBoolArgs() {
 		options.addLine(3, "IO[x]");
+		options.addLine(4, "Obj[x]");
+		options.addLine(5, "BoolConst");
 	}
 	
 	private void loadPointArgs() {
-		options.addLine(4, "PR[x]");
-		options.addLine(5, "JPos");
-		options.addLine(6, "LPos");
+		options.addLine(6, "PR[x]");
+		options.addLine(7, "JPos");
+		options.addLine(8, "LPos");
 	}
 
 	@Override
@@ -121,21 +125,29 @@ public class ScreenSetExpressionArg extends ST_ScreenEditItem {
 			robotRun.opEdit = expr.setOperand(robotRun.editIdx, operand);
 			robotRun.switchScreen(ScreenMode.INPUT_IOREG_IDX);
 		} else if(options.getCurrentItemIdx() == 4) {
+			operand = new OperandCamObj();
+			robotRun.opEdit = expr.setOperand(robotRun.editIdx, operand);
+			robotRun.switchScreen(ScreenMode.SET_OBJ_OPERAND_TGT);
+		} else if(options.getCurrentItemIdx() == 5) {
+			operand = new OperandBool();
+			robotRun.opEdit = expr.setOperand(robotRun.editIdx, operand);
+			robotRun.switchScreen(ScreenMode.SET_BOOL_CONST);
+		} else if(options.getCurrentItemIdx() == 6) {
 			// set arg to new preg
 			operand = new OperandPReg(new PositionRegister());
 			robotRun.opEdit = expr.setOperand(robotRun.editIdx, operand);
 			robotRun.switchScreen(ScreenMode.INPUT_PREG_IDX1);
-		} else if(options.getCurrentItemIdx() == 5) {	
+		} else if(options.getCurrentItemIdx() == 7) {	
 			// JPos operand
 			operand = new RobotPoint(robotRun.getActiveRobot(), false);
 			robotRun.opEdit = expr.setOperand(robotRun.editIdx, operand);
 			robotRun.lastScreen();
-		} else if(options.getCurrentItemIdx() == 6) {
+		} else if(options.getCurrentItemIdx() == 8) {
 			// LPos operand
 			operand = new RobotPoint(robotRun.getActiveRobot(), true);
 			robotRun.opEdit = expr.setOperand(robotRun.editIdx, operand);
 			robotRun.lastScreen();
-		} else if(options.getCurrentItemIdx() == 7) {
+		} else if(options.getCurrentItemIdx() == 9) {
 			// set arg to new expression
 			operand = new Expression();
 			robotRun.opEdit = expr.setOperand(robotRun.editIdx, operand);

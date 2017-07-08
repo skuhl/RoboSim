@@ -32,11 +32,11 @@ public class RMatrix extends Array2DRowRealMatrix {
 		
 		RMatrix m = new RMatrix(new double[][] {{v.x}, {v.y}, {v.z}, {1}});
 		RMatrix result = this.multiply(m);
-		
+
 		float x = result.getEntryF(0, 0);
-		float y = result.getEntryF(0, 1);
-		float z = result.getEntryF(0, 2);
-		float w = result.getEntryF(0, 3);
+		float y = result.getEntryF(1, 0);
+		float z = result.getEntryF(2, 0);
+		float w = result.getEntryF(3, 0);
 		
 		return new PVector(x/w, y/w, z/w);
 	}

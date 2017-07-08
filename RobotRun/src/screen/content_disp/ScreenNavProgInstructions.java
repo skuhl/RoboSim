@@ -607,6 +607,9 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 			robotRun.opEdit = o;
 			robotRun.nextScreen(ScreenMode.SET_BOOL_CONST);
 			break;
+		case Operand.CAM_MATCH:
+			robotRun.opEdit = o;
+			robotRun.nextScreen(ScreenMode.SET_OBJ_OPERAND_TGT);
 		case Operand.DREG: // Data reg
 			robotRun.opEdit = o;
 			robotRun.nextScreen(ScreenMode.INPUT_DREG_IDX);

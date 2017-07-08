@@ -3,6 +3,7 @@ package core;
 import java.util.ArrayList;
 
 import geom.ComplexShape;
+import geom.Part;
 import geom.RMatrix;
 import geom.RQuaternion;
 import geom.WorldObject;
@@ -400,11 +401,15 @@ public class RobotCamera {
 	
 	public ArrayList<WorldObject> teachObjectToCamera(Scenario scene) {
 		ArrayList<WorldObject> objs = getObjectsInFrame(scene);
-		if(objs.size() > 1 || objs.size() <= 0) {
-			return null;
+		WorldObject teachObj = null;
+		
+		for(WorldObject o: objs) {
+			if(o instanceof Part) {
+				teachObj = o.clone();
+			}
 		}
-		else {
-			WorldObject teachObj = objs.get(0).clone();
+		
+		if(teachObj != null) {
 			RMatrix objOrient = teachObj.getLocalOrientation();
 			RMatrix viewOrient = objOrient.transpose().multiply(camOrient.toMatrix());
 			teachObj.setLocalOrientation(viewOrient);
@@ -418,8 +423,9 @@ public class RobotCamera {
 			}
 			
 			taughtObjects.add(teachObj);
-			return taughtObjects;
 		}
+		
+		return taughtObjects;
 	}
 
 	public RobotCamera update(PVector pos, PVector rot,	float fov, float ar, 

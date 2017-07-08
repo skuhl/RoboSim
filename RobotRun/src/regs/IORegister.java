@@ -42,4 +42,12 @@ public class IORegister extends Register {
 		// Include the register's prefix and index
 		return String.format("%s[%s]", regPrefix(), idxStr);
 	}
+
+	public void toggleState() {
+		if(state == Fields.OFF) {
+			state = Fields.ON;
+		} else {
+			state = Fields.OFF;
+		}
+	}
 }
