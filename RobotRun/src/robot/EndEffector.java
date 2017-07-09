@@ -6,7 +6,6 @@ import geom.Part;
 import global.Fields;
 import regs.IORegTrace;
 import regs.IORegister;
-import regs.RTrace;
 
 /**
  * Defines an end effector for a robotic arm.

@@ -54,7 +54,7 @@ import programming.RegisterStatement;
 import programming.SelectStatement;
 import regs.PositionRegister;
 import regs.Register;
-import regs.RTrace;
+import robot.RTrace;
 import robot.RoboticArm;
 import screen.Screen;
 import screen.ScreenManager;
@@ -113,6 +113,7 @@ public class RobotRun extends PApplet {
 
 	// container for instructions being copied/ cut and pasted
 	public ArrayList<Instruction> clipBoard = new ArrayList<>();
+	
 	/**
 	 * Index of the current frame (Tool or User) selecting when in the Frame
 	 * menus
@@ -150,21 +151,23 @@ public class RobotRun extends PApplet {
 	 * was first pressed down.
 	 */
 	private WorldObject mouseOverWO;
+	
 	private Stack<ProgExecution> progCallStack;
 	private ProgExecution progExecState;
+	
 	private RobotCamera rCamera;
 
 	private boolean record;
-	private final HashMap<Integer, RoboticArm> ROBOTS = new HashMap<>();
-
-	private RTrace robotTrace;
-	private final Stack<WOUndoState> SCENARIO_UNDO = new Stack<>();
 	
+	private final HashMap<Integer, RoboticArm> ROBOTS = new HashMap<>();
+	private RTrace robotTrace;
+	
+	private final Stack<WOUndoState> SCENARIO_UNDO = new Stack<>();
 	private final ArrayList<Scenario> SCENARIOS = new ArrayList<>();
+	
 	private ScreenManager screens;
 
 	private boolean shift = false; // Is shift button pressed or not?
-	
 	private boolean step = false; // Is step button pressed or not?
 	
 	private WGUI UI;
@@ -1098,7 +1101,7 @@ public class RobotRun extends PApplet {
 		
 		if (!traceEnabled()) {
 			// Empty trace when it is disabled
-			robotTrace.clear();
+			robotTrace.addPt(null);
 		}
 	}
 	
@@ -2200,7 +2203,7 @@ public class RobotRun extends PApplet {
 		}
 	}
 
-	public void newIOInstruction(int ioIdx, int state) {
+	public void newIOInstruction(int ioIdx, boolean state) {
 		RoboticArm r = activeRobot;
 		Program p = getActiveProg();
 		IOInstruction io = new IOInstruction(ioIdx, state);

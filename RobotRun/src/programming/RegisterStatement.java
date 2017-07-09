@@ -12,6 +12,7 @@ import global.RMath;
 import processing.core.PConstants;
 import processing.core.PVector;
 import regs.DataRegister;
+import regs.IORegTrace;
 import regs.IORegister;
 import regs.PositionRegister;
 import regs.Register;
@@ -118,8 +119,11 @@ public class RegisterStatement extends Instruction implements ExpressionEvaluati
 		else if(result instanceof OperandBool) {
 			// Update an I/O register
 			boolean b = ((OperandBool)result).getBoolValue();
-			if(reg instanceof IORegister) {
-				((IORegister)reg).setState( (b) ? Fields.ON : Fields.OFF );
+			if(reg instanceof IORegTrace) {
+				((IORegTrace)reg).setState(b ? Fields.ON : Fields.OFF);
+				return 0;
+			} else if(reg instanceof IORegister) {
+				((IORegister)reg).setState(b ? Fields.ON : Fields.OFF);
 				return 0;
 			}
 		}

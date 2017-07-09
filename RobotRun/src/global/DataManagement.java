@@ -558,8 +558,7 @@ public abstract class DataManagement {
 			boolean isCommented = in.readBoolean();
 			int reg = in.readInt();
 			int val = in.readInt();
-
-			inst = new IOInstruction(reg, val);
+			inst = new IOInstruction(reg, val == Fields.ON);
 			inst.setIsCommented(isCommented);
 
 		} else if (instType == 5) {

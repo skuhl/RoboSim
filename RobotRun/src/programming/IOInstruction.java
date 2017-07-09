@@ -10,8 +10,14 @@ public class IOInstruction extends Instruction {
 		state = Fields.OFF;
 		reg = -1;
 	}
+	
+	public IOInstruction(int r, boolean s) {
+		super();
+		state = s ? Fields.ON : Fields.OFF;
+		reg = r;
+	}
 
-	public IOInstruction(int r, int t) {
+	private IOInstruction(int r, int t) {
 		super();
 		state = t;
 		reg = r;
@@ -24,12 +30,12 @@ public class IOInstruction extends Instruction {
 
 		return copy;
 	}
+	
 	public int getReg(){ return reg; }
 	public int getState(){ return state; }
 
 	public void setReg(int r){ reg = r; }
-
-	public void setState(int s){ state = s; }
+	public void setState(boolean s){ state = s ? Fields.ON : Fields.OFF; }
 
 	@Override
 	public String[] toStringArray() {
