@@ -1,7 +1,6 @@
 package programming;
 
 import enums.InstUndoType;
-import global.Fields;
 
 public class InstUndoState {
 	private InstUndoType type;
@@ -32,8 +31,6 @@ public class InstUndoState {
 	 * state.
 	 */
 	public void undo() {
-		Fields.debug("UNDO %s\n", this);
-		
 		if (type == InstUndoType.EDITED || type == InstUndoType.REPLACED) {
 			// Undo an edit or replacement
 			parent.replace(idx, elemRef);

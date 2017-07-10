@@ -1790,11 +1790,14 @@ public class RoboticArm {
 					break;
 				}
 				
+				/* TEST CODE *
+				Fields.debug("UNDO %s\n", undoState);
+				/**/
 				undoState.undo();
 				PROG_UNDO.pop();
 			}
 			
-		} else if (Fields.DEBUG) {
+		} else {
 			Fields.debug("Empty program undo stack!");
 		}
 	}
@@ -1857,7 +1860,9 @@ public class RoboticArm {
 		
 		InstUndoState undoState = new InstUndoState(type, gid, prog, idx, inst);
 		PROG_UNDO.push(undoState);
+		/* TEST CODE *
 		Fields.debug("%s\n", undoState);
+		/**/
 	}
 	
 	/**
