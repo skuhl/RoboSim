@@ -3,7 +3,8 @@ package regs;
 import global.Fields;
 
 /**
- * Defines an I/O register, the state of which is linked to the trace functionality.
+ * Defines an I/O register, the state of which is linked to the trace
+ * functionality.
  * 
  * @author Joshua Hooker
  */

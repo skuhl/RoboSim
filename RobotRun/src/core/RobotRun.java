@@ -81,7 +81,9 @@ import window.WGUI;
 import window.WGUI_Buttons;
 
 /**
- * TODO general comments
+ * The main class of the RoboRun application. This class handles the button
+ * events as well as the main render loop of the application amongst other
+ * various nuances in the program.
  * 
  * @author Vincent Druckte, Joshua Hooker, and James Walker
  */

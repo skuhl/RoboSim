@@ -2,7 +2,11 @@ package regs;
 
 import global.Fields;
 
-/* A simple class designed to hold a state value along with a name. */
+/**
+ * A simple class designed to hold a state value along with a name.
+ * 
+ * @author Joshua Hooker and Vincent Druckte
+ */
 public class IORegister extends Register {
 	
 	protected int state;

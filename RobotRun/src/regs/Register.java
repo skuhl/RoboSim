@@ -1,5 +1,10 @@
 package regs;
 
+/**
+ * A general class used to link all the different types of registers used by a robotic arm.
+ * 
+ * @author Joshua Hooker and Vincent Druckte
+ */
 public abstract class Register {
 	public final int idx;
 	public String comment;
