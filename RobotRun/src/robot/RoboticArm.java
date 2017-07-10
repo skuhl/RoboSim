@@ -1249,16 +1249,40 @@ public class RoboticArm {
 	 * 					instruction
 	 */
 	public Point getPosition(PosMotionInst mInst, Program parent) {
-		return getPosition(mInst.getPosIdx(), mInst.getPosType(), parent);
+		int pType = mInst.getPosType();
+		Point pt = null;
+		
+		if (pType == Fields.PTYPE_PREG) {
+			// The instruction references a global position register
+			PositionRegister pReg = getPReg(mInst.getPosIdx());
+			
+			if (pReg != null) {
+				pt = pReg.point;
+			}
+			
+		} else if (pType == Fields.PTYPE_PROG) {
+			pt = parent.getPosition(mInst.getPosIdx());
+		}
+		
+		if (pt != null) {
+			return pt.clone();
+		}
+		
+		// Uninitialized position or invalid position index
+		return null;
 	}
 	
 	/**
-	 * TODO comment this
+	 * Returns the position associated with the given position index based off
+	 * the given type and program.
 	 * 
-	 * @param posIdx
-	 * @param usePReg
-	 * @param parent
-	 * @return
+	 * @param posIdx	The index of the position in either the program's list
+	 * 					of positions or the robot's global position registers.
+	 * @param usePReg	Whether to pull the position from the program's list of
+						positions or this robot's global position registers.
+	 * @param parent	The program, of which to use the positions
+	 * @return			The position defined by the given index, type, and
+	 * 					program
 	 */
 	private Point getPosition(int posIdx, int pType, Program parent) {
 		Point pt = null;

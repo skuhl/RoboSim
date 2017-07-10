@@ -1834,7 +1834,7 @@ public class RobotRun extends PApplet {
 					UI.updateListContents();
 				}
 				
-			} else if (keyCode == KeyEvent.VK_P) {
+			} else if (keyCode == KeyEvent.VK_F) {
 				// Toggle the Robot's End Effector state
 				if (!isProgExec()) {
 					toggleEEState(activeRobot);
