@@ -400,8 +400,8 @@ public abstract class Screen {
 			IORegister ioReg = r.getIOReg(idx);
 			String col0 = String.format("IO[%2d:%-10s] = ", idx,
 					ioReg.comment);
-			lines.add(new DisplayLine(idx, 0, col0, (ioReg.getState() == 0) ?
-					"OFF" : "ON") );
+			lines.add(new DisplayLine(idx, 0, col0, ioReg.getState() ?
+					"ON" : "OFF"));
 		}
 		
 		return lines;

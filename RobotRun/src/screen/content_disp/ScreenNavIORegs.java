@@ -1,7 +1,6 @@
 package screen.content_disp;
 
 import core.RobotRun;
-import global.Fields;
 import regs.IORegister;
 import robot.RoboticArm;
 import screen.ScreenMode;
@@ -58,8 +57,7 @@ public class ScreenNavIORegs extends ST_ScreenListContents {
 		
 		if (ioReg != null) {
 			// Toggle the state of the I/O register
-			int curState = ioReg.getState();
-			ioReg.setState( (curState == Fields.ON) ? Fields.OFF : Fields.ON );
+			ioReg.setState(!ioReg.getState());
 			robotRun.updatePendantScreen();
 		}
 	}

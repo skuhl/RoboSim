@@ -124,11 +124,11 @@ public class EndEffector extends RSegment {
 		return reg.comment;
 	}
 	
-	public int getState() {
+	public boolean getState() {
 		return reg.getState();
 	}
 	
-	public void setState(int newState) {
+	public void setState(boolean newState) {
 		reg.setState(newState);
 	}
 	

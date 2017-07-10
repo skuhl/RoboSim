@@ -558,7 +558,7 @@ public abstract class DataManagement {
 			int reg = in.readInt();
 			int val = in.readInt();
 
-			inst = new IOInstruction(reg, val);
+			inst = new IOInstruction(reg, val == 0 ? Fields.OFF : Fields.ON);
 			inst.setIsCommented(isCommented);
 
 		} else if (instType == 5) {
@@ -1507,7 +1507,7 @@ public abstract class DataManagement {
 			// Write data associated with the ToolInstruction object
 			out.writeBoolean(t_inst.isCommented());
 			out.writeInt(t_inst.getReg());
-			out.writeInt(t_inst.getState());
+			out.writeInt(t_inst.getState() ? 1 : 0);
 
 		} else if(inst instanceof LabelInstruction) {
 			LabelInstruction l_inst = (LabelInstruction)inst;

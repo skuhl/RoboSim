@@ -2200,7 +2200,7 @@ public class RobotRun extends PApplet {
 		}
 	}
 
-	public void newIOInstruction(int ioIdx, int state) {
+	public void newIOInstruction(int ioIdx, boolean state) {
 		RoboticArm r = activeRobot;
 		Program p = getActiveProg();
 		IOInstruction io = new IOInstruction(ioIdx, state);
@@ -2743,11 +2743,10 @@ public class RobotRun extends PApplet {
 	 */
 	public void toggleEEState(RoboticArm robot) {
 		int edx = robot.getActiveEEIdx();
-		int curState = robot.getEEState();
+		boolean curState = robot.getEEState();
 		
 		if (curState == Fields.ON) {
 			robot.setEEState(edx, Fields.OFF);
-			
 		} else {
 			robot.setEEState(edx, Fields.ON);
 		}
@@ -2815,7 +2814,7 @@ public class RobotRun extends PApplet {
 	 * 					state
 	 * @param newState	The new state of the end effector
 	 */
-	public void updateRobotEEState(int edx, int newState) {
+	public void updateRobotEEState(int edx, boolean newState) {
 		updateRobotEEState(activeRobot, edx, newState);
 	}
 
@@ -2829,7 +2828,7 @@ public class RobotRun extends PApplet {
 	 * 					state
 	 * @param newState	The new state of the end effector
 	 */
-	public void updateRobotEEState(RoboticArm r, int edx, int newState) {
+	public void updateRobotEEState(RoboticArm r, int edx, boolean newState) {
 		r.setEEState(edx, newState);
 		
 		if (activeScenario != null) {

@@ -2,7 +2,7 @@ package programming;
 import global.Fields;
 
 public class IOInstruction extends Instruction {
-	int state;
+	boolean state;
 	int reg;
 
 	public IOInstruction(){
@@ -11,25 +11,24 @@ public class IOInstruction extends Instruction {
 		reg = -1;
 	}
 
-	public IOInstruction(int r, int t) {
+	public IOInstruction(int r, boolean s) {
 		super();
-		state = t;
 		reg = r;
+		state = s;
 	}
 
 	@Override
 	public Instruction clone() {
-		Instruction copy = new IOInstruction(state, reg);
+		Instruction copy = new IOInstruction(reg, state);
 		copy.setIsCommented( isCommented() );
 
 		return copy;
 	}
 	public int getReg(){ return reg; }
-	public int getState(){ return state; }
+	public boolean getState(){ return state; }
 
 	public void setReg(int r){ reg = r; }
-
-	public void setState(int s){ state = s; }
+	public void setState(boolean s){ state = s; }
 
 	@Override
 	public String[] toStringArray() {

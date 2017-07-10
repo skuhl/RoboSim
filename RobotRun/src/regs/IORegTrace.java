@@ -25,13 +25,13 @@ public class IORegTrace extends IORegister {
 		traceRef = robotTrace;
 	}
 	
-	public IORegTrace(int idx, String name, int iniState, RTrace robotTrace) {
-		super(idx, name, iniState);
+	public IORegTrace(int idx, String name, boolean initState, RTrace robotTrace) {
+		super(idx, name, initState);
 		traceRef = robotTrace;
 	}
 	
 	@Override
-	public void setState(int newState) {
+	public void setState(boolean newState) {
 		if (state == Fields.ON && newState == Fields.OFF) {
 			// Add break point
 			traceRef.addPt(null);
