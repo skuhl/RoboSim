@@ -22,9 +22,7 @@ public class ScreenSetCallProg extends ST_ScreenOptionsMenu {
 
 	@Override
 	protected void loadOptions() {
-		RoboticArm r = robotRun.getActiveRobot();
-		Instruction inst = r.getInstToEdit(robotRun.getActiveProg(), 
-				robotRun.getActiveInstIdx());
+		Instruction inst = robotRun.getActiveInstruction();
 		CallInstruction cInst;
 		
 		// Get the call instruction

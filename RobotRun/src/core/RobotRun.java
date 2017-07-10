@@ -42,6 +42,7 @@ import programming.CallInstruction;
 import programming.FrameInstruction;
 import programming.IOInstruction;
 import programming.IfStatement;
+import programming.InstElement;
 import programming.Instruction;
 import programming.JumpInstruction;
 import programming.LabelInstruction;
@@ -144,7 +145,6 @@ public class RobotRun extends PApplet {
 	 * orientation of a world object.
 	 */
 	private boolean mouseDragWO;
-
 	/**
 	 * Keeps track of the world object that the mouse was over, when the mouse
 	 * was first pressed down.
@@ -1498,12 +1498,12 @@ public class RobotRun extends PApplet {
 	public Instruction getActiveInstruction() {
 		Program prog = getActiveProg();
 		
-		if (prog == null || getActiveInstIdx() < 0 || getActiveInstIdx() >= prog.size()) {
+		if (prog == null || getActiveInstIdx() < 0 || getActiveInstIdx() >= prog.getNumOfInst()) {
 			// Invalid instruction or program index
 			return null;
 		}
 		
-		return prog.get(getActiveInstIdx());
+		return prog.getInstAt(getActiveInstIdx());
 	}
 
 	/**
@@ -1810,7 +1810,16 @@ public class RobotRun extends PApplet {
 				
 			} else if (keyCode == KeyEvent.VK_D) {
 				// Debug output
-				global.Fields.debug(screens.toString());
+				Program p = getActiveProg();
+				// Output all of the active program's instruction elements
+				if (p != null) {
+					
+					for (InstElement e : p) {
+						System.out.printf("%d:\t%s\n", e.getID(), e.getInst());
+					}
+					
+					System.out.println();
+				}
 				
 			} else if (keyCode == KeyEvent.VK_E) {
 				// Cycle End Effectors
@@ -2159,7 +2168,7 @@ public class RobotRun extends PApplet {
 		if (getActiveInstIdx() != p.getNumOfInst()) {
 			r.replaceInstAt(p, getActiveInstIdx(), call);
 		} else {
-			p.addInstAtEnd(call);
+			r.addInstAtEnd(p, call, false);
 		}
 	}
 
@@ -2171,7 +2180,7 @@ public class RobotRun extends PApplet {
 		if (getActiveInstIdx() != p.getNumOfInst()) {
 			r.replaceInstAt(p, getActiveInstIdx(), f);
 		} else {
-			p.addInstAtEnd(f);
+			r.addInstAtEnd(p, f, false);
 		}
 	}
 	
@@ -2183,7 +2192,7 @@ public class RobotRun extends PApplet {
 		if (getActiveInstIdx() != p.getNumOfInst()) {
 			r.replaceInstAt(p, getActiveInstIdx(), stmt);
 		} else {
-			p.addInstAtEnd(stmt);
+			r.addInstAtEnd(p, stmt, false);
 		}
 	}
 
@@ -2196,7 +2205,7 @@ public class RobotRun extends PApplet {
 		if (getActiveInstIdx() != p.getNumOfInst()) {
 			r.replaceInstAt(p, getActiveInstIdx(), stmt);
 		} else {
-			p.addInstAtEnd(stmt);
+			r.addInstAtEnd(p, stmt, false);
 		}
 	}
 
@@ -2209,7 +2218,7 @@ public class RobotRun extends PApplet {
 			r.replaceInstAt(p, getActiveInstIdx(), io);
 
 		} else {
-			p.addInstAtEnd(io);
+			r.addInstAtEnd(p, io, false);
 		}
 	}
 
@@ -2221,7 +2230,7 @@ public class RobotRun extends PApplet {
 		if (getActiveInstIdx() != p.getNumOfInst()) {
 			r.replaceInstAt(p, getActiveInstIdx(), j);
 		} else {
-			p.addInstAtEnd(j);
+			r.addInstAtEnd(p, j, false);
 		}
 	}
 
@@ -2234,7 +2243,7 @@ public class RobotRun extends PApplet {
 		if (getActiveInstIdx() != p.getNumOfInst()) {
 			r.replaceInstAt(p, getActiveInstIdx(), l);
 		} else {
-			p.addInstAtEnd(l);
+			r.addInstAtEnd(p, l, false);
 		}
 	}
 
@@ -2267,7 +2276,7 @@ public class RobotRun extends PApplet {
 			} 
 			else {
 				// Insert the new motion instruction
-				getActiveProg().addInstAt(prog.getNumOfInst(), mInst);
+				activeRobot.addInstAtEnd(prog, mInst, false);
 			}
 		}
 		
@@ -2317,7 +2326,7 @@ public class RobotRun extends PApplet {
 		if (getActiveInstIdx() != p.getNumOfInst()) {
 			r.replaceInstAt(p, getActiveInstIdx(), stmt);
 		} else {
-			p.addInstAtEnd(stmt);
+			r.addInstAtEnd(p, stmt, false);
 		}
 	}
 
@@ -2329,7 +2338,7 @@ public class RobotRun extends PApplet {
 		if (getActiveInstIdx() != p.getNumOfInst()) {
 			r.replaceInstAt(p, getActiveInstIdx(), stmt);
 		} else {
-			p.addInstAtEnd(stmt);
+			r.addInstAtEnd(p, stmt, false);
 		}
 	}
 	
@@ -2341,7 +2350,7 @@ public class RobotRun extends PApplet {
 		if (getActiveInstIdx() != p.getNumOfInst()) {
 			r.replaceInstAt(p, getActiveInstIdx(), rcall);
 		} else {
-			p.addInstAtEnd(rcall);
+			r.addInstAtEnd(p, rcall, false);
 		}
 	}
 
@@ -2353,7 +2362,7 @@ public class RobotRun extends PApplet {
 		if (getActiveInstIdx() != p.getNumOfInst()) {
 			r.replaceInstAt(p, getActiveInstIdx(), stmt);
 		} else {
-			p.addInstAtEnd(stmt);
+			r.addInstAtEnd(p, stmt, false);
 		}
 	}
 	
@@ -2376,6 +2385,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	public void pasteInstructions(int options) {
+		RoboticArm r = activeRobot;
 		ArrayList<Instruction> pasteList = new ArrayList<>();
 		Program p = getActiveProg();
 
@@ -2431,7 +2441,7 @@ public class RobotRun extends PApplet {
 				instr = pasteList.get(i);
 			}
 			
-			p.addInstAt(getActiveInstIdx() + i, instr);
+			r.addAt(p, getActiveInstIdx() + i, instr, i != 0);
 		}
 	}
 	
@@ -3021,7 +3031,7 @@ public class RobotRun extends PApplet {
 	private void progExec(int progIdx, int instIdx, boolean singleExec) {
 		Program p = activeRobot.getProgram(progIdx);
 		// Validate active indices
-		if (p != null && instIdx >= 0 && instIdx < p.size()) {
+		if (p != null && instIdx >= 0 && instIdx < p.getNumOfInst()) {
 			ExecType pExec = (singleExec) ? ExecType.EXEC_SINGLE
 					: ExecType.EXEC_FULL;
 			
@@ -3046,10 +3056,10 @@ public class RobotRun extends PApplet {
 	private void progExecBwd() {
 		Program p = getActiveProg();
 		
-		if (p != null && getActiveInstIdx() >= 1 && getActiveInstIdx() < p.size()) {
+		if (p != null && getActiveInstIdx() >= 1 && getActiveInstIdx() < p.getNumOfInst()) {
 			/* The program must have a motion instruction prior to the active
 			 * instruction for backwards execution to be valid. */
-			Instruction prevInst = p.get(getActiveInstIdx() - 1);
+			Instruction prevInst = p.getInstAt(getActiveInstIdx() - 1);
 			
 			if (prevInst instanceof MotionInstruction) {
 				progExec(activeRobot.RID, progExecState.getProgIdx(),
@@ -3583,14 +3593,14 @@ public class RobotRun extends PApplet {
 		// Wait until an instruction is complete
 		if (state == ExecState.EXEC_NEXT) {
 			
-			if (nextIdx < 0 || nextIdx > prog.size()) {
+			if (nextIdx < 0 || nextIdx > prog.getNumOfInst()) {
 				// Encountered a fault in program execution
 				progExecState.setState(ExecState.EXEC_FAULT);
 				
 			} else {
 				progExecState.setCurIdx(nextIdx);
 				
-				if (nextIdx == prog.size()) {
+				if (nextIdx == prog.getNumOfInst()) {
 					
 					if (!progCallStack.isEmpty()) {
 						// Return to the program state on the top of the call stack

@@ -6,7 +6,7 @@ import java.util.Stack;
 import core.Scenario;
 import enums.AxesDisplay;
 import enums.CoordFrame;
-import enums.InstOp;
+import enums.InstUndoType;
 import frame.ToolFrame;
 import frame.UserFrame;
 import geom.BoundingBox;
@@ -23,7 +23,8 @@ import processing.core.PConstants;
 import processing.core.PGraphics;
 import processing.core.PVector;
 import programming.CamMoveToObject;
-import programming.InstState;
+import programming.InstElement;
+import programming.InstUndoState;
 import programming.Instruction;
 import programming.Macro;
 import programming.MotionInstruction;
@@ -103,7 +104,7 @@ public class RoboticArm {
 	/**
 	 * A stack of previous states of instructions that the user has since edited.
 	 */
-	private final Stack<InstState> PROG_UNDO;
+	private final Stack<InstUndoState> PROG_UNDO;
 	
 	/**
 	 * The data register associated with this robot.
@@ -392,6 +393,40 @@ public class RoboticArm {
 			return idx;
 		}
 	}
+	
+	/**
+	 * Adds the given instruction to the end of the given program's list of
+	 * instructions. This insertion is added to the undo stack.
+	 * 
+	 * @param p		The program, to which to add the given instruction
+	 * @param inst	The instruction to add to the given program
+	 * @param group	Whether to group the insertion undo state with previous
+	 * 				undo states
+	 */
+	public void addInstAtEnd(Program p, Instruction inst, boolean group) {
+		int idx = p.getNumOfInst();
+		addAt(p, idx, inst, group);
+	}
+	
+	/**
+	 * Adds the given instruction to the given program, if the given index is
+	 * within the bounds of the given program's list of instructions. This
+	 * insertion is added to the undo stack.
+	 * 
+	 * @param p		The program, to which to add the given instruction
+	 * @param idx	The index at which to add the given instruction in the
+	 * 				given program's list of instructions
+	 * @param inst	The instruction to add to the given program
+	 * @param group	Whether to group the insertion undo state with previous
+	 * 				undo states
+	 */
+	public void addAt(Program p, int idx, Instruction inst, boolean group) {
+		if (p != null && inst != null && idx >= 0 && idx <= p.getNumOfInst()) {
+			p.addInstAt(idx, inst);
+			pushUndoState(InstUndoType.INSERTED, p, idx, p.get(idx), group);
+		}
+	}
+	
 	
 	/**
 	 * Converts the given point, pt, into the Coordinate System defined by the
@@ -1126,15 +1161,21 @@ public class RoboticArm {
 	public Instruction getInstToEdit(Program p, int idx) {
 		// Valid active program and instruction index
 		if (p != null && idx >= 0 && idx < p.getNumOfInst()) {
-			Instruction inst = p.get(idx);
+			InstElement e = p.get(idx);
 			
-			pushInstState(InstOp.REPLACED, idx, inst.clone());
+			pushUndoState(InstUndoType.EDITED, p, idx, new InstElement(e.getID(),
+					e.getInst().clone()), false);
 			
-			if (Fields.DEBUG) {
-				//System.out.printf("\nEDIT %d %s\n\n", idx, inst.getClass());
+			/* TEST CODE *
+			try {
+				throw new RuntimeException();
+				
+			} catch (RuntimeException REx) {
+				REx.printStackTrace();
 			}
+			/**/
 			
-			return inst;
+			return e.getInst();
 		}
 		
 		return null;
@@ -1730,29 +1771,27 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * If the robot's program undo stack is not empty, then the top
-	 * modification is popped off the stack and reverted in the active program.
-	 * 
-	 * @param the program associated with the undo functionality
+	 * Reverts the active program's undo states that have the same group ID as
+	 * the undo state on the top of the program undo stack.
 	 */
-	public void popInstructionUndo(Program p) {
+	public void undoProgramEdit() {
 		
 		if (!PROG_UNDO.isEmpty()) {
-			InstState state = PROG_UNDO.pop();
+			InstUndoState undoState = PROG_UNDO.pop();
+			undoState.undo();
 			
-			if (p != null) {
+			// Chain undo states with the same group
+			int gid = undoState.getGID();
+			
+			while (!PROG_UNDO.isEmpty()) {
+				undoState = PROG_UNDO.peek();
 				
-				if (state.operation == InstOp.REPLACED) {
-					// Replace the new instruction with the previous version
-					p.replaceInstAt(state.originIdx, state.inst);
-					
-				} else if (state.operation == InstOp.REMOVED) {
-					// Re-insert the removed instruction
-					p.addInstAt(state.originIdx, state.inst);
-					
-				} else {
-					Fields.debug("Invalid program state!\n", state);
+				if (undoState.getGID() != gid) {
+					break;
 				}
+				
+				undoState.undo();
+				PROG_UNDO.pop();
 			}
 			
 		} else if (Fields.DEBUG) {
@@ -1782,20 +1821,43 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * Pushes the given instruction and instruction index onto the robot's
-	 * program undo stack. If the stack size exceeds the maximum undo size,
-	 * then the oldest undo is removed from the stack
+	 * Adds the undo state defined the given parameters to the program undo
+	 * stack.
 	 * 
-	 * @param idx	The index of the instruction in the active program
-	 * @param inst	The instruction of which to save the state
+	 * @param type	The undo state type (i.e. edit, remove, etc.)
+	 * @param idx	The index in the program of the modified instruction
+	 * @param prog	The program referenced by the undo state
+	 * @param inst	The instruction related to the undo state
+	 * @param group	Whether to group this undo state with previous undo states
 	 */
-	private void pushInstState(InstOp op, int idx, Instruction inst) {
+	private void pushUndoState(InstUndoType type, Program prog, int idx,
+			InstElement inst, boolean group) {
 		
-		if (PROG_UNDO.size() > 35) {
+		if (PROG_UNDO.size() >= Program.MAX_UNDO_SIZE) {
+			// Remove old unused undo states to make room for new undo states
 			PROG_UNDO.remove(0);
 		}
 		
-		PROG_UNDO.push(new InstState(op, idx, inst));
+		// Determine the group ID of the undo state
+		int gid;
+		
+		if (PROG_UNDO.isEmpty()) {
+			gid = 0;
+			
+		} else {
+			InstUndoState top = PROG_UNDO.peek();
+			
+			if ((top.getGID() == 1 && group) || (top.getGID() == 0 && !group)) {
+				gid = 1;
+				
+			} else {
+				gid = 0;
+			}
+		}
+		
+		InstUndoState undoState = new InstUndoState(type, gid, prog, idx, inst);
+		PROG_UNDO.push(undoState);
+		Fields.debug("%s\n", undoState);
 	}
 	
 	/**
@@ -1848,22 +1910,19 @@ public class RoboticArm {
 	 * 				instruction
 	 */
 	public Instruction replaceInstAt(Program p, int idx, Instruction inst) {
-		Instruction replaced = null;
-		
 		// Valid active program and instruction index
-		if (p != null && idx >= 0 && idx < p.getNumOfInst()) {	
-			replaced = p.replaceInstAt(idx, inst);
+		if (p != null && idx >= 0 && idx < p.getNumOfInst()) {
+			InstElement e = p.get(idx);
+			InstElement replaced = new InstElement(e.getID(), e.getInst());
+			p.replaceInstAt(idx, inst);
 			
 			if (replaced != null) {
-				pushInstState(InstOp.REPLACED, idx, replaced.clone());
-				
-				if (Fields.DEBUG) {
-					//System.out.printf("\nREPLACE %d %s\n\n", idx, inst.getClass());
-				}
+				pushUndoState(InstUndoType.REPLACED, p, idx, replaced, false);
+				return replaced.getInst();
 			}
 		}
 		
-		return replaced;
+		return null;
 	}
 	
 	/**
@@ -1899,26 +1958,27 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * A wrapper method for removing an instruction from the active program of
-	 * this robot. The removal is added onto the program undo stack for the
-	 * active program.
+	 * Removes the instruction associated wit the given index, if the given
+	 * index is valid index in the given program. The deletion is added to
+	 * the program undo stack as well.
 	 * 
 	 * @param p		The program to edit
-	 * @param idx	The index of the instruction to remove
-	 * @return		The instruction, which was removed
+	 * @param idx	The index of the instruction to be removed
+	 * @param group	Whether to group this deletion with previous deletions in
+	 * 				the undo stack
+	 * @return		The instruction that was removed
 	 */
-	public Instruction rmInstAt(Program p, int idx) {
-		Instruction removed = null;
-		
+	public Instruction rmInstAt(Program p, int idx, boolean group) {
 		if (p != null && idx >= 0 && idx < p.getNumOfInst()) {
-			removed = p.rmInstAt(idx);
+			InstElement e = p.rmInstAt(idx);
 			
-			if (removed != null) {
-				pushInstState(InstOp.REMOVED, idx, removed);
+			if (e != null) {
+				pushUndoState(InstUndoType.REMOVED,  p, idx, e, group);
+				return e.getInst();
 			}
 		}
 		
-		return removed;
+		return null;
 	}
 	
 	/**
@@ -2256,7 +2316,7 @@ public class RoboticArm {
 		ClassCastException, NullPointerException {
 		
 		if (newPt != null) {
-			PosMotionInst mInst = (PosMotionInst) p.get(instIdx);
+			PosMotionInst mInst = (PosMotionInst) p.getInstAt(instIdx);
 			int posNum = mInst.getCircPosIdx();
 			
 			if (mInst.getCircPosType() == Fields.PTYPE_PREG) {
@@ -2305,7 +2365,7 @@ public class RoboticArm {
 		ClassCastException, NullPointerException {
 		
 		if (newPt != null) {
-			PosMotionInst mInst = (PosMotionInst)p.get(instIdx);
+			PosMotionInst mInst = (PosMotionInst)p.getInstAt(instIdx);
 			int posNum = mInst.getPosIdx();
 			
 			if (mInst.getPosType() == Fields.PTYPE_PREG) {

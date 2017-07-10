@@ -6,34 +6,83 @@ import java.util.Iterator;
 import java.util.Set;
 
 import geom.Point;
-import robot.RoboticArm;
 
-public class Program implements Iterable<Instruction> {
+public class Program implements Iterable<InstElement> {
+	
+	/**
+	 * The maximum size for a program's instruction set.
+	 */
+	public static final int MAX_SIZE;
+	
+	/**
+	 * The maximum number of past program modifications stored at one time.
+	 */
+	public static final int MAX_UNDO_SIZE;
+	
+	static {
+		MAX_SIZE = 2000;
+		MAX_UNDO_SIZE = 50;
+	}
+	
+	private String name;
+	
 	/**
 	 * The positions associated with this program, which are
 	 * stored in reference to the current User frame
 	 */
 	private final HashMap<Integer, Point> LPosReg;
-	private final ArrayList<Instruction> instructions;
 	
-	private String name;
-	private RoboticArm robot;
+	private final ArrayList<InstElement> instructions;
+	
+	private int nextID;
 	private int nextPosition;
 
-	public Program(String s, RoboticArm r) {
+	public Program(String s) {
 		name = s;
-		robot = r;
-		nextPosition = 0;
+		
 		LPosReg = new HashMap<>();
+		
 		instructions = new ArrayList<>();
+		
+		nextID = 0;
+		nextPosition = 0;
 	}
 	
-	public void addInstAtEnd(Instruction i) {
-		instructions.add(i);
+	public int addInstAtEnd(Instruction inst) {
+		return addInstAt(instructions.size(), inst);
 	}
-
-	public void addInstAt(int idx, Instruction i) {
-		instructions.add(idx, i);
+	
+	public int addInstAt(int idx, Instruction inst) {
+		if (instructions.size() < MAX_SIZE && idx >= 0 &&
+				idx <= instructions.size()) {
+			
+			int nextID = getNextID();
+			
+			if (nextID >= 0) {
+				InstElement e = new InstElement(nextID, inst);
+				instructions.add(idx, e);
+				
+			} else {
+				System.err.print("Program is full!");
+			}
+			
+			return nextID;
+		}
+		
+		return -1;
+	}
+	
+	/**
+	 * Adds the given instruction element to the program's list of instruction
+	 * elements at the given index.
+	 * 
+	 * @param idx	The index at which to add the given instruction element
+	 * @param e		The element to add to this program
+	 */
+	protected void addAt(int idx, InstElement e) {
+		if (idx >= 0 && idx < instructions.size()) {
+			instructions.add(idx, e);
+		}
 	}
 
 	/**
@@ -59,7 +108,7 @@ public class Program implements Iterable<Instruction> {
 	 */
 	@Override
 	public Program clone() {
-		Program copy = new Program(name, robot);
+		Program copy = new Program(name);
 
 		// Copy positions
 		Set<Integer> posNums = LPosReg.keySet();
@@ -69,8 +118,8 @@ public class Program implements Iterable<Instruction> {
 		}
 
 		// Copy instructions
-		for (Instruction inst : instructions) {
-			copy.addInstAtEnd(inst.clone());
+		for (InstElement e : instructions) {
+			copy.addInstAtEnd(e.getInst().clone());
 		}
 
 		return copy;
@@ -84,11 +133,11 @@ public class Program implements Iterable<Instruction> {
 	 * @returning     The instruction index of the target label, or -1 if it exists
 	 */
 	public int findLabelIdx(int lblNum) {
-
 		for (int idx = 0; idx < instructions.size(); ++idx) {
-			Instruction inst = instructions.get(idx);
+			Instruction inst = instructions.get(idx).getInst();
 			// Check the current instruction
-			if (inst instanceof LabelInstruction && ((LabelInstruction)inst).getLabelNum() == lblNum) {
+			if (inst instanceof LabelInstruction &&
+					((LabelInstruction)inst).getLabelNum() == lblNum) {
 				// Return the label's instruction index
 				return idx;
 			}
@@ -96,29 +145,54 @@ public class Program implements Iterable<Instruction> {
 		// A label with the given number does not exist
 		return -1;
 	}
-
-	public Instruction get(int i){
-		return instructions.get(i);
+	
+	/**
+	 * Returns the instruction element at the given index in the program's
+	 * list of instructions.
+	 * 
+	 * @param idx	The index of the instruction element to get
+	 * @return		The instruction element at the given index
+	 */
+	public InstElement get(int idx) {
+		return instructions.get(idx);
 	}
 	
+	/**
+	 * Returns the instruction at the given index in the program's list of
+	 * instructions.
+	 * 
+	 * @param idx	The index of the instruction to get
+	 * @return		The instruction at the given index
+	 */
 	public Instruction getInstAt(int idx) {
-		
-		if (idx >= 0 && idx < size()) {
-			return get(idx);
+		if (idx >= 0 && idx < instructions.size()) {
+			return get(idx).getInst();
 		}
 		
 		return null;
 	}
 	
+	/**
+	 * @return	The number of instructions in this program
+	 */
 	public int getNumOfInst() {
 		return instructions.size();
 	}
-
-	public LabelInstruction getLabel(int n){    
-		for(Instruction i: instructions){
-			if(i instanceof LabelInstruction){
-				if(((LabelInstruction)i).getLabelNum() == n){
-					return (LabelInstruction)i;
+	
+	/**
+	 * The label instruction with the given label number, if it exists in the
+	 * program.
+	 * 
+	 * @param n	The number of the label to find
+	 * @return	The label with the given number
+	 */
+	public LabelInstruction getLabel(int n) {
+		for(InstElement e : instructions) {
+			Instruction inst = e.getInst();
+			
+			if(inst instanceof LabelInstruction){
+				if(((LabelInstruction)inst).getLabelNum() == n){
+					return (LabelInstruction)inst;
 				}
 			}
 		}
@@ -153,27 +227,86 @@ public class Program implements Iterable<Instruction> {
 		return LPosReg.keySet();
 	}
 
+	/**
+	 * @return	The number of positions associated with this program
+	 */
 	public int getNumOfLReg() {
 		return LPosReg.size();
 	}
 	
-	public RoboticArm getRobot() {
-		return robot;
+	/**
+	 * Replaces the instruction and ID of the instruction element at the given
+	 * index in the program's list of instruction elements.
+	 * 
+	 * @param idx	The index at which to place the new instruction
+	 * @param inst	The instruction to insert into the program
+	 * @return		The instruction which was replaced
+	 */
+	public Instruction replaceInstAt(int idx, Instruction inst) {
+		if (idx >= 0 && idx < instructions.size()) {
+			InstElement e = get(idx);
+			// Remove current instruction
+			Instruction old = e.getInst();
+			// Add the new instruction
+			e.setElement(getNextID(), inst);
+			
+			return old;
+		}
+		
+		return null;
 	}
 	
-	@Override
-	public Iterator<Instruction> iterator() {
-		return instructions.iterator();
-	}
-
-	public Instruction replaceInstAt(int idx, Instruction i) {
-		return instructions.set(idx, i);
+	/**
+	 * Replaces the instruction element at the given index with the given
+	 * instruction element.
+	 * 
+	 * @param idx	The index at which to put the given instruction element
+	 * @param e		The element to put in this program
+	 */
+	protected void replace(int idx, InstElement e) {
+		if (idx >= 0 && idx < instructions.size()) {
+			instructions.set(idx, e);
+		}
 	}
 	
-	public Instruction rmInstAt(int idx) {
-		return instructions.remove(idx);
+	/**
+	 * Removes the instruction with the given ID, if such an instruction exists
+	 * in this program.
+	 * 
+	 * @param id	The ID of the instruction to remove
+	 * @return		The removed instruction element
+	 */
+	public InstElement rmInst(int id) {
+		for (int idx = 0; idx < instructions.size(); ++idx) {
+			InstElement e = instructions.get(idx);
+			if (e.getID() == id) {
+				// Remove the instruction's ID from the list ordering
+				instructions.remove(idx);
+				return e;
+			}
+		}
+		
+		// An instruction with the given ID does not exist
+		return null;
 	}
-
+	
+	
+	/**
+	 * Removes an instruction based on its order in the program execution.
+	 * 
+	 * @param idx	The list index of the instruction to remove
+	 * @return		The instruction element at the given list index
+	 */
+	public InstElement rmInstAt(int idx) {
+		InstElement removed = instructions.remove(idx);
+		return removed;
+	}
+	
+	/**
+	 * Sets the name of this program.
+	 * 
+	 * @param n	The new name of this program
+	 */
 	public void setName(String n) { name = n; }
 
 	/**
@@ -199,9 +332,21 @@ public class Program implements Iterable<Instruction> {
 		
 		return null;
 	}
-
-	public int size() {
-		return instructions.size();
+	
+	/**
+	 * Returns the next unique ID for an instruction. If the ID is -1, then the
+	 * program has reached its instruction capacity.
+	 * 
+	 * @return	The next unique ID for an instruction
+	 */
+	private int getNextID() {
+		if (nextID < Integer.MAX_VALUE) {
+			// Update the ID counter
+			return nextID++;
+		}
+		
+		// No next ID
+		return -1;
 	}
 
 	/**
@@ -220,5 +365,10 @@ public class Program implements Iterable<Instruction> {
 				nextPosition = (nextPosition + 1) % 1000;
 			}
 		}
+	}
+
+	@Override
+	public Iterator<InstElement> iterator() {
+		return instructions.iterator();
 	}
 }

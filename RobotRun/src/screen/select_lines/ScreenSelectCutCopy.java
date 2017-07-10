@@ -2,6 +2,7 @@ package screen.select_lines;
 
 import core.RobotRun;
 import programming.Program;
+import robot.RoboticArm;
 import screen.ScreenMode;
 
 public class ScreenSelectCutCopy extends ST_ScreenLineSelect {
@@ -31,6 +32,7 @@ public class ScreenSelectCutCopy extends ST_ScreenLineSelect {
 	
 	@Override
 	public void actionF3() {
+		RoboticArm r = robotRun.getActiveRobot();
 		Program p = robotRun.getActiveProg();
 		int size = p.getNumOfInst();
 		robotRun.clipBoard.clear();
@@ -39,8 +41,8 @@ public class ScreenSelectCutCopy extends ST_ScreenLineSelect {
 		for (int i = 0; i < size; i += 1) {
 			
 			if (lineSelectState[i]) {
-				robotRun.clipBoard.add(p.get(remIdx));
-				p.rmInstAt(remIdx);
+				robotRun.clipBoard.add(p.getInstAt(remIdx));
+				r.rmInstAt(p, remIdx, true);
 				
 			} else {
 				remIdx += 1;
@@ -57,7 +59,7 @@ public class ScreenSelectCutCopy extends ST_ScreenLineSelect {
 
 		for (int i = 0; i < p.getNumOfInst(); i += 1) {
 			if (lineSelectState[i])
-				robotRun.clipBoard.add(p.get(i).clone());
+				robotRun.clipBoard.add(p.getInstAt(i).clone());
 		}
 		
 		clearSelection();

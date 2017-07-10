@@ -1,6 +1,7 @@
 package screen.text_entry;
 
 import core.RobotRun;
+import programming.InstElement;
 import programming.Instruction;
 import programming.Program;
 import screen.ScreenMode;
@@ -57,7 +58,8 @@ public class ScreenFindReplace extends ST_ScreenTextEntry {
 		int lineIdx = 0;
 		String s;
 
-		for (Instruction instruct : p) {
+		for (InstElement e : p) {
+			Instruction instruct = e.getInst();
 			s = (lineIdx + 1) + ") " + instruct.toString();
 
 			if (s.toUpperCase().contains(workingText.toString().toUpperCase())) {

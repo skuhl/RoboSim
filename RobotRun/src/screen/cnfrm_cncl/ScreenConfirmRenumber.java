@@ -39,7 +39,7 @@ public class ScreenConfirmRenumber extends ST_ScreenConfirmCancel {
 
 		// rearrange positions
 		for (int i = 0; i < p.getNumOfInst(); i += 1) {
-			Instruction instr = p.get(i);
+			Instruction instr = p.getInstAt(i);
 
 			if (instr instanceof PosMotionInst) {
 				// Update the primary position

@@ -30,7 +30,7 @@ public class ScreenNavInstrMenu extends ST_ScreenOptionsMenu {
 	public void actionEntr() {
 		switch (options.getLineIdx()) {
 		case 0: // Undo
-			robotRun.getActiveRobot().popInstructionUndo(robotRun.getActiveProg());
+			robotRun.getActiveRobot().undoProgramEdit();
 			robotRun.lastScreen();
 			break;
 		case 1: // Insert

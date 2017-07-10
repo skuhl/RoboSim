@@ -49,6 +49,28 @@ public class ScreenNavIORegs extends ST_ScreenListContents {
 	public void actionRt() {
 		// Disable the ability to change columns
 	}
+	
+	@Override
+	public void actionUp() {
+		// Disable page up functionality
+		contents.moveUp(false);
+	}
+	
+	@Override
+	public void actionDn() {
+		// Disable page down functionality
+		contents.moveDown(false);
+	}
+	
+	@Override
+	public void actionLt() {
+		// Disable the ability to change columns
+	}
+	
+	@Override
+	public void actionRt() {
+		// Disable the ability to change columns
+	}
 
 	@Override
 	public void actionEntr() {
