@@ -990,7 +990,7 @@ public class RoboticArm {
 	 * @return	The active end effector segment, or null if no end effector is
 	 * 			active
 	 */
-	public EndEffector getActiveEE() {
+	private EndEffector getActiveEE() {
 		return EE_LIST[activeEEIdx];
 	}
 	
