@@ -189,17 +189,18 @@ public abstract class Screen {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Complies a list of display lines that represent the default end effector
+	 * offsets for the given robot.
 	 * 
-	 * @param robot
+	 * @param robot	
 	 * @return
 	 */
 	public ArrayList<DisplayLine> loadEEToolTipDefaults(RoboticArm robot) {
 		ArrayList<DisplayLine> lines = new ArrayList<>();
 		
-		for (int idx = 0; idx < robotRun.getActiveRobot().numOfEndEffectors(); ++idx) {
-			IORegister ioReg = robotRun.getActiveRobot().getIOReg(idx + 1);
-			PVector defToolTip = robotRun.getActiveRobot().getToolTipDefault(idx);
+		for (int idx = 0; idx < robot.numOfEndEffectors(); ++idx) {
+			IORegister ioReg = robot.getIOReg(idx + 1);
+			PVector defToolTip = robot.getToolTipDefault(idx);
 			String lineStr = String.format("%s = (%4.3f, %4.3f, %4.3f)",
 					ioReg.comment, defToolTip.x, defToolTip.y, defToolTip.z); 
 			
@@ -246,11 +247,14 @@ public abstract class Screen {
 	}
 	
 	/**
-	 * TODO
+	 * Compiles the list of all of the frames corresponding to the given
+	 * coordinate frame type (Tool or User), in a textual format, so that they
+	 * can be rendered on the pendant screen.
 	 * 
-	 * @param r
-	 * @param coordFrame
-	 * @return
+	 * @param r				The robot of which to use the frames
+	 * @param coordFrame	TOOL for tool frames, or USER for user frames
+	 * @return				The list of display liens corresponding to the
+	 * 						specified frame list
 	 */
 	public ArrayList<DisplayLine> loadFrames(RoboticArm r, CoordFrame coordFrame) {
 		ArrayList<DisplayLine> lines = new ArrayList<>();
@@ -284,8 +288,19 @@ public abstract class Screen {
 		return lines;
 	}
 
-	// prepare for displaying motion instructions on screen
-	public ArrayList<DisplayLine> loadInstructions(Program p, boolean includeEND) {
+	/**
+	 * Complies a of list of display lines, which represents the instructions
+	 * defined by the given program p.
+	 * 
+	 * @param p				The program of which to use the instructions
+	 * @param includeEND	Whether to include an END line marker at the end of
+	 * 						the program's list of instructions
+	 * @return				The list of display lines representing the given
+	 * 						program's list of instructions
+	 */
+	public ArrayList<DisplayLine> loadInstructions(Program p, boolean
+			includeEND) {
+		
 		ArrayList<DisplayLine> instruct_list = new ArrayList<>();
 		int tokenOffset = Fields.TXT_PAD - Fields.PAD_OFFSET;
 		
@@ -368,10 +383,12 @@ public abstract class Screen {
 	}
 
 	/**
-	 * TODO
+	 * Compiles a list of the given robot's I/O registers in the format for I/O
+	 * Instruction creation pendant screen.
 	 * 
-	 * @param r
-	 * @return
+	 * @param r	The robot, of which to use the I/O registers
+	 * @return	The list of display lines representing the given robot's I/O
+	 * 			registers and states
 	 */
 	public ArrayList<DisplayLine> loadIORegInst(RoboticArm r) {
 		ArrayList<DisplayLine> lines = new ArrayList<>();
@@ -388,10 +405,12 @@ public abstract class Screen {
 	}
 
 	/**
-	 * TODO
+	 * Compiles a list of the given robot's I/O registers in the format for the
+	 * I/O register navigation pendant screen.
 	 * 
-	 * @param r
-	 * @return
+	 * @param r	The robot, of which to use the I/O registers
+	 * @return	The list of display lines representing current state of the
+	 * 			given robot's I/O registers
 	 */
 	public ArrayList<DisplayLine> loadIORegNav(RoboticArm r) {
 		ArrayList<DisplayLine> lines = new ArrayList<>();
