@@ -129,6 +129,15 @@ public class LinearJog extends LinearMotion {
 		};
 	}
 	
+	/**
+	 * Returns the direction of motion for the axis associated with the given
+	 * index. The six motion axes are the translational motion along the x, y,
+	 * and z axes and the rotational motion around the x, y, and z.
+	 * 
+	 * @param mdx	The index of the motion axis (0 - 5)
+	 * @return		The direction of the motion associated with the specified
+	 * 				motion axis
+	 */
 	public int getMotion(int mdx) {
 		if (mdx == 0) {
 			return (int)translation.x;
@@ -184,6 +193,16 @@ public class LinearJog extends LinearMotion {
 		return rotation.x != 0f || rotation.y != 0f	|| rotation.z != 0f;
 	}
 	
+	/**
+	 * Updates the direction of motion associated with the motion axis with the
+	 * given index. Setting the direction of motion for an axis to its current
+	 * value will reset the motion to 0.
+	 * 
+	 * @param mdx		The index of a motion axis (0 - 5)
+	 * @param newDir	The new direction of motion for the specified motion
+	 * 					axis (0, -1, and 1)
+	 * @return			The old direction of motion for the specified axis
+	 */
 	public int setMotion(int mdx, int newDir) {
 		int curDir = getMotion(mdx);
 		

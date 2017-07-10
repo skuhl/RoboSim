@@ -8,7 +8,8 @@ import processing.core.PConstants;
 import processing.core.PVector;
 
 /**
- * TODO comment this
+ * An extension of the robot segment class, which includes the joint associated
+ * with a majority of a robotic arm's segments.
  * 
  * @author Joshua Hooker
  */
@@ -46,14 +47,17 @@ public class RSegWithJoint extends RSegment {
 	private float jointRotation;
 	
 	/**
-	 * TODO comment this
+	 * Creates a joint segment with the given mode, bounding boxes, joint
+	 * bounds, offset and orientation.
 	 * 
-	 * @param model
-	 * @param obbs
-	 * @param lb
-	 * @param ub
-	 * @param translation
-	 * @param axis
+	 * @param model			The model associated with this segment
+	 * @param obbs			The bounding boxes associated with this segment
+	 * @param lb			The lower bound of this segment's joint range
+	 * @param ub			The upper bound if this segment's joint range
+	 * @param translation	The offset of the segment's joint axis with respect
+	 * 						to its local coordinate system's origin
+	 * @param axis			The orientation of the segment's joint axis with
+	 * 						respect to its local orientation
 	 */
 	public RSegWithJoint(MyPShape model, BoundingBox[] obbs, float lb,
 			float ub, PVector translation, PVector axis) {
@@ -69,12 +73,15 @@ public class RSegWithJoint extends RSegment {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Creates a joint segment with the given model, bounding boxes, joint axes
+	 * offset and orientation. The segment will have full range of motion.
 	 * 
-	 * @param model
-	 * @param obbs
-	 * @param translation
-	 * @param axis
+	 * @param model			The model associated with this segment
+	 * @param obbs			The bounding boxes associated with this segment
+	 * @param translation	The offset of the segment's joint axis with respect
+	 * 						to its local coordinate system's origin
+	 * @param axis			The orientation of the segment's joint axis with
+	 * 						respect to its local orientation
 	 */
 	public RSegWithJoint(MyPShape model, BoundingBox[] obbs,
 			PVector translation, PVector axis) {
@@ -110,6 +117,14 @@ public class RSegWithJoint extends RSegment {
 		speedModifier = speedMod;
 	}
 	
+	/**
+	 * Updates the joint angle of this segment to the given value, if its is
+	 * within the bounds of the segment's joint range.
+	 * 
+	 * @param newRotation	The new joint rotation value
+	 * @return				If the given value is within the bounds of the
+	 * 						segment's joint range
+	 */
 	public boolean setJointRotation(float newRotation) {
 		// Validate the given rotation
 		if (anglePermitted(newRotation)) {
