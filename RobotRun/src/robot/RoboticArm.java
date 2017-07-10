@@ -1041,15 +1041,37 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Returns a copy of the secondary position of a position motion
+	 * instruction.
 	 * 
-	 * @param mInst
-	 * @param parent
+	 * @param mInst		The motion instruction, of which to get the associated
+	 * 					position
+	 * @param parent	The program, to which the given instruction belongs
 	 * @return			A copy of the position associated with the secondary
 	 * 					position of the given circular motion instruction
 	 */
 	public Point getCPosition(PosMotionInst mInst, Program parent) {
-		return getPosition(mInst.getCircPosIdx(), mInst.getCircPosType(), parent);
+		int pType = mInst.getCircPosType();
+		Point pt = null;
+		
+		if (pType == Fields.PTYPE_PREG) {
+			// The instruction references a global position register
+			PositionRegister pReg = getPReg(mInst.getCircPosIdx());
+			
+			if (pReg != null) {
+				pt = pReg.point;
+			}
+			
+		} else if (pType == Fields.PTYPE_PROG) {
+			pt = parent.getPosition(mInst.getCircPosIdx());
+		}
+		
+		if (pt != null) {
+			return pt.clone();
+		}
+		
+		// Uninitialized position or invalid position index
+		return null;
 	}
 	
 	/**
@@ -1241,12 +1263,14 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Returns a copy of the primary position of the given position motion
+	 * instruction.
 	 * 
-	 * @param mInst
-	 * @param parent
-	 * @return			A copy of the point associated with the given motion
-	 * 					instruction
+	 * @param mInst		The motion instruction, of which to get its associated
+	 * 					primary position
+	 * @param parent	The program, to which the given instruction belongs
+	 * @return			A copy of the primary position associated with the
+	 * 					given motion instruction
 	 */
 	public Point getPosition(PosMotionInst mInst, Program parent) {
 		int pType = mInst.getPosType();
@@ -1262,41 +1286,6 @@ public class RoboticArm {
 			
 		} else if (pType == Fields.PTYPE_PROG) {
 			pt = parent.getPosition(mInst.getPosIdx());
-		}
-		
-		if (pt != null) {
-			return pt.clone();
-		}
-		
-		// Uninitialized position or invalid position index
-		return null;
-	}
-	
-	/**
-	 * Returns the position associated with the given position index based off
-	 * the given type and program.
-	 * 
-	 * @param posIdx	The index of the position in either the program's list
-	 * 					of positions or the robot's global position registers.
-	 * @param usePReg	Whether to pull the position from the program's list of
-						positions or this robot's global position registers.
-	 * @param parent	The program, of which to use the positions
-	 * @return			The position defined by the given index, type, and
-	 * 					program
-	 */
-	private Point getPosition(int posIdx, int pType, Program parent) {
-		Point pt = null;
-		
-		if (pType == Fields.PTYPE_PREG) {
-			// The instruction references a global position register
-			PositionRegister pReg = getPReg(posIdx);
-			
-			if (pReg != null) {
-				pt = pReg.point;
-			}
-			
-		} else if (pType == Fields.PTYPE_PROG) {
-			pt = parent.getPosition(posIdx);
 		}
 		
 		if (pt != null) {
@@ -1327,10 +1316,12 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Attempts to find the index of the program with the given name amongst
+	 * this Robot's programs. If no program with the given name exists, then
+	 * null is returned.
 	 * 
-	 * @param name
-	 * @return
+	 * @param name	The name of the target program
+	 * @return		The program with the given name, if it exists
 	 */
 	public int getProgIdx(String name) {
 		for (int idx = 0; idx < PROGRAM.size(); ++idx) {
@@ -1426,10 +1417,12 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Returns the default tool tip offset for the end effector with the given
+	 * index.
 	 * 
-	 * @param idx
-	 * @return
+	 * @param idx	The index of an end effector of this robot
+	 * @return		The default tool tip offset of the end effector associated
+	 * 				with the given index
 	 */
 	public PVector getToolTipDefault(int idx) {
 		if (idx >= 0 && idx < EE_TOOLTIP_DEFAULTS.length) {
@@ -1440,7 +1433,7 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * @return	The robot's tooltip position and orientatio with respect to the
+	 * @return	The robot's tool tip position and orientation with respect to the
 	 * 			active user frame
 	 */
 	public Point getToolTipUser() {
@@ -2071,10 +2064,11 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Sets the offset of the tool frame with the given index to that of the
+	 * default tool tip with the other given index.
 	 * 
 	 * @param frameIdx	The index of the tool frame
-	 * @param defTipIdx	The index of a default tool tip offset
+	 * @param defTipIdx	The index of the default tool tip offset
 	 */
 	public void setDefToolTip(int frameIdx, int defTipIdx) {
 		ToolFrame frame = getToolFrame(frameIdx);
@@ -2135,13 +2129,24 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Initializes the motion defined by the given motion instruction and
+	 * program execution state.
 	 * 
-	 * @param prog
-	 * @param mInst
-	 * @param nextIdx
-	 * @param singleExec
-	 * @return
+	 * @param prog			The program, to which the given instruction belongs
+	 * @param mInst			The motion instruction, which defines the motion
+	 * @param nextIdx		The index of the next instruction in the given
+	 * 						program
+	 * @param singleExec	Whether or not the program execution type is
+	 * 						stepwise or not
+	 * @return				0 if the motion is successfully initialized,
+	 * 						1 if the active frames do not match those of the
+	 * 							given motion instruction,
+	 * 						2 if the motion instruction's position is invalid,
+	 * 						3 if the instruction is not a motion instruction
+	 * 							and the given instruction is a non-fine
+	 * 							termination instruction,
+	 * 						4 if the motion type of the given motion
+	 * 							instruction is invalid
 	 */
 	public int setupMInstMotion(Program prog, MotionInstruction mInst,
 			int nextIdx, boolean singleExec) {
@@ -2259,7 +2264,7 @@ public class RoboticArm {
 			}
 		}
 		
-		return 1;
+		return 2;
 	}
 	
 	@Override
@@ -2268,11 +2273,13 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Updates the direction of the jog axis for the robot's current motion. If
+	 * the robot's current motion is not jog motion, then the motion of the
+	 * robot is set to jog motion.
 	 * 
-	 * @param mdx
-	 * @param newDir
-	 * @return
+	 * @param mdx		The motion axis index
+	 * @param newDir	The new direction of motion
+	 * @return			The old direction of motion
 	 */
 	public int updateJogMotion(int mdx, int newDir) {
 		int oldDir;
