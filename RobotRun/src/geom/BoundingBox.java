@@ -13,20 +13,19 @@ public class BoundingBox {
 	
 	/**
 	 * This algorithm uses the Separating Axis Theorem to project radi of each
-	 * Box on to several axes to determine if a there is any overlap between
-	 * the boxes. The method strongly resembles the method outlined in Section
-	 * 4.4 of "Real Time Collision Detection" by Christer Ericson
+	 * bounding box on to several axes to determine if a there is any overlap
+	 * between them. The method strongly resembles the method outlined in
+	 * Section 4.4 of "Real Time Collision Detection" by Christer Ericson
 	 *
-	 * @param A  The hit box associated with some object in space
-	 * @param B  The hit box associated with another object in space
-	 * @return   Whether the two hit boxes intersect
+	 * @param B  Some other bounding box associated with an object in space
+	 * @return   Whether this and the given bounding box intersect
 	 */
 	public boolean collision3D(BoundingBox B) {
-		// Rows are x, y, z axis vectors for A and B: Ax, Ay, Az, Bx, By, and Bz
+		// Rows are x, y, z axis vectors for this and B: Ax, Ay, Az, Bx, By, and Bz
 		float[][] axes_A = getOrientationAxes().getDataF();
 		float[][] axes_B = B.getOrientationAxes().getDataF();
 
-		// Rotation matrices to convert B into A's coordinate system
+		// Rotation matrices to convert B into this coordinate system
 		float[][] rotMatrix = new float[3][3];
 		float[][] absRotMatrix = new float[3][3];
 
@@ -40,10 +39,10 @@ public class BoundingBox {
 			}
 		}
 
-		// T = B's position - A's
+		// T = B's position - position of this
 		PVector posA = getCenter().copy();
 		PVector posB = B.getCenter().copy();
-		// Convert T into A's coordinate frame
+		// Convert T into coordinate frame of this
 		PVector limbo = RMath.rotateVector(posB.sub(posA), axes_A);
 		float[] T = new float[] { limbo.x, limbo.y, limbo.z };
 
