@@ -33,7 +33,6 @@ import regs.DataRegister;
 import regs.IORegTrace;
 import regs.IORegister;
 import regs.PositionRegister;
-import regs.RTrace;
 import ui.DisplayLine;
 
 public class RoboticArm {

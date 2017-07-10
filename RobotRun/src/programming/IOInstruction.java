@@ -10,11 +10,11 @@ public class IOInstruction extends Instruction {
 		state = Fields.OFF;
 		reg = -1;
 	}
-
+	
 	public IOInstruction(int r, boolean s) {
 		super();
-		reg = r;
 		state = s;
+		reg = r;
 	}
 
 	@Override
@@ -24,6 +24,7 @@ public class IOInstruction extends Instruction {
 
 		return copy;
 	}
+	
 	public int getReg(){ return reg; }
 	public boolean getState(){ return state; }
 

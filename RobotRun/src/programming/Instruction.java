@@ -22,7 +22,7 @@ public class Instruction {
 		return copy;
 	}
 	
-	public boolean isCommented(){ return com; }
+	public boolean isCommented() { return com; }
 
 	public void setIsCommented(boolean comFlag) { com = comFlag; }
 

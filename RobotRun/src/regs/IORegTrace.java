@@ -1,6 +1,7 @@
 package regs;
 
 import global.Fields;
+import robot.RTrace;
 
 /**
  * Defines an I/O register, the state of which is linked to the trace functionality.
@@ -37,6 +38,16 @@ public class IORegTrace extends IORegister {
 			traceRef.addPt(null);
 		}
 		
-		super.setState(newState);
+		state = newState;
+	}
+	
+	@Override
+	public void toggleState() {
+		if(state == Fields.OFF) {
+			state = Fields.ON;
+		} else {
+			state = Fields.OFF;
+			traceRef.addPt(null);
+		}
 	}
 }

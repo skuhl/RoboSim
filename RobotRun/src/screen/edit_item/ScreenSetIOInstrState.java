@@ -1,7 +1,6 @@
 package screen.edit_item;
 
 import core.RobotRun;
-import global.Fields;
 import programming.IOInstruction;
 import robot.RoboticArm;
 import screen.ScreenMode;
@@ -25,9 +24,9 @@ public class ScreenSetIOInstrState extends ST_ScreenEditItem {
 				robotRun.getActiveInstIdx());
 
 		if (options.getLineIdx() == 0) {
-			ioInst.setState(Fields.ON);
+			ioInst.setState(true);
 		} else {
-			ioInst.setState(Fields.OFF);
+			ioInst.setState(false);
 		}
 
 		robotRun.lastScreen();
