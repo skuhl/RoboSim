@@ -65,6 +65,8 @@ import screen.content_disp.ScreenNavPrograms;
 import screen.edit_point.ST_ScreenPointEntry;
 import screen.num_entry.ST_ScreenNumEntry;
 import screen.teach_frame.ST_ScreenTeachPoints;
+import screen.teach_frame.ScreenTeach3PtTool;
+import screen.teach_frame.ScreenTeach3PtUser;
 import screen.teach_frame.ScreenTeach4Pt;
 import screen.teach_frame.ScreenTeach6Pt;
 import screen.text_entry.ST_ScreenTextEntry;
@@ -3001,9 +3003,11 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Begins forward program execution of the active robot's active program
+	 * from the active instruction index.
 	 * 
-	 * @param singleExec
+	 * @param singleExec	Whether to execute a single instruction or the
+	 * 						entire program
 	 */
 	private void progExec(boolean singleExec) {
 		ExecType pExec = (singleExec) ? ExecType.EXEC_SINGLE
@@ -3012,10 +3016,13 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Begins forward program execution of the active robot's active program
+	 * from the specified instruction index.
 	 * 
-	 * @param instIdx
-	 * @param singleExec
+	 * @param instIdx		The index of the instruction from which to begin
+	 * 						program execution
+	 * @param singleExec	Whether to execute a single instruction or the
+	 * 						entire program
 	 */
 	@SuppressWarnings("unused")
 	private void progExec(int instIdx, boolean singleExec) {
@@ -3023,11 +3030,15 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * TODO comment this
+	 * Begins forward program execution for the program specified by the given
+	 * program index in the active robot's list of programs. Program execution
+	 * begins at the specified instruction index.
 	 * 
-	 * @param progIdx
-	 * @param instIdx
-	 * @param singleExec
+	 * @param progIdx		The index of the program to execute
+	 * @param instIdx		The index of the instruction form which to begin
+	 * 						program execution
+	 * @param singleExec	Whether to execute a single instruction or the
+	 * 						entire program
 	 */
 	private void progExec(int progIdx, int instIdx, boolean singleExec) {
 		Program p = activeRobot.getProgram(progIdx);
@@ -3041,18 +3052,25 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Begins forward program execution for the program specified by the given
+	 * program index in the robot's, specified by the given robot ID, list of
+	 * programs. Program execution begins at the specified instruction index.
 	 * 
-	 * @param progIdx
-	 * @param instIdx
-	 * @param exec
+	 * @param rid		The index of the robot for which to bring begin program
+	 * 					execution
+	 * @param progIdx	The index of the program to execute
+	 * @param instIdx	The index of the instruction from which to begin
+	 * 					program execution
+	 * @param exec		Whether to execute a single instruction or the entire
+	 * 					program
 	 */
 	private void progExec(int rid, int progIdx, int instIdx, ExecType exec) {
 		progExecState.setExec(rid, exec, progIdx, instIdx);
 	}
 	
 	/**
-	 * TODO comment this
+	 * Begins backward program execution for the active program beginning from
+	 * the active instruction index.
 	 */
 	private void progExecBwd() {
 		Program p = getActiveProg();
@@ -3304,17 +3322,32 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Renders the points associated with teaching the given frame based of the
+	 * given frame's type and the active pendant screen's type.
 	 * 
-	 * @param frame
+	 * @param frame	The frame, of which to render the teach points
 	 */
 	private void renderTeachPoints(Frame frame) {
-		int size = 3;
-
-		if (screens.getActiveScreen() instanceof ScreenTeach6Pt && teachFrame instanceof ToolFrame) {
-			size = 6;
-		} else if (screens.getActiveScreen() instanceof ScreenTeach4Pt && teachFrame instanceof UserFrame) {
-			size = 4;
+		/* Determine how many points to render based off the given screen and
+		 * frame types */
+		Screen screen = screens.getActiveScreen();
+		int size = 0;
+		
+		if (frame instanceof ToolFrame) {
+			if (screen instanceof ScreenTeach3PtTool) {
+				size = 3;
+				
+			} else if (screen instanceof ScreenTeach6Pt) {
+				size = 6;
+			}
+			
+		} else if (frame instanceof UserFrame) {
+			if (screen instanceof ScreenTeach3PtUser) {
+				size = 3;
+				
+			} else if (screen instanceof ScreenTeach4Pt) {
+				size = 4;
+			}
 		}
 
 		for (int idx = 0; idx < size; ++idx) {
