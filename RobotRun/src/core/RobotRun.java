@@ -3232,8 +3232,13 @@ public class RobotRun extends PApplet {
 						10000f, Fields.BLACK);
 				
 			} else if (axesType == AxesDisplay.GRID) {
+				g.pushMatrix();
+				// Draw the gridlines at the base of the robot
+				PVector basePos = activeRobot.getBasePosition();
+				g.translate(0f, basePos.y, 0f);
 				activeRobot.drawGridlines(getGraphics(), Fields.WORLD_AXES_MAT,
 						origin, 35, 100f);
+				g.popMatrix();
 			}
 		}
 		
