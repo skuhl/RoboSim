@@ -1534,6 +1534,10 @@ public class RobotRun extends PApplet {
 	public Scenario getActiveScenario() {
 		return activeScenario;
 	}
+	
+	public Screen getActiveScreen() {
+		return screens.getActiveScreen();
+	}
 
 	/**
 	 * @return the active axes display state
