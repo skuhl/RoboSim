@@ -8,7 +8,8 @@ import processing.core.PGraphics;
 import processing.core.PVector;
 
 /**
- * TODO general comments
+ * A collection of static methods and fields that are not directly linked to a
+ * single class file in RobotRun.
  * 
  * @author Vincent Druckte and Joshua Hooker
  */
@@ -326,10 +327,10 @@ public abstract class Fields {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Applies the given transformation matrix to the given graphics object.
 	 * 
-	 * @param g
-	 * @param tMat
+	 * @param g		The graphics object to transform
+	 * @param tMat	The transformation matrict to apply
 	 */
 	public static void transform(PGraphics g, RMatrix tMat) {
 		
@@ -463,13 +464,15 @@ public abstract class Fields {
 	}
 	
 	/**
-	 * TODO comments this
+	 * Draws the xyz coordinate axes defined by the given origin position and
+	 * axis vectors with the specified axis length and origin color.
 	 * 
-	 * @param g
-	 * @param origin
-	 * @param axesVectors
-	 * @param axesLength
-	 * @param originColor
+	 * @param g				The graphics object used to render the axes
+	 * @param origin		The origin position of the axes
+	 * @param axesVectors	The rotation matrix which defines the coordinate
+	 * 						system axes
+	 * @param axesLength	The render length of the axes
+	 * @param originColor	The color of the origin point
 	 */
 	public static void drawAxes(PGraphics g, PVector origin,
 			RMatrix axesVectors, float axesLength, int originColor) {
@@ -482,12 +485,15 @@ public abstract class Fields {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Draws the xyz coordinate axes of the given graphic object's current
+	 * coordinate system with the specified axis length and origin color.
 	 * 
-	 * @param axesLength	The length of the rendered axes
-	 * @param originColor	The color of the point of origin of the axes
+	 * @param axesLength	The render length of the axes
+	 * @param originColor	The color of the origin point
 	 */
-	public static void drawAxes(PGraphics g, float axesLength, int originColor) {
+	public static void drawAxes(PGraphics g, float axesLength,
+			int originColor) {
+		
 		g.pushStyle();
 		
 		// X axis

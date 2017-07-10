@@ -9,7 +9,8 @@ import processing.core.PVector;
 import robot.RoboticArm;
 
 /**
- * TODO general comments
+ * A collection of methods and fields that pertain to graphical transformations
+ * of elements rendered in the interface of the RobotRun application.
  * 
  * @author Vincent Druckte and Joshua Hooker
  */
@@ -57,16 +58,17 @@ public abstract class RMath {
 	 * @param rangeEnd
 	 *            the 'upper bounds' of the angle range to check
 	 */
-	public static boolean angleWithinBounds(float angleToVerify, float rangeStart, float rangeEnd) {
+	public static boolean angleWithinBounds(float angleToVerify,
+			float rangeStart, float rangeEnd) {
 
 		if (rangeStart < rangeEnd) {
 			// Joint range does not overlap TWO_PI
-			return (angleToVerify - rangeStart) > -0.0001f && (angleToVerify - rangeEnd) < 0.0001f;
-			// return angleToVerify >= rangeStart && angleToVerify <= rangeEnd;
+			return (angleToVerify - rangeStart) > -0.0001f &&
+					(angleToVerify - rangeEnd) < 0.0001f;
 		} else {
 			// Joint range overlaps TWO_PI
-			return !((angleToVerify - rangeEnd) > -0.0001f && (angleToVerify - rangeStart) < 0.0001f);
-			// return !(angleToVerify > rangeEnd && angleToVerify < rangeStart);
+			return !((angleToVerify - rangeEnd) > -0.0001f &&
+					(angleToVerify - rangeStart) < 0.0001f);
 		}
 	}
 	
