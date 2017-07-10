@@ -553,7 +553,7 @@ public class RoboticArm {
 			BoundingBox oob1 = SEGMENT[SEG_OBB_CHECKS[cdx - 1]]
 					.OBBS[SEG_OBB_CHECKS[cdx]];
 			
-			if (Part.collision3D(oob0, oob1)) {
+			if (oob0.collision3D(oob1)) {
 				// Update OBB colors
 				oob0.setColor(Fields.OBB_COLLISION);
 				oob1.setColor(Fields.OBB_COLLISION);
@@ -571,7 +571,7 @@ public class RoboticArm {
 				BoundingBox segOBB = SEGMENT[EE_SEG_OBB_CHECKS[cdx - 1]]
 						.OBBS[EE_SEG_OBB_CHECKS[cdx]];
 				
-				if (Part.collision3D(obb, segOBB)) {
+				if (obb.collision3D(segOBB)) {
 					// Update OBB colors
 					obb.setColor(Fields.OBB_COLLISION);
 					segOBB.setColor(Fields.OBB_COLLISION);

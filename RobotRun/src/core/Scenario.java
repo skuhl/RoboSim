@@ -11,7 +11,9 @@ import global.Fields;
 import processing.core.PApplet;
 
 /**
- * A storage class for a collection of objects with an associated name for the collection.
+ * Defines a set of world objects that are rendered in the same scene.
+ * 
+ * @author Joshua Hooker
  */
 public class Scenario implements Iterable<WorldObject>, Cloneable {
 	private boolean gravity;
