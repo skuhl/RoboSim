@@ -44,7 +44,7 @@ public class ScreenSelectInstrDelete extends ST_ScreenLineSelect {
 			}
 		}
 		
-		contents.setLineIdx(RMath.clamp(contents.getLineIdx(), 0, p.size()));
+		contents.setLineIdx(RMath.clamp(contents.getLineIdx(), 0, p.getNumOfInst()));
 		System.out.println(contents.getLineIdx());
 
 		robotRun.lastScreen();

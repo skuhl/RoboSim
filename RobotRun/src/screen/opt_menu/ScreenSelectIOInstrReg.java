@@ -10,7 +10,7 @@ public class ScreenSelectIOInstrReg extends ST_ScreenOptionsMenu {
 	public ScreenSelectIOInstrReg(RobotRun r) {
 		super(ScreenMode.SELECT_IO_INSTR_REG, r);
 		// Restrict column index to the second column
-		options.setSelectedColumnIdx(1);
+		options.setColumnIdx(1);
 	}
 
 	@Override
@@ -21,11 +21,6 @@ public class ScreenSelectIOInstrReg extends ST_ScreenOptionsMenu {
 	@Override
 	protected void loadOptions() {
 		options.setLines(loadIORegInst(robotRun.getActiveRobot()));
-	}
-	
-	@Override
-	protected void loadVars(ScreenState s) {
-		setScreenIndices(0, 1, 0, 0, 0);
 	}
 	
 	@Override

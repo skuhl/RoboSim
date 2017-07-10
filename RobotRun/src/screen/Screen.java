@@ -293,7 +293,7 @@ public abstract class Screen {
 		
 		for (int i = 0; i < size; i += 1) {
 			DisplayLine line = new DisplayLine(i);
-			Instruction instr = p.get(i);
+			Instruction instr = p.getInstAt(i);
 			int xPos = 10;
 
 			// Add line number

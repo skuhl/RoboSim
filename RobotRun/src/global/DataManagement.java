@@ -252,7 +252,7 @@ public abstract class DataManagement {
 				out.write(System.lineSeparator());
 				
 				for(int j = 0; j < p.getNumOfInst(); j += 1) {
-					Instruction instr = p.get(j);
+					Instruction instr = p.getInstAt(j);
 					String[] text = instr.toStringArray();
 					
 					out.write((j + 1) + ") ");
