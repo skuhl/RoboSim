@@ -317,9 +317,9 @@ public abstract class Fields {
 	public static void transform(PGraphics g, PVector translation, RMatrix rotation) {
 		
 		g.applyMatrix(
-				(float)rotation.getEntry(0, 0), (float)rotation.getEntry(0, 1), (float)rotation.getEntry(0, 2), translation.x,
-				(float)rotation.getEntry(1, 0), (float)rotation.getEntry(1, 1), (float)rotation.getEntry(1, 2), translation.y,
-				(float)rotation.getEntry(2, 0), (float)rotation.getEntry(2, 1), (float)rotation.getEntry(2, 2), translation.z,
+				rotation.getEntryF(0, 0), rotation.getEntryF(0, 1), rotation.getEntryF(0, 2), translation.x,
+				rotation.getEntryF(1, 0), rotation.getEntryF(1, 1), rotation.getEntryF(1, 2), translation.y,
+				rotation.getEntryF(2, 0), rotation.getEntryF(2, 1), rotation.getEntryF(2, 2), translation.z,
 				0f, 0f, 0f, 1f
 		);
 		
@@ -334,10 +334,10 @@ public abstract class Fields {
 	public static void transform(PGraphics g, RMatrix tMat) {
 		
 		g.applyMatrix(
-				(float)tMat.getEntry(0, 0), (float)tMat.getEntry(0, 1), (float)tMat.getEntry(0, 2), (float)tMat.getEntry(0, 3),
-				(float)tMat.getEntry(1, 0), (float)tMat.getEntry(1, 1), (float)tMat.getEntry(1, 2), (float)tMat.getEntry(1, 3),
-				(float)tMat.getEntry(2, 0), (float)tMat.getEntry(2, 1), (float)tMat.getEntry(2, 2), (float)tMat.getEntry(2, 3),
-				(float)tMat.getEntry(3, 0), (float)tMat.getEntry(3, 1), (float)tMat.getEntry(3, 2), (float)tMat.getEntry(3, 3)
+				tMat.getEntryF(0, 0), tMat.getEntryF(0, 1), tMat.getEntryF(0, 2), tMat.getEntryF(0, 3),
+				tMat.getEntryF(1, 0), tMat.getEntryF(1, 1), tMat.getEntryF(1, 2), tMat.getEntryF(1, 3),
+				tMat.getEntryF(2, 0), tMat.getEntryF(2, 1), tMat.getEntryF(2, 2), tMat.getEntryF(2, 3),
+				tMat.getEntryF(3, 0), tMat.getEntryF(3, 1), tMat.getEntryF(3, 2), tMat.getEntryF(3, 3)
 		);
 		
 	}
@@ -351,9 +351,9 @@ public abstract class Fields {
 	public static void rotate(PGraphics g, RMatrix rotation) {
 		
 		g.applyMatrix(
-				(float)rotation.getEntry(0, 0), (float)rotation.getEntry(0, 1), (float)rotation.getEntry(0, 2), 0f,
-				(float)rotation.getEntry(1, 0), (float)rotation.getEntry(1, 1), (float)rotation.getEntry(1, 2), 0f,
-				(float)rotation.getEntry(2, 0), (float)rotation.getEntry(2, 1), (float)rotation.getEntry(2, 2), 0f,
+				rotation.getEntryF(0, 0), rotation.getEntryF(0, 1), rotation.getEntryF(0, 2), 0f,
+				rotation.getEntryF(1, 0), rotation.getEntryF(1, 1), rotation.getEntryF(1, 2), 0f,
+				rotation.getEntryF(2, 0), rotation.getEntryF(2, 1), rotation.getEntryF(2, 2), 0f,
 				0f, 0f, 0f, 1f
 		);
 		

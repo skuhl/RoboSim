@@ -225,9 +225,9 @@ public class BoundingBox {
 	 */
 	public void setCoordinateSystem(RMatrix tMat) {
 		PVector origin = localOrientation.getOrigin();
-		origin.x = (float)tMat.getEntry(0, 3);
-		origin.y = (float)tMat.getEntry(1, 3);
-		origin.z = (float)tMat.getEntry(2, 3);
+		origin.x = tMat.getEntryF(0, 3);
+		origin.y = tMat.getEntryF(1, 3);
+		origin.z = tMat.getEntryF(2, 3);
 		
 		localOrientation.setAxes( RMath.formRMat(tMat) );
 	}

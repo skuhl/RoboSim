@@ -1135,9 +1135,9 @@ public class RoboticArm {
 		
 		// Convert the orientation into the correct format for a Point
 		PVector position = new PVector(
-				 (float)tipOrien.getEntry(0, 3),
-				 (float)tipOrien.getEntry(1, 3),
-				 (float)tipOrien.getEntry(2, 3)
+				 tipOrien.getEntryF(0, 3),
+				 tipOrien.getEntryF(1, 3),
+				 tipOrien.getEntryF(2, 3)
 		);
 		
 		RQuaternion orientation = RMath.matrixToQuat(tipOrien);

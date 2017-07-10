@@ -874,12 +874,12 @@ public abstract class RMath {
 		
 		PVector u = new PVector();
 		// Apply the rotation matrix to the given vector
-		u.x = (float)(rMat.getEntry(0, 0) * v.x + rMat.getEntry(1, 0) * v.y +
-						rMat.getEntry(2, 0) * v.z);
-		u.y = (float)(rMat.getEntry(0, 1) * v.x + rMat.getEntry(1, 1) * v.y +
-						rMat.getEntry(2, 1) * v.z);
-		u.z = (float)(rMat.getEntry(0, 2) * v.x + rMat.getEntry(1, 2) * v.y +
-						rMat.getEntry(2, 2) * v.z);
+		u.x = rMat.getEntryF(0, 0) * v.x + rMat.getEntryF(1, 0) * v.y +
+						rMat.getEntryF(2, 0) * v.z;
+		u.y = rMat.getEntryF(0, 1) * v.x + rMat.getEntryF(1, 1) * v.y +
+						rMat.getEntryF(2, 1) * v.z;
+		u.z = rMat.getEntryF(0, 2) * v.x + rMat.getEntryF(1, 2) * v.y +
+						rMat.getEntryF(2, 2) * v.z;
 		
 		return u;
 	}
