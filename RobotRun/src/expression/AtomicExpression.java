@@ -80,8 +80,8 @@ public class AtomicExpression extends Operand<Object> {
 			
 		} else if (op.getType() == Operator.BOOL_OP) {
 			// Logic evaluation
-			float v1 = o1.getArithValue().floatValue();
-			float v2 = o2.getArithValue().floatValue();
+			float v1 = o1.getArithValue();
+			float v2 = o2.getArithValue();
 			
 			switch (op) {
 			case GRTR:		return new OperandBool(v1 > v2);
@@ -92,9 +92,6 @@ public class AtomicExpression extends Operand<Object> {
 			case LSEQ:		return new OperandBool(v1 <= v2);
 			default:
 			}
-			
-		} else {
-			// Invalid operation
 		}
 		
 		return null;
