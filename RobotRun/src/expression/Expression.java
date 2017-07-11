@@ -2,6 +2,7 @@ package expression;
 import java.util.ArrayList;
 
 import core.RobotRun;
+import global.Fields;
 import processing.core.PApplet;
 
 public class Expression extends AtomicExpression {
@@ -73,7 +74,7 @@ public class Expression extends AtomicExpression {
 		
 		if (result == null || result.getValue() == null) {
 			// Return a null operator, not an uninitialized operator
-			PApplet.println("Expression formatting error");
+			Fields.setMessage("Expression formatting error");
 			return null;
 		}
 		

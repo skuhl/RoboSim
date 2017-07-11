@@ -860,8 +860,8 @@ public class RobotRun extends PApplet {
 	 * object creation and edit windows.
 	 */
 	public void button_objClearFields() {
-		UI.clearAllInputFields();
 		Fields.resetMessage();
+		UI.clearAllInputFields();
 	}
 
 	/**
@@ -872,6 +872,7 @@ public class RobotRun extends PApplet {
 	 */
 	public void button_objConfirmDims() {
 		if (activeScenario != null) {
+			Fields.resetMessage();
 			WorldObject selectedWO = UI.getSelectedWO();
 			
 			if (selectedWO != null) {
@@ -881,7 +882,6 @@ public class RobotRun extends PApplet {
 				if (undoState != null) {
 					// Save original world object onto the undo stack
 					updateScenarioUndo(undoState);
-					Fields.resetMessage();
 				}
 			}
 			
@@ -901,10 +901,10 @@ public class RobotRun extends PApplet {
 	 */
 	public void button_objCreate() {
 		if (activeScenario != null) {
+			Fields.resetMessage();
 			WorldObject newObject = UI.createWorldObject();
 
 			if (newObject != null) {
-				Fields.resetMessage();
 				newObject.setLocalCenter(new PVector(-500f, 0f, 0f));
 				activeScenario.addWorldObject(newObject);
 				DataManagement.saveScenarios(this);
@@ -948,12 +948,12 @@ public class RobotRun extends PApplet {
 		// Only allow world object editing when no program is executing
 		if (!isProgExec()) {
 			RoboticArm r = activeRobot;
+			Fields.resetMessage();
 			WorldObject selectedWO = UI.getSelectedWO();
 			
 			if (selectedWO instanceof Fixture || (selectedWO instanceof Part &&
 					(r == null || !r.isHeld((Part)selectedWO)))) {
 				
-				Fields.resetMessage();
 				WOUndoState undoState = UI.updateWOCurrent(selectedWO);
 				
 				if (undoState != null) {
@@ -979,10 +979,10 @@ public class RobotRun extends PApplet {
 		// Only allow world object editing when no program is executing
 		if (!isProgExec()) {
 			RoboticArm r = activeRobot;
+			Fields.resetMessage();
 			WorldObject selectedWO = UI.getSelectedWO();
 			
 			if (selectedWO instanceof Part && (r == null || !r.isHeld((Part)selectedWO))) {
-				Fields.resetMessage();
 				WOUndoState undoState = UI.updateWOCurrent(selectedWO);
 				UI.fillCurWithDef( (Part)selectedWO );
 
@@ -1001,11 +1001,11 @@ public class RobotRun extends PApplet {
 	 * orientation.
 	 */
 	public void button_objResetDefault() {
-
+		Fields.resetMessage();
+		
 		for (WorldObject wo : activeScenario) {
 			// Only applies to parts
 			if (wo instanceof Part) {
-				Fields.resetMessage();
 				updateScenarioUndo(new WOUndoCurrent(wo));
 				
 				Part p = (Part) wo;
@@ -1031,10 +1031,10 @@ public class RobotRun extends PApplet {
 	 * the input fields in the edit window.
 	 */
 	public void button_objUpdateDefault() {
+		Fields.resetMessage();
 		WorldObject selectedWO = UI.getSelectedWO();
 		// Only parts have a default position and orientation
 		if (selectedWO instanceof Part) {
-			Fields.resetMessage();
 			WOUndoState undoState = UI.updateWODefault( (Part)selectedWO );
 			
 			if (undoState != null) {
@@ -1341,7 +1341,7 @@ public class RobotRun extends PApplet {
 			}
 
 		} else {
-			println("Invalid input points");
+			Fields.setMessage("Invalid input points");
 		}
 	}
 
@@ -2442,7 +2442,7 @@ public class RobotRun extends PApplet {
 					}
 
 					if (next != null) {
-						println("asdf");
+						Fields.debug("asdf");
 						m.setMotionType(next.getMotionType());
 						m.setSpdMod(next.getSpdMod());
 					}

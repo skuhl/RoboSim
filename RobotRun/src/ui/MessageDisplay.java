@@ -37,10 +37,16 @@ public class MessageDisplay {
 	}
 	
 	public void resetMessage() {
+		/* TEST CODE *
+		System.err.println("MSG RESET");
+		/**/
 		msg = null;
 	}
 	
 	public void setMessage(String newMsg) {
+		/* TEST CODE *
+		System.err.println(newMsg);
+		/**/
 		msg = newMsg;
 	}
 	

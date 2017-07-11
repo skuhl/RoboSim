@@ -288,6 +288,15 @@ public abstract class Frame {
 				return null;
 		}
 	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param teachMethod
+	 * @return
+	 *
+	public abstract boolean isComplete(int teachMethod);
+	/**/
 
 	/**
 	 * Resets all the fields of the frame to their default values.

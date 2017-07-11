@@ -1391,19 +1391,23 @@ public class WGUI implements ControlListener {
 				default:
 				}
 			}
+			
+			if (wldObj == null) {
+				Fields.setMessage("Missing field");
+			}
 
 		} catch (NullPointerException NPEx) {
-			PApplet.println("Missing parameter!");
+			Fields.setMessage("Missing field");
 			NPEx.printStackTrace();
 			wldObj = null;
 
 		} catch (ClassCastException CCEx) {
-			PApplet.println("Invalid field?");
+			Fields.setMessage("Invalid field");
 			CCEx.printStackTrace();
 			wldObj = null;
 
 		} catch (IndexOutOfBoundsException IOOBEx) {
-			PApplet.println("Missing field?");
+			Fields.setMessage("Missing field");
 			IOOBEx.printStackTrace();
 			wldObj = null;
 		}
@@ -1623,11 +1627,11 @@ public class WGUI implements ControlListener {
 			return dimensions;
 
 		} catch (NumberFormatException NFEx) {
-			PApplet.println("Invalid number input!");
+			Fields.setMessage("Invalid number input!");
 			return null;
 
 		} catch (NullPointerException NPEx) {
-			PApplet.println("Missing parameter!");
+			Fields.setMessage("Missing parameter!");
 			return null;
 		}
 	}
@@ -1703,11 +1707,11 @@ public class WGUI implements ControlListener {
 			return values;
 
 		} catch (NumberFormatException NFEx) {
-			PApplet.println("Invalid number input!");
+			Fields.setMessage("Invalid number input!");
 			return null;
 
 		} catch (NullPointerException NPEx) {
-			PApplet.println("Missing parameter!");
+			Fields.setMessage("Missing parameter!");
 			return null;
 		}
 	}
@@ -1760,11 +1764,11 @@ public class WGUI implements ControlListener {
 			return dimensions;
 
 		} catch (NumberFormatException NFEx) {
-			PApplet.println("Invalid number input!");
+			Fields.setMessage("Invalid number input!");
 			return null;
 
 		} catch (NullPointerException NPEx) {
-			PApplet.println("Missing parameter!");
+			Fields.setMessage("Missing parameter!");
 			return null;
 		}
 	}
@@ -1915,11 +1919,11 @@ public class WGUI implements ControlListener {
 			return dimensions;
 
 		} catch (NumberFormatException NFEx) {
-			PApplet.println(NFEx.getMessage());
+			Fields.setMessage(NFEx.getMessage());
 			return null;
 
 		} catch (NullPointerException NPEx) {
-			PApplet.println("Missing parameter!");
+			Fields.setMessage("Missing parameter!");
 			return null;
 		}
 	}
@@ -3706,7 +3710,7 @@ public class WGUI implements ControlListener {
 			}
 			
 		} catch (NullPointerException NPEx) {
-			PApplet.println("Missing parameter!");
+			Fields.setMessage("Missing parameter!");
 			NPEx.printStackTrace();
 		}
 		
@@ -3909,11 +3913,11 @@ public class WGUI implements ControlListener {
 			app.getRobotCamera().update(pos, rot, fov, aspect, clipNear, clipFar, br, exp);
 		}
 		catch (NumberFormatException NFEx) {
-			PApplet.println("Invalid number input!");
+			Fields.setMessage("Invalid number input!");
 
 		} 
 		catch (NullPointerException NPEx) {
-			PApplet.println("Missing parameter!");
+			Fields.setMessage("Missing parameter!");
 		}
 	}
 }

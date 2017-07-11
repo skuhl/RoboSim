@@ -98,6 +98,12 @@ public abstract class ST_ScreenTeachPoints extends Screen {
 			robotRun.teachFrame.setPoint(pt, options.getLineIdx());
 			DataManagement.saveRobotData(r, 2);
 			robotRun.updatePendantScreen();
+			
+			/* TODO add message when teaching is complete *
+			if () {
+				
+			}
+			/**/
 		}
 	}
 }
