@@ -1167,7 +1167,7 @@ public class RobotRun extends PApplet {
 	 * 
 	 * Increases the robot's jog speed.
 	 */
-	public void button_spdDn() {
+	public void button_speedDn() {
 		int curSpeed = activeRobot.getLiveSpeed();
 		// Reduce the speed at which the Robot jogs
 		if (isShift()) {
@@ -1194,7 +1194,7 @@ public class RobotRun extends PApplet {
 	 * 
 	 * Decreases the robot's jog speed.
 	 */
-	public void button_spdUp() {
+	public void button_speedUp() {
 		int curSpeed = activeRobot.getLiveSpeed();
 		// Increase the speed at which the Robot jogs
 		if (isShift()) {
@@ -1891,8 +1891,8 @@ public class RobotRun extends PApplet {
 			case KeyEvent.VK_SEMICOLON: button_jointPos5(); break;
 			case KeyEvent.VK_PERIOD: 	button_jointNeg6(); break;
 			case KeyEvent.VK_SLASH:		button_jointPos6(); break;
-			case KeyEvent.VK_MINUS:		button_spdDn(); break;
-			case KeyEvent.VK_EQUALS:	button_spdUp(); break;
+			case KeyEvent.VK_MINUS:		button_speedDn(); break;
+			case KeyEvent.VK_EQUALS:	button_speedUp(); break;
 			case KeyEvent.VK_S:			rCamera.teachObjectToCamera(getActiveScenario()); break;
 			}
 			
@@ -3542,13 +3542,19 @@ public class RobotRun extends PApplet {
 			}
 		}
 		
+		// Display the current axes display state
+		lastTextPositionY += 20;
+		text(String.format("Axes Display: %s", getAxesState().name()),
+				lastTextPositionX, lastTextPositionY);
+		lastTextPositionY += 20;	
+		
 		pushStyle();
 		fill(215, 0, 0);
 		lastTextPositionY += 20;
 		
-		if (record) {
-			text("Recording (press Ctrl + Alt + r)",
-					lastTextPositionX, lastTextPositionY);
+		// Display a message while the robot is carrying an object
+		if (!activeRobot.isHeld(null)) {
+			text("Object held", lastTextPositionX, lastTextPositionY);
 			lastTextPositionY += 20;
 		}
 
@@ -3559,6 +3565,11 @@ public class RobotRun extends PApplet {
 					lastTextPositionY);
 			lastTextPositionY += 20;
 		}
+		
+		if (isProgExec()) {
+			text("Program executing", lastTextPositionX, lastTextPositionY);
+			lastTextPositionY += 20;
+		}
 
 		// Display a message if the Robot is in motion
 		if (activeRobot.inMotion()) {
@@ -3566,21 +3577,13 @@ public class RobotRun extends PApplet {
 			lastTextPositionY += 20;
 		}
 		
-		if (isProgExec()) {
-			text("Program executing", lastTextPositionX, lastTextPositionY);
-			lastTextPositionY += 20;
-		}
-
-		// Display a message while the robot is carrying an object
-		if (!activeRobot.isHeld(null)) {
-			text("Object held", lastTextPositionX, lastTextPositionY);
+		if (record) {
+			text("Recording (press Ctrl + Alt + r)",
+					lastTextPositionX, lastTextPositionY);
 			lastTextPositionY += 20;
 		}
 		
 		popStyle();
-
-		// Display the current axes display state
-		text(String.format("Axes Display: %s", getAxesState().name()), lastTextPositionX, height - 50);
 		
 		UI.updateAndDrawUI();
 		
