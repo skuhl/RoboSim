@@ -1,6 +1,7 @@
 package screen.num_entry;
 
 import core.RobotRun;
+import global.Fields;
 import programming.RegisterStatement;
 import regs.DataRegister;
 import regs.IORegister;
@@ -33,7 +34,7 @@ public class ScreenSetRegExprIdx1 extends ST_ScreenNumEntry {
 			if (idx < 1 || ((reg instanceof DataRegister || reg instanceof PositionRegister) && idx > 100)
 					|| (reg instanceof IORegister && idx > 5)) {
 				// Index is out of bounds
-				System.err.println("Invalid register index!");
+				Fields.setMessage("Invalid register index!");
 
 			} else {
 

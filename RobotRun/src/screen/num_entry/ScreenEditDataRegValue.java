@@ -2,6 +2,7 @@ package screen.num_entry;
 
 import core.RobotRun;
 import global.DataManagement;
+import global.Fields;
 import regs.DataRegister;
 import regs.Register;
 import robot.RoboticArm;
@@ -50,7 +51,7 @@ public class ScreenEditDataRegValue extends ST_ScreenNumEntry {
 			}
 		} catch (NumberFormatException NFEx) {
 			// Invalid input value
-			System.err.println("Value must be a real number!");
+			Fields.setMessage("Value must be a real number!");
 		}
 
 		robotRun.lastScreen();

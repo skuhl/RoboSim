@@ -101,7 +101,7 @@ public class LinearInterpolation extends LinearMotion {
 		
 		if (Float.isNaN(thetaAB) || Float.isNaN(thetaBC)) {
 			// Invalid positions for circular motion
-			System.err.printf("Invalid angle: thetaAB=%f thetaBC=%f\n",
+			Fields.debug("Invalid angle: thetaAB=%f thetaBC=%f\n",
 					thetaAB, thetaBC);
 			return;
 		}
@@ -129,7 +129,7 @@ public class LinearInterpolation extends LinearMotion {
 		final int numOfPts = (int)((thetaAB + thetaBC) / angleInc);
 		// Define an upper bound for circular motion interpolation point count
 		if (numOfPts > 50000) {
-			System.err.printf("%d points is way too much (thetaAB=%f thetaBC=%f dist/pt=%f rad/pt=%f)!\n",
+			Fields.debug("%d points is way too much (thetaAB=%f thetaBC=%f dist/pt=%f rad/pt=%f)!\n",
 					numOfPts, thetaAB, thetaBC, distBtwPts, angleInc);
 			setFault(true);
 			return;
@@ -199,7 +199,7 @@ public class LinearInterpolation extends LinearMotion {
 		
 		// Define an upper bound for continuous interpolation point count
 		if (numberOfPoints > 15000) {
-			System.err.printf("%d points is way too much (d1=%f d2=%f dist/pt=%f)!",
+			Fields.debug("%d points is way too much (d1=%f d2=%f dist/pt=%f)!",
 					numberOfPoints, d1, d2, distBtwPts);
 			setFault(true);
 			return;
@@ -275,7 +275,7 @@ public class LinearInterpolation extends LinearMotion {
 		int numberOfPoints = (int) (dist / distBtwPts);
 		// Define an upper bound for linear interpolation point count
 		if (numberOfPoints > 15000) {
-			System.err.printf("%d points is way too much (dist=%f dist/pt=%f)!",
+			Fields.debug("%d points is way too much (dist=%f dist/pt=%f)!",
 					numberOfPoints, dist, distBtwPts);
 			setFault(true);
 			return;

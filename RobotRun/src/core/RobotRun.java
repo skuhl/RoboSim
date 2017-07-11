@@ -136,8 +136,9 @@ public class RobotRun extends PApplet {
 	
 	private boolean camEnable = false;
 	private Camera camera;
-
+	
 	private KeyCodeMap keyCodeMap;
+	
 	/**
 	 * A list of instruction indexes for the active program, which point to
 	 * motion instructions, whose position and orientation (or joint angles)
@@ -303,6 +304,7 @@ public class RobotRun extends PApplet {
 		if (screens.getActiveScreen() instanceof ScreenNavProgInstructions && isShift() && isStep()) {
 			// Safeguard against editing a program while it is running
 			screens.getActiveScreen().getContents().setColumnIdx(0);
+			Fields.resetMessage();
 			progExecBwd();
 		}
 	}
@@ -325,6 +327,7 @@ public class RobotRun extends PApplet {
 	public void button_camUpdate() {
 		if (rCamera != null) {
 			UI.updateCameraCurrent();
+			Fields.resetMessage();
 		}
 	}
 	
@@ -466,6 +469,7 @@ public class RobotRun extends PApplet {
 	 * Functions as a confirmation button for almost all menus.
 	 */
 	public void button_enter() {
+		Fields.resetMessage();
 		screens.getActiveScreen().actionEntr();
 		updatePendantScreen();
 	}
@@ -553,6 +557,7 @@ public class RobotRun extends PApplet {
 	 * Stops all robot motion and program execution.
 	 */
 	public void button_hold() {
+		Fields.resetMessage();
 		boolean robotInMotion = activeRobot.inMotion();
 		// Stop all robot motion and program execution
 		activeRobot.halt();
@@ -856,6 +861,7 @@ public class RobotRun extends PApplet {
 	 */
 	public void button_objClearFields() {
 		UI.clearAllInputFields();
+		Fields.resetMessage();
 	}
 
 	/**
@@ -875,11 +881,12 @@ public class RobotRun extends PApplet {
 				if (undoState != null) {
 					// Save original world object onto the undo stack
 					updateScenarioUndo(undoState);
+					Fields.resetMessage();
 				}
 			}
 			
 		} else {
-			System.err.println("No active scenario!");
+			Fields.setMessage("No active scenario!");
 		}
 	}
 	
@@ -897,13 +904,14 @@ public class RobotRun extends PApplet {
 			WorldObject newObject = UI.createWorldObject();
 
 			if (newObject != null) {
+				Fields.resetMessage();
 				newObject.setLocalCenter(new PVector(-500f, 0f, 0f));
 				activeScenario.addWorldObject(newObject);
 				DataManagement.saveScenarios(this);
 			}
 		}
 		else {
-			System.err.println("No active scenario!");
+			Fields.setMessage("No active scenario!");
 		}
 	}
 
@@ -945,6 +953,7 @@ public class RobotRun extends PApplet {
 			if (selectedWO instanceof Fixture || (selectedWO instanceof Part &&
 					(r == null || !r.isHeld((Part)selectedWO)))) {
 				
+				Fields.resetMessage();
 				WOUndoState undoState = UI.updateWOCurrent(selectedWO);
 				
 				if (undoState != null) {
@@ -954,7 +963,7 @@ public class RobotRun extends PApplet {
 					 */
 					updateScenarioUndo(undoState);
 				}
-	
+				
 				DataManagement.saveScenarios(this);
 			}
 		}
@@ -973,6 +982,7 @@ public class RobotRun extends PApplet {
 			WorldObject selectedWO = UI.getSelectedWO();
 			
 			if (selectedWO instanceof Part && (r == null || !r.isHeld((Part)selectedWO))) {
+				Fields.resetMessage();
 				WOUndoState undoState = UI.updateWOCurrent(selectedWO);
 				UI.fillCurWithDef( (Part)selectedWO );
 
@@ -980,7 +990,7 @@ public class RobotRun extends PApplet {
 					// If the part was modified, then save its previous state
 					updateScenarioUndo(undoState);
 				}
-
+				
 				DataManagement.saveScenarios(this);
 			}
 		}
@@ -995,6 +1005,7 @@ public class RobotRun extends PApplet {
 		for (WorldObject wo : activeScenario) {
 			// Only applies to parts
 			if (wo instanceof Part) {
+				Fields.resetMessage();
 				updateScenarioUndo(new WOUndoCurrent(wo));
 				
 				Part p = (Part) wo;
@@ -1023,6 +1034,7 @@ public class RobotRun extends PApplet {
 		WorldObject selectedWO = UI.getSelectedWO();
 		// Only parts have a default position and orientation
 		if (selectedWO instanceof Part) {
+			Fields.resetMessage();
 			WOUndoState undoState = UI.updateWODefault( (Part)selectedWO );
 			
 			if (undoState != null) {
@@ -1118,6 +1130,7 @@ public class RobotRun extends PApplet {
 	 * loading an inactive scenario).
 	 */
 	public void button_scenarioConfirm() {
+		Fields.resetMessage();
 		int ret = UI.updateScenarios(SCENARIOS);
 
 		if (ret > 0) {
@@ -1934,6 +1947,7 @@ public class RobotRun extends PApplet {
 		Screen cur = screens.getActiveScreen();
 		
 		if (cur.mode != ScreenMode.DEFAULT) {
+			Fields.resetMessage();
 			screens.lastScreen();
 			updatePendantScreen();
 			
@@ -2381,6 +2395,7 @@ public class RobotRun extends PApplet {
 		Screen prevScreen = screens.getActiveScreen();
 		screens.nextScreen(nextScreen);
 		updatePendantScreen();
+		Fields.resetMessage();
 				
 		Fields.debug("\n%s => %s\n", prevScreen.mode, nextScreen);
 	}
@@ -2726,6 +2741,8 @@ public class RobotRun extends PApplet {
 			throw NPEx;
 		}
 		
+		Fields.setMessage("This is a test");
+		
 		/**
 		RMatrix rx = RMath.formRMat(new PVector(1f, 0f, 0f), 135f * DEG_TO_RAD);
 		RMatrix ry = RMath.formRMat(new PVector(0f, 1f, 0f), 135f * DEG_TO_RAD);
@@ -2745,6 +2762,7 @@ public class RobotRun extends PApplet {
 		Screen prevScreen = screens.getActiveScreen();
 		screens.switchScreen(nextScreen);
 		updatePendantScreen();
+		Fields.resetMessage();
 				
 		Fields.debug("\n%s => %s\n", prevScreen.mode, nextScreen);
 	}
@@ -3585,6 +3603,8 @@ public class RobotRun extends PApplet {
 		
 		popStyle();
 		
+		lastTextPositionY += 20;
+		Fields.msgSystem.draw(getGraphics(), lastTextPositionX, lastTextPositionY);
 		UI.updateAndDrawUI();
 		
 		popStyle();
@@ -3860,6 +3880,7 @@ public class RobotRun extends PApplet {
 						
 					} else if (ret == 2) {
 						// Evaluation failed
+						Fields.setMessage("Expression evaluation error");
 						nextIdx = -1;
 					}
 	
@@ -3918,6 +3939,7 @@ public class RobotRun extends PApplet {
 					
 					if (ret != 0) {
 						// Register expression evaluation failed
+						Fields.setMessage("Expression evaluation error");
 						nextIdx = -1;
 					}
 				}

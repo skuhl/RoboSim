@@ -1,6 +1,7 @@
 package screen.num_entry;
 
 import core.RobotRun;
+import global.Fields;
 import programming.IOInstruction;
 import robot.RoboticArm;
 import screen.ScreenMode;
@@ -24,7 +25,7 @@ public class ScreenSetIOInstrIdx extends ST_ScreenNumEntry {
 			int tempReg = Integer.parseInt(workingText.toString());
 
 			if (tempReg < 1 || tempReg >= r.numOfEndEffectors()) {
-				System.err.println("Invalid index!");
+				Fields.setMessage("Invalid index!");
 
 			} else {
 				IOInstruction ioInst = (IOInstruction) r.getInstToEdit(robotRun.getActiveProg(), 

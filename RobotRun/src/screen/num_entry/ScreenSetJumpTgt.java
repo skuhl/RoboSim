@@ -1,6 +1,7 @@
 package screen.num_entry;
 
 import core.RobotRun;
+import global.Fields;
 import programming.IfStatement;
 import programming.Instruction;
 import programming.JumpInstruction;
@@ -39,7 +40,7 @@ public class ScreenSetJumpTgt extends ST_ScreenNumEntry {
 					JumpInstruction jmp = (JumpInstruction) inst;
 					jmp.setTgtLblNum(lblNum);
 				} else {
-					System.err.println("Invalid label number!");
+					Fields.setMessage("Invalid label number!");
 				}
 			}
 		} catch (NumberFormatException NFEx) {

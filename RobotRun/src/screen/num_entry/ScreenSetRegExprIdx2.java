@@ -1,6 +1,7 @@
 package screen.num_entry;
 
 import core.RobotRun;
+import global.Fields;
 import programming.RegisterStatement;
 import regs.PositionRegister;
 import robot.RoboticArm;
@@ -25,7 +26,7 @@ public class ScreenSetRegExprIdx2 extends ST_ScreenNumEntry {
 			int idx = Integer.parseInt(workingText.toString());
 
 			if (idx < 1 || idx > 6) {
-				System.err.println("Invalid position index!");
+				Fields.setMessage("Invalid position index!");
 			} else {
 				RegisterStatement regStmt = (RegisterStatement) r.getInstToEdit(robotRun.getActiveProg(), 
 						robotRun.getActiveInstIdx());

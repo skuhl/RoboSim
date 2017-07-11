@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.Set;
 
 import geom.Point;
+import global.Fields;
 
 public class Program implements Iterable<InstElement> {
 	
@@ -63,7 +64,7 @@ public class Program implements Iterable<InstElement> {
 				instructions.add(idx, e);
 				
 			} else {
-				System.err.print("Program is full!");
+				Fields.setMessage("Program is full!");
 			}
 			
 			return nextID;

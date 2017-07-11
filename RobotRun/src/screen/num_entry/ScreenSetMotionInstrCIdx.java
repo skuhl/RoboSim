@@ -38,7 +38,7 @@ public class ScreenSetMotionInstrCIdx extends ST_ScreenNumEntry {
 			if (tempRegister < lbound || tempRegister > ubound) {
 				// Invalid register index
 				String err = String.format("Only registers %d-%d are valid!", lbound, ubound);
-				System.err.println(err);
+				Fields.setMessage(err);
 				robotRun.lastScreen();
 				return;
 			}
@@ -46,7 +46,7 @@ public class ScreenSetMotionInstrCIdx extends ST_ScreenNumEntry {
 			pMInst.setCircPosIdx(tempRegister - 1);
 		} catch (NumberFormatException NFEx) {
 			String err = "Invalid entry!";
-			System.err.println(err);
+			Fields.setMessage(err);
 		}
 		
 		robotRun.lastScreen();

@@ -3,6 +3,7 @@ package screen.edit_point;
 import core.RobotRun;
 import geom.Point;
 import geom.RQuaternion;
+import global.Fields;
 import global.RMath;
 import processing.core.PVector;
 import screen.Screen;
@@ -114,7 +115,7 @@ public abstract class ST_ScreenPointEntry extends Screen {
 			return robotRun.getActiveRobot().getToolTipNative(inputs);
 		} catch (NumberFormatException NFEx) {
 			// Invalid input
-			System.err.println("Values must be real numbers!");
+			Fields.setMessage("Values must be real numbers!");
 			return null;
 		}
 	}

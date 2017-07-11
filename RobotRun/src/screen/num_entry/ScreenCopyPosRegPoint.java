@@ -2,6 +2,7 @@ package screen.num_entry;
 
 import core.RobotRun;
 import global.DataManagement;
+import global.Fields;
 import regs.PositionRegister;
 import regs.Register;
 import robot.RoboticArm;
@@ -53,9 +54,9 @@ public class ScreenCopyPosRegPoint extends ST_ScreenNumEntry {
 			DataManagement.saveRobotData(robotRun.getActiveRobot(), 3);
 
 		} catch (NumberFormatException MFEx) {
-			System.err.println("Only real numbers are valid!");
+			Fields.setMessage("Only real numbers are valid!");
 		} catch (IndexOutOfBoundsException IOOBEx) {
-			System.err.println("Only positve integers between 1 and 100 are valid!");
+			Fields.setMessage("Only positve integers between 1 and 100 are valid!");
 		}
 
 		robotRun.lastScreen();

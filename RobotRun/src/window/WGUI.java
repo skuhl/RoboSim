@@ -1111,6 +1111,7 @@ public class WGUI implements ControlListener {
 		if (arg0.isFrom(windowTabs)) {
 			// Update the window based on the button tab selected
 			String actLbl = windowTabs.getActButLbl();
+			Fields.resetMessage();
 			
 			if (actLbl == null) {
 				updateView( null );
@@ -1993,7 +1994,7 @@ public class WGUI implements ControlListener {
 
 			} else if (val != null) {
 				// Invalid entry in the dropdown list
-				System.err.printf("Invalid class type: %d!\n", val.getClass());
+				Fields.setMessage("Invalid class type: %d!\n", val.getClass());
 			}
 		}
 
@@ -3150,7 +3151,7 @@ public class WGUI implements ControlListener {
 			}
 		} 
 		else {
-			System.err.println("Missing data subfolder!");
+			Fields.debug("Missing data subfolder!");
 		}
 
 		if (app.getActiveScenario() != null) {

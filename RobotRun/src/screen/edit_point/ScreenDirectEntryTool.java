@@ -2,6 +2,7 @@ package screen.edit_point;
 
 import core.RobotRun;
 import frame.ToolFrame;
+import global.Fields;
 import screen.ScreenMode;
 import ui.DisplayLine;
 
@@ -64,7 +65,7 @@ public class ScreenDirectEntryTool extends ST_ScreenPointEntry {
 				if (str.length() < 0) {
 					// No value entered
 					robotRun.updatePendantScreen();
-					System.err.println("All entries must have a value!");
+					Fields.setMessage("All entries must have a value!");
 					return;
 				}
 
@@ -78,7 +79,7 @@ public class ScreenDirectEntryTool extends ST_ScreenPointEntry {
 			robotRun.lastScreen();
 		} catch (NumberFormatException NFEx) {
 			// Invalid number
-			System.err.println("Entries must be real numbers!");
+			Fields.setMessage("Entries must be real numbers!");
 			return;
 		}
 	}

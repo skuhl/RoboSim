@@ -47,7 +47,7 @@ public class ScreenSetMotionInstrIdx extends ST_ScreenNumEntry {
 			if (tempRegister < lbound || tempRegister > ubound) {
 				// Invalid register index
 				String err = String.format("Only registers %d-%d are valid!", lbound, ubound);
-				System.err.println(err);
+				Fields.setMessage(err);
 			}
 			
 			mInst.setPosIdx(tempRegister - 1);

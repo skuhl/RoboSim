@@ -1,6 +1,7 @@
 package screen.num_entry;
 
 import core.RobotRun;
+import global.Fields;
 import programming.LabelInstruction;
 import robot.RoboticArm;
 import screen.ScreenMode;
@@ -24,7 +25,7 @@ public class ScreenSetLabelNum extends ST_ScreenNumEntry {
 			int idx = Integer.parseInt(workingText.toString());
 
 			if (idx < 0 || idx > 99) {
-				System.err.println("Invalid label index!");
+				Fields.setMessage("Invalid label index!");
 			} else {
 				((LabelInstruction) r.getInstToEdit(robotRun.getActiveProg(), 
 						robotRun.getActiveInstIdx())).setLabelNum(idx);

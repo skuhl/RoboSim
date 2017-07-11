@@ -2,6 +2,7 @@ package screen.num_entry;
 
 import core.RobotRun;
 import expression.OperandPRegIdx;
+import global.Fields;
 import robot.RoboticArm;
 import screen.ScreenMode;
 
@@ -23,7 +24,7 @@ public class ScreenInputPosRegSubIdx extends ST_ScreenNumEntry {
 		int idx = Integer.parseInt(workingText.toString());
 		
 		if (idx < 1 || idx > 6) {
-			System.err.println("Invalid index!");
+			Fields.setMessage("Invalid index!");
 		} else {
 			r.getInstToEdit(robotRun.getActiveProg(), robotRun.getActiveInstIdx());
 			((OperandPRegIdx)robotRun.opEdit).setSubIdx(idx - 1);

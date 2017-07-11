@@ -529,7 +529,6 @@ public class RoboticArm {
 		return 2;
 	}
 	
-
 	/**
 	 * Checks collisions between the bounding boxes of the robot's segments and
 	 * end effectors. The colors of the robot's bounding boxes are updated
@@ -579,7 +578,6 @@ public class RoboticArm {
 					selfCollision = true;
 				}
 			}
-			
 		}
 		
 		return selfCollision;
@@ -1550,7 +1548,7 @@ public class RoboticArm {
 		}
 		
 		if (pt == null) {
-			System.err.printf("Null position for %s\n", mInst);
+			Fields.debug("Null position for %s\n", mInst);
 			return null;
 		}
 		
@@ -1562,7 +1560,7 @@ public class RoboticArm {
 			
 			if (offReg == null || offReg.point == null) {
 				// Invalid offset
-				System.err.printf("Null offset PR[%d] for %s\n",
+				Fields.setMessage("Null offset PR[%d] for %s\n",
 						mInst.getOffsetIdx(), mInst);
 				
 				return null;
@@ -1587,7 +1585,7 @@ public class RoboticArm {
 				
 				if (jointAngles == null) {
 					// Inverse kinematics failure
-					System.err.printf("IK failure for %s\n", mInst);
+					Fields.setMessage("IK failure for %s\n", mInst);
 					return null;
 					
 				} else {
@@ -1607,7 +1605,7 @@ public class RoboticArm {
 				
 				if (jointAngles == null) {
 					// Inverse kinematics failure
-					System.err.printf("IK failure for %s\n", mInst);
+					Fields.setMessage("IK failure for %s\n", mInst);
 					return null;
 				}
 				// Apply the offset
@@ -1635,7 +1633,7 @@ public class RoboticArm {
 				
 				if (jointAngles == null) {
 					// Inverse kinematics failure
-					System.err.printf("IK failure for %s\n", mInst);
+					Fields.setMessage("IK failure for %s\n", mInst);
 					return null;
 					
 				} else {
@@ -1740,7 +1738,7 @@ public class RoboticArm {
 			if (!seg.anglePermitted(destAngles[joint])) {
 				invalidAngle = true;
 				
-				System.err.printf("Invalid angle: J[%d] = %4.3f -> %4.3f : [%4.3f - %4.3f]\n",
+				Fields.debug("Invalid angle: J[%d] = %4.3f -> %4.3f : [%4.3f - %4.3f]\n",
 						joint, getJointAngles()[joint], destAngles[joint], seg.LOW_BOUND,
 						seg.UP_BOUND);
 				break;
@@ -1751,7 +1749,7 @@ public class RoboticArm {
 		if ((destAngles == null) || invalidAngle) {
 			if (destAngles == null) {
 				Point RP = getToolTipNative();
-				System.err.printf("IK Failure ...\n%s -> %s\n%s -> %s\n\n",
+				Fields.debug("IK Failure ...\n%s -> %s\n%s -> %s\n\n",
 						RP.position, destPosition, RP.orientation,
 						destOrientation);
 			}

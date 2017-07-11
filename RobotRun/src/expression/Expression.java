@@ -1,6 +1,7 @@
 package expression;
 import java.util.ArrayList;
 
+import core.RobotRun;
 import processing.core.PApplet;
 
 public class Expression extends AtomicExpression {
@@ -33,8 +34,7 @@ public class Expression extends AtomicExpression {
 	public Operand<?> evaluate() {
 		ExpressionElement e = elementList.get(0);
 		
-		if(e == null || e instanceof Operator || elementList.size() % 2 != 1) { 
-			System.err.println("Expression formatting error");
+		if(e == null || e instanceof Operator || elementList.size() % 2 != 1) {
 			return null;
 		}
 
@@ -42,7 +42,6 @@ public class Expression extends AtomicExpression {
 		
 		for(int i = 1; i < elementList.size(); i += 2) {
 			if(!(elementList.get(i) instanceof Operator) || !(elementList.get(i + 1) instanceof Operand<?>)) {
-				System.err.println("Expression formatting error");
 				return null;
 			} 
 			else {
