@@ -192,8 +192,9 @@ public abstract class Screen {
 	 * Complies a list of display lines that represent the default end effector
 	 * offsets for the given robot.
 	 * 
-	 * @param robot	
-	 * @return
+	 * @param robot	The robot, of which to use the default tool tip offsets
+	 * @return		The list of display lines, which represent the values of
+	 * 				the given robot's default tool tip offsets
 	 */
 	public ArrayList<DisplayLine> loadEEToolTipDefaults(RoboticArm robot) {
 		ArrayList<DisplayLine> lines = new ArrayList<>();
@@ -218,7 +219,8 @@ public abstract class Screen {
 	 * @param fdx
 	 * @return
 	 */
-	public ArrayList<DisplayLine> loadFrameDetail(RoboticArm r, CoordFrame coordFrame, int fdx) {
+	public ArrayList<DisplayLine> loadFrameDetail(RoboticArm r,
+			CoordFrame coordFrame, int fdx) {
 		
 		ArrayList<DisplayLine> lines = new ArrayList<>();
 		Frame f = null;
@@ -427,19 +429,31 @@ public abstract class Screen {
 	}
 
 	/**
-	 * TODO
+	 * Compiles a list of display lines which represent if a point is taught
+	 * for the given frame and the given teaching method.
 	 * 
-	 * @param f
-	 * @param teachMethod
-	 * @return
+	 * The teaching method should be either 0 or 1.
+	 * For a user frame:
+	 * 	0 -> three point method
+	 * 	1 -> four point method
+	 * 
+	 * For a tool frame:
+	 * 	0 -> three point method
+	 * 	1 -> six point method
+	 * 
+	 * @param f				The frame of which to use the teach points
+	 * @param teachMethod	The flag indicating what teach points are
+	 * 						represented by the display lines (either 0 or 1)
+	 * @return				The display lines representing the teach points of
+	 * 						the given frame for the teach point defined by the
+	 * 						teachMethod field
 	 */
 	public ArrayList<DisplayLine> loadPointList(Frame f, int teachMethod) {
 		ArrayList<DisplayLine> lines = new ArrayList<>();
 		boolean validMethod = teachMethod == 0 || teachMethod == 1;
 		
-		
 		if (f instanceof ToolFrame && validMethod) {
-			
+			// Points used in the three and six point method of tool frames
 			String out = (f.getPoint(0) == null) ? "UNINIT" : "RECORDED";
 			lines.add(new DisplayLine(0, 0, "First Approach Point: " + out));
 			
@@ -450,6 +464,7 @@ public abstract class Screen {
 			lines.add(new DisplayLine(2, 0, "Third Approach Point: " + out));
 			
 			if (teachMethod == 1) {
+				// Points used in the six point method of tool frames
 				out = (f.getPoint(3) == null) ? "UNINIT" : "RECORDED";
 				lines.add(new DisplayLine(3, 0, "Orient Origin Point: " + out));
 				
@@ -461,7 +476,7 @@ public abstract class Screen {
 			}
 			
 		} else if (f instanceof UserFrame && validMethod) {
-			
+			// Points used in the three and four point methods of user frames
 			String out = (f.getPoint(0) == null) ? "UNINIT" : "RECORDED";
 			lines.add(new DisplayLine(0, 0, "Orient Origin Point: " + out));
 			
@@ -472,6 +487,7 @@ public abstract class Screen {
 			lines.add(new DisplayLine(2, 0, "Y Axis Point: " + out));
 			
 			if (teachMethod == 1) {
+				// The point used in the for point method of user frames
 				out = (f.getPoint(3) == null) ? "UNINIT" : "RECORDED";
 				lines.add(new DisplayLine(3, 0, "Origin: " + out));
 			}
@@ -488,10 +504,12 @@ public abstract class Screen {
 	}
 	
 	/**
-	 * TODO
+	 * Compiles a list of display lines that represent the position registers
+	 * of the given robot.
 	 * 
-	 * @param r
-	 * @return
+	 * @param r	The robot of which to use the position registers
+	 * @return	The list of display lines representing the position registers
+	 * 			associated with the given robot
 	 */
 	public ArrayList<DisplayLine> loadPositionRegisters(RoboticArm r) {
 		ArrayList<DisplayLine> lines = new ArrayList<>();
@@ -511,10 +529,12 @@ public abstract class Screen {
 	}
 
 	/**
-	 * TODO comment
+	 * Compiles a list of display lines, which represent the list of programs
+	 * associated with the given robot.
 	 * 
-	 * @param rid
-	 * @return
+	 * @param r	The robot of which to use the programs
+	 * @return	The list of display lines representing the programs associated
+	 * 			with the given robot
 	 */
 	public ArrayList<DisplayLine> loadPrograms(RoboticArm r) {
 		ArrayList<DisplayLine> progList = null;
