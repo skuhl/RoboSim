@@ -3372,6 +3372,18 @@ public class RobotRun extends PApplet {
 			
 			if (wo != null) {
 				UI.updateEditWindowFields(wo);
+				
+				if (wo instanceof Fixture) {
+					for (WorldObject wldObj : getActiveScenario()) {
+						if (wldObj instanceof Part) {
+							Part p = (Part)wldObj;
+
+							if (p.getFixtureRef() == wo) {
+								p.updateAbsoluteOrientation();
+							}
+						}
+					}
+				}
 			}
 			
 			/* Since objects are copied onto the undo stack, the robot may be

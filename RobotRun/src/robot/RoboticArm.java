@@ -1584,7 +1584,7 @@ public class RoboticArm {
 				
 				if (jointAngles == null) {
 					// Inverse kinematics failure
-					Fields.setMessage("IK failure for %s\n", mInst);
+					Fields.debug("IK failure for %s\n", mInst);
 					return null;
 					
 				} else {
