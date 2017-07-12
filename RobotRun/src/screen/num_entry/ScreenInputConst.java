@@ -2,6 +2,7 @@ package screen.num_entry;
 
 import core.RobotRun;
 import expression.OperandFloat;
+import global.Fields;
 import robot.RoboticArm;
 import screen.ScreenMode;
 
@@ -31,7 +32,7 @@ public class ScreenInputConst extends ST_ScreenNumEntry {
 			((OperandFloat)robotRun.opEdit).setValue(data);
 			
 		} catch (NumberFormatException e) {
-			//TODO report error to user
+			Fields.setMessage("The constant must be a real number");
 			e.printStackTrace();
 		}
 

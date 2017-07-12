@@ -98,11 +98,11 @@ public abstract class Screen {
 	}
 	
 	public void printScreenInfo() {
-		System.out.println("Current screen: ");
-		System.out.println("\tMode: " + mode.name());
-		System.out.println("\tRow: " + contents.getLineIdx() + ", col: " + contents.getColumnIdx() +
+		Fields.debug("Current screen: ");
+		Fields.debug("\tMode: " + mode.name());
+		Fields.debug("\tRow: " + contents.getLineIdx() + ", col: " + contents.getColumnIdx() +
 				", RS: " + contents.getRenderStart());
-		System.out.println("\tOpt row: " + options.getLineIdx() + ", opt RS: " + options.getRenderStart());
+		Fields.debug("\tOpt row: " + options.getLineIdx() + ", opt RS: " + options.getRenderStart());
 	}
 	
 	//Sets text for each screen

@@ -72,7 +72,7 @@ public class DropdownSearch extends MyDropdownList {
 			} else if (e.getKeyCode() == ControlP5.ENTER) {
 				// Set the item at index 0 as active
 				if (items.size() > 0) {
-					System.out.println( items.get(0).get("name") );
+					Fields.debug("%s\n", items.get(0).get("name"));
 					setValue(0);
 					close();
 				}

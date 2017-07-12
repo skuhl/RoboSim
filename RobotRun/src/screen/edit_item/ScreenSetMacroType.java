@@ -2,6 +2,7 @@ package screen.edit_item;
 
 import core.RobotRun;
 import global.DataManagement;
+import global.Fields;
 import robot.RoboticArm;
 import screen.ScreenMode;
 
@@ -31,7 +32,7 @@ public class ScreenSetMacroType extends ST_ScreenEditItem {
 	public void actionEntr() {
 		RoboticArm r = robotRun.getActiveRobot();
 		int idx = robotRun.getLastScreen().getContentIdx();
-		System.out.println(idx);
+		Fields.debug("%d\n", idx);
 		if (options.getLineIdx() == 0) {
 			r.getMacro(idx).setManual(false);
 			robotRun.switchScreen(ScreenMode.SET_MACRO_BINDING);

@@ -1639,7 +1639,7 @@ public class RobotRun extends PApplet {
 			return 0;
 			
 		} catch (IndexOutOfBoundsException IOOBEx) {
-			//System.err.printf("inst=%d row=%d size=%d\n", instrIdx, row, instr.size());
+			//Fields.debug("inst=%d row=%d size=%d\n", instrIdx, row, instr.size());
 			return row;
 		}
 	}
@@ -1837,10 +1837,10 @@ public class RobotRun extends PApplet {
 				if (p != null) {
 					
 					for (InstElement e : p) {
-						System.out.printf("%d:\t%s\n", e.getID(), e.getInst());
+						Fields.debug("%d:\t%s\n", e.getID(), e.getInst());
 					}
 					
-					System.out.println();
+					Fields.debug("");
 				}
 				
 			} else if (keyCode == KeyEvent.VK_E) {
@@ -2749,7 +2749,7 @@ public class RobotRun extends PApplet {
 		RMatrix ry = RMath.formRMat(new PVector(0f, 1f, 0f), 135f * DEG_TO_RAD);
 		RMatrix rz = RMath.formRMat(new PVector(0f, 0f, 1f), 135f * DEG_TO_RAD);
 		
-		System.out.printf("%s\n%s\n%s\n", rx, ry, rz);
+		Fields.debug("%s\n%s\n%s\n", rx, ry, rz);
 		/**/
 	}
 
@@ -3614,7 +3614,9 @@ public class RobotRun extends PApplet {
 		}
 		
 		lastTextPositionY += 20;
-		Fields.msgSystem.draw(getGraphics(), lastTextPositionX, lastTextPositionY);
+		lastTextPositionY = Fields.msgSystem.draw(getGraphics(),
+				lastTextPositionX, lastTextPositionY);
+		
 		UI.updateAndDrawUI();
 		
 		popStyle();

@@ -1,6 +1,7 @@
 package screen.select_lines;
 
 import core.RobotRun;
+import global.Fields;
 import global.RMath;
 import programming.Program;
 import robot.RoboticArm;
@@ -45,7 +46,7 @@ public class ScreenSelectInstrDelete extends ST_ScreenLineSelect {
 		}
 		
 		contents.setLineIdx(RMath.clamp(contents.getLineIdx(), 0, p.getNumOfInst()));
-		System.out.println(contents.getLineIdx());
+		Fields.debug( Integer.toString(contents.getLineIdx()) );
 
 		robotRun.lastScreen();
 		robotRun.getLastScreen().setContentIdx(contents.getLineIdx());

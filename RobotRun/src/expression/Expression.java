@@ -51,7 +51,7 @@ public class Expression extends AtomicExpression {
 				AtomicExpression expr = new AtomicExpression(result, nextOperand, op);
 
 				result = expr.evaluate();
-				System.out.println("rolling result: " + result.getValue().toString());
+				Fields.debug("rolling result: " + result.getValue().toString());
 			}
 		}
 		

@@ -264,10 +264,8 @@ public class BoundingBox {
 			
 			if (G == 0f) {
 				/**
-				if (Fields.DEBUG) {
-					System.err.printf("G = 0 for A=%f R=%s\n",
+				Fields.debug("G = 0 for A=%f R=%s\n",
 							planeAxes[planeAxis] * dims[planeAxis], ray);
-				}
 				/**/
 				
 			} else {

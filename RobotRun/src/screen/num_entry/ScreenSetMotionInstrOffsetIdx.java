@@ -28,8 +28,7 @@ public class ScreenSetMotionInstrOffsetIdx extends ST_ScreenNumEntry {
 			
 			if (tempRegister < 0 || tempRegister > 99) {
 				// Invalid register index
-				String err = "Only registers 1 - 1000 are legal!";
-				System.out.println(err);
+				Fields.setMessage("Only registers 1 - 1000 are legal!");
 				
 			} else {
 				pMInst.setOffsetType(Fields.OFFSET_PREG);
