@@ -5,15 +5,17 @@ import java.util.Stack;
 
 import geom.Point;
 
-public class Expression extends AtomicExpression {
+public class Expression extends Operand<Object> {
 	private ArrayList<ExpressionElement> elementList;
 
 	public Expression() {
+		super(null, Operand.SUBEXP);
 		elementList = new ArrayList<>();
 		elementList.add(new OperandGeneric());
 	}
 
 	public Expression(ArrayList<ExpressionElement> e) {
+		super(null, Operand.SUBEXP);
 		elementList = e;
 	}
 
@@ -31,7 +33,6 @@ public class Expression extends AtomicExpression {
 		return new Expression(newList);
 	}
 	
-	@Override
 	public Operand<?> evaluate() {
 		if(elementList.isEmpty()) {
 			System.err.println("Empty expression error!");
@@ -236,6 +237,14 @@ public class Expression extends AtomicExpression {
 		return idx;
 	}
 
+	public void add(ExpressionElement e) {
+		elementList.add(e);
+	}
+	
+	protected void clear() {
+		elementList.clear();
+	}
+	
 	public void insertElement(int edit_idx) {
 		//limit number of elements allowed in this expression
 		if(getLength() >= 21) return;

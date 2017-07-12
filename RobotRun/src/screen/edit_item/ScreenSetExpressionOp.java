@@ -1,7 +1,7 @@
 package screen.edit_item;
 
 import core.RobotRun;
-import expression.AtomicExpression;
+import expression.BooleanBinaryExpression;
 import expression.BoolMath;
 import expression.Expression;
 import expression.ExpressionElement;
@@ -26,7 +26,14 @@ public class ScreenSetExpressionOp extends ST_ScreenEditItem {
 
 	@Override
 	protected void loadOptions() {
-		if (robotRun.opEdit instanceof Expression) {
+		if(robotRun.opEdit instanceof BooleanBinaryExpression) {
+			options.addLine("1. ... =  ...");
+			options.addLine("2. ... <> ...");
+			options.addLine("3. ... >  ...");
+			options.addLine("4. ... <  ...");
+			options.addLine("5. ... >= ...");
+			options.addLine("6. ... <= ...");
+		} else if (robotRun.opEdit instanceof Expression) {
 			Instruction instr = robotRun.getActiveInstruction();
 			Expression expr = (Expression)robotRun.opEdit;
 			int idx = contents.getItemColumnIdx() - ((ExpressionEvaluation)instr).getHeaderLength();
@@ -80,13 +87,6 @@ public class ScreenSetExpressionOp extends ST_ScreenEditItem {
 					loadLogicOps();
 				}
 			}
-		} else if(robotRun.opEdit instanceof AtomicExpression) {
-			options.addLine("1. ... =  ...");
-			options.addLine("2. ... <> ...");
-			options.addLine("3. ... >  ...");
-			options.addLine("4. ... <  ...");
-			options.addLine("5. ... >= ...");
-			options.addLine("6. ... <= ...");
 		}
 	}
 	
@@ -129,7 +129,19 @@ public class ScreenSetExpressionOp extends ST_ScreenEditItem {
 
 	@Override
 	public void actionEntr() {
-		if (robotRun.opEdit instanceof Expression) {
+		if (robotRun.opEdit instanceof BooleanBinaryExpression) {
+			BooleanBinaryExpression atmExpr = (BooleanBinaryExpression)robotRun.opEdit;
+
+			switch (options.getLineIdx()) {
+			case 0: atmExpr.setOperator(Operator.EQUAL); break;
+			case 1: atmExpr.setOperator(Operator.NEQUAL); break;
+			case 2: atmExpr.setOperator(Operator.GRTR); break;
+			case 3:	atmExpr.setOperator(Operator.LESS); break;
+			case 4: atmExpr.setOperator(Operator.GREQ); break;
+			case 5: atmExpr.setOperator(Operator.LSEQ); break;
+			}
+		}
+		else if (robotRun.opEdit instanceof Expression) {
 			Expression expr = (Expression)robotRun.opEdit;
 			
 			switch (options.getCurrentItemIdx()) {
@@ -150,18 +162,6 @@ public class ScreenSetExpressionOp extends ST_ScreenEditItem {
 			case 14: expr.setOperator(robotRun.editIdx, Operator.NOT); break;
 			case 15: expr.setOperator(robotRun.editIdx, Operator.PT_ADD); break;
 			case 16: expr.setOperator(robotRun.editIdx, Operator.PT_SUB); break;
-			}
-		}
-		else if (robotRun.opEdit instanceof AtomicExpression) {
-			AtomicExpression atmExpr = (AtomicExpression)robotRun.opEdit;
-
-			switch (options.getLineIdx()) {
-			case 0: atmExpr.setOperator(Operator.EQUAL); break;
-			case 1: atmExpr.setOperator(Operator.NEQUAL); break;
-			case 2: atmExpr.setOperator(Operator.GRTR); break;
-			case 3:	atmExpr.setOperator(Operator.LESS); break;
-			case 4: atmExpr.setOperator(Operator.GREQ); break;
-			case 5: atmExpr.setOperator(Operator.LSEQ); break;
 			}
 		}
 		

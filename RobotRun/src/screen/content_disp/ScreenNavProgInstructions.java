@@ -2,7 +2,7 @@ package screen.content_disp;
 
 import core.RobotRun;
 import enums.CoordFrame;
-import expression.AtomicExpression;
+import expression.BooleanBinaryExpression;
 import expression.Expression;
 import expression.ExpressionElement;
 import expression.Operand;
@@ -480,30 +480,18 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 		} else if (ins instanceof IfStatement) {
 			IfStatement stmt = (IfStatement) ins;
 			
-			if (stmt.getExpr() instanceof Expression) {
-				int len = stmt.getExpr().getLength();
-
-				if (sdx >= 3 && sdx < len + 1) {
-					editExpression((Expression) stmt.getExpr(), sdx - 3);
-				} else if (sdx == len + 2) {
-					robotRun.nextScreen(ScreenMode.SET_IF_STMT_ACT);
-				} else if (sdx == len + 3) {
-					if (stmt.getInstr() instanceof JumpInstruction) {
-						robotRun.nextScreen(ScreenMode.SET_JUMP_TGT);
-					} else if (stmt.getInstr() instanceof CallInstruction) {
-						robotRun.nextScreen(ScreenMode.SET_CALL_PROG);
-					}
-				}
-			} else if (stmt.getExpr() instanceof AtomicExpression) {
+			if (stmt.getExpr() instanceof BooleanBinaryExpression) {
+				BooleanBinaryExpression expr = (BooleanBinaryExpression)stmt.getExpr();
+				
 				if (sdx == 2) {
-					robotRun.opEdit = stmt.getExpr().getArg1();
+					robotRun.opEdit = expr.getArg1();
 					robotRun.editIdx = 0;
 					robotRun.nextScreen(ScreenMode.SET_BOOL_EXPR_ARG);
 				} else if (sdx == 3) {
 					robotRun.opEdit = stmt.getExpr();
 					robotRun.nextScreen(ScreenMode.SET_EXPR_OP);
 				} else if (sdx == 4) {
-					robotRun.opEdit = stmt.getExpr().getArg2();
+					robotRun.opEdit = expr.getArg2();
 					robotRun.editIdx = 2;
 					robotRun.nextScreen(ScreenMode.SET_BOOL_EXPR_ARG);
 				} else if (sdx == 5) {
@@ -514,7 +502,21 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 					} else if (stmt.getInstr() instanceof CallInstruction) {
 						robotRun.nextScreen(ScreenMode.SET_CALL_PROG);
 					}
-				}
+				} 
+			} else if (stmt.getExpr() instanceof Expression) {
+				int len = stmt.getExpr().getLength();
+
+				if (sdx >= 3 && sdx < len + 1) {
+					editExpression(stmt.getExpr(), sdx - 3);
+				} else if (sdx == len + 2) {
+					robotRun.nextScreen(ScreenMode.SET_IF_STMT_ACT);
+				} else if (sdx == len + 3) {
+					if (stmt.getInstr() instanceof JumpInstruction) {
+						robotRun.nextScreen(ScreenMode.SET_JUMP_TGT);
+					} else if (stmt.getInstr() instanceof CallInstruction) {
+						robotRun.nextScreen(ScreenMode.SET_CALL_PROG);
+					}
+				} 
 			}
 		} else if (ins instanceof SelectStatement) {
 			SelectStatement stmt = (SelectStatement) ins;

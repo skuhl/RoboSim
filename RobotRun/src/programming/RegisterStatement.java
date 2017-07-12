@@ -222,55 +222,22 @@ public class RegisterStatement extends Instruction implements ExpressionEvaluati
 
 	@Override
 	public Operand<?> setOperand(int idx, Operand<?> o) {
-		Operand<?> ret;
-		
-		if(expr instanceof Expression) {
-			ret = ((Expression)expr).setOperand(idx, o);
-		} else if(idx == 0) {
-			ret = expr.setArg1(o);
-		} else if(idx == 2) {
-			ret = expr.setArg2(o);
-		} else {
-			ret = null;
-		}
-		
-		return ret;
+		return expr.setOperand(idx, o);
 	}
 
 	@Override
 	public Operator setOperator(int idx, Operator o) {
-		Operator ret;
-		
-		if(expr instanceof Expression) {
-			ret = ((Expression)expr).setOperator(idx, o);
-		} else {
-			expr.setOp(o);
-			ret = expr.getOp();
-		}
-		
-		return ret;
+		return expr.setOperator(idx, o);
 	}
 
 	@Override
 	public Operand<?> getOperand(int idx) {
-		if(expr instanceof Expression) {
-			return ((Expression)expr).getOperand(idx);
-		} else if(idx == 0) {
-			return expr.getArg1();
-		} else if(idx == 2) {
-			return expr.getArg2();
-		} else {
-			return null;
-		}
+		return expr.getOperand(idx);
 	}
 
 	@Override
 	public Operator getOperator(int idx) {
-		if(expr instanceof Expression) {
-			return ((Expression)expr).getOperator(idx);
-		} else {
-			return expr.getOp();
-		}
+		return expr.getOperator(idx);
 	}
 	
 	@Override

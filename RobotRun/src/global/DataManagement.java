@@ -14,8 +14,8 @@ import java.util.ArrayList;
 
 import core.RobotRun;
 import core.Scenario;
-import expression.AtomicExpression;
 import expression.BoolMath;
+import expression.BooleanBinaryExpression;
 import expression.Expression;
 import expression.ExpressionElement;
 import expression.FloatMath;
@@ -335,7 +335,7 @@ public abstract class DataManagement {
 			Operand<?> a1 = (Operand<?>)loadExpressionElement(robot, in);
 			Operator op = (Operator)loadExpressionElement(robot, in);
 
-			ee = new AtomicExpression(a0, a1, op);
+			ee = new BooleanBinaryExpression(a0, a1, op);
 
 		} else if (nullFlag == 4) {
 			// Read in a normal operand
@@ -615,7 +615,7 @@ public abstract class DataManagement {
 			// Load data associated with an if statement
 			boolean isCommented = in.readBoolean();
 			Instruction subInst = loadInstruction(robot, in);
-			AtomicExpression expr = (AtomicExpression)loadExpressionElement(robot, in);
+			Expression expr = (Expression)loadExpressionElement(robot, in);
 			
 			inst = new IfStatement(expr, subInst);
 			inst.setIsCommented(isCommented);
@@ -1288,6 +1288,15 @@ public abstract class DataManagement {
 				out.writeByte(1);
 				out.writeInt( op.getOpID() );
 
+			} else if (ee instanceof BooleanBinaryExpression) {
+				// Subexpression
+				BooleanBinaryExpression ae = (BooleanBinaryExpression)ee;
+
+				out.writeByte(3);
+				saveExpressionElement(ae.getArg1(), out);
+				saveExpressionElement(ae.getArg2(), out);
+				saveExpressionElement(ae.getOperator(), out);
+
 			} else if (ee instanceof Expression) {
 				Expression expr = (Expression)ee;
 				
@@ -1302,15 +1311,6 @@ public abstract class DataManagement {
 					saveExpressionElement(expr.get(idx), out);
 				}
 				
-			} else if (ee instanceof AtomicExpression) {
-				// Subexpression
-				AtomicExpression ae = (AtomicExpression)ee;
-
-				out.writeByte(3);
-				saveExpressionElement(ae.getArg1(), out);
-				saveExpressionElement(ae.getArg2(), out);
-				saveExpressionElement(ae.getOp(), out);
-
 			} else if (ee instanceof Operand<?>) {
 				Operand<?> eo = (Operand<?>)ee;
 
