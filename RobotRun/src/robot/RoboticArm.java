@@ -184,7 +184,6 @@ public class RoboticArm {
 	public RoboticArm(int rid, PVector basePos, MyPShape[] segmentModels,
 			MyPShape[] endEffectorModels, RTrace robotTrace) {
 		
-		
 		RID = rid;
 		liveSpeed = 10;
 		BASE_POSITION = basePos;

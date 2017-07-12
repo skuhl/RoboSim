@@ -45,6 +45,23 @@ public class UserFrame extends Frame {
 
 		return null;
 	}
+	
+	@Override
+	public boolean isComplete(int teachMethod) {
+		if (teachMethod == 0) {
+			// Check if all points are taught for the three point method
+			return axesTeachPoints[0] != null && axesTeachPoints[1] != null &&
+				   axesTeachPoints[2] != null;
+			
+		} else if (teachMethod == 1) {
+			// Check if all points are taught for the fourth point method
+			return axesTeachPoints[0] != null && axesTeachPoints[1] != null &&
+				   axesTeachPoints[2] != null && orientOrigin != null;
+		}
+		
+		// Invalid teaching method flag
+		return false;
+	}
 
 	@Override
 	public void reset() {

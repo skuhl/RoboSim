@@ -98,12 +98,31 @@ public abstract class ST_ScreenTeachPoints extends Screen {
 			robotRun.teachFrame.setPoint(pt, options.getLineIdx());
 			DataManagement.saveRobotData(r, 2);
 			robotRun.updatePendantScreen();
-			
-			/* TODO add message when teaching is complete *
-			if () {
-				
-			}
-			/**/
 		}
+	}
+	
+	/**
+	 * @return	If all the points are taught for the teaching method associated
+	 * 			with this screen for the frame currently being taught
+	 */
+	public boolean readyToTeach() {
+		int teachMethod;
+		// Determine the teach method flag value
+		if (mode == ScreenMode.TEACH_3PT_TOOL ||
+				mode == ScreenMode.TEACH_3PT_USER) {
+			
+			teachMethod = 0;
+			
+		} else if (mode == ScreenMode.TEACH_4PT ||
+				mode == ScreenMode.TEACH_6PT) {
+			
+			teachMethod = 1;
+			
+		} else {
+			teachMethod = 2;
+		}
+		// Are all the correct points taught for this frame
+		return robotRun.teachFrame != null &&
+				robotRun.teachFrame.isComplete(teachMethod);
 	}
 }

@@ -20,10 +20,10 @@ public abstract class Frame {
 	protected RQuaternion orientationOffset;
 	/* The three points used to define a coordinate axis for 6-Point Method
 	 * of Tool Frames and 3-Point or 4_Point Methods of User Frames */
-	private Point[] axesTeachPoints;
+	protected Point[] axesTeachPoints;
 	// For Direct Entry
-	private PVector DEOrigin;
-	private RQuaternion DEOrientationOffset;
+	protected PVector DEOrigin;
+	protected RQuaternion DEOrientationOffset;
 
 	public Frame(String name) {
 		this.name = name;
@@ -294,9 +294,8 @@ public abstract class Frame {
 	 * 
 	 * @param teachMethod
 	 * @return
-	 *
+	 */
 	public abstract boolean isComplete(int teachMethod);
-	/**/
 
 	/**
 	 * Resets all the fields of the frame to their default values.

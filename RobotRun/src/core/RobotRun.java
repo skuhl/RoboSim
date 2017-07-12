@@ -118,6 +118,7 @@ public class RobotRun extends PApplet {
 
 	// container for instructions being copied/ cut and pasted
 	public ArrayList<Instruction> clipBoard = new ArrayList<>();
+	
 	/**
 	 * Index of the current frame (Tool or User) selecting when in the Frame
 	 * menus
@@ -3602,6 +3603,15 @@ public class RobotRun extends PApplet {
 		}
 		
 		popStyle();
+		
+		Screen activeScreen = getActiveScreen();
+		
+		if (activeScreen instanceof ST_ScreenTeachPoints &&
+				((ST_ScreenTeachPoints) activeScreen).readyToTeach() &&
+				Fields.msgSystem.getMessage() == null) {
+			// Prompt the user to teach a frame when all points are taught
+			Fields.setMessage("Press ENTER to teach the frame");
+		}
 		
 		lastTextPositionY += 20;
 		Fields.msgSystem.draw(getGraphics(), lastTextPositionX, lastTextPositionY);

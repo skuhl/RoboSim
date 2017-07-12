@@ -1133,7 +1133,6 @@ public abstract class DataManagement {
 				}
 				
 				MyPShape form = app.loadSTLModel(srcPath, fill);
-				
 				// Creates a complex shape from the srcPath located in RobotRun/data/
 				shape = new ComplexShape(srcPath, form, fill, scale);
 			}
