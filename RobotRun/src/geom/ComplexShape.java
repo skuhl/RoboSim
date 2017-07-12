@@ -125,6 +125,22 @@ public class ComplexShape extends RShape {
 	}
 	
 	/**
+	 * TODO comment this
+	 * 
+	 * @param dim
+	 * @return
+	 */
+	public float getBaseDim(DimType dim) {
+		switch(dim) {
+		// Determine dimension based on the scale
+		case LENGTH: return baseDims.x;
+		case HEIGHT: return baseDims.y;
+		case WIDTH:  return baseDims.z;
+		default:     return -1f;
+		}
+	}
+	
+	/**
 	 * @return	The center offset associated with this model
 	 */
 	public float[] getCenterOffset() {

@@ -1337,6 +1337,7 @@ public class WGUI implements ControlListener {
 						if (shapeDims[0] != null) {
 							// Define shape scale
 							shape = new ComplexShape(srcFile, model, fill, shapeDims[0]);
+							
 						} else {
 							shape = new ComplexShape(srcFile, model, fill);
 						}
@@ -1595,43 +1596,43 @@ public class WGUI implements ControlListener {
 				// Read length input
 				float val = Float.parseFloat(lenField);
 
-				if (val <= 0) {
-					throw new NumberFormatException("Invalid length value!");
+				if (val < 10f || val > 800f) {
+					throw new NumberFormatException("The length must be within the range 10 and 800");
 				}
-				// Length cap of 800
-				dimensions[0] = PApplet.max(10f, PApplet.min(val, 800f));
+				
+				dimensions[0] = val;
 			}
 
 			if (hgtField != null && !hgtField.equals("")) {
 				// Read height input
 				float val = Float.parseFloat(hgtField);
 
-				if (val <= 0) {
-					throw new NumberFormatException("Invalid height value!");
+				if (val < 10f || val > 800f) {
+					throw new NumberFormatException("The height must be within the range 10 and 800");
 				}
-				// Height cap of 800
-				dimensions[1] = PApplet.max(10f, PApplet.min(val, 800f));
+				
+				dimensions[1] = val;
 			}
 
 			if (wdhField != null && !wdhField.equals("")) {
 				// Read Width input
 				float val = Float.parseFloat(wdhField);
 
-				if (val <= 0) {
-					throw new NumberFormatException("Invalid width value!");
+				if (val < 10f || val > 800f) {
+					throw new NumberFormatException("The width must be within the range 10 and 800");
 				}
-				// Width cap of 800
-				dimensions[2] = PApplet.max(10f, PApplet.min(val, 800f));
+				
+				dimensions[2] = val;
 			}
 
 			return dimensions;
 
 		} catch (NumberFormatException NFEx) {
-			Fields.setMessage("Invalid number input!");
+			Fields.setMessage(NFEx.getMessage());
 			return null;
 
 		} catch (NullPointerException NPEx) {
-			Fields.setMessage("Missing parameter!");
+			Fields.setMessage("All dimension fields must have a value");
 			return null;
 		}
 	}
@@ -1707,11 +1708,11 @@ public class WGUI implements ControlListener {
 			return values;
 
 		} catch (NumberFormatException NFEx) {
-			Fields.setMessage("Invalid number input!");
+			Fields.setMessage("All fields must be real numbers");
 			return null;
 
 		} catch (NullPointerException NPEx) {
-			Fields.setMessage("Missing parameter!");
+			Fields.setMessage("All fields must be real numbers");
 			return null;
 		}
 	}
@@ -1743,32 +1744,32 @@ public class WGUI implements ControlListener {
 				// Read radius input
 				float val = Float.parseFloat(radField);
 
-				if (val <= 0) {
-					throw new NumberFormatException("Invalid length value!");
+				if (val < 5f || val > 400f) {
+					throw new NumberFormatException("The radius must be within the range 5 and 400");
 				}
-				// Radius cap of 400
-				dimensions[0] = PApplet.max(5f, PApplet.min(val, 400f));
+				
+				dimensions[0] = val;
 			}
 
 			if (hgtField != null && !hgtField.equals("")) {
 				// Read height input
 				float val = Float.parseFloat(hgtField);
 
-				if (val <= 0) {
-					throw new NumberFormatException("Invalid height value!");
+				if (val < 5f || val > 800f) {
+					throw new NumberFormatException("The height must be within the range 10 and 800");
 				}
-				// Height cap of 800
-				dimensions[1] = PApplet.max(10f, PApplet.min(val, 800f));
+				
+				dimensions[1] = val;
 			}
 
 			return dimensions;
 
 		} catch (NumberFormatException NFEx) {
-			Fields.setMessage("Invalid number input!");
+			Fields.setMessage(NFEx.getMessage());
 			return null;
 
 		} catch (NullPointerException NPEx) {
-			Fields.setMessage("Missing parameter!");
+			Fields.setMessage("All dimension fields must have a value");
 			return null;
 		}
 	}
@@ -1909,21 +1910,23 @@ public class WGUI implements ControlListener {
 				// Read scale input
 				float val = Float.parseFloat(sclField);
 
-				if (val <= 0) {
-					throw new NumberFormatException("Invalid scale value");
+				if (val <= 0f) {
+					Fields.setMessage("The scale must be greater than");
+					return null;
+					
+				} else {
+					dimensions[0] = val;
 				}
-				// Scale cap of 50
-				dimensions[0] = PApplet.min(val, 50f);
 			}
 
 			return dimensions;
 
 		} catch (NumberFormatException NFEx) {
-			Fields.setMessage(NFEx.getMessage());
+			Fields.setMessage("The scale must be a real number");
 			return null;
 
 		} catch (NullPointerException NPEx) {
-			Fields.setMessage("Missing parameter!");
+			Fields.setMessage("The scale must be a real number");
 			return null;
 		}
 	}
@@ -3710,8 +3713,7 @@ public class WGUI implements ControlListener {
 			}
 			
 		} catch (NullPointerException NPEx) {
-			Fields.setMessage("Missing parameter!");
-			NPEx.printStackTrace();
+			Fields.setMessage("All fields must be real numbers");
 		}
 		
 		return null;
@@ -3831,9 +3833,23 @@ public class WGUI implements ControlListener {
 			}
 
 		} else if (s instanceof ComplexShape) {
+			ComplexShape compShape = (ComplexShape)s;
 			Float[] newDims = getModelDimensions();
 
 			if (newDims[0] != null) {
+				
+				float scaledLen = newDims[0] * compShape.getBaseDim(DimType.LENGTH);
+				float scaledHgt = newDims[0] * compShape.getBaseDim(DimType.HEIGHT);
+				float scaledWdh = newDims[0] * compShape.getBaseDim(DimType.WIDTH);
+				
+				if (scaledLen < 5f || scaledLen > 800f ||
+					scaledHgt < 5f || scaledHgt > 800f ||
+					scaledWdh < 5f || scaledWdh > 800f) {
+					
+					// The scaling is out of bounds
+					return null;
+				}
+				
 				// Update the model's scale value
 				s.setDim(newDims[0], DimType.SCALE);
 				dimChanged = true;
