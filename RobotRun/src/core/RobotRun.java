@@ -241,8 +241,15 @@ public class RobotRun extends PApplet {
 	 * in either the content or options menu.
 	 */
 	public void button_arrowDn() {
-		screens.getActiveScreen().actionDn();
-		updatePendantScreen();
+		try {
+			screens.getActiveScreen().actionDn();
+			updatePendantScreen();
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 	
 	/**
@@ -253,8 +260,15 @@ public class RobotRun extends PApplet {
 	 * either the content or options menu.
 	 */
 	public void button_arrowLt() {
-		screens.getActiveScreen().actionLt();
-		updatePendantScreen();
+		try {
+			screens.getActiveScreen().actionLt();
+			updatePendantScreen();
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 
 	/**
@@ -267,8 +281,15 @@ public class RobotRun extends PApplet {
 	 * text, and point entry menus.
 	 */
 	public void button_arrowRt() {
-		screens.getActiveScreen().actionRt();
-		updatePendantScreen();
+		try {
+			screens.getActiveScreen().actionRt();
+			updatePendantScreen();
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 	
 	/**
@@ -279,8 +300,15 @@ public class RobotRun extends PApplet {
 	 * in either the content or options menu.
 	 */
 	public void button_arrowUp() {
-		screens.getActiveScreen().actionUp();
-		updatePendantScreen();
+		try {
+			screens.getActiveScreen().actionUp();
+			updatePendantScreen();
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 
 	/**
@@ -289,8 +317,15 @@ public class RobotRun extends PApplet {
 	 * Functions as a backspace key for number, text, and point input menus.
 	 */
 	public void button_bkspc() {
-		screens.getActiveScreen().actionBkspc();
-		updatePendantScreen();
+		try {
+			screens.getActiveScreen().actionBkspc();
+			updatePendantScreen();
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 	
 	/**
@@ -300,35 +335,65 @@ public class RobotRun extends PApplet {
 	 * instruction (if one exists).
 	 */
 	public void button_bwd() {
-		// Backwards is only functional when executing a program one instruction
-		// at a time
-		if (screens.getActiveScreen() instanceof ScreenNavProgInstructions && isShift() && isStep()) {
-			// Safeguard against editing a program while it is running
-			screens.getActiveScreen().getContents().setColumnIdx(0);
-			Fields.resetMessage();
-			progExecBwd();
+		try {
+			// Backwards is only functional when executing a program one instruction
+			// at a time
+			if (screens.getActiveScreen() instanceof ScreenNavProgInstructions
+					&& isShift() && isStep()) {
+				
+				// Safeguard against editing a program while it is running
+				screens.getActiveScreen().getContents().setColumnIdx(0);
+				Fields.resetMessage();
+				progExecBwd();
+			}
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
 		}
 	}
 	
 	public void button_camTeachObj() {
-		if(activeScenario != null) {
-			rCamera.teachObjectToCamera(activeScenario);
+		try {
+			if(activeScenario != null) {
+				rCamera.teachObjectToCamera(activeScenario);
+			}
+			
+			UI.updateCameraListContents();
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
 		}
-		
-		UI.updateCameraListContents();
 	}
 
 	public void button_camToggleActive() {
-		camEnable = UI.toggleCamera();
-				
-		UI.updateUIContentPositions();
-		updatePendantScreen();
+		try {
+			camEnable = UI.toggleCamera();
+					
+			UI.updateUIContentPositions();
+			updatePendantScreen();
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 	
 	public void button_camUpdate() {
-		if (rCamera != null) {
-			UI.updateCameraCurrent();
-			Fields.resetMessage();
+		try {
+			if (rCamera != null) {
+				UI.updateCameraCurrent();
+				Fields.resetMessage();
+			}
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
 		}
 	}
 	
@@ -339,9 +404,16 @@ public class RobotRun extends PApplet {
 	 * x-axis of the world coordinate system.
 	 */
 	public void button_camViewBack() {
-		// Back view
-		camera.reset();
-		camera.setRotation(0f, PI, 0f);
+		try {
+			// Back view
+			camera.reset();
+			camera.setRotation(0f, PI, 0f);
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 	
 	/**
@@ -351,9 +423,16 @@ public class RobotRun extends PApplet {
 	 * frame, so as to view the bottom of the robot.
 	 */
 	public void button_camViewBottom() {
-		// Bottom view
-		camera.reset();
-		camera.setRotation(HALF_PI, 0f, 0f);
+		try {
+			// Bottom view
+			camera.reset();
+			camera.setRotation(HALF_PI, 0f, 0f);
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 	
 	/**
@@ -363,8 +442,15 @@ public class RobotRun extends PApplet {
 	 * of the world coordinate system.
 	 */
 	public void button_camViewFront() {
-		// Default view
-		camera.reset();
+		try {
+			// Default view
+			camera.reset();
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 	
 	/**
@@ -374,9 +460,16 @@ public class RobotRun extends PApplet {
 	 * frame.
 	 */
 	public void button_camViewLeft() {
-		// Left view
-		camera.reset();
-		camera.setRotation(0f, HALF_PI, 0f);
+		try {
+			// Left view
+			camera.reset();
+			camera.setRotation(0f, HALF_PI, 0f);
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 	
 	/**
@@ -386,9 +479,16 @@ public class RobotRun extends PApplet {
 	 * coordinate frame.
 	 */
 	public void button_camViewRight() {
-		// Right view
-		camera.reset();
-		camera.setRotation(0, 3f * HALF_PI, 0f);
+		try {
+			// Right view
+			camera.reset();
+			camera.setRotation(0, 3f * HALF_PI, 0f);
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 
 	/**
@@ -398,9 +498,16 @@ public class RobotRun extends PApplet {
 	 * coordinate frame.
 	 */
 	public void button_camViewTop() {
-		// Top view
-		camera.reset();
-		camera.setRotation(3f * HALF_PI, 0f, 0f);
+		try {
+			// Top view
+			camera.reset();
+			camera.setRotation(3f * HALF_PI, 0f, 0f);
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 	
 	/**
@@ -411,12 +518,19 @@ public class RobotRun extends PApplet {
 	 * active frames menu on the pendant.
 	 */
 	public void button_coord() {
-		if (isShift()) {
-			nextScreen(ScreenMode.ACTIVE_FRAMES);
-		} else {
-			// Update the coordinate frame
-			coordFrameTransition();
-			updatePendantScreen();
+		try {
+			if (isShift()) {
+				nextScreen(ScreenMode.ACTIVE_FRAMES);
+			} else {
+				// Update the coordinate frame
+				coordFrameTransition();
+				updatePendantScreen();
+			}
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
 		}
 	}
 
@@ -427,7 +541,14 @@ public class RobotRun extends PApplet {
 	 * menus.
 	 */
 	public void button_dash() {
-		screens.getActiveScreen().actionKeyPress('-');
+		try {
+			screens.getActiveScreen().actionKeyPress('-');
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 
 	/**
@@ -437,7 +558,14 @@ public class RobotRun extends PApplet {
 	 * registers).
 	 */
 	public void button_data() {
-		nextScreen(ScreenMode.NAV_DATA);
+		try {
+			nextScreen(ScreenMode.NAV_DATA);
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 	
 	/**
@@ -448,19 +576,26 @@ public class RobotRun extends PApplet {
 	 * the selected program
 	 */
 	public void button_edit() {
-		if (screens.getActiveScreen() instanceof ScreenNavPrograms) {
-			// Load the selected program
-			setActiveProgIdx(screens.getActiveScreen().getContentIdx());
-			setActiveInstIdx(0);
-			nextScreen(ScreenMode.NAV_PROG_INSTR);
+		try {
+			if (screens.getActiveScreen() instanceof ScreenNavPrograms) {
+				// Load the selected program
+				setActiveProgIdx(screens.getActiveScreen().getContentIdx());
+				setActiveInstIdx(0);
+				nextScreen(ScreenMode.NAV_PROG_INSTR);
+				
+			} else if (getActiveProg() != null) {
+				// Load the current active program
+				nextScreen(ScreenMode.NAV_PROG_INSTR);
+			} else {
+				// Load the program navigation menu
+				screens.resetStack();
+				nextScreen(ScreenMode.NAV_PROGRAMS);
+			}
 			
-		} else if (getActiveProg() != null) {
-			// Load the current active program
-			nextScreen(ScreenMode.NAV_PROG_INSTR);
-		} else {
-			// Load the program navigation menu
-			screens.resetStack();
-			nextScreen(ScreenMode.NAV_PROGRAMS);
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
 		}
 	}
 	
@@ -470,9 +605,16 @@ public class RobotRun extends PApplet {
 	 * Functions as a confirmation button for almost all menus.
 	 */
 	public void button_enter() {
-		Fields.resetMessage();
-		screens.getActiveScreen().actionEntr();
-		updatePendantScreen();
+		try {
+			Fields.resetMessage();
+			screens.getActiveScreen().actionEntr();
+			updatePendantScreen();
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 	
 	/**
@@ -483,8 +625,15 @@ public class RobotRun extends PApplet {
 	 * menu.
 	 */
 	public void button_F1() {
-		screens.getActiveScreen().actionF1();
-		updatePendantScreen();
+		try {
+			screens.getActiveScreen().actionF1();
+			updatePendantScreen();
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 
 	/**
@@ -495,8 +644,15 @@ public class RobotRun extends PApplet {
 	 * menu.
 	 */
 	public void button_F2() {
-		screens.getActiveScreen().actionF2();
-		updatePendantScreen();
+		try {
+			screens.getActiveScreen().actionF2();
+			updatePendantScreen();
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 
 	/**
@@ -507,8 +663,15 @@ public class RobotRun extends PApplet {
 	 * menu.
 	 */
 	public void button_F3() {
-		screens.getActiveScreen().actionF3();
-		updatePendantScreen();
+		try {
+			screens.getActiveScreen().actionF3();
+			updatePendantScreen();
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 
 	/**
@@ -519,8 +682,15 @@ public class RobotRun extends PApplet {
 	 * menu.
 	 */
 	public void button_F4() {
-		screens.getActiveScreen().actionF4();
-		updatePendantScreen();
+		try {
+			screens.getActiveScreen().actionF4();
+			updatePendantScreen();
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
   
 	/**
@@ -531,8 +701,15 @@ public class RobotRun extends PApplet {
 	 * menu.
 	 */
 	public void button_F5() {
-		screens.getActiveScreen().actionF5();
-		updatePendantScreen();
+		try {
+			screens.getActiveScreen().actionF5();
+			updatePendantScreen();
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 
 	/**
@@ -543,12 +720,21 @@ public class RobotRun extends PApplet {
 	 * otherwise the entire program is executed.
 	 */
 	public void button_fwd() {
-		if (screens.getActiveScreen() instanceof ScreenNavProgInstructions && !isProgExec() && isShift()) {
-			// Stop any prior Robot movement
-			button_hold();
-			// Safeguard against editing a program while it is running
-			screens.getActiveScreen().getContents().setColumnIdx(0);
-			progExec(isStep());
+		try {
+			if (screens.getActiveScreen() instanceof ScreenNavProgInstructions
+					&& !isProgExec() && isShift()) {
+				
+				// Stop any prior Robot movement
+				button_hold();
+				// Safeguard against editing a program while it is running
+				screens.getActiveScreen().getContents().setColumnIdx(0);
+				progExec(isStep());
+			}
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
 		}
 	}
 	
@@ -558,15 +744,22 @@ public class RobotRun extends PApplet {
 	 * Stops all robot motion and program execution.
 	 */
 	public void button_hold() {
-		Fields.resetMessage();
-		boolean robotInMotion = activeRobot.inMotion();
-		// Stop all robot motion and program execution
-		activeRobot.halt();
-		progExecState.halt();
-		
-		if (robotInMotion && !activeRobot.inMotion()) {
-			// Robot has stopped moving
-			updateInstList();
+		try {
+			Fields.resetMessage();
+			boolean robotInMotion = activeRobot.inMotion();
+			// Stop all robot motion and program execution
+			activeRobot.halt();
+			progExecState.halt();
+			
+			if (robotInMotion && !activeRobot.inMotion()) {
+				// Robot has stopped moving
+				updateInstList();
+			}
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
 		}
 	}
 	
@@ -578,16 +771,23 @@ public class RobotRun extends PApplet {
 	 * executes the program binded with a macro to this button.
 	 */
 	public void button_io() {
-		if (isShift()) {
-			if (activeRobot.getMacroKeyBinds()[6] != null) {
-				execute(activeRobot.getMacroKeyBinds()[6]);
+		try {
+			if (isShift()) {
+				if (activeRobot.getMacroKeyBinds()[6] != null) {
+					execute(activeRobot.getMacroKeyBinds()[6]);
+				}
+	
+			} else {
+				if (!isProgExec()) {
+					// Map I/O to the robot's end effector state, if shift is off
+					toggleEEState(activeRobot);
+				}
 			}
-
-		} else {
-			if (!isProgExec()) {
-				// Map I/O to the robot's end effector state, if shift is off
-				toggleEEState(activeRobot);
-			}
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
 		}
 	}
 	
@@ -597,8 +797,15 @@ public class RobotRun extends PApplet {
 	 * Not sure what this does ...
 	 */
 	public void button_item() {
-		if (screens.getActiveScreen() instanceof ScreenNavProgInstructions) {
-			nextScreen(ScreenMode.JUMP_TO_LINE);
+		try {
+			if (screens.getActiveScreen() instanceof ScreenNavProgInstructions) {
+				nextScreen(ScreenMode.JUMP_TO_LINE);
+			}
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
 		}
 	}
 	
@@ -610,7 +817,14 @@ public class RobotRun extends PApplet {
 	 * at most one of the two can be active at one time.
 	 */
 	public void button_jointNeg1() {
-		updateRobotJogMotion(0, -1);
+		try {
+			updateRobotJogMotion(0, -1);
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 	
 	/**
@@ -621,7 +835,14 @@ public class RobotRun extends PApplet {
 	 * at most one of the two can be active at one time.
 	 */
 	public void button_jointNeg2() {
-		updateRobotJogMotion(1, -1);
+		try {
+			updateRobotJogMotion(1, -1);
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 	
 	/**
@@ -632,7 +853,14 @@ public class RobotRun extends PApplet {
 	 * at most one of the two can be active at one time.
 	 */
 	public void button_jointNeg3() {
-		updateRobotJogMotion(2, -1);
+		try {
+			updateRobotJogMotion(2, -1);
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 	
 	/**
@@ -643,7 +871,14 @@ public class RobotRun extends PApplet {
 	 * at most one of the two can be active at one time.
 	 */
 	public void button_jointNeg4() {
-		updateRobotJogMotion(3, -1);
+		try {
+			updateRobotJogMotion(3, -1);
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 	
 	/**
@@ -654,7 +889,14 @@ public class RobotRun extends PApplet {
 	 * at most one of the two can be active at one time.
 	 */
 	public void button_jointNeg5() {
-		updateRobotJogMotion(4, -1);
+		try {
+			updateRobotJogMotion(4, -1);
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 	
 	/**
@@ -665,7 +907,14 @@ public class RobotRun extends PApplet {
 	 * at most one of the two can be active at one time.
 	 */
 	public void button_jointNeg6() {
-		updateRobotJogMotion(5, -1);
+		try {
+			updateRobotJogMotion(5, -1);
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 	
 	/**
@@ -676,7 +925,14 @@ public class RobotRun extends PApplet {
 	 * at most one of the two can be active at one time.
 	 */
 	public void button_jointPos1() {
-		updateRobotJogMotion(0, 1);
+		try {
+			updateRobotJogMotion(0, 1);
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 	
 	/**
@@ -687,7 +943,14 @@ public class RobotRun extends PApplet {
 	 * at most one of the two can be active at one time.
 	 */
 	public void button_jointPos2() {
-		updateRobotJogMotion(1, 1);
+		try {
+			updateRobotJogMotion(1, 1);
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 	
 	/**
@@ -698,7 +961,14 @@ public class RobotRun extends PApplet {
 	 * at most one of the two can be active at one time.
 	 */
 	public void button_jointPos3() {
-		updateRobotJogMotion(2, 1);
+		try {
+			updateRobotJogMotion(2, 1);
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 
 	/**
@@ -709,7 +979,14 @@ public class RobotRun extends PApplet {
 	 * at most one of the two can be active at one time.
 	 */
 	public void button_jointPos4() {
-		updateRobotJogMotion(3, 1);
+		try {
+			updateRobotJogMotion(3, 1);
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 
 	/**
@@ -720,7 +997,14 @@ public class RobotRun extends PApplet {
 	 * at most one of the two can be active at one time.
 	 */
 	public void button_jointPos5() {
-		updateRobotJogMotion(4, 1);
+		try {
+			updateRobotJogMotion(4, 1);
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 
 	/**
@@ -731,7 +1015,14 @@ public class RobotRun extends PApplet {
 	 * at most one of the two can be active at one time.
 	 */
 	public void button_jointPos6() {
-		updateRobotJogMotion(5, 1);
+		try {
+			updateRobotJogMotion(5, 1);
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 
 	/**
@@ -740,7 +1031,14 @@ public class RobotRun extends PApplet {
 	 * A list of miscellaneous sub menus (frames, marcos, I/O registers).
 	 */
 	public void button_menu() {
-		nextScreen(ScreenMode.NAV_MAIN_MENU);
+		try {
+			nextScreen(ScreenMode.NAV_MAIN_MENU);
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 	
 	/**
@@ -749,8 +1047,15 @@ public class RobotRun extends PApplet {
 	 * A button used for macro binding
 	 */
 	public void button_mvmu() {
-		if (activeRobot.getMacroKeyBinds()[2] != null && isShift()) {
-			execute(activeRobot.getMacroKeyBinds()[2]);
+		try {
+			if (activeRobot.getMacroKeyBinds()[2] != null && isShift()) {
+				execute(activeRobot.getMacroKeyBinds()[2]);
+			}
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
 		}
 	}
 	
@@ -761,7 +1066,14 @@ public class RobotRun extends PApplet {
 	 * menus.
 	 */
 	public void button_num0() {
-		screens.getActiveScreen().actionKeyPress('0');
+		try {
+			screens.getActiveScreen().actionKeyPress('0');
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 
 	/**
@@ -771,7 +1083,14 @@ public class RobotRun extends PApplet {
 	 * menus.
 	 */
 	public void button_num1() {
-		screens.getActiveScreen().actionKeyPress('1');
+		try {
+			screens.getActiveScreen().actionKeyPress('1');
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 
 	/**
@@ -781,7 +1100,14 @@ public class RobotRun extends PApplet {
 	 * menus.
 	 */
 	public void button_num2() {
-		screens.getActiveScreen().actionKeyPress('2');
+		try {
+			screens.getActiveScreen().actionKeyPress('2');
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 
 	/**
@@ -791,7 +1117,14 @@ public class RobotRun extends PApplet {
 	 * menus.
 	 */
 	public void button_num3() {
-		screens.getActiveScreen().actionKeyPress('3');
+		try {
+			screens.getActiveScreen().actionKeyPress('3');
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 
 	/**
@@ -801,7 +1134,14 @@ public class RobotRun extends PApplet {
 	 * menus.
 	 */
 	public void button_num4() {
-		screens.getActiveScreen().actionKeyPress('4');
+		try {
+			screens.getActiveScreen().actionKeyPress('4');
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 	
 	/**
@@ -811,7 +1151,14 @@ public class RobotRun extends PApplet {
 	 * menus.
 	 */
 	public void button_num5() {
-		screens.getActiveScreen().actionKeyPress('5');
+		try {
+			screens.getActiveScreen().actionKeyPress('5');
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 	
 	/**
@@ -821,7 +1168,14 @@ public class RobotRun extends PApplet {
 	 * menus.
 	 */
 	public void button_num6() {
-		screens.getActiveScreen().actionKeyPress('6');
+		try {
+			screens.getActiveScreen().actionKeyPress('6');
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 	
 	/**
@@ -831,7 +1185,14 @@ public class RobotRun extends PApplet {
 	 * menus.
 	 */
 	public void button_num7() {
-		screens.getActiveScreen().actionKeyPress('7');
+		try {
+			screens.getActiveScreen().actionKeyPress('7');
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 	
 	/**
@@ -841,7 +1202,14 @@ public class RobotRun extends PApplet {
 	 * menus.
 	 */
 	public void button_num8() {
-		screens.getActiveScreen().actionKeyPress('8');
+		try {
+			screens.getActiveScreen().actionKeyPress('8');
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 
 	/**
@@ -851,7 +1219,14 @@ public class RobotRun extends PApplet {
 	 * menus.
 	 */
 	public void button_num9() {
-		screens.getActiveScreen().actionKeyPress('9');
+		try {
+			screens.getActiveScreen().actionKeyPress('9');
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 	
 	/**
@@ -861,8 +1236,15 @@ public class RobotRun extends PApplet {
 	 * object creation and edit windows.
 	 */
 	public void button_objClearFields() {
-		Fields.resetMessage();
-		UI.clearAllInputFields();
+		try {
+			Fields.resetMessage();
+			UI.clearAllInputFields();
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 
 	/**
@@ -872,22 +1254,29 @@ public class RobotRun extends PApplet {
 	 * of the dimension input fields.
 	 */
 	public void button_objConfirmDims() {
-		if (activeScenario != null) {
-			Fields.resetMessage();
-			WorldObject selectedWO = UI.getSelectedWO();
-			
-			if (selectedWO != null) {
-				// Update the dimensions of the world object
-				WOUndoState undoState = UI.updateWODims(selectedWO);
+		try {
+			if (activeScenario != null) {
+				Fields.resetMessage();
+				WorldObject selectedWO = UI.getSelectedWO();
 				
-				if (undoState != null) {
-					// Save original world object onto the undo stack
-					updateScenarioUndo(undoState);
+				if (selectedWO != null) {
+					// Update the dimensions of the world object
+					WOUndoState undoState = UI.updateWODims(selectedWO);
+					
+					if (undoState != null) {
+						// Save original world object onto the undo stack
+						updateScenarioUndo(undoState);
+					}
 				}
+				
+			} else {
+				Fields.setMessage("No active scenario!");
 			}
 			
-		} else {
-			Fields.setMessage("No active scenario!");
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
 		}
 	}
 	
@@ -901,18 +1290,25 @@ public class RobotRun extends PApplet {
 	 * all data is saved.
 	 */
 	public void button_objCreate() {
-		if (activeScenario != null) {
-			Fields.resetMessage();
-			WorldObject newObject = UI.createWorldObject();
-
-			if (newObject != null) {
-				newObject.setLocalCenter(new PVector(-500f, 0f, 0f));
-				activeScenario.addWorldObject(newObject);
-				DataManagement.saveScenarios(this);
+		try {
+			if (activeScenario != null) {
+				Fields.resetMessage();
+				WorldObject newObject = UI.createWorldObject();
+	
+				if (newObject != null) {
+					newObject.setLocalCenter(new PVector(-500f, 0f, 0f));
+					activeScenario.addWorldObject(newObject);
+					DataManagement.saveScenarios(this);
+				}
 			}
-		}
-		else {
-			Fields.setMessage("No active scenario!");
+			else {
+				Fields.setMessage("No active scenario!");
+			}
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
 		}
 	}
 
@@ -922,20 +1318,27 @@ public class RobotRun extends PApplet {
 	 * Removes the selected world object from the active scenario.
 	 */
 	public void button_objDelete() {
-		// Delete focused world object and add to the scenario undo stack
-		WorldObject selected = UI.getSelectedWO();
-		
-		if (selected != null) {
-			updateScenarioUndo(new WOUndoDelete(selected, activeScenario));
-			int ret = getActiveScenario().removeWorldObject( selected );
+		try {
+			// Delete focused world object and add to the scenario undo stack
+			WorldObject selected = UI.getSelectedWO();
 			
-			if (ret == 0) {
-				UI.setSelectedWO(null);
+			if (selected != null) {
+				updateScenarioUndo(new WOUndoDelete(selected, activeScenario));
+				int ret = getActiveScenario().removeWorldObject( selected );
+				
+				if (ret == 0) {
+					UI.setSelectedWO(null);
+				}
+				
+				Fields.debug("World Object removed: %d\n", ret);
+				
+				DataManagement.saveScenarios(this);
 			}
 			
-			Fields.debug("World Object removed: %d\n", ret);
-			
-			DataManagement.saveScenarios(this);
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
 		}
 	}
 
@@ -946,27 +1349,34 @@ public class RobotRun extends PApplet {
 	 * inputed values in the edit window.
 	 */
 	public void button_objMoveToCur() {
-		// Only allow world object editing when no program is executing
-		if (!isProgExec()) {
-			RoboticArm r = activeRobot;
-			Fields.resetMessage();
-			WorldObject selectedWO = UI.getSelectedWO();
-			
-			if (selectedWO instanceof Fixture || (selectedWO instanceof Part &&
-					(r == null || !r.isHeld((Part)selectedWO)))) {
+		try {
+			// Only allow world object editing when no program is executing
+			if (!isProgExec()) {
+				RoboticArm r = activeRobot;
+				Fields.resetMessage();
+				WorldObject selectedWO = UI.getSelectedWO();
 				
-				WOUndoState undoState = UI.updateWOCurrent(selectedWO);
-				
-				if (undoState != null) {
-					/*
-					 * If the object was modified, then save the previous state
-					 * of the object
-					 */
-					updateScenarioUndo(undoState);
+				if (selectedWO instanceof Fixture || (selectedWO instanceof Part &&
+						(r == null || !r.isHeld((Part)selectedWO)))) {
+					
+					WOUndoState undoState = UI.updateWOCurrent(selectedWO);
+					
+					if (undoState != null) {
+						/*
+						 * If the object was modified, then save the previous state
+						 * of the object
+						 */
+						updateScenarioUndo(undoState);
+					}
+					
+					DataManagement.saveScenarios(this);
 				}
-				
-				DataManagement.saveScenarios(this);
 			}
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
 		}
 	}
 
@@ -977,23 +1387,30 @@ public class RobotRun extends PApplet {
 	 * to that of its default fields.
 	 */
 	public void button_objMoveToDefault() {
-		// Only allow world object editing when no program is executing
-		if (!isProgExec()) {
-			RoboticArm r = activeRobot;
-			Fields.resetMessage();
-			WorldObject selectedWO = UI.getSelectedWO();
-			
-			if (selectedWO instanceof Part && (r == null || !r.isHeld((Part)selectedWO))) {
-				WOUndoState undoState = UI.updateWOCurrent(selectedWO);
-				UI.fillCurWithDef( (Part)selectedWO );
-
-				if (undoState != null) {
-					// If the part was modified, then save its previous state
-					updateScenarioUndo(undoState);
-				}
+		try {
+			// Only allow world object editing when no program is executing
+			if (!isProgExec()) {
+				RoboticArm r = activeRobot;
+				Fields.resetMessage();
+				WorldObject selectedWO = UI.getSelectedWO();
 				
-				DataManagement.saveScenarios(this);
+				if (selectedWO instanceof Part && (r == null || !r.isHeld((Part)selectedWO))) {
+					WOUndoState undoState = UI.updateWOCurrent(selectedWO);
+					UI.fillCurWithDef( (Part)selectedWO );
+	
+					if (undoState != null) {
+						// If the part was modified, then save its previous state
+						updateScenarioUndo(undoState);
+					}
+					
+					DataManagement.saveScenarios(this);
+				}
 			}
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
 		}
 	}
 
@@ -1002,17 +1419,24 @@ public class RobotRun extends PApplet {
 	 * orientation.
 	 */
 	public void button_objResetDefault() {
-		Fields.resetMessage();
-		
-		for (WorldObject wo : activeScenario) {
-			// Only applies to parts
-			if (wo instanceof Part) {
-				updateScenarioUndo(new WOUndoCurrent(wo));
-				
-				Part p = (Part) wo;
-				p.setLocalCenter(p.getDefaultCenter());
-				p.setLocalOrientation(p.getDefaultOrientation());
+		try {
+			Fields.resetMessage();
+			
+			for (WorldObject wo : activeScenario) {
+				// Only applies to parts
+				if (wo instanceof Part) {
+					updateScenarioUndo(new WOUndoCurrent(wo));
+					
+					Part p = (Part) wo;
+					p.setLocalCenter(p.getDefaultCenter());
+					p.setLocalOrientation(p.getDefaultOrientation());
+				}
 			}
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
 		}
 	}
 	
@@ -1022,7 +1446,14 @@ public class RobotRun extends PApplet {
 	 * Toggles bounding box display on or off.
 	 */
 	public void button_objToggleBounds() {
-		UI.updateUIContentPositions();
+		try {
+			UI.updateUIContentPositions();
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 
 	/**
@@ -1032,16 +1463,23 @@ public class RobotRun extends PApplet {
 	 * the input fields in the edit window.
 	 */
 	public void button_objUpdateDefault() {
-		Fields.resetMessage();
-		WorldObject selectedWO = UI.getSelectedWO();
-		// Only parts have a default position and orientation
-		if (selectedWO instanceof Part) {
-			WOUndoState undoState = UI.updateWODefault( (Part)selectedWO );
-			
-			if (undoState != null) {
-				// If the part was modified, then save its previous state
-				updateScenarioUndo(undoState);
+		try {
+			Fields.resetMessage();
+			WorldObject selectedWO = UI.getSelectedWO();
+			// Only parts have a default position and orientation
+			if (selectedWO instanceof Part) {
+				WOUndoState undoState = UI.updateWODefault( (Part)selectedWO );
+				
+				if (undoState != null) {
+					// If the part was modified, then save its previous state
+					updateScenarioUndo(undoState);
+				}
 			}
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
 		}
 	}
 	
@@ -1052,7 +1490,14 @@ public class RobotRun extends PApplet {
 	 * menus.
 	 */
 	public void button_period() {
-		screens.getActiveScreen().actionKeyPress('.');
+		try {
+			screens.getActiveScreen().actionKeyPress('.');
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 
 	/**
@@ -1061,8 +1506,15 @@ public class RobotRun extends PApplet {
 	 * A button used for marcos binding.
 	 */
 	public void button_posn() {
-		if (activeRobot.getMacroKeyBinds()[5] != null && isShift()) {
-			execute(activeRobot.getMacroKeyBinds()[5]);
+		try {
+			if (activeRobot.getMacroKeyBinds()[5] != null && isShift()) {
+				execute(activeRobot.getMacroKeyBinds()[5]);
+			}
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
 		}
 	}
 
@@ -1072,7 +1524,14 @@ public class RobotRun extends PApplet {
 	 * Transitions to the previous menu screen, if one exists.
 	 */
 	public void button_prev() {
-		lastScreen();
+		try {
+			lastScreen();
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 
 	/**
@@ -1082,10 +1541,17 @@ public class RobotRun extends PApplet {
 	 * flag is set on.
 	 */
 	public void button_reset() {
-		if (isShift()) {
-			button_hold();
-			// Reset motion fault for the active robot
-			activeRobot.setMotionFault(false);
+		try {
+			if (isShift()) {
+				button_hold();
+				// Reset motion fault for the active robot
+				activeRobot.setMotionFault(false);
+			}
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
 		}
 	}
 
@@ -1095,14 +1561,22 @@ public class RobotRun extends PApplet {
 	 * Toggles the second Robot on or off.
 	 */
 	public void button_robotToggleActive() {
-		UI.toggleSecondRobot();
-		// Reset the active robot to the first if the second robot is removed
-		if (activeRobot != ROBOTS.get(0)) {
-			activeRobot = ROBOTS.get(0);
+		try {
+			UI.toggleSecondRobot();
+			/* Reset the active robot to the first if the second robot is
+			 * removed */
+			if (activeRobot != ROBOTS.get(0)) {
+				activeRobot = ROBOTS.get(0);
+			}
+	
+			UI.updateUIContentPositions();
+			updatePendantScreen();
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
 		}
-
-		UI.updateUIContentPositions();
-		updatePendantScreen();
 	}
 	
 	/**
@@ -1111,16 +1585,30 @@ public class RobotRun extends PApplet {
 	 * Toggles the robot tool tip trace function on or off.
 	 */
 	public void button_robotToggleTrace() {
-		UI.updateUIContentPositions();
-		
-		if (!traceEnabled()) {
-			// Empty trace when it is disabled
-			robotTrace.clear();
+		try {
+			UI.updateUIContentPositions();
+			
+			if (!traceEnabled()) {
+				// Empty trace when it is disabled
+				robotTrace.clear();
+			}
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
 		}
 	}
 	
 	public void button_robotClearTrace() {
-		robotTrace.clear();
+		try {
+			robotTrace.clear();
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 
 	/**
@@ -1131,18 +1619,25 @@ public class RobotRun extends PApplet {
 	 * loading an inactive scenario).
 	 */
 	public void button_scenarioConfirm() {
-		Fields.resetMessage();
-		int ret = UI.updateScenarios(SCENARIOS);
-
-		if (ret > 0) {
-			activeScenario = UI.getSelectedScenario();
-			DataManagement.saveScenarios(this);
-
-		} else if (ret == 0) {
-			DataManagement.saveScenarios(this);
+		try {
+			Fields.resetMessage();
+			int ret = UI.updateScenarios(SCENARIOS);
+	
+			if (ret > 0) {
+				activeScenario = UI.getSelectedScenario();
+				DataManagement.saveScenarios(this);
+	
+			} else if (ret == 0) {
+				DataManagement.saveScenarios(this);
+			}
+			
+			Fields.debug(String.format("SConfirm: %d\n", ret));
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
 		}
-		
-		Fields.debug(String.format("SConfirm: %d\n", ret));
 	}
 
 	/**
@@ -1152,7 +1647,14 @@ public class RobotRun extends PApplet {
 	 * their programs.
 	 */
 	public void button_select() {
-		nextScreen(ScreenMode.NAV_PROGRAMS);
+		try {
+			nextScreen(ScreenMode.NAV_PROGRAMS);
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 	
 	/**
@@ -1161,8 +1663,15 @@ public class RobotRun extends PApplet {
 	 * A button used for binding macros.
 	 */
 	public void button_setup() {
-		if (activeRobot.getMacroKeyBinds()[3] != null && isShift()) {
-			execute(activeRobot.getMacroKeyBinds()[3]);
+		try {
+			if (activeRobot.getMacroKeyBinds()[3] != null && isShift()) {
+				execute(activeRobot.getMacroKeyBinds()[3]);
+			}
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
 		}
 	}
 
@@ -1173,7 +1682,14 @@ public class RobotRun extends PApplet {
 	 * anything involving robot motion or point recording.
 	 */
 	public void button_shift() {
-		setShift(!shift);
+		try {
+			setShift(!shift);
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 	
 	/**
@@ -1182,24 +1698,31 @@ public class RobotRun extends PApplet {
 	 * Increases the robot's jog speed.
 	 */
 	public void button_speedDn() {
-		int curSpeed = activeRobot.getLiveSpeed();
-		// Reduce the speed at which the Robot jogs
-		if (isShift()) {
-			if (curSpeed > 50) {
-				activeRobot.setLiveSpeed(50);
-			} else if (curSpeed > 5) {
-				activeRobot.setLiveSpeed(5);
-			} else {
-				activeRobot.setLiveSpeed(1);
+		try {
+			int curSpeed = activeRobot.getLiveSpeed();
+			// Reduce the speed at which the Robot jogs
+			if (isShift()) {
+				if (curSpeed > 50) {
+					activeRobot.setLiveSpeed(50);
+				} else if (curSpeed > 5) {
+					activeRobot.setLiveSpeed(5);
+				} else {
+					activeRobot.setLiveSpeed(1);
+				}
+			} else if (curSpeed > 1) {
+				if (curSpeed > 50) {
+					activeRobot.setLiveSpeed(curSpeed - 10);
+				} else if (curSpeed > 5) {
+					activeRobot.setLiveSpeed(curSpeed - 5);
+				} else {
+					activeRobot.setLiveSpeed(curSpeed - 1);
+				}
 			}
-		} else if (curSpeed > 1) {
-			if (curSpeed > 50) {
-				activeRobot.setLiveSpeed(curSpeed - 10);
-			} else if (curSpeed > 5) {
-				activeRobot.setLiveSpeed(curSpeed - 5);
-			} else {
-				activeRobot.setLiveSpeed(curSpeed - 1);
-			}
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
 		}
 	}
 	
@@ -1209,24 +1732,31 @@ public class RobotRun extends PApplet {
 	 * Decreases the robot's jog speed.
 	 */
 	public void button_speedUp() {
-		int curSpeed = activeRobot.getLiveSpeed();
-		// Increase the speed at which the Robot jogs
-		if (isShift()) {
-			if (curSpeed < 5) {
-				activeRobot.setLiveSpeed(5);
-			} else if (curSpeed < 50) {
-				activeRobot.setLiveSpeed(50);
-			} else {
-				activeRobot.setLiveSpeed(100);
+		try {
+			int curSpeed = activeRobot.getLiveSpeed();
+			// Increase the speed at which the Robot jogs
+			if (isShift()) {
+				if (curSpeed < 5) {
+					activeRobot.setLiveSpeed(5);
+				} else if (curSpeed < 50) {
+					activeRobot.setLiveSpeed(50);
+				} else {
+					activeRobot.setLiveSpeed(100);
+				}
+			} else if (curSpeed < 100) {
+				if (curSpeed < 5) {
+					activeRobot.setLiveSpeed(curSpeed + 1);
+				} else if (curSpeed < 50) {
+					activeRobot.setLiveSpeed(curSpeed + 5);
+				} else {
+					activeRobot.setLiveSpeed(curSpeed + 10);
+				}
 			}
-		} else if (curSpeed < 100) {
-			if (curSpeed < 5) {
-				activeRobot.setLiveSpeed(curSpeed + 1);
-			} else if (curSpeed < 50) {
-				activeRobot.setLiveSpeed(curSpeed + 5);
-			} else {
-				activeRobot.setLiveSpeed(curSpeed + 10);
-			}
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
 		}
 	}
 	
@@ -1236,8 +1766,15 @@ public class RobotRun extends PApplet {
 	 * A button used for macros.
 	 */
 	public void button_status() {
-		if (activeRobot.getMacroKeyBinds()[4] != null && isShift()) {
-			execute(activeRobot.getMacroKeyBinds()[4]);
+		try {
+			if (activeRobot.getMacroKeyBinds()[4] != null && isShift()) {
+				execute(activeRobot.getMacroKeyBinds()[4]);
+			}
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
 		}
 	}
 	
@@ -1248,7 +1785,14 @@ public class RobotRun extends PApplet {
 	 * will be executed one at a time as opposed to all at once.
 	 */
 	public void button_step() {
-		setStep(!isStep());
+		try {
+			setStep(!isStep());
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 	
 	/**
@@ -1257,8 +1801,15 @@ public class RobotRun extends PApplet {
 	 * A button used for binding marcos.
 	 */
 	public void button_tool1() {
-		if (activeRobot.getMacroKeyBinds()[0] != null && isShift()) {
-			execute(activeRobot.getMacroKeyBinds()[0]);
+		try {
+			if (activeRobot.getMacroKeyBinds()[0] != null && isShift()) {
+				execute(activeRobot.getMacroKeyBinds()[0]);
+			}
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
 		}
 	}
 	
@@ -1268,8 +1819,15 @@ public class RobotRun extends PApplet {
 	 * A button used for binding marcos.
 	 */
 	public void button_tool2() {
-		if (activeRobot.getMacroKeyBinds()[1] != null && isShift()) {
-			execute(activeRobot.getMacroKeyBinds()[1]);
+		try {
+			if (activeRobot.getMacroKeyBinds()[1] != null && isShift()) {
+				execute(activeRobot.getMacroKeyBinds()[1]);
+			}
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
 		}
 	}
 	
