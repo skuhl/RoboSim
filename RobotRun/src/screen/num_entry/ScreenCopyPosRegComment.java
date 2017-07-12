@@ -2,7 +2,6 @@ package screen.num_entry;
 
 import core.RobotRun;
 import global.DataManagement;
-import global.Fields;
 import regs.Register;
 import robot.RoboticArm;
 import screen.ScreenMode;
@@ -40,16 +39,17 @@ public class ScreenCopyPosRegComment extends ST_ScreenNumEntry {
 			// Copy the comment of the curent Position register to the
 			// Position register at the specified index
 			regIdx = Integer.parseInt(workingText.toString()) - 1;
-			robotRun.getActiveRobot().getPReg(regIdx).comment = robotRun.getActiveRobot().getPReg(itemIdx).comment;
+			robotRun.getActiveRobot().getPReg(regIdx).comment =
+					robotRun.getActiveRobot().getPReg(itemIdx).comment;
 			DataManagement.saveRobotData(robotRun.getActiveRobot(), 3);
+			robotRun.lastScreen();
 
 		} catch (NumberFormatException MFEx) {
-			Fields.setMessage("Only real numbers are valid!");
+			errorMessage("Only real numbers are valid!");
+			
 		} catch (IndexOutOfBoundsException IOOBEx) {
-			Fields.setMessage("Only positve integers between 1 and 100 are valid!");
+			errorMessage("Only positve integers between 1 and 100 are valid!");
 		}
-
-		robotRun.lastScreen();
 	}
 
 }

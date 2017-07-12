@@ -1,6 +1,7 @@
 package screen.num_entry;
 
 import core.RobotRun;
+import global.Fields;
 import screen.Screen;
 import screen.ScreenMode;
 import screen.ScreenState;
@@ -88,4 +89,25 @@ public abstract class ST_ScreenNumEntry extends Screen {
 
 	@Override
 	public void actionF5() {}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param msg
+	 */
+	protected void errorMessage(String msg) {
+		Fields.setMessage(msg);
+		workingText = new StringBuilder("");
+		robotRun.updatePendantScreen();
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param format
+	 * @param args
+	 */
+	protected void errorMessage(String format, Object... args) {
+		errorMessage( String.format(format, args) );
+	}
 }

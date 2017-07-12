@@ -76,8 +76,12 @@ public class ScreenEditPosReg extends ST_ScreenPointEntry {
 			// Position was successfully pulled form the contents menu
 			pReg.point = pt;
 			DataManagement.saveRobotData(r, 3);
+			robotRun.lastScreen();
+			
+		} else {
+			errorMessage("All entries must be a real number");
 		}
 
-		robotRun.lastScreen();
+		
 	}
 }

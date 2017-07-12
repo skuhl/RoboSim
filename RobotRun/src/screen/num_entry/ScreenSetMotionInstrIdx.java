@@ -40,21 +40,22 @@ public class ScreenSetMotionInstrIdx extends ST_ScreenNumEntry {
 				
 				if (s != null) {
 					ubound = s.size();
-					
 				}	
 			}
 
 			if (tempRegister < lbound || tempRegister > ubound) {
-				// Invalid register index
-				String err = String.format("Only registers %d-%d are valid!", lbound, ubound);
-				Fields.setMessage(err);
+				// Out of bounds
+				errorMessage("The index must be with the range %d and %d",
+						lbound, ubound);
+				
+			} else {
+				mInst.setPosIdx(tempRegister - 1);
+				robotRun.lastScreen();
 			}
 			
-			mInst.setPosIdx(tempRegister - 1);
-			
-		} catch (NumberFormatException NFEx) {/* Ignore invalid numbers */}
-
-		robotRun.lastScreen();
+		} catch (NumberFormatException NFEx) {
+			// Not an integer
+			errorMessage("The index must be integer");
+		}
 	}
-
 }

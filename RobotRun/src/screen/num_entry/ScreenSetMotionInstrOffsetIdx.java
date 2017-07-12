@@ -27,16 +27,18 @@ public class ScreenSetMotionInstrOffsetIdx extends ST_ScreenNumEntry {
 			int tempRegister = Integer.parseInt(workingText.toString()) - 1;
 			
 			if (tempRegister < 0 || tempRegister > 99) {
-				// Invalid register index
-				Fields.setMessage("Only registers 1 - 1000 are legal!");
+				// Out of bounds
+				errorMessage("The index must be within the range 1 and 100");
 				
 			} else {
 				pMInst.setOffsetType(Fields.OFFSET_PREG);
 				pMInst.setOffsetIdx(tempRegister);
+				robotRun.lastScreen();
 			}
 			
-		} catch (NumberFormatException NFEx) {/* Ignore invalid numbers */ }
-
-		robotRun.lastScreen();
+		} catch (NumberFormatException NFEx) {
+			// Not an integer
+			errorMessage("The index must be an integer");
+		}
 	}
 }

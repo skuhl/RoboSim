@@ -60,8 +60,10 @@ public class ScreenEditProgramPos extends ST_ScreenPointEntry {
 			// Update the position of the active motion instruction
 			robotRun.getActiveProg().setPosition(pMInst.getPosIdx(), pt);
 			DataManagement.saveRobotData(r, 1);
+			robotRun.lastScreen();
+			
+		} else {
+			errorMessage("All entries must be a real number");
 		}
-
-		robotRun.lastScreen();
 	}
 }

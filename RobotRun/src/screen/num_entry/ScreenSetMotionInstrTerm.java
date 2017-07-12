@@ -27,10 +27,15 @@ public class ScreenSetMotionInstrTerm extends ST_ScreenNumEntry {
 
 			if (tempTerm >= 0 && tempTerm <= 100) {
 				m.setTermination(tempTerm);
+				robotRun.lastScreen();
+				
+			} else {
+				errorMessage("The termination must be within the range 0 and 100");
 			}
-		} catch (NumberFormatException NFEx) {/* Ignore invalid input */}
-
-		robotRun.lastScreen();
+			
+		} catch (NumberFormatException NFEx) {
+			// Not an integer
+			errorMessage("The termination must be an integer");
+		}
 	}
-
 }

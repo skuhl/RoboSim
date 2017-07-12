@@ -32,18 +32,26 @@ public class ScreenSetSelectArgValue extends ST_ScreenNumEntry {
 				robotRun.opEdit = new OperandFloat(f);
 				s.setOperand(robotRun.editIdx, robotRun.opEdit);
 				
+				robotRun.lastScreen();
+				robotRun.lastScreen();
+				
 			} else if (robotRun.opEdit.getType() == Operand.DREG) {
 				if (f >= 1f && f <= 100f) {
 					robotRun.opEdit = new OperandDReg(r.getDReg((int) f - 1));
 					s.setOperand(robotRun.editIdx, robotRun.opEdit);
+					
+					robotRun.lastScreen();
+					robotRun.lastScreen();
+					
+				} else {
+					// Out of bounds
+					errorMessage("The index must be within the range 1 and 100");
 				}
-			}	
+			}
 			
 		} catch (NumberFormatException NFex) {
-			//TODO display error to user
+			// Not a real number
+			errorMessage("The value must be a real number");
 		}
-
-		robotRun.lastScreen();
-		robotRun.lastScreen();
 	}
 }

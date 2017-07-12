@@ -2,7 +2,6 @@ package screen.num_entry;
 
 import core.RobotRun;
 import global.DataManagement;
-import global.Fields;
 import regs.Register;
 import robot.RoboticArm;
 import screen.ScreenMode;
@@ -27,7 +26,8 @@ public class ScreenCopyDataRegComment extends ST_ScreenNumEntry {
 
 	@Override
 	protected void loadOptions() {
-		options.addLine(String.format("Move R[%d]'s comment to:", robotRun.getLastScreen().getContentIdx() + 1));
+		options.addLine(String.format("Move R[%d]'s comment to:",
+				robotRun.getLastScreen().getContentIdx() + 1));
 		options.addLine(String.format("R[%s]", workingText));
 	}
 
@@ -40,16 +40,17 @@ public class ScreenCopyDataRegComment extends ST_ScreenNumEntry {
 			// Copy the comment of the curent Data register to the Data
 			// register at the specified index
 			regIdx = Integer.parseInt(workingText.toString()) - 1;
-			robotRun.getActiveRobot().getDReg(regIdx).comment = robotRun.getActiveRobot().getDReg(itemIdx).comment;
+			robotRun.getActiveRobot().getDReg(regIdx).comment =
+					robotRun.getActiveRobot().getDReg(itemIdx).comment;
 			DataManagement.saveRobotData(robotRun.getActiveRobot(), 3);
+			robotRun.lastScreen();
 
 		} catch (NumberFormatException MFEx) {
-			Fields.setMessage("Only real numbers are valid!");
+			errorMessage("The index must be an integer");
+			
 		} catch (IndexOutOfBoundsException IOOBEx) {
-			Fields.setMessage("Only positve integers between 1 and 100 are valid!");
+			errorMessage("The index must be within the range 1 and 100");
 		}
-
-		robotRun.lastScreen();
 	}
 
 }

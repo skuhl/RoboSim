@@ -2,7 +2,6 @@ package screen.num_entry;
 
 import core.RobotRun;
 import expression.OperandIOReg;
-import global.Fields;
 import robot.RoboticArm;
 import screen.ScreenMode;
 
@@ -21,16 +20,22 @@ public class ScreenInputIORegIdx extends ST_ScreenNumEntry {
 	@Override
 	public void actionEntr() {
 		RoboticArm r = robotRun.getActiveRobot();
-		int idx = Integer.parseInt(workingText.toString());
 		
-		if (idx < 1 || idx > robotRun.getActiveRobot().numOfEndEffectors()) {
-			Fields.setMessage("Invalid index!");
-
-		} else {
-			r.getInstToEdit(robotRun.getActiveProg(), robotRun.getActiveInstIdx());
-			((OperandIOReg)robotRun.opEdit).setValue(robotRun.getActiveRobot().getIOReg(idx));
+		try {
+			int idx = Integer.parseInt(workingText.toString());
+			
+			if (idx < 1 || idx >= r.numOfEndEffectors()) {
+				errorMessage("The index must be with the range 1 and %d",
+						r.numOfEndEffectors() - 1);
+	
+			} else {
+				r.getInstToEdit(robotRun.getActiveProg(), robotRun.getActiveInstIdx());
+				((OperandIOReg)robotRun.opEdit).setValue(robotRun.getActiveRobot().getIOReg(idx));
+				robotRun.lastScreen();
+			}
+			
+		} catch (NumberFormatException NFEx) {
+			errorMessage("The index must be a integer");
 		}
-		
-		robotRun.lastScreen();
 	}
 }

@@ -56,6 +56,25 @@ public abstract class ST_ScreenPointEntry extends Screen {
 		setScreenIndices(0, 1, 0, -1, 0);
 	}
 	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param msg
+	 */
+	protected void errorMessage(String msg) {
+		Fields.setMessage(msg);
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param format
+	 * @param args
+	 */
+	protected void errorMessage(String format, Object... args) {
+		errorMessage( String.format(format, args) );
+	}
+	
 	protected abstract void loadWorkingText();
 	
 	protected Point parsePosFromContents(boolean isCartesian) {

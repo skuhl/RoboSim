@@ -1,7 +1,6 @@
 package screen.num_entry;
 
 import core.RobotRun;
-import global.Fields;
 import programming.IfStatement;
 import programming.Instruction;
 import programming.JumpInstruction;
@@ -29,24 +28,29 @@ public class ScreenSetJumpTgt extends ST_ScreenNumEntry {
 			Instruction inst = r.getInstToEdit(robotRun.getActiveProg(), 
 					robotRun.getActiveInstIdx());
 			
-			if (inst instanceof IfStatement) {
+			if (lblNum < 0 || lblNum > 99) {
+				// Out of bounds
+				errorMessage("The ID must be with the range 0 and 99");
+				
+			} else if (inst instanceof IfStatement) {
 				IfStatement ifStmt = (IfStatement) inst;
 				((JumpInstruction) ifStmt.getInstr()).setTgtLblNum(lblNum);
+				robotRun.lastScreen();
+				
 			} else if (inst instanceof SelectStatement) {
 				SelectStatement sStmt = (SelectStatement) inst;
 				((JumpInstruction) sStmt.getInstrs().get(robotRun.editIdx)).setTgtLblNum(lblNum);
+				robotRun.lastScreen();
+				
 			} else {
-				if (lblNum >= 0) {
-					JumpInstruction jmp = (JumpInstruction) inst;
-					jmp.setTgtLblNum(lblNum);
-				} else {
-					Fields.setMessage("Invalid label number!");
-				}
+				JumpInstruction jmp = (JumpInstruction) inst;
+				jmp.setTgtLblNum(lblNum);
 			}
+			
 		} catch (NumberFormatException NFEx) {
-		/* Ignore invalid input */ }
-
-		robotRun.lastScreen();
+			// Not an integer
+			errorMessage("The ID must be an integer");
+		}
 	}
 
 }
