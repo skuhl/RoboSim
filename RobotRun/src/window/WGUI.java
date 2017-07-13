@@ -1398,17 +1398,18 @@ public class WGUI implements ControlListener {
 
 		} catch (NullPointerException NPEx) {
 			Fields.setMessage("Missing field");
-			NPEx.printStackTrace();
 			wldObj = null;
 
 		} catch (ClassCastException CCEx) {
 			Fields.setMessage("Invalid field");
-			CCEx.printStackTrace();
 			wldObj = null;
 
 		} catch (IndexOutOfBoundsException IOOBEx) {
 			Fields.setMessage("Missing field");
-			IOOBEx.printStackTrace();
+			wldObj = null;
+			
+		} catch (IllegalArgumentException IAEx) {
+			Fields.setMessage("Missing field");
 			wldObj = null;
 		}
 
