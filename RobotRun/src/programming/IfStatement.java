@@ -1,5 +1,5 @@
 package programming;
-import expression.AtomicExpression;
+import expression.BooleanBinaryExpression;
 import expression.Expression;
 import expression.Operand;
 import expression.OperandBool;
@@ -18,7 +18,7 @@ import expression.Operator;
  * @param i - the instruction to be executed if the statement expression evaluates to true.
  */
 public class IfStatement extends Instruction implements ExpressionEvaluation {
-	AtomicExpression expr;
+	Expression expr;
 	Instruction instr;
 
 	public IfStatement() {
@@ -26,18 +26,18 @@ public class IfStatement extends Instruction implements ExpressionEvaluation {
 		instr = null;
 	}
 	
-	public IfStatement(AtomicExpression e) {
+	public IfStatement(Expression e) {
 		expr = e;
 		instr = null;
 	}
 
-	public IfStatement(AtomicExpression e, Instruction i) {
+	public IfStatement(Expression e, Instruction i) {
 		expr = e;
 		instr = i;
 	}
 
 	public IfStatement(Operator o, Instruction i) {
-		expr = new AtomicExpression(o);
+		expr = new BooleanBinaryExpression(o);
 		instr = i;
 	}
 	
@@ -45,13 +45,8 @@ public class IfStatement extends Instruction implements ExpressionEvaluation {
 	public Instruction clone() {
 		Instruction copy;
 		
-		if(expr instanceof Expression) {
-			if(instr != null) copy = new IfStatement(((Expression)expr).clone(), instr.clone());
-			else 			  copy = new IfStatement(((Expression)expr).clone());
-		} else {
-			if(instr != null) copy = new IfStatement(expr.clone(), instr.clone());
-			else 			  copy = new IfStatement(expr.clone());
-		}
+		if(instr != null) copy = new IfStatement(expr.clone(), instr.clone());
+		else 			  copy = new IfStatement(expr.clone());
 		
 		copy.setIsCommented( isCommented() );
 		
@@ -71,15 +66,15 @@ public class IfStatement extends Instruction implements ExpressionEvaluation {
 		if (result instanceof OperandBool) {
 			if (((OperandBool) result).getBoolValue()) {
 				return 0;
+			} else {
+				return 1;
 			}
-			
-			return 1;
+		} else {
+			return 2;
 		}
-
-		return 2;
 	}
 
-	public AtomicExpression getExpr() {
+	public Expression getExpr() {
 		return expr;
 	}
 
@@ -87,7 +82,7 @@ public class IfStatement extends Instruction implements ExpressionEvaluation {
 		return instr;
 	}
 
-	public void setExpr(AtomicExpression expr) {
+	public void setExpr(BooleanBinaryExpression expr) {
 		this.expr = expr;
 	}
 
@@ -129,16 +124,16 @@ public class IfStatement extends Instruction implements ExpressionEvaluation {
 
 	@Override
 	public Operand<?> setOperand(int idx, Operand<?> o) {
-		Operand<?> ret;
+		Operand<?> ret = null;
 		
-		if(expr instanceof Expression) {
-			ret = ((Expression)expr).setOperand(idx, o);
-		} else if(idx == 0) {
-			ret = expr.setArg1(o);
-		} else if(idx == 2) {
-			ret = expr.setArg2(o);
+		if(expr instanceof BooleanBinaryExpression) {
+			if(idx == 0) {
+				ret = ((BooleanBinaryExpression)expr).setArg1(o);
+			} else if(idx == 2) {
+				ret = ((BooleanBinaryExpression)expr).setArg2(o);
+			}
 		} else {
-			ret = null;
+			ret = ((Expression)expr).setOperand(idx, o);
 		}
 		
 		return ret;
@@ -148,11 +143,10 @@ public class IfStatement extends Instruction implements ExpressionEvaluation {
 	public Operator setOperator(int idx, Operator o) {
 		Operator ret;
 		
-		if(expr instanceof Expression) {
-			ret = ((Expression)expr).setOperator(idx, o);
+		if(expr instanceof BooleanBinaryExpression) {
+			ret = ((BooleanBinaryExpression)expr).setOperator(o);
 		} else {
-			expr.setOp(o);
-			ret = expr.getOp();
+			ret = expr.setOperator(idx, o);
 		}
 		
 		return ret;
@@ -160,24 +154,32 @@ public class IfStatement extends Instruction implements ExpressionEvaluation {
 
 	@Override
 	public Operand<?> getOperand(int idx) {
-		if(expr instanceof Expression) {
-			return ((Expression)expr).getOperand(idx);
-		} else if(idx == 0) {
-			return expr.getArg1();
-		} else if(idx == 2) {
-			return expr.getArg2();
+		Operand<?> ret = null;
+		
+		if(expr instanceof BooleanBinaryExpression) {
+			if(idx == 0) {
+				ret = ((BooleanBinaryExpression)expr).getArg1();
+			} else if(idx == 2) {
+				ret = ((BooleanBinaryExpression)expr).getArg2();
+			}
 		} else {
-			return null;
+			ret = ((Expression)expr).getOperand(idx);
 		}
+		
+		return ret;
 	}
 
 	@Override
 	public Operator getOperator(int idx) {
-		if(expr instanceof Expression) {
-			return ((Expression)expr).getOperator(idx);
+		Operator ret;
+		
+		if(expr instanceof BooleanBinaryExpression) {
+			ret = ((BooleanBinaryExpression)expr).getOperator();
 		} else {
-			return expr.getOp();
+			ret = expr.getOperator(idx);
 		}
+		
+		return ret;
 	}
 	
 	@Override

@@ -2,7 +2,7 @@ package expression;
 
 public class OperandFloat extends Operand<Float> implements FloatMath {
 	public OperandFloat() {
-		super(null, Operand.FLOAT);
+		super(Float.NaN, Operand.FLOAT);
 	}
 		
 	public OperandFloat(Float v) {

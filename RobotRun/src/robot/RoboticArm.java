@@ -34,7 +34,6 @@ import regs.DataRegister;
 import regs.IORegTrace;
 import regs.IORegister;
 import regs.PositionRegister;
-import regs.RTrace;
 import ui.DisplayLine;
 
 public class RoboticArm {
@@ -1107,7 +1106,7 @@ public class RoboticArm {
 	/**
 	 * @return	The state of the robot's current end effector
 	 */
-	public int getEEState() {
+	public boolean getEEState() {
 		return this.getActiveEE().getState();
 	}
 	
@@ -2086,7 +2085,7 @@ public class RoboticArm {
 	 * @param rdx		The index of the I/O register
 	 * @param newState	The new state of the I/O register
 	 */
-	public void setEEState(int rdx, int newState) {
+	public void setEEState(int rdx, boolean newState) {
 		IORegister ioReg = getIOReg(rdx);
 		
 		if (ioReg != null) {

@@ -24,12 +24,12 @@ public abstract class Fields {
 	/**
 	 * The off state of an end effector
 	 */
-	public static final int OFF = 0;
+	public static final boolean OFF = false;
 	
 	/**
 	 * The on state of an end effector
 	 */
-	public static final int ON = 1;
+	public static final boolean ON = true;
 	
 	/**
 	 * The maximum number of tool or user frames associated with a robot.

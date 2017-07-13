@@ -1,7 +1,6 @@
 package screen.opt_menu;
 
 import core.RobotRun;
-import global.Fields;
 import screen.ScreenMode;
 import screen.ScreenState;
 
@@ -47,7 +46,7 @@ public class ScreenSelectIOInstrReg extends ST_ScreenOptionsMenu {
 	@Override
 	public void actionEntr() {
 		// IO registers are 1 indexed!
-		int state = (options.getColumnIdx() == 1) ? Fields.ON : Fields.OFF;
+		boolean state = (options.getColumnIdx() == 1);
 		robotRun.newIOInstruction(options.getLineIdx() + 1, state);
 		robotRun.lastScreen();
 		robotRun.lastScreen();

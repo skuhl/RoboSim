@@ -55,7 +55,7 @@ import programming.RegisterStatement;
 import programming.SelectStatement;
 import regs.PositionRegister;
 import regs.Register;
-import regs.RTrace;
+import robot.RTrace;
 import robot.RoboticArm;
 import screen.Screen;
 import screen.ScreenManager;
@@ -156,21 +156,23 @@ public class RobotRun extends PApplet {
 	 * was first pressed down.
 	 */
 	private WorldObject mouseOverWO;
+	
 	private Stack<ProgExecution> progCallStack;
 	private ProgExecution progExecState;
+	
 	private RobotCamera rCamera;
 
 	private boolean record;
-	private final HashMap<Integer, RoboticArm> ROBOTS = new HashMap<>();
-
-	private RTrace robotTrace;
-	private final Stack<WOUndoState> SCENARIO_UNDO = new Stack<>();
 	
+	private final HashMap<Integer, RoboticArm> ROBOTS = new HashMap<>();
+	private RTrace robotTrace;
+	
+	private final Stack<WOUndoState> SCENARIO_UNDO = new Stack<>();
 	private final ArrayList<Scenario> SCENARIOS = new ArrayList<>();
+	
 	private ScreenManager screens;
 
 	private boolean shift = false; // Is shift button pressed or not?
-	
 	private boolean step = false; // Is step button pressed or not?
 	
 	private WGUI UI;
@@ -1590,7 +1592,7 @@ public class RobotRun extends PApplet {
 			
 			if (!traceEnabled()) {
 				// Empty trace when it is disabled
-				robotTrace.clear();
+				robotTrace.addPt(null);
 			}
 			
 		} catch (Exception Ex) {
@@ -2787,7 +2789,7 @@ public class RobotRun extends PApplet {
 		}
 	}
 
-	public void newIOInstruction(int ioIdx, int state) {
+	public void newIOInstruction(int ioIdx, boolean state) {
 		RoboticArm r = activeRobot;
 		Program p = getActiveProg();
 		IOInstruction io = new IOInstruction(ioIdx, state);
@@ -3335,11 +3337,10 @@ public class RobotRun extends PApplet {
 	 */
 	public void toggleEEState(RoboticArm robot) {
 		int edx = robot.getActiveEEIdx();
-		int curState = robot.getEEState();
+		boolean curState = robot.getEEState();
 		
 		if (curState == Fields.ON) {
 			robot.setEEState(edx, Fields.OFF);
-			
 		} else {
 			robot.setEEState(edx, Fields.ON);
 		}
@@ -3419,7 +3420,7 @@ public class RobotRun extends PApplet {
 	 * 					state
 	 * @param newState	The new state of the end effector
 	 */
-	public void updateRobotEEState(int edx, int newState) {
+	public void updateRobotEEState(int edx, boolean newState) {
 		updateRobotEEState(activeRobot, edx, newState);
 	}
 
@@ -3433,7 +3434,7 @@ public class RobotRun extends PApplet {
 	 * 					state
 	 * @param newState	The new state of the end effector
 	 */
-	public void updateRobotEEState(RoboticArm r, int edx, int newState) {
+	public void updateRobotEEState(RoboticArm r, int edx, boolean newState) {
 		r.setEEState(edx, newState);
 		
 		if (activeScenario != null) {

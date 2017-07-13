@@ -9,7 +9,7 @@ import global.Fields;
  */
 public class IORegister extends Register {
 	
-	protected int state;
+	protected boolean state;
 
 	public IORegister() {
 		super();
@@ -21,17 +21,17 @@ public class IORegister extends Register {
 		state = Fields.OFF;
 	}
 
-	public IORegister(int i, String comm, int iniState) {
+	public IORegister(int i, String comm, boolean initState) {
 		super(i, comm);
-		state = iniState;
+		state = initState;
 	}
 	
 	
-	public void setState(int newState) {
+	public void setState(boolean newState) {
 		state = newState;
 	}
 	
-	public int getState() {
+	public boolean getState() {
 		return state;
 	}
 	

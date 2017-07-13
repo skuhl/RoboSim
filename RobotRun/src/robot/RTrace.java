@@ -1,4 +1,4 @@
-package regs;
+package robot;
 
 import java.util.LinkedList;
 
