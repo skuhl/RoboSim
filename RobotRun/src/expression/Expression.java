@@ -1,9 +1,8 @@
 package expression;
+
 import java.util.ArrayList;
 
-import core.RobotRun;
 import global.Fields;
-import processing.core.PApplet;
 
 public class Expression extends AtomicExpression {
 	private ArrayList<ExpressionElement> elementList;

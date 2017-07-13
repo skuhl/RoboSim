@@ -2,7 +2,6 @@ package geom;
 
 import global.Fields;
 import global.RMath;
-import processing.core.PApplet;
 import processing.core.PGraphics;
 import processing.core.PVector;
 
@@ -296,9 +295,8 @@ public class Part extends WorldObject {
 
 		if (s instanceof RBox || s instanceof ComplexShape) {
 			// Update the OBB dimensions for a box or complex part
-			minAddition = OBB_DIM_SCALE * PApplet.min(s.getDim(DimType.LENGTH),
-					PApplet.min(s.getDim(DimType.HEIGHT),
-							s.getDim(DimType.WIDTH)));
+			minAddition = OBB_DIM_SCALE * RMath.min(s.getDim(DimType.LENGTH),
+					s.getDim(DimType.HEIGHT), s.getDim(DimType.WIDTH));
 
 			absOBB.setDim(s.getDim(DimType.LENGTH) + minAddition, DimType.LENGTH);
 			absOBB.setDim(s.getDim(DimType.HEIGHT) + minAddition, DimType.HEIGHT);
@@ -306,7 +304,7 @@ public class Part extends WorldObject {
 
 		} else if (s instanceof RCylinder) {
 			// Update the OBB dimensions for a cylindrical part
-			minAddition =  PApplet.min(OBB_RAD_SCALE * s.getDim(DimType.RADIUS),
+			minAddition =  RMath.min(OBB_RAD_SCALE * s.getDim(DimType.RADIUS),
 					OBB_DIM_SCALE * s.getDim(DimType.HEIGHT));
 
 			absOBB.setDim(2f * s.getDim(DimType.RADIUS) + minAddition, DimType.LENGTH);

@@ -8,7 +8,6 @@ import geom.Fixture;
 import geom.Part;
 import geom.WorldObject;
 import global.Fields;
-import processing.core.PApplet;
 
 /**
  * Defines a set of world objects that are rendered in the same scene.

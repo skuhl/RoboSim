@@ -35,7 +35,6 @@ import geom.WorldObject;
 import global.DataManagement;
 import global.Fields;
 import global.RMath;
-import processing.core.PApplet;
 import processing.core.PFont;
 import processing.core.PGraphics;
 import processing.core.PImage;
@@ -1680,8 +1679,7 @@ public class WGUI implements ControlListener {
 				if (orienVals[valIdx] != null && !orienVals[valIdx].equals("")) {
 					float val = Float.parseFloat(orienVals[valIdx]);
 					// Bring value within the range [-9999, 9999]
-					val = PApplet.max(-9999f, PApplet.min(val, 9999f));
-					values[valIdx] = val;
+					values[valIdx] = RMath.clamp(val, -9999f, 9999f);
 				}
 			}
 

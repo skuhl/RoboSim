@@ -116,6 +116,7 @@ public abstract class DataManagement {
 			}
 			
 			PrintWriter out = new PrintWriter(errLog);
+			out.append(Ex.getMessage());
 			Ex.printStackTrace(out);
 			out.close();
 			
