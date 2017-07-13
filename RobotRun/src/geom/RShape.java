@@ -66,6 +66,48 @@ public abstract class RShape implements Cloneable {
 	public abstract float getDim(DimType dim);
 	
 	public abstract float[] getDimArray();
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param dim
+	 * @return
+	 */
+	public float getDimLBound(DimType dim) {
+		
+		switch (dim) {
+		case LENGTH:
+		case HEIGHT:
+		case WIDTH:
+			return 10f;
+		case RADIUS:
+			return 5f;
+		default:
+			return -1f;
+		}
+		
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param dim
+	 * @return
+	 */
+	public float getDimUBound(DimType dim) {
+		
+		switch (dim) {
+		case LENGTH:
+		case HEIGHT:
+		case WIDTH:
+			return 1000f;
+		case RADIUS:
+			return 500f;
+		default:
+			return -1f;
+		}
+		
+	}
 
 	/* Getters and Setters for shapes fill and stroke colors */
 

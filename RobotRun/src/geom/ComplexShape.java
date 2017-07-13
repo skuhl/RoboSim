@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import core.CamSelectArea;
 import core.CamSelectView;
 import core.RobotRun;
+import global.RMath;
 import global.RegisteredModels;
 import processing.core.PGraphics;
 import processing.core.PShape;
@@ -15,6 +16,9 @@ import processing.core.PVector;
  */
 public class ComplexShape extends RShape {
 	
+	public final float MIN_SCALE;
+	public final float MAX_SCALE;
+	
 	private String srcFilePath;
 	
 	private MyPShape model;
@@ -22,7 +26,7 @@ public class ComplexShape extends RShape {
 	
 	private PGraphics preview;
 	
-	private float mdlScale;
+	private float mdlScale = 1f;
 	private final int model_id;
 	private final int model_family_id;
 	private ArrayList<CamSelectArea> selectAreas;
@@ -32,22 +36,12 @@ public class ComplexShape extends RShape {
 	 * given name, filename, stored in the '/RobotRun/data/'
 	 * with the given fill color.
 	 * 
-	 * @throws NullPointerException  if the given filename is
-	 *         not a valid .stl file in RobotRun/data/
+	 * @throws IllegalArgumentException	If the given model's base dimensions
+	 * 									are outside the range of a world
+	 * 									object's dimensions
 	 */
 	public ComplexShape(String filename, MyPShape mdl, int fill) {
-		super(fill, null);
-		model_id = RegisteredModels.modelIDList.get(filename);
-		model_family_id = RegisteredModels.modelFamilyList.get(model_id);
-		srcFilePath = filename;
-		
-		mdlScale = 1f;
-		model = mdl;
-		model.setFill(fill);
-		iniDimensions();
-		
-		selectAreas = new ArrayList<CamSelectArea>();
-		loadCamSelectAreas();
+		this(filename, mdl, fill, 1f);
 	}
 
 	/**
@@ -55,21 +49,40 @@ public class ComplexShape extends RShape {
 	 * given name, filename, stored in the '/RobotRun/data/'
 	 * with the given fill color and scale value.
 	 * 
-	 * @throws NullPointerException  if the given filename is
-	 *         not a valid .stl file in RobotRun/data/
+	 * @throws IllegalArgumentException	If the given model's scaled dimensions
+	 * 									are outside the range of a world
+	 * 									object's dimensions
 	 */
-	public ComplexShape(String filename, MyPShape mdl, int fill, float scale) {
+	public ComplexShape(String filename, MyPShape mdl, int fill, float scale)
+			throws IllegalArgumentException {
+		
 		super(fill, null);
 		model_id = RegisteredModels.modelIDList.get(filename);
 		model_family_id = RegisteredModels.modelFamilyList.get(model_id);
 		srcFilePath = filename;
 		
-		// The initial scale MUST be one in order for scaling to work properly!
-		mdlScale = 1f;
 		model = mdl;
+		
 		iniDimensions();
-		// This sets the scale!
-		setDim(scale, DimType.SCALE);
+		MIN_SCALE = 10f / RMath.min(baseDims.x, baseDims.y, baseDims.z);
+		MAX_SCALE = 1000f / RMath.max(baseDims.x, baseDims.y, baseDims.z);
+		
+		if ((MAX_SCALE - MIN_SCALE) < 0f) {
+			/* The model cannot be scaled to fit within the bounds of a world
+			 * object's dimensions */
+			String msg = String.format("%s\n%f - %f = %f\n", filename, MAX_SCALE,
+					MIN_SCALE, MAX_SCALE - MIN_SCALE);
+			throw new IllegalArgumentException(msg);
+			
+		} else if (scale > MAX_SCALE || scale < MIN_SCALE) {
+			// The given scale is out of bounds
+			String msg = String.format("The model's scale must be between %4.5f and %4.5f",
+					MIN_SCALE, MAX_SCALE);
+			throw new IllegalArgumentException(msg);
+			
+		} else {
+			setDim(scale, DimType.SCALE);
+		}
 		
 		selectAreas = new ArrayList<CamSelectArea>();
 		loadCamSelectAreas();
@@ -125,22 +138,6 @@ public class ComplexShape extends RShape {
 	}
 	
 	/**
-	 * TODO comment this
-	 * 
-	 * @param dim
-	 * @return
-	 */
-	public float getBaseDim(DimType dim) {
-		switch(dim) {
-		// Determine dimension based on the scale
-		case LENGTH: return baseDims.x;
-		case HEIGHT: return baseDims.y;
-		case WIDTH:  return baseDims.z;
-		default:     return -1f;
-		}
-	}
-	
-	/**
 	 * @return	The center offset associated with this model
 	 */
 	public float[] getCenterOffset() {
@@ -148,7 +145,7 @@ public class ComplexShape extends RShape {
 				centerOffset.x, centerOffset.y, centerOffset.z
 		};
 	}
-
+	
 	@Override
 	public float getDim(DimType dim) {
 		switch(dim) {
@@ -168,6 +165,28 @@ public class ComplexShape extends RShape {
 		dims[1] = getDim(DimType.HEIGHT);
 		dims[2] = getDim(DimType.WIDTH);
 		return dims;
+	}
+	
+	@Override
+	public float getDimLBound(DimType dim) {
+		if (dim == DimType.SCALE) {
+			// Include the scale dimension
+			return MIN_SCALE;
+			
+		} else {
+			return super.getDimLBound(dim);
+		}
+	}
+	
+	@Override
+	public float getDimUBound(DimType dim) {
+		if (dim == DimType.SCALE) {
+			// Include the scale dimension
+			return MAX_SCALE;
+			
+		} else {
+			return super.getDimLBound(dim);
+		}
 	}
 	
 	@Override

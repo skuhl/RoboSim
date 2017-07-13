@@ -657,6 +657,64 @@ public abstract class RMath {
 	}
 	
 	/**
+	 * Finds the maximum value amongst all given integer values.
+	 * 
+	 * @param args	A set of integer values
+	 * @return		The maximum amongst all values of args
+	 */
+	public static int max(int... args) {
+		
+		if (args == null || args.length == 0) {
+			// Because why not
+			return Integer.MAX_VALUE;
+			
+		} else if (args.length == 1) {
+			// No comparison needed
+			return args[0];
+		}
+		
+		// Find the maximum amongst all given values
+		int max = Integer.MIN_VALUE;
+		
+		for (int val : args) {
+			if (val > max) {
+				max = val;
+			}
+		}
+		
+		return max;
+	}
+	
+	/**
+	 * Finds the maximum value amongst all given float values.
+	 * 
+	 * @param args	A set of float values
+	 * @return		The maximum amongst all values of args
+	 */
+	public static float max(float... args) {
+		
+		if (args == null || args.length == 0) {
+			// Because why not
+			return Float.MAX_VALUE;
+			
+		} else if (args.length == 1) {
+			// No comparison needed
+			return args[0];
+		}
+		
+		// Find the maximum amongst all given values
+		float max = Float.MIN_VALUE;
+		
+		for (float val : args) {
+			if (val > max) {
+				max = val;
+			}
+		}
+		
+		return max;
+	}
+	
+	/**
 	 * Find the minimum value amongst all given integer values.
 	 * 
 	 * @param args	A set of integer values
@@ -678,6 +736,35 @@ public abstract class RMath {
 		int min = Integer.MAX_VALUE;
 		
 		for (int val : args) {
+			if (val < min) {
+				min = val;
+			}
+		}
+		
+		return min;
+	}
+	
+	/**
+	 * Finds the minimum value amongst all given float values.
+	 * 
+	 * @param args	A set of float values
+	 * @return		The minimum amongst all values of args
+	 */
+	public static float min(float... args) {
+		
+		if (args == null || args.length == 0) {
+			// Because why not
+			return Float.MIN_VALUE;
+			
+		} else if (args.length == 1) {
+			// No comparison needed
+			return args[0];
+		}
+		
+		// Find the minimum amongst all given values
+		float min = Float.MAX_VALUE;
+		
+		for (float val : args) {
 			if (val < min) {
 				min = val;
 			}

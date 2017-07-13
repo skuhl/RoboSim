@@ -1571,14 +1571,12 @@ public class WGUI implements ControlListener {
 	/**
 	 * Returns a post-processed list of the user's input for the dimensions of
 	 * the box world object (i.e. length, height, width). Valid values for a
-	 * box's dimensions are between 10 and 800, inclusive. Any inputed value
-	 * that is positive and outside the valid range is clamped to the valid
-	 * range. So, if the user inputed 900 for the length, then it would be
-	 * changed to 800. However, if a input is not a number or negative, then
-	 * no other inputs are processed and null is returned. Although, if a
-	 * field is left blank (i.e. ""), then that field is ignored. The array of
-	 * processed input returned contains three Float objects. If any of the
-	 * input was ignored, then its corresponding array element will be null.
+	 * box's dimensions are between 10 and 800, inclusive. If a input is not
+	 * valid, then no other inputs are processed and null is returned.
+	 * Although, if a field is left blank (i.e. ""), then that field is
+	 * ignored. The array of processed input returned contains three Float
+	 * objects. If any of the input was ignored, then its corresponding array
+	 * element will be null.
 	 * 
 	 * @return a 3-element array: [length, height, width], or null
 	 */
@@ -1594,35 +1592,17 @@ public class WGUI implements ControlListener {
 
 			if (lenField != null && !lenField.equals("")) {
 				// Read length input
-				float val = Float.parseFloat(lenField);
-
-				if (val < 10f || val > 800f) {
-					throw new NumberFormatException("The length must be within the range 10 and 800");
-				}
-				
-				dimensions[0] = val;
+				dimensions[0] = Float.parseFloat(lenField);
 			}
 
 			if (hgtField != null && !hgtField.equals("")) {
 				// Read height input
-				float val = Float.parseFloat(hgtField);
-
-				if (val < 10f || val > 800f) {
-					throw new NumberFormatException("The height must be within the range 10 and 800");
-				}
-				
-				dimensions[1] = val;
+				dimensions[1] = Float.parseFloat(hgtField);
 			}
 
 			if (wdhField != null && !wdhField.equals("")) {
 				// Read Width input
-				float val = Float.parseFloat(wdhField);
-
-				if (val < 10f || val > 800f) {
-					throw new NumberFormatException("The width must be within the range 10 and 800");
-				}
-				
-				dimensions[2] = val;
+				dimensions[2] = Float.parseFloat(wdhField);
 			}
 
 			return dimensions;
@@ -1720,11 +1700,8 @@ public class WGUI implements ControlListener {
 	/**
 	 * Returns a post-processed list of the user's input for the dimensions of
 	 * the cylinder world object (i.e. radius and height). Valid values for a
-	 * cylinder's dimensions are between 5 and 800, inclusive. Any inputed value
-	 * that is positive and outside the valid range is clamped to the valid
-	 * range. So, if the user inputed 2 for the radius, then it would be
-	 * changed to 5. However, if a input is not a number or negative, then
-	 * no other inputs are processed and null is returned. Although, if a
+	 * cylinder's radius are between 5 and 400, inclusive. If a input is valid,
+	 * then no other inputs are processed and null is returned. Although, if a
 	 * field is left blank (i.e. ""), then that field is ignored. The array of
 	 * processed input returned contains two Float objects. If any of the
 	 * input was ignored, then its corresponding array element will be null.
@@ -1742,24 +1719,12 @@ public class WGUI implements ControlListener {
 
 			if (radField != null && !radField.equals("")) {
 				// Read radius input
-				float val = Float.parseFloat(radField);
-
-				if (val < 5f || val > 400f) {
-					throw new NumberFormatException("The radius must be within the range 5 and 400");
-				}
-				
-				dimensions[0] = val;
+				dimensions[0] = Float.parseFloat(radField);
 			}
 
 			if (hgtField != null && !hgtField.equals("")) {
 				// Read height input
-				float val = Float.parseFloat(hgtField);
-
-				if (val < 5f || val > 800f) {
-					throw new NumberFormatException("The height must be within the range 10 and 800");
-				}
-				
-				dimensions[1] = val;
+				dimensions[1] = Float.parseFloat(hgtField);
 			}
 
 			return dimensions;
@@ -1885,15 +1850,12 @@ public class WGUI implements ControlListener {
 
 	/**
 	 * Returns a post-processed list of the user's input for the dimensions of
-	 * the model world object (i.e. scale). Valid values for a model's
-	 * dimensions are between 1 and 50, inclusive. Any inputed value that is
-	 * positive and outside the valid range is clamped to the valid range. So,
-	 * if the user inputed 100 for the length, then it would be changed to 50.
-	 * However, if a input is not a number or negative, then no other inputs
-	 * are processed and null is returned. Although, if a field is left blank
-	 * (i.e. ""), then that field is ignored. The array of processed input
-	 * returned contains one Float object. If any of the input was ignored,
-	 * then its corresponding array element will be null.
+	 * the model world object (i.e. scale). The scale of a complex shape must
+	 * be a positive number, however its range depends on the model's base
+	 * dimensions. Although, if a field is left blank (i.e. ""), then that
+	 * field is ignored. The array of processed input returned contains one
+	 * Float object. If any of the input was ignored, then its corresponding
+	 * array element will be null.
 	 * 
 	 * @return a 3-element array: [scale], or null
 	 */
@@ -1908,15 +1870,7 @@ public class WGUI implements ControlListener {
 
 			if (sclField != null && !sclField.equals("")) {
 				// Read scale input
-				float val = Float.parseFloat(sclField);
-
-				if (val <= 0f) {
-					Fields.setMessage("The scale must be greater than");
-					return null;
-					
-				} else {
-					dimensions[0] = val;
-				}
+				dimensions[0] = Float.parseFloat(sclField);
 			}
 
 			return dimensions;
@@ -3801,20 +3755,19 @@ public class WGUI implements ControlListener {
 
 			if (newDims[0] != null) {
 				// Update the box's length
-				s.setDim(newDims[0], DimType.LENGTH);
-				dimChanged = true;
+				dimChanged = updateDim(s, DimType.LENGTH, newDims[0]);
 			}
 
 			if (newDims[1] != null) {
 				// Update the box's height
-				s.setDim(newDims[1], DimType.HEIGHT);
-				dimChanged = true;
+				boolean ret = updateDim(s, DimType.HEIGHT, newDims[1]);
+				dimChanged = dimChanged || ret;
 			}
 
 			if (newDims[2] != null) {
 				// Update the box's width
-				s.setDim(newDims[2], DimType.WIDTH);
-				dimChanged = true;
+				boolean ret = updateDim(s, DimType.WIDTH, newDims[2]);
+				dimChanged = dimChanged || ret;
 			}
 
 		} else if (s instanceof RCylinder) {
@@ -3822,37 +3775,21 @@ public class WGUI implements ControlListener {
 
 			if (newDims[0] != null) {
 				// Update the cylinder's radius
-				s.setDim(newDims[0], DimType.RADIUS);
-				dimChanged = true;
+				dimChanged = updateDim(s, DimType.RADIUS, newDims[0]);
 			}
 
 			if (newDims[1] != null) {
 				// Update the cylinder's height
-				s.setDim(newDims[1], DimType.HEIGHT);
-				dimChanged = true;
+				boolean ret = updateDim(s, DimType.HEIGHT, newDims[1]);
+				dimChanged = dimChanged || ret;
 			}
 
 		} else if (s instanceof ComplexShape) {
-			ComplexShape compShape = (ComplexShape)s;
 			Float[] newDims = getModelDimensions();
 
 			if (newDims[0] != null) {
-				
-				float scaledLen = newDims[0] * compShape.getBaseDim(DimType.LENGTH);
-				float scaledHgt = newDims[0] * compShape.getBaseDim(DimType.HEIGHT);
-				float scaledWdh = newDims[0] * compShape.getBaseDim(DimType.WIDTH);
-				
-				if (scaledLen < 5f || scaledLen > 800f ||
-					scaledHgt < 5f || scaledHgt > 800f ||
-					scaledWdh < 5f || scaledWdh > 800f) {
-					
-					// The scaling is out of bounds
-					return null;
-				}
-				
-				// Update the model's scale value
-				s.setDim(newDims[0], DimType.SCALE);
-				dimChanged = true;
+				boolean ret = updateDim(s, DimType.SCALE, newDims[0]);
+				dimChanged = dimChanged || ret;
 			}
 		}
 
@@ -3866,6 +3803,29 @@ public class WGUI implements ControlListener {
 		}
 		
 		return null;
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param s
+	 * @param dim
+	 * @param val
+	 * @return
+	 */
+	private boolean updateDim(RShape s, DimType dim, float val) {
+		float lbound = s.getDimLBound(dim);
+		float ubound = s.getDimUBound(dim);
+		
+		if (val < lbound || val > ubound) {
+			Fields.setMessage("The shape's %s must be within the range %4.5f and %4.5f",
+					dim.name().toLowerCase(), lbound, ubound);
+			return false;
+			
+		} else {
+			s.setDim(val, dim);
+			return true;
+		}
 	}
 
 	/**
