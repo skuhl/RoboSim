@@ -290,10 +290,24 @@ public abstract class Frame {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Checks if all the points are taught for the teaching method specified by
+	 * the given flag value for this frame. The teachingMethod values
+	 * correspond to the following teaching methods:
 	 * 
-	 * @param teachMethod
-	 * @return
+	 * For tool frames
+	 * 0	->	3 point method
+	 * 1	->	6 point method
+	 * 
+	 * For user frames
+	 * 0	->	3 point method
+	 * 1	->	4 point method
+	 * 
+	 * No other values of teachingMethod are valid.
+	 * 
+	 * @param teachMethod	Either 0 or 1, indicating one of two teaching
+	 * 						methods for this frame
+	 * @return				If all the points are taught for the specified
+	 * 						teaching method
 	 */
 	public abstract boolean isComplete(int teachMethod);
 

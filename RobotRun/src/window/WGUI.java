@@ -3806,12 +3806,18 @@ public class WGUI implements ControlListener {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Validates the given value with the given shape's bound for the specified
+	 * dimension. If val is within the bounds for the dimension, then the
+	 * shape's dimensions is updated, otherwise an error message is displayed
+	 * in the UI.
 	 * 
-	 * @param s
-	 * @param dim
-	 * @param val
-	 * @return
+	 * @param s		The shape for which to validate the given value and update
+	 * 				if the value is valid
+	 * @param dim	The dimension with which the given value is associated
+	 * @param val	The given value for the specified dimension of the given
+	 * 				shape
+	 * @return		Whether or not the specified dimension of the given shape
+	 * 				is updated to the given value
 	 */
 	private boolean updateDim(RShape s, DimType dim, float val) {
 		float lbound = s.getDimLBound(dim);
@@ -3823,6 +3829,7 @@ public class WGUI implements ControlListener {
 			return false;
 			
 		} else {
+			// Update the dimension
 			s.setDim(val, dim);
 			return true;
 		}
