@@ -747,7 +747,6 @@ public class RobotRun extends PApplet {
 	 */
 	public void button_hold() {
 		try {
-			Fields.resetMessage();
 			boolean robotInMotion = activeRobot.inMotion();
 			// Stop all robot motion and program execution
 			activeRobot.halt();
