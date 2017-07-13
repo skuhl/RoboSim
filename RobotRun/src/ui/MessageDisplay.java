@@ -5,7 +5,9 @@ import processing.core.PConstants;
 import processing.core.PGraphics;
 
 /**
- * TODO general comments
+ * Defines the functionality for rendering event-driven messages. For
+ * simplicity's sake, only one message can be rendered by a single message
+ * display.
  * 
  * @author Joshua Hooker
  */

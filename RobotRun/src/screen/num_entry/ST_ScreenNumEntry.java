@@ -91,9 +91,10 @@ public abstract class ST_ScreenNumEntry extends Screen {
 	public void actionF5() {}
 	
 	/**
-	 * TODO comment this
+	 * Renders the given message in the application UI and resets the working
+	 * text for this screen.
 	 * 
-	 * @param msg
+	 * @param msg	The message to render in the application UI
 	 */
 	protected void errorMessage(String msg) {
 		Fields.setMessage(msg);
@@ -102,7 +103,7 @@ public abstract class ST_ScreenNumEntry extends Screen {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Creates an error message from the given format String and arguments.
 	 * 
 	 * @param format
 	 * @param args

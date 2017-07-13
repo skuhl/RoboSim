@@ -96,7 +96,8 @@ import screen.text_entry.ScreenToolFrameRename;
 import screen.text_entry.ScreenUserFrameRename;
 
 /**
- * TODO comment this
+ * Defines the manager for the pendant's active screen and previous screen
+ * stack.
  * 
  * @author Joshua Hooker
  */

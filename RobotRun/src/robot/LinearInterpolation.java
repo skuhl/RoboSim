@@ -71,6 +71,12 @@ public class LinearInterpolation extends LinearMotion {
 		PVector center = circleCenter(vectorConvertTo(va, plane[0], plane[1], plane[2]),
 				vectorConvertTo(vb, plane[0], plane[1], plane[2]),
 				vectorConvertTo(vc, plane[0], plane[1], plane[2]));
+		
+		if (center == null) {
+			// The points are collinear
+			return;
+		}
+		
 		center = vectorConvertFrom(center, plane[0], plane[1], plane[2]);
 		// Now get the radius (easy)
 		float radius = PVector.dist(center, va);
@@ -253,12 +259,17 @@ public class LinearInterpolation extends LinearMotion {
 		interMotionIdx = 0;
 	}
 
-	// TODO: Add error check for colinear case (denominator is zero)
 	private float calculateH(float x1, float y1, float x2, float y2, float x3, float y3) {
 		float numerator = (x2 * x2 + y2 * y2) * y3 - (x3 * x3 + y3 * y3) * y2
 				- ((x1 * x1 + y1 * y1) * y3 - (x3 * x3 + y3 * y3) * y1) + (x1 * x1 + y1 * y1) * y2
 				- (x2 * x2 + y2 * y2) * y1;
 		float denominator = (x2 * y3 - x3 * y2) - (x1 * y3 - x3 * y1) + (x1 * y2 - x2 * y1);
+		
+		if (denominator == 0f) {
+			// The collinear case
+			return Float.NaN;
+		}
+		
 		denominator *= 2;
 		return numerator / denominator;
 	}
@@ -308,6 +319,12 @@ public class LinearInterpolation extends LinearMotion {
 	
 	private PVector circleCenter(PVector a, PVector b, PVector c) {
 		float h = calculateH(a.x, a.y, b.x, b.y, c.x, c.y);
+		
+		if (Float.isNaN(h)) {
+			// The given points are collinear
+			return null;
+		}
+		
 		float k = calculateK(a.x, a.y, b.x, b.y, c.x, c.y);
 		return new PVector(h, k, a.z);
 	}

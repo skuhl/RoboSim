@@ -57,19 +57,20 @@ public abstract class ST_ScreenPointEntry extends Screen {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Sets the application message to the given String.
 	 * 
-	 * @param msg
+	 * @param msg	The message to render in the applicaiton UI
 	 */
 	protected void errorMessage(String msg) {
 		Fields.setMessage(msg);
 	}
 	
 	/**
-	 * TODO comment this
+	 * Similar to errorMessage(String), except that this accepts a format
+	 * String and its arguments.
 	 * 
-	 * @param format
-	 * @param args
+	 * @param format	The format String
+	 * @param args		The arguments for the format String
 	 */
 	protected void errorMessage(String format, Object... args) {
 		errorMessage( String.format(format, args) );

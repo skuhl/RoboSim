@@ -4,7 +4,9 @@ import global.Fields;
 import robot.RoboticArm;
 
 /**
- * TODO general comments
+ * The traditional motion instruction defined by a primary and possibly
+ * secondary point. In addition, an offset can be specified for a position
+ * motion instruction.
  * 
  * @author Joshua Hooker
  */
