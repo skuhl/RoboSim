@@ -91,9 +91,6 @@ import window.WGUI_Buttons;
 public class RobotRun extends PApplet {
 	private static RobotRun instance;
 	
-	/**
-	 * Returns the instance of this PApplet	
-	 */
 	public static RobotRun getInstance() {
 		return instance;
 	}
@@ -181,7 +178,7 @@ public class RobotRun extends PApplet {
 	/**
 	 * Applies the active camera to the matrix stack.
 	 * 
-	 * @param	The camera to apply
+	 * @param c	The camera to apply
 	 */
 	public void applyCamera(Camera c) {
 		PVector cPos = c.getPosition();
@@ -225,7 +222,7 @@ public class RobotRun extends PApplet {
 	 * Wrapper method for applying the coordinate frame defined by the given
 	 * column major transformation matrix.
 	 * 
-	 * @param tMatrix	A 4x4 row major transformation matrix
+	 * @param mat	A 4x4 row major transformation matrix
 	 */
 	public void applyMatrix(RMatrix mat) {
 		super.applyMatrix(
@@ -1845,9 +1842,6 @@ public class RobotRun extends PApplet {
 	 * Robot's current frame in the process and skipping the Tool or User frame
 	 * if there are no active frames in either one. Since the Robot's frame is
 	 * potentially reset in this method, all Robot motion is halted.
-	 *
-	 * @param model
-	 *            The Robot Arm, for which to switch coordinate frames
 	 */
 	public void coordFrameTransition() {
 		RoboticArm r = activeRobot;
@@ -2467,6 +2461,7 @@ public class RobotRun extends PApplet {
 		}
 	}
 	
+	@Override
 	public void keyReleased() {
 		keyCodeMap.keyReleased(keyCode, key);
 		
@@ -2492,8 +2487,6 @@ public class RobotRun extends PApplet {
 	/**
 	 * Pulls off the current screen state from the screen state stack and loads
 	 * the previous screen state as the active screen state.
-	 * 
-	 * @return	If a previous screen exists
 	 */
 	public void lastScreen() {
 		Screen cur = screens.getActiveScreen();
@@ -2511,6 +2504,9 @@ public class RobotRun extends PApplet {
 	 * Build a PShape object from the contents of the given .stl source file
 	 * stored in /RobotRun/data/.
 	 * 
+	 * @param filename	The name of the .stl file to use to build the model
+	 * @param fill		The fill color to use for the model
+	 * @return	The PShape generated from the given file
 	 * @throws NullPointerException
 	 *             if the given filename does not pertain to a valid .stl file
 	 *             located in RobotRun/data/
@@ -2569,6 +2565,7 @@ public class RobotRun extends PApplet {
 		return mesh;
 	}
 	
+	@Override
 	public void mouseDragged(MouseEvent e) {
 		WorldObject selectedWO = UI.getSelectedWO();
 		
@@ -2613,7 +2610,7 @@ public class RobotRun extends PApplet {
 				float mouseXDiff = mouseX - pmouseX;
 				float mouseYDiff = mouseY - pmouseY;
 				float mouseDiff = (float) Math.sqrt(mouseXDiff * mouseXDiff + mouseYDiff * mouseYDiff);
-				float angle = RobotRun.DEG_TO_RAD * mouseDiff / 4f;
+				float angle = DEG_TO_RAD * mouseDiff / 4f;
 				
 				/* Form an axis perpendicular to the line formed by the previous
 				 * and current mouse position to use as the axis of rotation. */
@@ -3263,12 +3260,10 @@ public class RobotRun extends PApplet {
 			
 			robotTrace = new RTrace();
 			
-			RoboticArm r = createRobot(0, new PVector(200, Fields.FLOOR_Y, 200),
-					robotTrace);
+			RoboticArm r = createRobot(0, new PVector(200, Fields.FLOOR_Y, 200));
 			ROBOTS.put(r.RID, r);
 			
-			r = createRobot(1, new PVector(200, Fields.FLOOR_Y, -750),
-					robotTrace);
+			r = createRobot(1, new PVector(200, Fields.FLOOR_Y, -750));
 			ROBOTS.put(r.RID, r);
 
 			activeRobot = ROBOTS.get(0);
@@ -3476,11 +3471,10 @@ public class RobotRun extends PApplet {
 		if (UI.getRobotButtonState()) {
 			return checkForRayCollisions(ray, activeScenario, ROBOTS.get(0));
 			
-		} else {
-			return checkForRayCollisions(ray, activeScenario, ROBOTS.get(0),
-					ROBOTS.get(1));
 		}
 		
+		return checkForRayCollisions(ray, activeScenario, ROBOTS.get(0),
+				ROBOTS.get(1));
 	}
 	
 	/**
@@ -3492,8 +3486,9 @@ public class RobotRun extends PApplet {
 	 * @param ray		A ray, for which to check collisions
 	 * @param scenario	The scenario, with which to check collisions with the
 	 * 					given ray
-	 * @param robot		The robots, which which to check collisions with the
+	 * @param robots	The robots, which which to check collisions with the
 	 * 					given ray
+	 * @return			The object, with which, the given ray collides
 	 */
 	private WorldObject checkForRayCollisions(RRay ray, Scenario scenario,
 			RoboticArm... robots) {
@@ -3559,16 +3554,15 @@ public class RobotRun extends PApplet {
 	 * @param rid			The id of the robot, which must be unique amongst
 	 * 						all other robots
 	 * @param basePosition	The position of the robot's base segment
-	 * @param robotTrace	A reference to this.robotTrace
 	 * @return				The initialized robot
 	 */
-	private RoboticArm createRobot(int rid, PVector basePosition, RTrace robotTrace) {
+	private RoboticArm createRobot(int rid, PVector basePosition) {
 		MyPShape[] segModels = new MyPShape[6];
 		MyPShape[] eeModels = new MyPShape[7];
 		
 		segModels[0] = loadSTLModel("robot/ROBOT_BASE.STL", color(200, 200, 0));
 		segModels[1] = loadSTLModel("robot/ROBOT_SEGMENT_1.STL", color(40, 40, 40));
-		segModels[2] = loadSTLModel("robot/ROBOT_SEGMENT_2.STL", color(200, 200, 0));;
+		segModels[2] = loadSTLModel("robot/ROBOT_SEGMENT_2.STL", color(200, 200, 0));
 		segModels[3] = loadSTLModel("robot/ROBOT_SEGMENT_3.STL", color(40, 40, 40));
 		segModels[4] = loadSTLModel("robot/ROBOT_SEGMENT_4.STL", color(40, 40, 40));
 		segModels[5] = loadSTLModel("robot/ROBOT_SEGMENT_5.STL", color(200, 200, 0));
@@ -3576,7 +3570,7 @@ public class RobotRun extends PApplet {
 		// Load end effector models
 		eeModels[0] = loadSTLModel("robot/EE/FACEPLATE.STL", color(40, 40, 40));
 		eeModels[1] = loadSTLModel("robot/EE/SUCTION.stl", color(108, 206, 214));
-		eeModels[2] = loadSTLModel("robot/EE/GRIPPER.stl", color(108, 206, 214));;
+		eeModels[2] = loadSTLModel("robot/EE/GRIPPER.stl", color(108, 206, 214));
 		eeModels[3] = loadSTLModel("robot/EE/PINCER.stl", color(200, 200, 0));
 		eeModels[4] = loadSTLModel("robot/EE/POINTER.stl", color(108, 206, 214));
 		eeModels[5] = loadSTLModel("robot/EE/GLUE_GUN.stl", color(108, 206, 214));
