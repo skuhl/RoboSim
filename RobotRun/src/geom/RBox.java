@@ -1,5 +1,6 @@
 package geom;
 
+import camera.RegisteredModels;
 import processing.core.PGraphics;
 import processing.core.PVector;
 
@@ -114,10 +115,10 @@ public class RBox extends RShape {
 
 	@Override
 	public int getID() {
-		return -1;
+		return RegisteredModels.ID_CUBE;
 	}
 	
 	public int getFamilyID() {
-		return -1;
+		return RegisteredModels.ID_CUBE;
 	}
 }
