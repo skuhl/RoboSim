@@ -141,13 +141,11 @@ public abstract class Screen {
 	public ArrayList<DisplayLine> loadManualFunct() {
 		ArrayList<DisplayLine> disp = new ArrayList<DisplayLine>();
 		RoboticArm r = robotRun.getActiveRobot();
-		int macroNum = 0;
 
 		for (int i = 0; i < r.getMacroList().size(); i += 1) {
 			if (r.getMacroList().get(i).isManual()) {
 				String manFunct = r.getMacroList().get(i).toString();
-				disp.add(new DisplayLine(macroNum, (macroNum + 1) + " " + manFunct));
-				macroNum += 1;
+				disp.add(new DisplayLine(i, (i + 1) + " " + manFunct));
 			}
 		}
 		

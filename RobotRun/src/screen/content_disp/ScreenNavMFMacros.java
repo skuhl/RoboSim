@@ -34,7 +34,7 @@ public class ScreenNavMFMacros extends ST_ScreenListContents {
 		if(robotRun.isShift()) {
 			RoboticArm r = robotRun.getActiveRobot();
 			int idx = contents.getCurrentItemIdx();
-			
+			System.out.println(idx);
 			robotRun.execute(r.getMacro(idx));
 		}
 	}
