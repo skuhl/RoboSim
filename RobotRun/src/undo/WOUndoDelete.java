@@ -1,6 +1,6 @@
 package undo;
 
-import core.Scenario;
+import geom.Scenario;
 import geom.WorldObject;
 
 /**

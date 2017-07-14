@@ -1,6 +1,6 @@
 package expression;
 
-import core.RobotCamera;
+import camera.RobotCamera;
 import core.RobotRun;
 import geom.WorldObject;
 

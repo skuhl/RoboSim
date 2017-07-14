@@ -1,4 +1,4 @@
-package core;
+package camera;
 
 import processing.core.PVector;
 

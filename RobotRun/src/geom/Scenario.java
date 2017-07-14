@@ -1,12 +1,9 @@
-package core;
+package geom;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.regex.Pattern;
 
-import geom.Fixture;
-import geom.Part;
-import geom.WorldObject;
 import global.Fields;
 import processing.core.PApplet;
 

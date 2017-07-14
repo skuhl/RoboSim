@@ -2,7 +2,7 @@ package screen.edit_item;
 
 import java.util.ArrayList;
 
-import core.RobotCamera;
+import camera.RobotCamera;
 import core.RobotRun;
 import expression.OperandCamObj;
 import geom.WorldObject;

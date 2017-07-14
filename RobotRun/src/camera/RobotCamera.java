@@ -1,11 +1,13 @@
-package core;
+package camera;
 
 import java.util.ArrayList;
 
+import core.RobotRun;
 import geom.ComplexShape;
 import geom.Part;
 import geom.RMatrix;
 import geom.RQuaternion;
+import geom.Scenario;
 import geom.WorldObject;
 import global.RMath;
 import processing.core.PVector;

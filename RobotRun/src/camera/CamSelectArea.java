@@ -1,4 +1,4 @@
-package core;
+package camera;
 
 import geom.RMatrix;
 import processing.core.PVector;

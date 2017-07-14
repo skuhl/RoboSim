@@ -3,7 +3,6 @@ package robot;
 import java.util.ArrayList;
 import java.util.Stack;
 
-import core.Scenario;
 import enums.AxesDisplay;
 import enums.CoordFrame;
 import enums.InstOp;
@@ -16,6 +15,7 @@ import geom.Point;
 import geom.RMatrix;
 import geom.RQuaternion;
 import geom.RRay;
+import geom.Scenario;
 import geom.WorldObject;
 import global.Fields;
 import global.RMath;

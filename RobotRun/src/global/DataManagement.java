@@ -13,7 +13,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 import core.RobotRun;
-import core.Scenario;
 import expression.BoolMath;
 import expression.BooleanBinaryExpression;
 import expression.Expression;
@@ -49,6 +48,7 @@ import geom.RCylinder;
 import geom.RMatrix;
 import geom.RQuaternion;
 import geom.RShape;
+import geom.Scenario;
 import geom.WorldObject;
 import processing.core.PVector;
 import programming.CallInstruction;

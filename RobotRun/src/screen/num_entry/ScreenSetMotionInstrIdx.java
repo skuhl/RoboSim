@@ -1,7 +1,7 @@
 package screen.num_entry;
 
 import core.RobotRun;
-import core.Scenario;
+import geom.Scenario;
 import global.Fields;
 import programming.CamMoveToObject;
 import programming.MotionInstruction;

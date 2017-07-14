@@ -2,10 +2,10 @@ package geom;
 
 import java.util.ArrayList;
 
-import core.CamSelectArea;
-import core.CamSelectView;
+import camera.CamSelectArea;
+import camera.CamSelectView;
+import camera.RegisteredModels;
 import core.RobotRun;
-import global.RegisteredModels;
 import processing.core.PGraphics;
 import processing.core.PShape;
 import processing.core.PVector;

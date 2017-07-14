@@ -1,7 +1,7 @@
 package screen.edit_item;
 
 import core.RobotRun;
-import core.Scenario;
+import geom.Scenario;
 import geom.WorldObject;
 import programming.CamMoveToObject;
 import robot.RoboticArm;

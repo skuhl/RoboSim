@@ -1,10 +1,8 @@
-package global;
+package camera;
 
 import java.io.File;
 import java.util.HashMap;
 
-import core.CamSelectArea;
-import core.CamSelectView;
 import core.RobotRun;
 import processing.data.JSONArray;
 import processing.data.JSONObject;
