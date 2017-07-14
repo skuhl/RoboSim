@@ -2326,161 +2326,152 @@ public class RobotRun extends PApplet {
 		if (key == 27) {
 			// Disable the window exiting function of the 'esc' key
 			key = 0;
-			
-		} else if ((UI != null && UI.isATextFieldActive())) {
-			
-			/* Disable key events when typing in a text field or entering text
-			 * on the pendant */
-			return;
-			
-		}  else if (UI != null && UI.isPendantActive()) {
-			// Suppress other key events when entering text for the pendant
-			screens.getActiveScreen().actionKeyPress(key);
-			updatePendantScreen();
-			
-			// Pendant button shortcuts
-			if (!(screens.getActiveScreen() instanceof ST_ScreenTextEntry) &&
-					!(screens.getActiveScreen() instanceof ST_ScreenNumEntry) &&
-					!(screens.getActiveScreen() instanceof ST_ScreenPointEntry)) {
-				// Disable function shortcuts when entering in text or number input
-				if (keyCode == KeyEvent.VK_1) {
-					button_F1();
-					
-				} else if (keyCode == KeyEvent.VK_2) {
-					button_F2();
-					
-				} else if (keyCode == KeyEvent.VK_3) {
-					button_F3();
-					
-				} else if (keyCode == KeyEvent.VK_4) {
-					button_F4();
-					
-				} else if (keyCode == KeyEvent.VK_5) {
-					button_F5();
-				}
-				
-			}
-			
-			if (keyCode == KeyEvent.VK_ENTER) {
-				button_enter();
-				
-			} else if (keyCode == KeyEvent.VK_BACK_SPACE) {
-				button_bkspc();
-				
-			} else if (keyCode == KeyEvent.VK_DOWN) {
-				button_arrowDn();
-				
-			} else if (keyCode == KeyEvent.VK_LEFT) {
-				button_arrowLt();
-				
-			} else if (keyCode == KeyEvent.VK_RIGHT) {
-				button_arrowRt();
-				
-			} else if (keyCode == KeyEvent.VK_UP) {
-				button_arrowUp();
-			}
 		}
 		
-		// General key functions
-		if (ctrlDown) {
+		if (UI != null) {
 			
-			if (keyCode == KeyEvent.VK_C) {
-				// Update the coordinate frame
-				coordFrameTransition();
-				updatePendantScreen();
-				
-			} else if (keyCode == KeyEvent.VK_D) {
-				// Debug output
-				Program p = getActiveProg();
-				// Output all of the active program's instruction elements
-				if (p != null) {
-					
-					for (InstElement e : p) {
-						Fields.debug("%d:\t%s\n", e.getID(), e.getInst());
+			if (ctrlDown) {
+				// Pendant function key shortcuts
+				if (keyCode == KeyEvent.VK_1) {
+					if (UI.isPendantActive()) {
+						button_F1();
 					}
 					
-					Fields.debug("");
-				}
-				
-			} else if (keyCode == KeyEvent.VK_E) {
-				// Cycle End Effectors
-				if (!isProgExec()) {
-					activeRobot.cycleEndEffector();
-					UI.updateListContents();
-				}
-				
-			} else if (keyCode == KeyEvent.VK_F) {
-				// Toggle the Robot's End Effector state
-				if (!isProgExec()) {
-					toggleEEState(activeRobot);
-				}
-				
-			} else if (keyCode == KeyEvent.VK_T) {
-				// Restore default Robot joint angles
-				button_hold();
-				float[] rot = { 0, 0, 0, 0, 0, 0 };
-				activeRobot.releaseHeldObject();
-				activeRobot.setJointAngles(rot);
-				
-			} else if (keyCode == KeyEvent.VK_R) {
-				
-				if (keyCodeMap.isKeyDown(KeyEvent.VK_ALT)) {
+				} else if (keyCode == KeyEvent.VK_2) {
+					if (UI.isPendantActive()) {
+						button_F2();
+					}
+					
+				} else if (keyCode == KeyEvent.VK_3) {
+					if (UI.isPendantActive()) {
+						button_F3();
+					}
+					
+				} else if (keyCode == KeyEvent.VK_4) {
+					if (UI.isPendantActive()) {
+						button_F4();
+					}
+					
+				} else if (keyCode == KeyEvent.VK_5) {
+					if (UI.isPendantActive()) {
+						button_F5();
+					}
+					
+				// General key functions
+				} else if (keyCode == KeyEvent.VK_D) {
+					// Debug output
+					Program p = getActiveProg();
+					// Output all of the active program's instruction elements
+					if (p != null) {
+						
+						for (InstElement e : p) {
+							Fields.debug("%d:\t%s\n", e.getID(), e.getInst());
+						}
+						
+						Fields.debug("");
+					}
+					
+				} else if (keyCode == KeyEvent.VK_E) {
+					// Cycle End Effectors
+					if (!isProgExec()) {
+						activeRobot.cycleEndEffector();
+						UI.updateListContents();
+					}
+					
+				} else if (keyCode == KeyEvent.VK_F) {
+					// Toggle the Robot's End Effector state
+					if (!isProgExec()) {
+						toggleEEState(activeRobot);
+					}
+					
+				} else if (keyCode == KeyEvent.VK_T) {
+					// Restore default Robot joint angles
+					button_hold();
+					float[] rot = { 0, 0, 0, 0, 0, 0 };
+					activeRobot.releaseHeldObject();
+					activeRobot.setJointAngles(rot);
+					
+				} else if (keyCode == KeyEvent.VK_R) {
 					// Toggle record state
 					setRecord( !getRecord() );
 					
-				} else {
-					// Rest motion fault
-					button_reset();
+				} else if (keyCode == KeyEvent.VK_S) {
+					// Save EVERYTHING!
+					DataManagement.saveState(this);
+					
+				} else if (keyCode == KeyEvent.VK_Z) {
+					// Scenario undo
+					if (UI != null) {
+						if (!UI.isPendantActive()) {
+							undoScenarioEdit();
+						}
+					}	
 				}
 				
-			} else if ( keyCode == KeyEvent.VK_S) {
-				// Save EVERYTHING!
-				DataManagement.saveState(this);
+			} else {
 				
-			} else if (keyCode == KeyEvent.VK_Z) {
-				// Scenario undo
-				if (UI != null) {
-					if (!UI.isPendantActive()) {
-						undoScenarioEdit();
+				if (UIKeyboardUse()) {
+					getActiveScreen().actionKeyPress(key);
+					
+				} else {
+					// Robot jogging shortcuts
+					switch(keyCode) {
+					case KeyEvent.VK_SHIFT:		setShift(true); break;
+					case KeyEvent.VK_C:
+							// Update the coordinate frame
+							coordFrameTransition();
+							updatePendantScreen();
+							break;
+					case KeyEvent.VK_U: 		button_jointNeg1(); break;
+					case KeyEvent.VK_I:			button_jointPos1(); break;
+					case KeyEvent.VK_J: 		button_jointNeg2(); break;
+					case KeyEvent.VK_K: 		button_jointPos2(); break;
+					case KeyEvent.VK_M: 		button_jointNeg3(); break;
+					case KeyEvent.VK_COMMA:		button_jointPos3(); break;
+					case KeyEvent.VK_O: 		button_jointNeg4(); break;
+					case KeyEvent.VK_P:			button_jointPos4(); break;
+					case KeyEvent.VK_L: 		button_jointNeg5(); break;
+					case KeyEvent.VK_SEMICOLON: button_jointPos5(); break;
+					case KeyEvent.VK_PERIOD: 	button_jointNeg6(); break;
+					case KeyEvent.VK_SLASH:		button_jointPos6(); break;
+					case KeyEvent.VK_MINUS:		button_speedDn(); break;
+					case KeyEvent.VK_EQUALS:	button_speedUp(); break;
+					case KeyEvent.VK_S:			rCamera.teachObjectToCamera(getActiveScenario()); break;
+					case KeyEvent.VK_R:			button_reset();
 					}
-				}	
+				}
+				
+				if (UI.isPendantActive()) {
+					// Pendant shortcuts
+					if (keyCode == KeyEvent.VK_ENTER) {
+						button_enter();
+						
+					} else if (keyCode == KeyEvent.VK_BACK_SPACE) {
+						button_bkspc();
+						
+					} else if (keyCode == KeyEvent.VK_DOWN) {
+						button_arrowDn();
+						
+					} else if (keyCode == KeyEvent.VK_LEFT) {
+						button_arrowLt();
+						
+					} else if (keyCode == KeyEvent.VK_RIGHT) {
+						button_arrowRt();
+						
+					} else if (keyCode == KeyEvent.VK_UP) {
+						button_arrowUp();
+					}
+				}
 			}
-			
-		} else if (!UIKeyboardUse()) {
-			
-			// Pendant button shortcuts
-			switch(keyCode) {
-			case KeyEvent.VK_SHIFT:		if (!(screens.getActiveScreen() instanceof ST_ScreenTextEntry)) 
-											setShift(true); break;
-			case KeyEvent.VK_U: 		button_jointNeg1(); break;
-			case KeyEvent.VK_I:			button_jointPos1(); break;
-			case KeyEvent.VK_J: 		button_jointNeg2(); break;
-			case KeyEvent.VK_K: 		button_jointPos2(); break;
-			case KeyEvent.VK_M: 		button_jointNeg3(); break;
-			case KeyEvent.VK_COMMA:		button_jointPos3(); break;
-			case KeyEvent.VK_O: 		button_jointNeg4(); break;
-			case KeyEvent.VK_P:			button_jointPos4(); break;
-			case KeyEvent.VK_L: 		button_jointNeg5(); break;
-			case KeyEvent.VK_SEMICOLON: button_jointPos5(); break;
-			case KeyEvent.VK_PERIOD: 	button_jointNeg6(); break;
-			case KeyEvent.VK_SLASH:		button_jointPos6(); break;
-			case KeyEvent.VK_MINUS:		button_speedDn(); break;
-			case KeyEvent.VK_EQUALS:	button_speedUp(); break;
-			case KeyEvent.VK_S:			rCamera.teachObjectToCamera(getActiveScenario()); break;
-			}
-			
 		}
 	}
 	
 	public void keyReleased() {
 		keyCodeMap.keyReleased(keyCode, key);
 		
-		if (!keyCodeMap.isKeyDown(KeyEvent.VK_CONTROL) &&
-				!UIKeyboardUse()) {
-			
+		if (!keyCodeMap.isKeyDown(KeyEvent.VK_CONTROL) && !UIKeyboardUse()) {
 			switch(keyCode) {
-			case KeyEvent.VK_SHIFT: 	if (!(screens.getActiveScreen() instanceof ST_ScreenTextEntry))
-											setShift(false); break;
+			case KeyEvent.VK_SHIFT: 	setShift(false); break;
 			case KeyEvent.VK_U: 		button_jointNeg1(); break;
 			case KeyEvent.VK_I:			button_jointPos1(); break;
 			case KeyEvent.VK_J: 		button_jointNeg2(); break;
@@ -4198,20 +4189,25 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Detemines if the active menu uses keyboard input.
+	 * TODO comment this
 	 * 
 	 * @return
 	 */
 	private boolean UIKeyboardUse() {
 		
-		if (UI.isPendantActive() && (screens.getActiveScreen() instanceof ST_ScreenTextEntry ||
-				screens.getActiveScreen() instanceof ST_ScreenPointEntry ||
-				screens.getActiveScreen() instanceof ST_ScreenNumEntry)) {
-			
-			return true;
-			
-		} else if (UI.getMenu() == WindowTab.CREATE || UI.getMenu() == WindowTab.EDIT) {
-			return true;
+		if (UI != null) {
+			if (UI.isPendantActive()) {
+				// Screens extending these screen types use keyboard input.
+				Screen activeScreen = getActiveScreen();
+				
+				return activeScreen instanceof ST_ScreenPointEntry ||
+						activeScreen instanceof ST_ScreenTextEntry ||
+						activeScreen instanceof ST_ScreenNumEntry;
+				
+			} else if (UI.getMenu() != null) {
+				// Textfields and some dropdown lists use text input
+				return UI.isATextFieldActive() || UI.isMouseOverUIElement();
+			}
 		}
 		
 		return false;
