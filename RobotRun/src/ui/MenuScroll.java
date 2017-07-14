@@ -2,6 +2,7 @@ package ui;
 
 import java.util.ArrayList;
 
+import global.Fields;
 import global.RMath;
 
 public class MenuScroll {
@@ -146,6 +147,25 @@ public class MenuScroll {
 	
 	public int getYPos() {
 		return yPos;
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param itemIdx
+	 */
+	public void jumpToItem(int itemIdx) {
+		
+		for (int idx = 0; idx < lines.size(); ++idx) {
+			DisplayLine line = lines.get(idx);
+			
+			if (line.getItemIdx() == itemIdx) {
+				int diff = lineIdx - renderStart;
+				lineIdx = idx;
+				renderStart = RMath.max(0, lineIdx - diff);
+				break;
+			}
+		}
 	}
 
 	public int moveDown(boolean page) {

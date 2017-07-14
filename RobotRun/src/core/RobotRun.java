@@ -3286,7 +3286,7 @@ public class RobotRun extends PApplet {
 			progExecState = new ProgExecution();
 			progCallStack = new Stack<>();
 			
-			mInstRobotAt = new HashMap<Integer, Boolean>();
+			mInstRobotAt = new HashMap<>();
 			
 		} catch (NullPointerException NPEx) {
 			DataManagement.errLog(NPEx);
