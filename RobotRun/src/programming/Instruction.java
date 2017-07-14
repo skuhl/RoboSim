@@ -1,14 +1,15 @@
 package programming;
 
 public class Instruction {
-	boolean com;
+	
+	protected boolean isCommented;
 
 	public Instruction() {
-		com = false;
+		isCommented = false;
 	}
 	
 	public Instruction(boolean isComm) {
-		com = isComm;
+		isCommented = isComm;
 	}
 	
 	/**
@@ -16,17 +17,14 @@ public class Instruction {
 	 */
 	@Override
 	public Instruction clone() {
-		Instruction copy = new Instruction();
-		copy.setIsCommented( isCommented() );
-
-		return copy;
+		return new Instruction(isCommented);
 	}
 	
-	public boolean isCommented() { return com; }
+	public boolean isCommented(){ return isCommented; }
 
-	public void setIsCommented(boolean comFlag) { com = comFlag; }
+	public void setIsCommented(boolean comFlag) { isCommented = comFlag; }
 
-	public void toggleCommented() { com = !com; }
+	public void toggleCommented() { isCommented = !isCommented; }
 
 	@Override
 	public String toString() {

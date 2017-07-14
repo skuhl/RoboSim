@@ -1,5 +1,10 @@
 package regs;
-/* A simple class for a Register of the Robot Arm, which holds a value associated with a comment. */
+/**
+ * An extension of the register class, which holds a floating-point value along
+ * with an associated comment.
+ * 
+ * @author Joshua Hooker and Vincent Druckte
+ */
 public class DataRegister extends Register {
 	public Float value;
 

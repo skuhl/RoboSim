@@ -1,7 +1,8 @@
 package programming;
 
 /**
- * TODO general comments
+ * An instruction that defines the fields and methods common amongst all types of
+ * motion instructions.
  * 
  * @author Joshua Hooker and Vincent Druckte
  */

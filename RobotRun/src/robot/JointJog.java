@@ -50,6 +50,14 @@ public class JointJog extends JointMotion {
 		return JOINT_MOTION.clone();
 	}
 	
+	/**
+	 * Returns the direction of motion for the axis associated with the given
+	 * index. The six motion axes are the six joint axes of a robotic arm.
+	 * 
+	 * @param mdx	The index of the motion axis (0 - 5)
+	 * @return		The direction of the motion associated with the specified
+	 * 				motion axis
+	 */
 	public int getMotion(int mdx) {
 		if (mdx >= 0 && mdx < JOINT_MOTION.length) {
 			return JOINT_MOTION[mdx];
@@ -58,6 +66,16 @@ public class JointJog extends JointMotion {
 		return 0;
 	}
 	
+	/**
+	 * Updates the direction of motion associated with the motion axis with the
+	 * given index. Setting the direction of motion for an axis to its current
+	 * value will reset the motion to 0.
+	 * 
+	 * @param mdx		The index of a motion axis (0 - 5)
+	 * @param newDir	The new direction of motion for the specified motion
+	 * 					axis (0, -1, and 1)
+	 * @return			The old direction of motion for the specified axis
+	 */
 	public int setMotion(int mdx, int newDir) {
 		if (mdx >= 0 && mdx < JOINT_MOTION.length) {
 			if (JOINT_MOTION[mdx] == newDir) {

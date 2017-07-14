@@ -28,10 +28,16 @@ public class ScreenSetFramInstrIdx extends ST_ScreenNumEntry {
 				FrameInstruction fInst = (FrameInstruction) r.getInstToEdit(robotRun.getActiveProg(), 
 						robotRun.getActiveInstIdx());
 				fInst.setReg(frameIdx);
+				robotRun.lastScreen();
+				
+			} else {
+				// Out of bounds
+				errorMessage("The frame index must be within the range 0 and 10");
 			}
+			
 		} catch (NumberFormatException NFEx) {
-		/* Ignore invalid input */ }
-
-		robotRun.lastScreen();
+			// Not a number
+			errorMessage("The frame index must be an integer");
+		}	
 	}
 }

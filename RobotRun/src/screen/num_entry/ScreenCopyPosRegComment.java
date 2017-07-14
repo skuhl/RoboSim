@@ -39,16 +39,17 @@ public class ScreenCopyPosRegComment extends ST_ScreenNumEntry {
 			// Copy the comment of the curent Position register to the
 			// Position register at the specified index
 			regIdx = Integer.parseInt(workingText.toString()) - 1;
-			robotRun.getActiveRobot().getPReg(regIdx).comment = robotRun.getActiveRobot().getPReg(itemIdx).comment;
+			robotRun.getActiveRobot().getPReg(regIdx).comment =
+					robotRun.getActiveRobot().getPReg(itemIdx).comment;
 			DataManagement.saveRobotData(robotRun.getActiveRobot(), 3);
+			robotRun.lastScreen();
 
 		} catch (NumberFormatException MFEx) {
-			System.err.println("Only real numbers are valid!");
+			errorMessage("Only real numbers are valid!");
+			
 		} catch (IndexOutOfBoundsException IOOBEx) {
-			System.err.println("Only positve integers between 1 and 100 are valid!");
+			errorMessage("Only positve integers between 1 and 100 are valid!");
 		}
-
-		robotRun.lastScreen();
 	}
 
 }

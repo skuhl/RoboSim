@@ -136,7 +136,7 @@ public class ScreenNavPosRegs extends ST_ScreenListContents {
 					r.updateMotion(pt.angles);
 				}
 			} else {
-				System.err.println("Position register is uninitialized!");
+				Fields.setMessage("Position register is uninitialized!");
 			}
 		}
 	}

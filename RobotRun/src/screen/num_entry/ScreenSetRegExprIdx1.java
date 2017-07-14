@@ -1,6 +1,7 @@
 package screen.num_entry;
 
 import core.RobotRun;
+import global.Fields;
 import programming.RegisterStatement;
 import regs.DataRegister;
 import regs.IORegister;
@@ -29,11 +30,13 @@ public class ScreenSetRegExprIdx1 extends ST_ScreenNumEntry {
 			RegisterStatement regStmt = (RegisterStatement) r.getInstToEdit(robotRun.getActiveProg(), 
 					robotRun.getActiveInstIdx());
 			Register reg = regStmt.getReg();
+			int ubound = (reg instanceof IORegister) ? r.numOfEndEffectors()
+					: 100;
 
-			if (idx < 1 || ((reg instanceof DataRegister || reg instanceof PositionRegister) && idx > 100)
-					|| (reg instanceof IORegister && idx > 5)) {
+			if (idx < 1 || idx > ubound) {
 				// Index is out of bounds
-				System.err.println("Invalid register index!");
+				Fields.setMessage("Index must be within the range 1 and %d",
+						ubound);
 
 			} else {
 
@@ -52,11 +55,14 @@ public class ScreenSetRegExprIdx1 extends ST_ScreenNumEntry {
 						// Update a position register index operand
 						regStmt.setRegister(r.getPReg(idx - 1), regStmt.getPosIdx());
 					}
-
 				}
+				
+				robotRun.lastScreen();
 			}
-		} catch (NumberFormatException NFEx) {/* Ignore invalid input */}
-
-		robotRun.lastScreen();
+			
+		} catch (NumberFormatException NFEx) {
+			// Not an integer
+			errorMessage("The index must be an integer");
+		}
 	}
 }

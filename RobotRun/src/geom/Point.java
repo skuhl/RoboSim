@@ -165,13 +165,20 @@ public class Point  {
 	 * 				together to be considered the same
 	 */
 	public boolean compareCartesian(Point pt) {
+		// Compare positions
 		float posDist = PVector.dist(pt.position, position);
 		
 		if (posDist > 0.01f) {
 			return false;
 			
 		} else {
-			// TODO quaternion difference
+			// Compare orientations
+			RQuaternion diff = RQuaternion.mult(pt.orientation, orientation);
+			float orienDist = diff.magnitude();
+			
+			if (orienDist > 0.0005f) {
+				return false;
+			}
 		}
 		
 		return true;

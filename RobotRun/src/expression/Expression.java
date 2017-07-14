@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Stack;
 
 import geom.Point;
+import global.Fields;
 
 public class Expression extends Operand<Object> {
 	private ArrayList<ExpressionElement> elementList;
@@ -35,10 +36,10 @@ public class Expression extends Operand<Object> {
 	
 	public Operand<?> evaluate() {
 		if(elementList.isEmpty()) {
-			System.err.println("Empty expression error!");
+			Fields.setMessage("Empty expression error!");
 			return null;
 		}
-		
+
 		Stack<Operator> operators = new Stack<Operator>();
 		Stack<Operand<?>> operands = new Stack<Operand<?>>();
 		
@@ -88,7 +89,7 @@ public class Expression extends Operand<Object> {
 		
 		if (result == null || result.getValue() == null) {
 			// Return a null operator, not an uninitialized operator
-			System.err.println("Expression formatting error");
+			Fields.setMessage("Expression formatting error");
 			return null;
 		}
 		

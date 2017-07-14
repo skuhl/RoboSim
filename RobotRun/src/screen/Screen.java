@@ -98,11 +98,11 @@ public abstract class Screen {
 	}
 	
 	public void printScreenInfo() {
-		System.out.println("Current screen: ");
-		System.out.println("\tMode: " + mode.name());
-		System.out.println("\tRow: " + contents.getLineIdx() + ", col: " + contents.getColumnIdx() +
+		Fields.debug("Current screen: ");
+		Fields.debug("\tMode: " + mode.name());
+		Fields.debug("\tRow: " + contents.getLineIdx() + ", col: " + contents.getColumnIdx() +
 				", RS: " + contents.getRenderStart());
-		System.out.println("\tOpt row: " + options.getLineIdx() + ", opt RS: " + options.getRenderStart());
+		Fields.debug("\tOpt row: " + options.getLineIdx() + ", opt RS: " + options.getRenderStart());
 	}
 	
 	//Sets text for each screen
@@ -187,17 +187,19 @@ public abstract class Screen {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Complies a list of display lines that represent the default end effector
+	 * offsets for the given robot.
 	 * 
-	 * @param robot
-	 * @return
+	 * @param robot	The robot, of which to use the default tool tip offsets
+	 * @return		The list of display lines, which represent the values of
+	 * 				the given robot's default tool tip offsets
 	 */
 	public ArrayList<DisplayLine> loadEEToolTipDefaults(RoboticArm robot) {
 		ArrayList<DisplayLine> lines = new ArrayList<>();
 		
-		for (int idx = 0; idx < robotRun.getActiveRobot().numOfEndEffectors(); ++idx) {
-			IORegister ioReg = robotRun.getActiveRobot().getIOReg(idx + 1);
-			PVector defToolTip = robotRun.getActiveRobot().getToolTipDefault(idx);
+		for (int idx = 0; idx < robot.numOfEndEffectors(); ++idx) {
+			IORegister ioReg = robot.getIOReg(idx + 1);
+			PVector defToolTip = robot.getToolTipDefault(idx);
 			String lineStr = String.format("%s = (%4.3f, %4.3f, %4.3f)",
 					ioReg.comment, defToolTip.x, defToolTip.y, defToolTip.z); 
 			
@@ -215,7 +217,8 @@ public abstract class Screen {
 	 * @param fdx
 	 * @return
 	 */
-	public ArrayList<DisplayLine> loadFrameDetail(RoboticArm r, CoordFrame coordFrame, int fdx) {
+	public ArrayList<DisplayLine> loadFrameDetail(RoboticArm r,
+			CoordFrame coordFrame, int fdx) {
 		
 		ArrayList<DisplayLine> lines = new ArrayList<>();
 		Frame f = null;
@@ -244,11 +247,14 @@ public abstract class Screen {
 	}
 	
 	/**
-	 * TODO
+	 * Compiles the list of all of the frames corresponding to the given
+	 * coordinate frame type (Tool or User), in a textual format, so that they
+	 * can be rendered on the pendant screen.
 	 * 
-	 * @param r
-	 * @param coordFrame
-	 * @return
+	 * @param r				The robot of which to use the frames
+	 * @param coordFrame	TOOL for tool frames, or USER for user frames
+	 * @return				The list of display liens corresponding to the
+	 * 						specified frame list
 	 */
 	public ArrayList<DisplayLine> loadFrames(RoboticArm r, CoordFrame coordFrame) {
 		ArrayList<DisplayLine> lines = new ArrayList<>();
@@ -282,8 +288,19 @@ public abstract class Screen {
 		return lines;
 	}
 
-	// prepare for displaying motion instructions on screen
-	public ArrayList<DisplayLine> loadInstructions(Program p, boolean includeEND) {
+	/**
+	 * Complies a of list of display lines, which represents the instructions
+	 * defined by the given program p.
+	 * 
+	 * @param p				The program of which to use the instructions
+	 * @param includeEND	Whether to include an END line marker at the end of
+	 * 						the program's list of instructions
+	 * @return				The list of display lines representing the given
+	 * 						program's list of instructions
+	 */
+	public ArrayList<DisplayLine> loadInstructions(Program p, boolean
+			includeEND) {
+		
 		ArrayList<DisplayLine> instruct_list = new ArrayList<>();
 		int tokenOffset = Fields.TXT_PAD - Fields.PAD_OFFSET;
 		
@@ -291,7 +308,7 @@ public abstract class Screen {
 		
 		for (int i = 0; i < size; i += 1) {
 			DisplayLine line = new DisplayLine(i);
-			Instruction instr = p.get(i);
+			Instruction instr = p.getInstAt(i);
 			int xPos = 10;
 
 			// Add line number
@@ -366,10 +383,12 @@ public abstract class Screen {
 	}
 
 	/**
-	 * TODO
+	 * Compiles a list of the given robot's I/O registers in the format for I/O
+	 * Instruction creation pendant screen.
 	 * 
-	 * @param r
-	 * @return
+	 * @param r	The robot, of which to use the I/O registers
+	 * @return	The list of display lines representing the given robot's I/O
+	 * 			registers and states
 	 */
 	public ArrayList<DisplayLine> loadIORegInst(RoboticArm r) {
 		ArrayList<DisplayLine> lines = new ArrayList<>();
@@ -386,10 +405,12 @@ public abstract class Screen {
 	}
 
 	/**
-	 * TODO
+	 * Compiles a list of the given robot's I/O registers in the format for the
+	 * I/O register navigation pendant screen.
 	 * 
-	 * @param r
-	 * @return
+	 * @param r	The robot, of which to use the I/O registers
+	 * @return	The list of display lines representing current state of the
+	 * 			given robot's I/O registers
 	 */
 	public ArrayList<DisplayLine> loadIORegNav(RoboticArm r) {
 		ArrayList<DisplayLine> lines = new ArrayList<>();
@@ -406,19 +427,31 @@ public abstract class Screen {
 	}
 
 	/**
-	 * TODO
+	 * Compiles a list of display lines which represent if a point is taught
+	 * for the given frame and the given teaching method.
 	 * 
-	 * @param f
-	 * @param teachMethod
-	 * @return
+	 * The teaching method should be either 0 or 1.
+	 * For a user frame:
+	 * 	0 -> three point method
+	 * 	1 -> four point method
+	 * 
+	 * For a tool frame:
+	 * 	0 -> three point method
+	 * 	1 -> six point method
+	 * 
+	 * @param f				The frame of which to use the teach points
+	 * @param teachMethod	The flag indicating what teach points are
+	 * 						represented by the display lines (either 0 or 1)
+	 * @return				The display lines representing the teach points of
+	 * 						the given frame for the teach point defined by the
+	 * 						teachMethod field
 	 */
 	public ArrayList<DisplayLine> loadPointList(Frame f, int teachMethod) {
 		ArrayList<DisplayLine> lines = new ArrayList<>();
 		boolean validMethod = teachMethod == 0 || teachMethod == 1;
 		
-		
 		if (f instanceof ToolFrame && validMethod) {
-			
+			// Points used in the three and six point method of tool frames
 			String out = (f.getPoint(0) == null) ? "UNINIT" : "RECORDED";
 			lines.add(new DisplayLine(0, 0, "First Approach Point: " + out));
 			
@@ -429,6 +462,7 @@ public abstract class Screen {
 			lines.add(new DisplayLine(2, 0, "Third Approach Point: " + out));
 			
 			if (teachMethod == 1) {
+				// Points used in the six point method of tool frames
 				out = (f.getPoint(3) == null) ? "UNINIT" : "RECORDED";
 				lines.add(new DisplayLine(3, 0, "Orient Origin Point: " + out));
 				
@@ -440,7 +474,7 @@ public abstract class Screen {
 			}
 			
 		} else if (f instanceof UserFrame && validMethod) {
-			
+			// Points used in the three and four point methods of user frames
 			String out = (f.getPoint(0) == null) ? "UNINIT" : "RECORDED";
 			lines.add(new DisplayLine(0, 0, "Orient Origin Point: " + out));
 			
@@ -451,6 +485,7 @@ public abstract class Screen {
 			lines.add(new DisplayLine(2, 0, "Y Axis Point: " + out));
 			
 			if (teachMethod == 1) {
+				// The point used in the for point method of user frames
 				out = (f.getPoint(3) == null) ? "UNINIT" : "RECORDED";
 				lines.add(new DisplayLine(3, 0, "Origin: " + out));
 			}
@@ -467,10 +502,12 @@ public abstract class Screen {
 	}
 	
 	/**
-	 * TODO
+	 * Compiles a list of display lines that represent the position registers
+	 * of the given robot.
 	 * 
-	 * @param r
-	 * @return
+	 * @param r	The robot of which to use the position registers
+	 * @return	The list of display lines representing the position registers
+	 * 			associated with the given robot
 	 */
 	public ArrayList<DisplayLine> loadPositionRegisters(RoboticArm r) {
 		ArrayList<DisplayLine> lines = new ArrayList<>();
@@ -490,10 +527,12 @@ public abstract class Screen {
 	}
 
 	/**
-	 * TODO comment
+	 * Compiles a list of display lines, which represent the list of programs
+	 * associated with the given robot.
 	 * 
-	 * @param rid
-	 * @return
+	 * @param r	The robot of which to use the programs
+	 * @return	The list of display lines representing the programs associated
+	 * 			with the given robot
 	 */
 	public ArrayList<DisplayLine> loadPrograms(RoboticArm r) {
 		ArrayList<DisplayLine> progList = null;

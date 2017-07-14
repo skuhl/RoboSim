@@ -99,6 +99,7 @@ public class ScreenShowActiveFrames extends ST_ScreenNumEntry {
 		} catch (NumberFormatException NFEx) {
 			// Non-integer value
 		}
+		
 		// Update display
 		if (getContentIdx() == 0) {
 			workingText = new StringBuilder(Integer.toString(robot.getActiveToolIdx() + 1));

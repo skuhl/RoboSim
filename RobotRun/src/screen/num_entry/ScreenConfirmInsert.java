@@ -1,8 +1,10 @@
 package screen.num_entry;
 
 import core.RobotRun;
+import global.Fields;
 import programming.Instruction;
 import programming.Program;
+import robot.RoboticArm;
 import screen.ScreenMode;
 
 public class ScreenConfirmInsert extends ST_ScreenNumEntry {
@@ -29,19 +31,29 @@ public class ScreenConfirmInsert extends ST_ScreenNumEntry {
 	
 	@Override
 	public void actionEntr() {
+		RoboticArm r = robotRun.getActiveRobot();
 		Program p = robotRun.getActiveProg();
 		
 		try {
 			int lines_to_insert = Integer.parseInt(workingText.toString());
-			for (int i = 0; i < lines_to_insert; i += 1) {
-				p.addInstAt(robotRun.getActiveInstIdx(), new Instruction());
+			
+			if (lines_to_insert > 0 && lines_to_insert <= 100) {
+				for (int i = 0; i < lines_to_insert; i += 1) {
+					r.addAt(p, robotRun.getActiveInstIdx() + i,
+							new Instruction(), i != 0);
+				}
+				
+				robotRun.updateInstructions();
+				robotRun.lastScreen();
+				
+			} else {
+				// Out of bounds
+				errorMessage("The number of lines must be within the range 0 and 99");
 			}
 			
-			robotRun.updateInstructions();
 		} catch (Exception e) {
-			e.printStackTrace();
+			// Not an integer
+			Fields.setMessage("The number of lines must be a real number");
 		}
-
-		robotRun.lastScreen();
 	}
 }

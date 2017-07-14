@@ -89,10 +89,13 @@ public class EndEffector extends RSegment {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Determines if the given part's bounding boxes collide with at least one
+	 * of the pickup bounding boxes of this end effector. If there is a
+	 * collision detected, then true is returned, otherwise false is returned.
 	 * 
-	 * @param p
-	 * @return
+	 * @param p	The part with which to check collisions
+	 * @return	Whether a collision is detected between this end effector's
+	 * 			pickup bounding boxes and the given part's bounding box.
 	 */
 	public boolean canPickup(Part p) {
 		int ret = super.checkCollision(p);

@@ -35,7 +35,6 @@ import geom.WorldObject;
 import global.DataManagement;
 import global.Fields;
 import global.RMath;
-import processing.core.PApplet;
 import processing.core.PFont;
 import processing.core.PGraphics;
 import processing.core.PImage;
@@ -1111,6 +1110,7 @@ public class WGUI implements ControlListener {
 		if (arg0.isFrom(windowTabs)) {
 			// Update the window based on the button tab selected
 			String actLbl = windowTabs.getActButLbl();
+			Fields.resetMessage();
 			
 			if (actLbl == null) {
 				updateView( null );
@@ -1336,6 +1336,7 @@ public class WGUI implements ControlListener {
 						if (shapeDims[0] != null) {
 							// Define shape scale
 							shape = new ComplexShape(srcFile, model, fill, shapeDims[0]);
+							
 						} else {
 							shape = new ComplexShape(srcFile, model, fill);
 						}
@@ -1390,20 +1391,25 @@ public class WGUI implements ControlListener {
 				default:
 				}
 			}
+			
+			if (wldObj == null) {
+				Fields.setMessage("Missing field");
+			}
 
 		} catch (NullPointerException NPEx) {
-			PApplet.println("Missing parameter!");
-			NPEx.printStackTrace();
+			Fields.setMessage("Missing field");
 			wldObj = null;
 
 		} catch (ClassCastException CCEx) {
-			PApplet.println("Invalid field?");
-			CCEx.printStackTrace();
+			Fields.setMessage("Invalid field");
 			wldObj = null;
 
 		} catch (IndexOutOfBoundsException IOOBEx) {
-			PApplet.println("Missing field?");
-			IOOBEx.printStackTrace();
+			Fields.setMessage("Missing field");
+			wldObj = null;
+			
+		} catch (IllegalArgumentException IAEx) {
+			Fields.setMessage("Missing field");
 			wldObj = null;
 		}
 
@@ -1565,14 +1571,12 @@ public class WGUI implements ControlListener {
 	/**
 	 * Returns a post-processed list of the user's input for the dimensions of
 	 * the box world object (i.e. length, height, width). Valid values for a
-	 * box's dimensions are between 10 and 800, inclusive. Any inputed value
-	 * that is positive and outside the valid range is clamped to the valid
-	 * range. So, if the user inputed 900 for the length, then it would be
-	 * changed to 800. However, if a input is not a number or negative, then
-	 * no other inputs are processed and null is returned. Although, if a
-	 * field is left blank (i.e. ""), then that field is ignored. The array of
-	 * processed input returned contains three Float objects. If any of the
-	 * input was ignored, then its corresponding array element will be null.
+	 * box's dimensions are between 10 and 800, inclusive. If a input is not
+	 * valid, then no other inputs are processed and null is returned.
+	 * Although, if a field is left blank (i.e. ""), then that field is
+	 * ignored. The array of processed input returned contains three Float
+	 * objects. If any of the input was ignored, then its corresponding array
+	 * element will be null.
 	 * 
 	 * @return a 3-element array: [length, height, width], or null
 	 */
@@ -1588,45 +1592,27 @@ public class WGUI implements ControlListener {
 
 			if (lenField != null && !lenField.equals("")) {
 				// Read length input
-				float val = Float.parseFloat(lenField);
-
-				if (val <= 0) {
-					throw new NumberFormatException("Invalid length value!");
-				}
-				// Length cap of 800
-				dimensions[0] = PApplet.max(10f, PApplet.min(val, 800f));
+				dimensions[0] = Float.parseFloat(lenField);
 			}
 
 			if (hgtField != null && !hgtField.equals("")) {
 				// Read height input
-				float val = Float.parseFloat(hgtField);
-
-				if (val <= 0) {
-					throw new NumberFormatException("Invalid height value!");
-				}
-				// Height cap of 800
-				dimensions[1] = PApplet.max(10f, PApplet.min(val, 800f));
+				dimensions[1] = Float.parseFloat(hgtField);
 			}
 
 			if (wdhField != null && !wdhField.equals("")) {
 				// Read Width input
-				float val = Float.parseFloat(wdhField);
-
-				if (val <= 0) {
-					throw new NumberFormatException("Invalid width value!");
-				}
-				// Width cap of 800
-				dimensions[2] = PApplet.max(10f, PApplet.min(val, 800f));
+				dimensions[2] = Float.parseFloat(wdhField);
 			}
 
 			return dimensions;
 
 		} catch (NumberFormatException NFEx) {
-			PApplet.println("Invalid number input!");
+			Fields.setMessage(NFEx.getMessage());
 			return null;
 
 		} catch (NullPointerException NPEx) {
-			PApplet.println("Missing parameter!");
+			Fields.setMessage("All dimension fields must have a value");
 			return null;
 		}
 	}
@@ -1694,19 +1680,18 @@ public class WGUI implements ControlListener {
 				if (orienVals[valIdx] != null && !orienVals[valIdx].equals("")) {
 					float val = Float.parseFloat(orienVals[valIdx]);
 					// Bring value within the range [-9999, 9999]
-					val = PApplet.max(-9999f, PApplet.min(val, 9999f));
-					values[valIdx] = val;
+					values[valIdx] = RMath.clamp(val, -9999f, 9999f);
 				}
 			}
 
 			return values;
 
 		} catch (NumberFormatException NFEx) {
-			PApplet.println("Invalid number input!");
+			Fields.setMessage("All fields must be real numbers");
 			return null;
 
 		} catch (NullPointerException NPEx) {
-			PApplet.println("Missing parameter!");
+			Fields.setMessage("All fields must be real numbers");
 			return null;
 		}
 	}
@@ -1714,11 +1699,8 @@ public class WGUI implements ControlListener {
 	/**
 	 * Returns a post-processed list of the user's input for the dimensions of
 	 * the cylinder world object (i.e. radius and height). Valid values for a
-	 * cylinder's dimensions are between 5 and 800, inclusive. Any inputed value
-	 * that is positive and outside the valid range is clamped to the valid
-	 * range. So, if the user inputed 2 for the radius, then it would be
-	 * changed to 5. However, if a input is not a number or negative, then
-	 * no other inputs are processed and null is returned. Although, if a
+	 * cylinder's radius are between 5 and 400, inclusive. If a input is valid,
+	 * then no other inputs are processed and null is returned. Although, if a
 	 * field is left blank (i.e. ""), then that field is ignored. The array of
 	 * processed input returned contains two Float objects. If any of the
 	 * input was ignored, then its corresponding array element will be null.
@@ -1736,34 +1718,22 @@ public class WGUI implements ControlListener {
 
 			if (radField != null && !radField.equals("")) {
 				// Read radius input
-				float val = Float.parseFloat(radField);
-
-				if (val <= 0) {
-					throw new NumberFormatException("Invalid length value!");
-				}
-				// Radius cap of 400
-				dimensions[0] = PApplet.max(5f, PApplet.min(val, 400f));
+				dimensions[0] = Float.parseFloat(radField);
 			}
 
 			if (hgtField != null && !hgtField.equals("")) {
 				// Read height input
-				float val = Float.parseFloat(hgtField);
-
-				if (val <= 0) {
-					throw new NumberFormatException("Invalid height value!");
-				}
-				// Height cap of 800
-				dimensions[1] = PApplet.max(10f, PApplet.min(val, 800f));
+				dimensions[1] = Float.parseFloat(hgtField);
 			}
 
 			return dimensions;
 
 		} catch (NumberFormatException NFEx) {
-			PApplet.println("Invalid number input!");
+			Fields.setMessage(NFEx.getMessage());
 			return null;
 
 		} catch (NullPointerException NPEx) {
-			PApplet.println("Missing parameter!");
+			Fields.setMessage("All dimension fields must have a value");
 			return null;
 		}
 	}
@@ -1879,15 +1849,12 @@ public class WGUI implements ControlListener {
 
 	/**
 	 * Returns a post-processed list of the user's input for the dimensions of
-	 * the model world object (i.e. scale). Valid values for a model's
-	 * dimensions are between 1 and 50, inclusive. Any inputed value that is
-	 * positive and outside the valid range is clamped to the valid range. So,
-	 * if the user inputed 100 for the length, then it would be changed to 50.
-	 * However, if a input is not a number or negative, then no other inputs
-	 * are processed and null is returned. Although, if a field is left blank
-	 * (i.e. ""), then that field is ignored. The array of processed input
-	 * returned contains one Float object. If any of the input was ignored,
-	 * then its corresponding array element will be null.
+	 * the model world object (i.e. scale). The scale of a complex shape must
+	 * be a positive number, however its range depends on the model's base
+	 * dimensions. Although, if a field is left blank (i.e. ""), then that
+	 * field is ignored. The array of processed input returned contains one
+	 * Float object. If any of the input was ignored, then its corresponding
+	 * array element will be null.
 	 * 
 	 * @return a 3-element array: [scale], or null
 	 */
@@ -1902,23 +1869,17 @@ public class WGUI implements ControlListener {
 
 			if (sclField != null && !sclField.equals("")) {
 				// Read scale input
-				float val = Float.parseFloat(sclField);
-
-				if (val <= 0) {
-					throw new NumberFormatException("Invalid scale value");
-				}
-				// Scale cap of 50
-				dimensions[0] = PApplet.min(val, 50f);
+				dimensions[0] = Float.parseFloat(sclField);
 			}
 
 			return dimensions;
 
 		} catch (NumberFormatException NFEx) {
-			PApplet.println(NFEx.getMessage());
+			Fields.setMessage("The scale must be a real number");
 			return null;
 
 		} catch (NullPointerException NPEx) {
-			PApplet.println("Missing parameter!");
+			Fields.setMessage("The scale must be a real number");
 			return null;
 		}
 	}
@@ -1993,7 +1954,7 @@ public class WGUI implements ControlListener {
 
 			} else if (val != null) {
 				// Invalid entry in the dropdown list
-				System.err.printf("Invalid class type: %d!\n", val.getClass());
+				Fields.setMessage("Invalid class type: %d!\n", val.getClass());
 			}
 		}
 
@@ -3150,7 +3111,7 @@ public class WGUI implements ControlListener {
 			}
 		} 
 		else {
-			System.err.println("Missing data subfolder!");
+			Fields.debug("Missing data subfolder!");
 		}
 
 		if (app.getActiveScenario() != null) {
@@ -3705,8 +3666,7 @@ public class WGUI implements ControlListener {
 			}
 			
 		} catch (NullPointerException NPEx) {
-			PApplet.println("Missing parameter!");
-			NPEx.printStackTrace();
+			Fields.setMessage("All fields must be real numbers");
 		}
 		
 		return null;
@@ -3794,20 +3754,19 @@ public class WGUI implements ControlListener {
 
 			if (newDims[0] != null) {
 				// Update the box's length
-				s.setDim(newDims[0], DimType.LENGTH);
-				dimChanged = true;
+				dimChanged = updateDim(s, DimType.LENGTH, newDims[0]);
 			}
 
 			if (newDims[1] != null) {
 				// Update the box's height
-				s.setDim(newDims[1], DimType.HEIGHT);
-				dimChanged = true;
+				boolean ret = updateDim(s, DimType.HEIGHT, newDims[1]);
+				dimChanged = dimChanged || ret;
 			}
 
 			if (newDims[2] != null) {
 				// Update the box's width
-				s.setDim(newDims[2], DimType.WIDTH);
-				dimChanged = true;
+				boolean ret = updateDim(s, DimType.WIDTH, newDims[2]);
+				dimChanged = dimChanged || ret;
 			}
 
 		} else if (s instanceof RCylinder) {
@@ -3815,23 +3774,21 @@ public class WGUI implements ControlListener {
 
 			if (newDims[0] != null) {
 				// Update the cylinder's radius
-				s.setDim(newDims[0], DimType.RADIUS);
-				dimChanged = true;
+				dimChanged = updateDim(s, DimType.RADIUS, newDims[0]);
 			}
 
 			if (newDims[1] != null) {
 				// Update the cylinder's height
-				s.setDim(newDims[1], DimType.HEIGHT);
-				dimChanged = true;
+				boolean ret = updateDim(s, DimType.HEIGHT, newDims[1]);
+				dimChanged = dimChanged || ret;
 			}
 
 		} else if (s instanceof ComplexShape) {
 			Float[] newDims = getModelDimensions();
 
 			if (newDims[0] != null) {
-				// Update the model's scale value
-				s.setDim(newDims[0], DimType.SCALE);
-				dimChanged = true;
+				boolean ret = updateDim(s, DimType.SCALE, newDims[0]);
+				dimChanged = dimChanged || ret;
 			}
 		}
 
@@ -3845,6 +3802,36 @@ public class WGUI implements ControlListener {
 		}
 		
 		return null;
+	}
+	
+	/**
+	 * Validates the given value with the given shape's bound for the specified
+	 * dimension. If val is within the bounds for the dimension, then the
+	 * shape's dimensions is updated, otherwise an error message is displayed
+	 * in the UI.
+	 * 
+	 * @param s		The shape for which to validate the given value and update
+	 * 				if the value is valid
+	 * @param dim	The dimension with which the given value is associated
+	 * @param val	The given value for the specified dimension of the given
+	 * 				shape
+	 * @return		Whether or not the specified dimension of the given shape
+	 * 				is updated to the given value
+	 */
+	private boolean updateDim(RShape s, DimType dim, float val) {
+		float lbound = s.getDimLBound(dim);
+		float ubound = s.getDimUBound(dim);
+		
+		if (val < lbound || val > ubound) {
+			Fields.setMessage("The shape's %s must be within the range %4.5f and %4.5f",
+					dim.name().toLowerCase(), lbound, ubound);
+			return false;
+			
+		} else {
+			// Update the dimension
+			s.setDim(val, dim);
+			return true;
+		}
 	}
 
 	/**
@@ -3908,11 +3895,11 @@ public class WGUI implements ControlListener {
 			app.getRobotCamera().update(pos, rot, fov, aspect, clipNear, clipFar, br, exp);
 		}
 		catch (NumberFormatException NFEx) {
-			PApplet.println("Invalid number input!");
+			Fields.setMessage("Invalid number input!");
 
 		} 
 		catch (NullPointerException NPEx) {
-			PApplet.println("Missing parameter!");
+			Fields.setMessage("Missing parameter!");
 		}
 	}
 }

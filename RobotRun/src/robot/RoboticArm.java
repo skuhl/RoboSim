@@ -5,7 +5,7 @@ import java.util.Stack;
 
 import enums.AxesDisplay;
 import enums.CoordFrame;
-import enums.InstOp;
+import enums.InstUndoType;
 import frame.ToolFrame;
 import frame.UserFrame;
 import geom.BoundingBox;
@@ -23,7 +23,8 @@ import processing.core.PConstants;
 import processing.core.PGraphics;
 import processing.core.PVector;
 import programming.CamMoveToObject;
-import programming.InstState;
+import programming.InstElement;
+import programming.InstUndoState;
 import programming.Instruction;
 import programming.Macro;
 import programming.MotionInstruction;
@@ -102,7 +103,7 @@ public class RoboticArm {
 	/**
 	 * A stack of previous states of instructions that the user has since edited.
 	 */
-	private final Stack<InstState> PROG_UNDO;
+	private final Stack<InstUndoState> PROG_UNDO;
 	
 	/**
 	 * The data register associated with this robot.
@@ -181,7 +182,6 @@ public class RoboticArm {
 	 */
 	public RoboticArm(int rid, PVector basePos, MyPShape[] segmentModels,
 			MyPShape[] endEffectorModels, RTrace robotTrace) {
-		
 		
 		RID = rid;
 		liveSpeed = 10;
@@ -393,6 +393,40 @@ public class RoboticArm {
 	}
 	
 	/**
+	 * Adds the given instruction to the end of the given program's list of
+	 * instructions. This insertion is added to the undo stack.
+	 * 
+	 * @param p		The program, to which to add the given instruction
+	 * @param inst	The instruction to add to the given program
+	 * @param group	Whether to group the insertion undo state with previous
+	 * 				undo states
+	 */
+	public void addInstAtEnd(Program p, Instruction inst, boolean group) {
+		int idx = p.getNumOfInst();
+		addAt(p, idx, inst, group);
+	}
+	
+	/**
+	 * Adds the given instruction to the given program, if the given index is
+	 * within the bounds of the given program's list of instructions. This
+	 * insertion is added to the undo stack.
+	 * 
+	 * @param p		The program, to which to add the given instruction
+	 * @param idx	The index at which to add the given instruction in the
+	 * 				given program's list of instructions
+	 * @param inst	The instruction to add to the given program
+	 * @param group	Whether to group the insertion undo state with previous
+	 * 				undo states
+	 */
+	public void addAt(Program p, int idx, Instruction inst, boolean group) {
+		if (p != null && inst != null && idx >= 0 && idx <= p.getNumOfInst()) {
+			p.addInstAt(idx, inst);
+			pushUndoState(InstUndoType.INSERTED, p, idx, p.get(idx), group);
+		}
+	}
+	
+	
+	/**
 	 * Converts the given point, pt, into the Coordinate System defined by the
 	 * given origin vector and rotation quaternion axes. The joint angles
 	 * associated with the point will be transformed as well, though, if inverse
@@ -493,7 +527,6 @@ public class RoboticArm {
 		return 2;
 	}
 	
-
 	/**
 	 * Checks collisions between the bounding boxes of the robot's segments and
 	 * end effectors. The colors of the robot's bounding boxes are updated
@@ -517,7 +550,7 @@ public class RoboticArm {
 			BoundingBox oob1 = SEGMENT[SEG_OBB_CHECKS[cdx - 1]]
 					.OBBS[SEG_OBB_CHECKS[cdx]];
 			
-			if (Part.collision3D(oob0, oob1)) {
+			if (oob0.collision3D(oob1)) {
 				// Update OBB colors
 				oob0.setColor(Fields.OBB_COLLISION);
 				oob1.setColor(Fields.OBB_COLLISION);
@@ -535,7 +568,7 @@ public class RoboticArm {
 				BoundingBox segOBB = SEGMENT[EE_SEG_OBB_CHECKS[cdx - 1]]
 						.OBBS[EE_SEG_OBB_CHECKS[cdx]];
 				
-				if (Part.collision3D(obb, segOBB)) {
+				if (obb.collision3D(segOBB)) {
 					// Update OBB colors
 					obb.setColor(Fields.OBB_COLLISION);
 					segOBB.setColor(Fields.OBB_COLLISION);
@@ -543,7 +576,6 @@ public class RoboticArm {
 					selfCollision = true;
 				}
 			}
-			
 		}
 		
 		return selfCollision;
@@ -954,7 +986,7 @@ public class RoboticArm {
 	 * @return	The active end effector segment, or null if no end effector is
 	 * 			active
 	 */
-	public EndEffector getActiveEE() {
+	private EndEffector getActiveEE() {
 		return EE_LIST[activeEEIdx];
 	}
 	
@@ -1005,15 +1037,37 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Returns a copy of the secondary position of a position motion
+	 * instruction.
 	 * 
-	 * @param mInst
-	 * @param parent
+	 * @param mInst		The motion instruction, of which to get the associated
+	 * 					position
+	 * @param parent	The program, to which the given instruction belongs
 	 * @return			A copy of the position associated with the secondary
 	 * 					position of the given circular motion instruction
 	 */
 	public Point getCPosition(PosMotionInst mInst, Program parent) {
-		return getPosition(mInst.getCircPosIdx(), mInst.getCircPosType(), parent);
+		int pType = mInst.getCircPosType();
+		Point pt = null;
+		
+		if (pType == Fields.PTYPE_PREG) {
+			// The instruction references a global position register
+			PositionRegister pReg = getPReg(mInst.getCircPosIdx());
+			
+			if (pReg != null) {
+				pt = pReg.point;
+			}
+			
+		} else if (pType == Fields.PTYPE_PROG) {
+			pt = parent.getPosition(mInst.getCircPosIdx());
+		}
+		
+		if (pt != null) {
+			return pt.clone();
+		}
+		
+		// Uninitialized position or invalid position index
+		return null;
 	}
 	
 	/**
@@ -1077,9 +1131,9 @@ public class RoboticArm {
 		
 		// Convert the orientation into the correct format for a Point
 		PVector position = new PVector(
-				 (float)tipOrien.getEntry(0, 3),
-				 (float)tipOrien.getEntry(1, 3),
-				 (float)tipOrien.getEntry(2, 3)
+				 tipOrien.getEntryF(0, 3),
+				 tipOrien.getEntryF(1, 3),
+				 tipOrien.getEntryF(2, 3)
 		);
 		
 		RQuaternion orientation = RMath.matrixToQuat(tipOrien);
@@ -1125,15 +1179,21 @@ public class RoboticArm {
 	public Instruction getInstToEdit(Program p, int idx) {
 		// Valid active program and instruction index
 		if (p != null && idx >= 0 && idx < p.getNumOfInst()) {
-			Instruction inst = p.get(idx);
+			InstElement e = p.get(idx);
 			
-			pushInstState(InstOp.REPLACED, idx, inst.clone());
+			pushUndoState(InstUndoType.EDITED, p, idx, new InstElement(e.getID(),
+					e.getInst().clone()), false);
 			
-			if (Fields.DEBUG) {
-				//System.out.printf("\nEDIT %d %s\n\n", idx, inst.getClass());
+			/* TEST CODE *
+			try {
+				throw new RuntimeException();
+				
+			} catch (RuntimeException REx) {
+				REx.printStackTrace();
 			}
+			/**/
 			
-			return inst;
+			return e.getInst();
 		}
 		
 		return null;
@@ -1199,38 +1259,29 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Returns a copy of the primary position of the given position motion
+	 * instruction.
 	 * 
-	 * @param mInst
-	 * @param parent
-	 * @return			A copy of the point associated with the given motion
-	 * 					instruction
+	 * @param mInst		The motion instruction, of which to get its associated
+	 * 					primary position
+	 * @param parent	The program, to which the given instruction belongs
+	 * @return			A copy of the primary position associated with the
+	 * 					given motion instruction
 	 */
 	public Point getPosition(PosMotionInst mInst, Program parent) {
-		return getPosition(mInst.getPosIdx(), mInst.getPosType(), parent);
-	}
-	
-	/**
-	 * TODO comment this
-	 * 
-	 * @param posIdx
-	 * @param usePReg
-	 * @param parent
-	 * @return
-	 */
-	private Point getPosition(int posIdx, int pType, Program parent) {
+		int pType = mInst.getPosType();
 		Point pt = null;
 		
 		if (pType == Fields.PTYPE_PREG) {
 			// The instruction references a global position register
-			PositionRegister pReg = getPReg(posIdx);
+			PositionRegister pReg = getPReg(mInst.getPosIdx());
 			
 			if (pReg != null) {
 				pt = pReg.point;
 			}
 			
 		} else if (pType == Fields.PTYPE_PROG) {
-			pt = parent.getPosition(posIdx);
+			pt = parent.getPosition(mInst.getPosIdx());
 		}
 		
 		if (pt != null) {
@@ -1261,10 +1312,12 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Attempts to find the index of the program with the given name amongst
+	 * this Robot's programs. If no program with the given name exists, then
+	 * null is returned.
 	 * 
-	 * @param name
-	 * @return
+	 * @param name	The name of the target program
+	 * @return		The program with the given name, if it exists
 	 */
 	public int getProgIdx(String name) {
 		for (int idx = 0; idx < PROGRAM.size(); ++idx) {
@@ -1360,10 +1413,12 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Returns the default tool tip offset for the end effector with the given
+	 * index.
 	 * 
-	 * @param idx
-	 * @return
+	 * @param idx	The index of an end effector of this robot
+	 * @return		The default tool tip offset of the end effector associated
+	 * 				with the given index
 	 */
 	public PVector getToolTipDefault(int idx) {
 		if (idx >= 0 && idx < EE_TOOLTIP_DEFAULTS.length) {
@@ -1374,7 +1429,7 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * @return	The robot's tooltip position and orientatio with respect to the
+	 * @return	The robot's tool tip position and orientation with respect to the
 	 * 			active user frame
 	 */
 	public Point getToolTipUser() {
@@ -1491,7 +1546,7 @@ public class RoboticArm {
 		}
 		
 		if (pt == null) {
-			System.err.printf("Null position for %s\n", mInst);
+			Fields.debug("Null position for %s\n", mInst);
 			return null;
 		}
 		
@@ -1503,7 +1558,7 @@ public class RoboticArm {
 			
 			if (offReg == null || offReg.point == null) {
 				// Invalid offset
-				System.err.printf("Null offset PR[%d] for %s\n",
+				Fields.setMessage("Null offset PR[%d] for %s\n",
 						mInst.getOffsetIdx(), mInst);
 				
 				return null;
@@ -1528,7 +1583,7 @@ public class RoboticArm {
 				
 				if (jointAngles == null) {
 					// Inverse kinematics failure
-					System.err.printf("IK failure for %s\n", mInst);
+					Fields.debug("IK failure for %s\n", mInst);
 					return null;
 					
 				} else {
@@ -1548,7 +1603,7 @@ public class RoboticArm {
 				
 				if (jointAngles == null) {
 					// Inverse kinematics failure
-					System.err.printf("IK failure for %s\n", mInst);
+					Fields.setMessage("IK failure for %s\n", mInst);
 					return null;
 				}
 				// Apply the offset
@@ -1576,7 +1631,7 @@ public class RoboticArm {
 				
 				if (jointAngles == null) {
 					// Inverse kinematics failure
-					System.err.printf("IK failure for %s\n", mInst);
+					Fields.setMessage("IK failure for %s\n", mInst);
 					return null;
 					
 				} else {
@@ -1681,7 +1736,7 @@ public class RoboticArm {
 			if (!seg.anglePermitted(destAngles[joint])) {
 				invalidAngle = true;
 				
-				System.err.printf("Invalid angle: J[%d] = %4.3f -> %4.3f : [%4.3f - %4.3f]\n",
+				Fields.debug("Invalid angle: J[%d] = %4.3f -> %4.3f : [%4.3f - %4.3f]\n",
 						joint, getJointAngles()[joint], destAngles[joint], seg.LOW_BOUND,
 						seg.UP_BOUND);
 				break;
@@ -1692,7 +1747,7 @@ public class RoboticArm {
 		if ((destAngles == null) || invalidAngle) {
 			if (destAngles == null) {
 				Point RP = getToolTipNative();
-				System.err.printf("IK Failure ...\n%s -> %s\n%s -> %s\n\n",
+				Fields.debug("IK Failure ...\n%s -> %s\n%s -> %s\n\n",
 						RP.position, destPosition, RP.orientation,
 						destOrientation);
 			}
@@ -1729,32 +1784,33 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * If the robot's program undo stack is not empty, then the top
-	 * modification is popped off the stack and reverted in the active program.
-	 * 
-	 * @param the program associated with the undo functionality
+	 * Reverts the active program's undo states that have the same group ID as
+	 * the undo state on the top of the program undo stack.
 	 */
-	public void popInstructionUndo(Program p) {
+	public void undoProgramEdit() {
 		
 		if (!PROG_UNDO.isEmpty()) {
-			InstState state = PROG_UNDO.pop();
+			InstUndoState undoState = PROG_UNDO.pop();
+			undoState.undo();
 			
-			if (p != null) {
+			// Chain undo states with the same group
+			int gid = undoState.getGID();
+			
+			while (!PROG_UNDO.isEmpty()) {
+				undoState = PROG_UNDO.peek();
 				
-				if (state.operation == InstOp.REPLACED) {
-					// Replace the new instruction with the previous version
-					p.replaceInstAt(state.originIdx, state.inst);
-					
-				} else if (state.operation == InstOp.REMOVED) {
-					// Re-insert the removed instruction
-					p.addInstAt(state.originIdx, state.inst);
-					
-				} else {
-					Fields.debug("Invalid program state!\n", state);
+				if (undoState.getGID() != gid) {
+					break;
 				}
+				
+				/* TEST CODE *
+				Fields.debug("UNDO %s\n", undoState);
+				/**/
+				undoState.undo();
+				PROG_UNDO.pop();
 			}
 			
-		} else if (Fields.DEBUG) {
+		} else {
 			Fields.debug("Empty program undo stack!");
 		}
 	}
@@ -1781,20 +1837,45 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * Pushes the given instruction and instruction index onto the robot's
-	 * program undo stack. If the stack size exceeds the maximum undo size,
-	 * then the oldest undo is removed from the stack
+	 * Adds the undo state defined the given parameters to the program undo
+	 * stack.
 	 * 
-	 * @param idx	The index of the instruction in the active program
-	 * @param inst	The instruction of which to save the state
+	 * @param type	The undo state type (i.e. edit, remove, etc.)
+	 * @param idx	The index in the program of the modified instruction
+	 * @param prog	The program referenced by the undo state
+	 * @param inst	The instruction related to the undo state
+	 * @param group	Whether to group this undo state with previous undo states
 	 */
-	private void pushInstState(InstOp op, int idx, Instruction inst) {
+	private void pushUndoState(InstUndoType type, Program prog, int idx,
+			InstElement inst, boolean group) {
 		
-		if (PROG_UNDO.size() > 35) {
+		if (PROG_UNDO.size() >= Program.MAX_UNDO_SIZE) {
+			// Remove old unused undo states to make room for new undo states
 			PROG_UNDO.remove(0);
 		}
 		
-		PROG_UNDO.push(new InstState(op, idx, inst));
+		// Determine the group ID of the undo state
+		int gid;
+		
+		if (PROG_UNDO.isEmpty()) {
+			gid = 0;
+			
+		} else {
+			InstUndoState top = PROG_UNDO.peek();
+			
+			if ((top.getGID() == 1 && group) || (top.getGID() == 0 && !group)) {
+				gid = 1;
+				
+			} else {
+				gid = 0;
+			}
+		}
+		
+		InstUndoState undoState = new InstUndoState(type, gid, prog, idx, inst);
+		PROG_UNDO.push(undoState);
+		/* TEST CODE *
+		Fields.debug("%s\n", undoState);
+		/**/
 	}
 	
 	/**
@@ -1847,22 +1928,19 @@ public class RoboticArm {
 	 * 				instruction
 	 */
 	public Instruction replaceInstAt(Program p, int idx, Instruction inst) {
-		Instruction replaced = null;
-		
 		// Valid active program and instruction index
-		if (p != null && idx >= 0 && idx < p.getNumOfInst()) {	
-			replaced = p.replaceInstAt(idx, inst);
+		if (p != null && idx >= 0 && idx < p.getNumOfInst()) {
+			InstElement e = p.get(idx);
+			InstElement replaced = new InstElement(e.getID(), e.getInst());
+			p.replaceInstAt(idx, inst);
 			
 			if (replaced != null) {
-				pushInstState(InstOp.REPLACED, idx, replaced.clone());
-				
-				if (Fields.DEBUG) {
-					//System.out.printf("\nREPLACE %d %s\n\n", idx, inst.getClass());
-				}
+				pushUndoState(InstUndoType.REPLACED, p, idx, replaced, false);
+				return replaced.getInst();
 			}
 		}
 		
-		return replaced;
+		return null;
 	}
 	
 	/**
@@ -1898,26 +1976,27 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * A wrapper method for removing an instruction from the active program of
-	 * this robot. The removal is added onto the program undo stack for the
-	 * active program.
+	 * Removes the instruction associated wit the given index, if the given
+	 * index is valid index in the given program. The deletion is added to
+	 * the program undo stack as well.
 	 * 
 	 * @param p		The program to edit
-	 * @param idx	The index of the instruction to remove
-	 * @return		The instruction, which was removed
+	 * @param idx	The index of the instruction to be removed
+	 * @param group	Whether to group this deletion with previous deletions in
+	 * 				the undo stack
+	 * @return		The instruction that was removed
 	 */
-	public Instruction rmInstAt(Program p, int idx) {
-		Instruction removed = null;
-		
+	public Instruction rmInstAt(Program p, int idx, boolean group) {
 		if (p != null && idx >= 0 && idx < p.getNumOfInst()) {
-			removed = p.rmInstAt(idx);
+			InstElement e = p.rmInstAt(idx);
 			
-			if (removed != null) {
-				pushInstState(InstOp.REMOVED, idx, removed);
+			if (e != null) {
+				pushUndoState(InstUndoType.REMOVED,  p, idx, e, group);
+				return e.getInst();
 			}
 		}
 		
-		return removed;
+		return null;
 	}
 	
 	/**
@@ -1981,10 +2060,11 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Sets the offset of the tool frame with the given index to that of the
+	 * default tool tip with the other given index.
 	 * 
 	 * @param frameIdx	The index of the tool frame
-	 * @param defTipIdx	The index of a default tool tip offset
+	 * @param defTipIdx	The index of the default tool tip offset
 	 */
 	public void setDefToolTip(int frameIdx, int defTipIdx) {
 		ToolFrame frame = getToolFrame(frameIdx);
@@ -2045,13 +2125,24 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Initializes the motion defined by the given motion instruction and
+	 * program execution state.
 	 * 
-	 * @param prog
-	 * @param mInst
-	 * @param nextIdx
-	 * @param singleExec
-	 * @return
+	 * @param prog			The program, to which the given instruction belongs
+	 * @param mInst			The motion instruction, which defines the motion
+	 * @param nextIdx		The index of the next instruction in the given
+	 * 						program
+	 * @param singleExec	Whether or not the program execution type is
+	 * 						stepwise or not
+	 * @return				0 if the motion is successfully initialized,
+	 * 						1 if the active frames do not match those of the
+	 * 							given motion instruction,
+	 * 						2 if the motion instruction's position is invalid,
+	 * 						3 if the instruction is not a motion instruction
+	 * 							and the given instruction is a non-fine
+	 * 							termination instruction,
+	 * 						4 if the motion type of the given motion
+	 * 							instruction is invalid
 	 */
 	public int setupMInstMotion(Program prog, MotionInstruction mInst,
 			int nextIdx, boolean singleExec) {
@@ -2169,7 +2260,7 @@ public class RoboticArm {
 			}
 		}
 		
-		return 1;
+		return 2;
 	}
 	
 	@Override
@@ -2178,11 +2269,13 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Updates the direction of the jog axis for the robot's current motion. If
+	 * the robot's current motion is not jog motion, then the motion of the
+	 * robot is set to jog motion.
 	 * 
-	 * @param mdx
-	 * @param newDir
-	 * @return
+	 * @param mdx		The motion axis index
+	 * @param newDir	The new direction of motion
+	 * @return			The old direction of motion
 	 */
 	public int updateJogMotion(int mdx, int newDir) {
 		int oldDir;
@@ -2255,7 +2348,7 @@ public class RoboticArm {
 		ClassCastException, NullPointerException {
 		
 		if (newPt != null) {
-			PosMotionInst mInst = (PosMotionInst) p.get(instIdx);
+			PosMotionInst mInst = (PosMotionInst) p.getInstAt(instIdx);
 			int posNum = mInst.getCircPosIdx();
 			
 			if (mInst.getCircPosType() == Fields.PTYPE_PREG) {
@@ -2304,7 +2397,7 @@ public class RoboticArm {
 		ClassCastException, NullPointerException {
 		
 		if (newPt != null) {
-			PosMotionInst mInst = (PosMotionInst)p.get(instIdx);
+			PosMotionInst mInst = (PosMotionInst)p.getInstAt(instIdx);
 			int posNum = mInst.getPosIdx();
 			
 			if (mInst.getPosType() == Fields.PTYPE_PREG) {

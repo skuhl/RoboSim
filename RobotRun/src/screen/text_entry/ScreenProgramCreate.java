@@ -26,7 +26,7 @@ public class ScreenProgramCreate extends ST_ScreenTextEntry {
 				workingText.deleteCharAt(workingText.length() - 1);
 			}
 
-			int new_prog = r.addProgram(new Program(workingText.toString(), r));
+			int new_prog = r.addProgram(new Program(workingText.toString()));
 			robotRun.setActiveProgIdx(new_prog);
 			robotRun.setActiveInstIdx(0);
 

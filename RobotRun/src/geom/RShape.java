@@ -66,6 +66,50 @@ public abstract class RShape implements Cloneable {
 	public abstract float getDim(DimType dim);
 	
 	public abstract float[] getDimArray();
+	
+	/**
+	 * Returns the lower bound for the specified dimension, if one exists. If
+	 * no lower bound exists for this shape, then -1 is returned.
+	 * 
+	 * @param dim	The dimension for which to get the lower bound
+	 * @return		The lower bound for the given dimension or -1 if no lower
+	 * 				bound is specified
+	 */
+	public float getDimLBound(DimType dim) {
+		switch (dim) {
+		case LENGTH:
+		case HEIGHT:
+		case WIDTH:
+			return 10f;
+		case RADIUS:
+			return 5f;
+		// Scale bounds vary from model to model
+		default:
+			return -1f;
+		}
+	}
+	
+	/**
+	 * Returns the upper bound for the specified dimension, if one exists. If
+	 * no upper bound exists for this shape, then -1 is returned.
+	 * 
+	 * @param dim	The dimension for which to get the upper bound
+	 * @return		The upper bound for the given dimension or -1 if no upper
+	 * 				bound is specified
+	 */
+	public float getDimUBound(DimType dim) {
+		switch (dim) {
+		case LENGTH:
+		case HEIGHT:
+		case WIDTH:
+			return 1000f;
+		case RADIUS:
+			return 500f;
+		// Scale bounds vary from model to model
+		default:
+			return -1f;
+		}
+	}
 
 	/* Getters and Setters for shapes fill and stroke colors */
 

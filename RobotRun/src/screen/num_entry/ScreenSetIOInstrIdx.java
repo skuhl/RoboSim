@@ -1,6 +1,7 @@
 package screen.num_entry;
 
 import core.RobotRun;
+import global.Fields;
 import programming.IOInstruction;
 import robot.RoboticArm;
 import screen.ScreenMode;
@@ -24,16 +25,20 @@ public class ScreenSetIOInstrIdx extends ST_ScreenNumEntry {
 			int tempReg = Integer.parseInt(workingText.toString());
 
 			if (tempReg < 1 || tempReg >= r.numOfEndEffectors()) {
-				System.err.println("Invalid index!");
+				// Out of bounds
+				Fields.setMessage("The index must be within the range 1 and %d",
+						r.numOfEndEffectors() - 1);
 
 			} else {
 				IOInstruction ioInst = (IOInstruction) r.getInstToEdit(robotRun.getActiveProg(), 
 						robotRun.getActiveInstIdx());
 				ioInst.setReg(tempReg);
+				robotRun.lastScreen();
 			}
-		} catch (NumberFormatException NFEx) {/* Ignore invalid input */}
-
-		robotRun.lastScreen();
+			
+		} catch (NumberFormatException NFEx) {
+			// Ignore invalid input
+			errorMessage("The index must be an integer");
+		}
 	}
-
 }

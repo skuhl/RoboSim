@@ -116,6 +116,7 @@ public abstract class DataManagement {
 			}
 			
 			PrintWriter out = new PrintWriter(errLog);
+			out.append(Ex.getMessage());
 			Ex.printStackTrace(out);
 			out.close();
 			
@@ -252,7 +253,7 @@ public abstract class DataManagement {
 				out.write(System.lineSeparator());
 				
 				for(int j = 0; j < p.getNumOfInst(); j += 1) {
-					Instruction instr = p.get(j);
+					Instruction instr = p.getInstAt(j);
 					String[] text = instr.toStringArray();
 					
 					out.write((j + 1) + ") ");
@@ -750,7 +751,7 @@ public abstract class DataManagement {
 		
 		// Read program name
 		String name = in.readUTF();
-		Program prog = new Program(name, robot);
+		Program prog = new Program(name);
 		int nReg;
 
 		// Read in all the positions saved for the program
@@ -1133,7 +1134,6 @@ public abstract class DataManagement {
 				}
 				
 				MyPShape form = app.loadSTLModel(srcPath, fill);
-				
 				// Creates a complex shape from the srcPath located in RobotRun/data/
 				shape = new ComplexShape(srcPath, form, fill, scale);
 			}
@@ -1194,8 +1194,8 @@ public abstract class DataManagement {
 		for (int pdx = 0; pdx < robot.numOfPrograms(); ++pdx) {
 			Program p = robot.getProgram(pdx);
 			
-			for (int idx = 0; idx < p.size(); ++idx) {
-				Instruction inst = p.get(idx);
+			for (int idx = 0; idx < p.getNumOfInst(); ++idx) {
+				Instruction inst = p.getInstAt(idx);
 				
 				if (inst instanceof CallInstruction) {
 					// Update a top call instruction
@@ -1739,8 +1739,8 @@ public abstract class DataManagement {
 
 			out.writeInt(p.getNumOfInst());
 			// Save each instruction
-			for(Instruction inst : p) {
-				saveInstruction(inst, out);
+			for (int idx = 0; idx < p.getNumOfInst(); ++idx) {
+				saveInstruction(p.getInstAt(idx), out);
 			}
 		}
 	}

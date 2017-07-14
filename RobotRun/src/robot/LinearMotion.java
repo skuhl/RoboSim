@@ -25,7 +25,12 @@ public abstract class LinearMotion implements RobotMotion {
 
 	@Override
 	public abstract void halt();
-
+	
+	/**
+	 * Checks if the linear motion met a motion fault.
+	 * 
+	 * @return	Has this motion met a motion fault?
+	 */
 	public boolean hasFault() {
 		return motionFault;
 	}
@@ -33,6 +38,12 @@ public abstract class LinearMotion implements RobotMotion {
 	@Override
 	public abstract boolean hasMotion();
 	
+	/**
+	 * Sets the motion fault flag of this motion object to the given state. If
+	 * the given value is true, then all motion is halted.
+	 * 
+	 * @param newState	The new motion fault state
+	 */
 	public void setFault(boolean newState) {
 		motionFault = newState;
 		

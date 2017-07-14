@@ -2,7 +2,8 @@ package regs;
 import geom.Point;
 
 /**
- * TODO general comments
+ * An extension of the register class, which houses a point along with an
+ * associated comment.
  * 
  * @author Joshua Hooker and Vincent Druckte
  */

@@ -36,19 +36,18 @@ public class ScreenSetMotionInstrCIdx extends ST_ScreenNumEntry {
 			}
 
 			if (tempRegister < lbound || tempRegister > ubound) {
-				// Invalid register index
-				String err = String.format("Only registers %d-%d are valid!", lbound, ubound);
-				System.err.println(err);
+				// Out of bounds
+				errorMessage("The index must be within the range %d and %d",
+						lbound, ubound);
+				
+			} else {
+				pMInst.setCircPosIdx(tempRegister - 1);
 				robotRun.lastScreen();
-				return;
 			}
 			
-			pMInst.setCircPosIdx(tempRegister - 1);
 		} catch (NumberFormatException NFEx) {
-			String err = "Invalid entry!";
-			System.err.println(err);
+			// Not an integer
+			Fields.setMessage("Index must be an integer");
 		}
-		
-		robotRun.lastScreen();
 	}
 }

@@ -1,6 +1,7 @@
 package screen.num_entry;
 
 import core.RobotRun;
+import global.Fields;
 import screen.Screen;
 import screen.ScreenMode;
 import screen.ScreenState;
@@ -88,4 +89,26 @@ public abstract class ST_ScreenNumEntry extends Screen {
 
 	@Override
 	public void actionF5() {}
+	
+	/**
+	 * Renders the given message in the application UI and resets the working
+	 * text for this screen.
+	 * 
+	 * @param msg	The message to render in the application UI
+	 */
+	protected void errorMessage(String msg) {
+		Fields.setMessage(msg);
+		workingText = new StringBuilder("");
+		robotRun.updatePendantScreen();
+	}
+	
+	/**
+	 * Creates an error message from the given format String and arguments.
+	 * 
+	 * @param format
+	 * @param args
+	 */
+	protected void errorMessage(String format, Object... args) {
+		errorMessage( String.format(format, args) );
+	}
 }

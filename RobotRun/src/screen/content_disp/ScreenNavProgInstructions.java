@@ -580,7 +580,7 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 			}
 			
 		} catch (ArrayIndexOutOfBoundsException AIOOBEx) {
-			System.err.printf("Invalid expression index: %d!\n", selectIdx);
+			Fields.setMessage("Invalid expression index: %d!\n", selectIdx);
 		}
 	}
 	

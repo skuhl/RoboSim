@@ -57,6 +57,24 @@ public class ToolFrame extends Frame {
 	public PVector getTCPOffset() { return TCPOffset; }
 	
 	@Override
+	public boolean isComplete(int teachMethod) {
+		if (teachMethod == 0) {
+			// Check if all points are taught for the three point method
+			return TCPTeachPoints[0] != null && TCPTeachPoints[1] != null &&
+					TCPTeachPoints[2] != null;
+			
+		} else if (teachMethod == 1) {
+			// Check if all points are taught for the six point method
+			return axesTeachPoints[0] != null && axesTeachPoints[1] != null &&
+				   axesTeachPoints[2] != null && TCPTeachPoints[0] != null &&
+				   TCPTeachPoints[1] != null && TCPTeachPoints[2] != null;
+		}
+		
+		// Invalid teaching method flag
+		return false;
+	}
+	
+	@Override
 	public void reset() {
 		orientationOffset = new RQuaternion();
 		setPoint(null, 0);

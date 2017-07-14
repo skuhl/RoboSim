@@ -63,8 +63,7 @@ public class ScreenDirectEntryTool extends ST_ScreenPointEntry {
 
 				if (str.length() < 0) {
 					// No value entered
-					robotRun.updatePendantScreen();
-					System.err.println("All entries must have a value!");
+					errorMessage("All entries must have a value!");
 					return;
 				}
 
@@ -76,10 +75,10 @@ public class ScreenDirectEntryTool extends ST_ScreenPointEntry {
 
 			robotRun.createFrameDirectEntry(robotRun.teachFrame, inputs);
 			robotRun.lastScreen();
+			
 		} catch (NumberFormatException NFEx) {
-			// Invalid number
-			System.err.println("Entries must be real numbers!");
-			return;
+			// Not a real number
+			errorMessage("Entries must be real numbers!");
 		}
 	}
 	

@@ -2,6 +2,7 @@ package screen.num_entry;
 
 import core.RobotRun;
 import expression.OperandFloat;
+import global.RMath;
 import robot.RoboticArm;
 import screen.ScreenMode;
 
@@ -28,13 +29,11 @@ public class ScreenInputConst extends ST_ScreenNumEntry {
 			RoboticArm r = robotRun.getActiveRobot();
 			float data = Float.parseFloat(workingText.toString());
 			r.getInstToEdit(robotRun.getActiveProg(), robotRun.getActiveInstIdx());
-			((OperandFloat)robotRun.opEdit).setValue(data);
+			((OperandFloat)robotRun.opEdit).setValue(RMath.clamp(data, -9999f, 9999f));
+			robotRun.lastScreen();
 			
 		} catch (NumberFormatException e) {
-			//TODO report error to user
-			e.printStackTrace();
+			errorMessage("The constant must be a real number");
 		}
-
-		robotRun.lastScreen();
 	}
 }

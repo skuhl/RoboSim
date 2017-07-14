@@ -49,10 +49,13 @@ public class RSegment {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Checks if the given part's bounding box is intersecting with any of the
+	 * bounding boxes associated with this robot segment, returning the number
+	 * of boxes, with which the part's bounding box has intersections.
 	 * 
-	 * @param p
-	 * @return
+	 * @param p	The part with which to check for collisions
+	 * @return	The number of bounding boxes of this segment that intersect
+	 * 			with the given part's bounding box
 	 */
 	public int checkCollision(Part p) {
 		int ret = 0;
@@ -70,10 +73,13 @@ public class RSegment {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Checks if the given ray intersects with any of the bounding boxes
+	 * associated with this robot segment. The position of the closest (if any)
+	 * intersection between the given ray and a bounding box associated with
+	 * this robot segment is returned or null if no intersection exists.
 	 * 
-	 * @param ray
-	 * @return
+	 * @param ray	The ray with which to check for collisions
+	 * @return		The position of the closest intersection (if any)
 	 */
 	public PVector closestCollision(RRay ray) {
 		PVector closestCollPt = null;

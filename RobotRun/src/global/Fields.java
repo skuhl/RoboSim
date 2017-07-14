@@ -6,9 +6,11 @@ import processing.core.PConstants;
 import processing.core.PFont;
 import processing.core.PGraphics;
 import processing.core.PVector;
+import ui.MessageDisplay;
 
 /**
- * TODO general comments
+ * A collection of static methods and fields that are not directly linked to a
+ * single class file in RobotRun.
  * 
  * @author Vincent Druckte and Joshua Hooker
  */
@@ -183,6 +185,8 @@ public abstract class Fields {
 	 */
 	public static PFont small, medium, bond;
 	
+	public static final MessageDisplay msgSystem;
+	
 	/**
 	 * Initialize the static fields.
 	 */
@@ -244,6 +248,8 @@ public abstract class Fields {
 		small = null;
 		medium = null;
 		bond = null;
+		
+		msgSystem = new MessageDisplay();
 	}
 	
 	/**
@@ -294,68 +300,6 @@ public abstract class Fields {
 		System.out.printf("editDist(\"%s\", \"%s\") = %d\n", s1, s2, dist);
 		
 		/**/
-		
-	}
-	
-	/**
-	 * Applies the given coordinate system to the given graphics object.
-	 * 
-	 * @param g		The graphics object to transform
-	 * @param cs	The coordinate system to apply to g
-	 */
-	public static void transform(PGraphics g, CoordinateSystem cs) {
-		transform(g, cs.getOrigin(), cs.getAxes());
-	}
-	
-	/**
-	 * Applies the given rotation and translation to the graphics object.
-	 * 
-	 * @param g				The graphics object to transform
-	 * @param translation	The translation to apply to g
-	 * @param rotation		The rotation to apply to g
-	 */
-	public static void transform(PGraphics g, PVector translation, RMatrix rotation) {
-		
-		g.applyMatrix(
-				(float)rotation.getEntry(0, 0), (float)rotation.getEntry(0, 1), (float)rotation.getEntry(0, 2), translation.x,
-				(float)rotation.getEntry(1, 0), (float)rotation.getEntry(1, 1), (float)rotation.getEntry(1, 2), translation.y,
-				(float)rotation.getEntry(2, 0), (float)rotation.getEntry(2, 1), (float)rotation.getEntry(2, 2), translation.z,
-				0f, 0f, 0f, 1f
-		);
-		
-	}
-	
-	/**
-	 * TODO comment this
-	 * 
-	 * @param g
-	 * @param tMat
-	 */
-	public static void transform(PGraphics g, RMatrix tMat) {
-		
-		g.applyMatrix(
-				(float)tMat.getEntry(0, 0), (float)tMat.getEntry(0, 1), (float)tMat.getEntry(0, 2), (float)tMat.getEntry(0, 3),
-				(float)tMat.getEntry(1, 0), (float)tMat.getEntry(1, 1), (float)tMat.getEntry(1, 2), (float)tMat.getEntry(1, 3),
-				(float)tMat.getEntry(2, 0), (float)tMat.getEntry(2, 1), (float)tMat.getEntry(2, 2), (float)tMat.getEntry(2, 3),
-				(float)tMat.getEntry(3, 0), (float)tMat.getEntry(3, 1), (float)tMat.getEntry(3, 2), (float)tMat.getEntry(3, 3)
-		);
-		
-	}
-	
-	/**
-	 * Applies the given rotation to the graphics object.
-	 * 
-	 * @param g			The graphics object to rotate
-	 * @param rotation	The rotation to apply to g
-	 */
-	public static void rotate(PGraphics g, RMatrix rotation) {
-		
-		g.applyMatrix(
-				(float)rotation.getEntry(0, 0), (float)rotation.getEntry(0, 1), (float)rotation.getEntry(0, 2), 0f,
-				(float)rotation.getEntry(1, 0), (float)rotation.getEntry(1, 1), (float)rotation.getEntry(1, 2), 0f,
-				(float)rotation.getEntry(2, 0), (float)rotation.getEntry(2, 1), (float)rotation.getEntry(2, 2), 0f,
-				0f, 0f, 0f, 1f
-		);
 		
 	}
 	
@@ -423,53 +367,38 @@ public abstract class Fields {
 	}
 	
 	/**
-	 * Calculates the minimum edit distance (inserts, deletions, replacements)
-	 * to convert s1 into s2. This method is based off the one described on
-	 * this webiste:
+	 * Calls System.out.printf(format, args), if the field, DEBUG, is true.
 	 * 
-	 * http://www.geeksforgeeks.org/dynamic-programming-set-5-edit-distance/
-	 * 
-	 * @param s1	A non-null string
-	 * @param s2	Another non-null string
-	 * @return		The edit distance between s1 and s2
+	 * @param format	The format string
+	 * @param args		The arguments to print to standard out
 	 */
-	public static int editDistance(String s1, String s2) {
-		int[][] distSubprobs = new int[s1.length() + 1][s2.length() + 1];
-		
-		for (int idx1 = 0; idx1 <= s1.length(); ++idx1) {
-			
-			for (int idx2 = 0; idx2 <= s2.length(); ++idx2) {
-				
-				if (idx1 == 0) {
-					distSubprobs[idx1][idx2] = idx2;
-					
-				} else if (idx2 == 0) {
-					distSubprobs[idx1][idx2] = idx1;
-					
-				} else if (s1.charAt(idx1 - 1) == s2.charAt(idx2 - 1)) {
-					distSubprobs[idx1][idx2] = distSubprobs[idx1 - 1][idx2 - 1];
-					
-				} else {
-					distSubprobs[idx1][idx2] = 1 +
-							RMath.min(distSubprobs[idx1][idx2 - 1],
-								distSubprobs[idx1 - 1][idx2],
-								distSubprobs[idx1 - 1][idx2 - 1]);
-				}
-			}
-			
+	public static void debug(String format, Object... args) {
+		if (DEBUG) {
+			System.out.printf(format, args);
 		}
-		
-		return distSubprobs[s1.length()][s2.length()];
 	}
 	
 	/**
-	 * TODO comments this
+	 * Calls System.out.println(out), if the field, DEBUG, is true.
 	 * 
-	 * @param g
-	 * @param origin
-	 * @param axesVectors
-	 * @param axesLength
-	 * @param originColor
+	 * @param out	The string to print to standard out
+	 */
+	public static void debug(String out) {
+		if (DEBUG) {
+			System.out.println(out);
+		}
+	}
+	
+	/**
+	 * Draws the xyz coordinate axes defined by the given origin position and
+	 * axis vectors with the specified axis length and origin color.
+	 * 
+	 * @param g				The graphics object used to render the axes
+	 * @param origin		The origin position of the axes
+	 * @param axesVectors	The rotation matrix which defines the coordinate
+	 * 						system axes
+	 * @param axesLength	The render length of the axes
+	 * @param originColor	The color of the origin point
 	 */
 	public static void drawAxes(PGraphics g, PVector origin,
 			RMatrix axesVectors, float axesLength, int originColor) {
@@ -482,12 +411,15 @@ public abstract class Fields {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Draws the xyz coordinate axes of the given graphic object's current
+	 * coordinate system with the specified axis length and origin color.
 	 * 
-	 * @param axesLength	The length of the rendered axes
-	 * @param originColor	The color of the point of origin of the axes
+	 * @param axesLength	The render length of the axes
+	 * @param originColor	The color of the origin point
 	 */
-	public static void drawAxes(PGraphics g, float axesLength, int originColor) {
+	public static void drawAxes(PGraphics g, float axesLength,
+			int originColor) {
+		
 		g.pushStyle();
 		
 		// X axis
@@ -543,6 +475,46 @@ public abstract class Fields {
 	}
 	
 	/**
+	 * Calculates the minimum edit distance (inserts, deletions, replacements)
+	 * to convert s1 into s2. This method is based off the one described on
+	 * this webiste:
+	 * 
+	 * http://www.geeksforgeeks.org/dynamic-programming-set-5-edit-distance/
+	 * 
+	 * @param s1	A non-null string
+	 * @param s2	Another non-null string
+	 * @return		The edit distance between s1 and s2
+	 */
+	public static int editDistance(String s1, String s2) {
+		int[][] distSubprobs = new int[s1.length() + 1][s2.length() + 1];
+		
+		for (int idx1 = 0; idx1 <= s1.length(); ++idx1) {
+			
+			for (int idx2 = 0; idx2 <= s2.length(); ++idx2) {
+				
+				if (idx1 == 0) {
+					distSubprobs[idx1][idx2] = idx2;
+					
+				} else if (idx2 == 0) {
+					distSubprobs[idx1][idx2] = idx1;
+					
+				} else if (s1.charAt(idx1 - 1) == s2.charAt(idx2 - 1)) {
+					distSubprobs[idx1][idx2] = distSubprobs[idx1 - 1][idx2 - 1];
+					
+				} else {
+					distSubprobs[idx1][idx2] = 1 +
+							RMath.min(distSubprobs[idx1][idx2 - 1],
+								distSubprobs[idx1 - 1][idx2],
+								distSubprobs[idx1 - 1][idx2 - 1]);
+				}
+			}
+			
+		}
+		
+		return distSubprobs[s1.length()][s2.length()];
+	}
+	
+	/**
 	 * Calculates the square differences between the alpha, red, green, and
 	 * blue byte values in the 32-bit colors, c0 and c1.
 	 * 
@@ -589,6 +561,51 @@ public abstract class Fields {
 	}
 	
 	/**
+	 * Calls msgSystem.resetMessage().
+	 */
+	public static void resetMessage() {
+		msgSystem.resetMessage();
+	}
+	
+	/**
+	 * Applies the given rotation to the graphics object.
+	 * 
+	 * @param g			The graphics object to rotate
+	 * @param rotation	The rotation to apply to g
+	 */
+	public static void rotate(PGraphics g, RMatrix rotation) {
+		
+		g.applyMatrix(
+				rotation.getEntryF(0, 0), rotation.getEntryF(0, 1), rotation.getEntryF(0, 2), 0f,
+				rotation.getEntryF(1, 0), rotation.getEntryF(1, 1), rotation.getEntryF(1, 2), 0f,
+				rotation.getEntryF(2, 0), rotation.getEntryF(2, 1), rotation.getEntryF(2, 2), 0f,
+				0f, 0f, 0f, 1f
+		);
+		
+	}
+	
+	/**
+	 * Set the value of the message, shown in the mid to lower right portion
+	 * of the application window.
+	 * 
+	 * @param msg	The new message to be displayed
+	 */
+	public static void setMessage(String msg) {
+		msgSystem.setMessage(msg);
+	}
+	
+	/**
+	 * Set the value of the message, shown in the mid to lower right portion
+	 * of the application window.
+	 * 
+	 * @param format	The format of the message String
+	 * @param args		The arguments for the given format String
+	 */
+	public static void setMessage(String format, Object... args) {
+		msgSystem.setMessage( String.format(format, args) );
+	}
+	
+	/**
 	 * Creates a 2-element a string array, whose entries are formatted String
 	 * representations the given position and rotation.
 	 *
@@ -612,25 +629,48 @@ public abstract class Fields {
 	}
 	
 	/**
-	 * Calls System.out.printf(format, args), if the field, DEBUG, is true.
+	 * Applies the given coordinate system to the given graphics object.
 	 * 
-	 * @param format	The format string
-	 * @param args		The arguments to print to standard out
+	 * @param g		The graphics object to transform
+	 * @param cs	The coordinate system to apply to g
 	 */
-	public static void debug(String format, Object... args) {
-		if (DEBUG) {
-			System.out.printf(format, args);
-		}
+	public static void transform(PGraphics g, CoordinateSystem cs) {
+		transform(g, cs.getOrigin(), cs.getAxes());
 	}
 	
 	/**
-	 * Calls System.out.println(out), if the field, DEBUG, is true.
+	 * Applies the given rotation and translation to the graphics object.
 	 * 
-	 * @param out	The string to print to standard out
+	 * @param g				The graphics object to transform
+	 * @param translation	The translation to apply to g
+	 * @param rotation		The rotation to apply to g
 	 */
-	public static void debug(String out) {
-		if (DEBUG) {
-			System.out.println(out);
-		}
+	public static void transform(PGraphics g, PVector translation, RMatrix rotation) {
+		
+		g.applyMatrix(
+				rotation.getEntryF(0, 0), rotation.getEntryF(0, 1), rotation.getEntryF(0, 2), translation.x,
+				rotation.getEntryF(1, 0), rotation.getEntryF(1, 1), rotation.getEntryF(1, 2), translation.y,
+				rotation.getEntryF(2, 0), rotation.getEntryF(2, 1), rotation.getEntryF(2, 2), translation.z,
+				0f, 0f, 0f, 1f
+		);
+		
 	}
+	
+	/**
+	 * Applies the given transformation matrix to the given graphics object.
+	 * 
+	 * @param g		The graphics object to transform
+	 * @param tMat	The transformation matrict to apply
+	 */
+	public static void transform(PGraphics g, RMatrix tMat) {
+		
+		g.applyMatrix(
+				tMat.getEntryF(0, 0), tMat.getEntryF(0, 1), tMat.getEntryF(0, 2), tMat.getEntryF(0, 3),
+				tMat.getEntryF(1, 0), tMat.getEntryF(1, 1), tMat.getEntryF(1, 2), tMat.getEntryF(1, 3),
+				tMat.getEntryF(2, 0), tMat.getEntryF(2, 1), tMat.getEntryF(2, 2), tMat.getEntryF(2, 3),
+				tMat.getEntryF(3, 0), tMat.getEntryF(3, 1), tMat.getEntryF(3, 2), tMat.getEntryF(3, 3)
+		);
+		
+	}
+
 }

@@ -5,10 +5,11 @@ import java.util.Iterator;
 import java.util.regex.Pattern;
 
 import global.Fields;
-import processing.core.PApplet;
 
 /**
- * A storage class for a collection of objects with an associated name for the collection.
+ * Defines a set of world objects that are rendered in the same scene.
+ * 
+ * @author Joshua Hooker
  */
 public class Scenario implements Iterable<WorldObject>, Cloneable {
 	private boolean gravity;
@@ -104,9 +105,10 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 		if (newObject == null || objList.contains(newObject)) {
 			// Ignore nulls and duplicates
 			if (newObject == null) {
-				PApplet.println("New Object is null");
+				Fields.debug("New Object is null");
+				
 			} else {
-				PApplet.println("New Object is: " + newObject.getName());
+				Fields.debug("New Object is: " + newObject.getName());
 			}
 
 			return false;

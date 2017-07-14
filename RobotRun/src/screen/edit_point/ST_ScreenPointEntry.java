@@ -3,6 +3,7 @@ package screen.edit_point;
 import core.RobotRun;
 import geom.Point;
 import geom.RQuaternion;
+import global.Fields;
 import global.RMath;
 import processing.core.PVector;
 import screen.Screen;
@@ -53,6 +54,26 @@ public abstract class ST_ScreenPointEntry extends Screen {
 	@Override
 	protected void loadVars(ScreenState s) {
 		setScreenIndices(0, 1, 0, -1, 0);
+	}
+	
+	/**
+	 * Sets the application message to the given String.
+	 * 
+	 * @param msg	The message to render in the applicaiton UI
+	 */
+	protected void errorMessage(String msg) {
+		Fields.setMessage(msg);
+	}
+	
+	/**
+	 * Similar to errorMessage(String), except that this accepts a format
+	 * String and its arguments.
+	 * 
+	 * @param format	The format String
+	 * @param args		The arguments for the format String
+	 */
+	protected void errorMessage(String format, Object... args) {
+		errorMessage( String.format(format, args) );
 	}
 	
 	protected abstract void loadWorkingText();
@@ -114,7 +135,7 @@ public abstract class ST_ScreenPointEntry extends Screen {
 			return robotRun.getActiveRobot().getToolTipNative(inputs);
 		} catch (NumberFormatException NFEx) {
 			// Invalid input
-			System.err.println("Values must be real numbers!");
+			Fields.setMessage("Values must be real numbers!");
 			return null;
 		}
 	}

@@ -57,10 +57,11 @@ public class ScreenSetMotionInstrSpeed extends ST_ScreenNumEntry {
 			}
 			
 			m.setSpdMod(RMath.clamp(tempSpeed, 0.01f, 1f));
+			robotRun.lastScreen();
 			
-		} catch (NumberFormatException NFEx) {/*Invalid input*/}
-		
-		robotRun.lastScreen();
+		} catch (NumberFormatException NFEx) {
+			// Not a real number
+			errorMessage("The speed must be a real number");
+		}
 	}
-
 }

@@ -9,7 +9,8 @@ import processing.core.PVector;
 import robot.RoboticArm;
 
 /**
- * TODO general comments
+ * A collection of methods and fields that pertain to graphical transformations
+ * of elements rendered in the interface of the RobotRun application.
  * 
  * @author Vincent Druckte and Joshua Hooker
  */
@@ -57,16 +58,17 @@ public abstract class RMath {
 	 * @param rangeEnd
 	 *            the 'upper bounds' of the angle range to check
 	 */
-	public static boolean angleWithinBounds(float angleToVerify, float rangeStart, float rangeEnd) {
+	public static boolean angleWithinBounds(float angleToVerify,
+			float rangeStart, float rangeEnd) {
 
 		if (rangeStart < rangeEnd) {
 			// Joint range does not overlap TWO_PI
-			return (angleToVerify - rangeStart) > -0.0001f && (angleToVerify - rangeEnd) < 0.0001f;
-			// return angleToVerify >= rangeStart && angleToVerify <= rangeEnd;
+			return (angleToVerify - rangeStart) > -0.0001f &&
+					(angleToVerify - rangeEnd) < 0.0001f;
 		} else {
 			// Joint range overlaps TWO_PI
-			return !((angleToVerify - rangeEnd) > -0.0001f && (angleToVerify - rangeStart) < 0.0001f);
-			// return !(angleToVerify > rangeEnd && angleToVerify < rangeStart);
+			return !((angleToVerify - rangeEnd) > -0.0001f &&
+					(angleToVerify - rangeStart) < 0.0001f);
 		}
 	}
 	
@@ -655,6 +657,64 @@ public abstract class RMath {
 	}
 	
 	/**
+	 * Finds the maximum value amongst all given integer values.
+	 * 
+	 * @param args	A set of integer values
+	 * @return		The maximum amongst all values of args
+	 */
+	public static int max(int... args) {
+		
+		if (args == null || args.length == 0) {
+			// Because why not
+			return Integer.MAX_VALUE;
+			
+		} else if (args.length == 1) {
+			// No comparison needed
+			return args[0];
+		}
+		
+		// Find the maximum amongst all given values
+		int max = Integer.MIN_VALUE;
+		
+		for (int val : args) {
+			if (val > max) {
+				max = val;
+			}
+		}
+		
+		return max;
+	}
+	
+	/**
+	 * Finds the maximum value amongst all given float values.
+	 * 
+	 * @param args	A set of float values
+	 * @return		The maximum amongst all values of args
+	 */
+	public static float max(float... args) {
+		
+		if (args == null || args.length == 0) {
+			// Because why not
+			return Float.MAX_VALUE;
+			
+		} else if (args.length == 1) {
+			// No comparison needed
+			return args[0];
+		}
+		
+		// Find the maximum amongst all given values
+		float max = Float.MIN_VALUE;
+		
+		for (float val : args) {
+			if (val > max) {
+				max = val;
+			}
+		}
+		
+		return max;
+	}
+	
+	/**
 	 * Find the minimum value amongst all given integer values.
 	 * 
 	 * @param args	A set of integer values
@@ -676,6 +736,35 @@ public abstract class RMath {
 		int min = Integer.MAX_VALUE;
 		
 		for (int val : args) {
+			if (val < min) {
+				min = val;
+			}
+		}
+		
+		return min;
+	}
+	
+	/**
+	 * Finds the minimum value amongst all given float values.
+	 * 
+	 * @param args	A set of float values
+	 * @return		The minimum amongst all values of args
+	 */
+	public static float min(float... args) {
+		
+		if (args == null || args.length == 0) {
+			// Because why not
+			return Float.MIN_VALUE;
+			
+		} else if (args.length == 1) {
+			// No comparison needed
+			return args[0];
+		}
+		
+		// Find the minimum amongst all given values
+		float min = Float.MAX_VALUE;
+		
+		for (float val : args) {
 			if (val < min) {
 				min = val;
 			}
@@ -874,12 +963,12 @@ public abstract class RMath {
 		
 		PVector u = new PVector();
 		// Apply the rotation matrix to the given vector
-		u.x = (float)(rMat.getEntry(0, 0) * v.x + rMat.getEntry(1, 0) * v.y +
-						rMat.getEntry(2, 0) * v.z);
-		u.y = (float)(rMat.getEntry(0, 1) * v.x + rMat.getEntry(1, 1) * v.y +
-						rMat.getEntry(2, 1) * v.z);
-		u.z = (float)(rMat.getEntry(0, 2) * v.x + rMat.getEntry(1, 2) * v.y +
-						rMat.getEntry(2, 2) * v.z);
+		u.x = rMat.getEntryF(0, 0) * v.x + rMat.getEntryF(1, 0) * v.y +
+						rMat.getEntryF(2, 0) * v.z;
+		u.y = rMat.getEntryF(0, 1) * v.x + rMat.getEntryF(1, 1) * v.y +
+						rMat.getEntryF(2, 1) * v.z;
+		u.z = rMat.getEntryF(0, 2) * v.x + rMat.getEntryF(1, 2) * v.y +
+						rMat.getEntryF(2, 2) * v.z;
 		
 		return u;
 	}

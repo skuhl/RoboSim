@@ -4,7 +4,9 @@ import global.Fields;
 import robot.RoboticArm;
 
 /**
- * TODO general comments
+ * The traditional motion instruction defined by a primary and possibly
+ * secondary point. In addition, an offset can be specified for a position
+ * motion instruction.
  * 
  * @author Joshua Hooker
  */
@@ -51,7 +53,7 @@ public class PosMotionInst extends MotionInstruction {
 	
 	@Override
 	public PosMotionInst clone() {
-		return new PosMotionInst(com, motionType, posType, posIdx, circPosType,
+		return new PosMotionInst(isCommented, motionType, posType, posIdx, circPosType,
 				circPosIdx, spdModifier, termination, tFrameIdx, uFrameIdx,
 				offsetType, offRegIdx);
 	}

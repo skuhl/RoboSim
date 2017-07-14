@@ -1,6 +1,7 @@
 package screen.num_entry;
 
 import core.RobotRun;
+import global.Fields;
 import programming.RegisterStatement;
 import regs.PositionRegister;
 import robot.RoboticArm;
@@ -25,17 +26,21 @@ public class ScreenSetRegExprIdx2 extends ST_ScreenNumEntry {
 			int idx = Integer.parseInt(workingText.toString());
 
 			if (idx < 1 || idx > 6) {
-				System.err.println("Invalid position index!");
+				Fields.setMessage("Index must be within the range 1 and 6");
+				
 			} else {
 				RegisterStatement regStmt = (RegisterStatement) r.getInstToEdit(robotRun.getActiveProg(), 
 						robotRun.getActiveInstIdx());
 				if (regStmt.getReg() instanceof PositionRegister) {
 					regStmt.setPosIdx(idx - 1);
 				}
+				
+				robotRun.lastScreen();
 			}
-		} catch (NumberFormatException NFEx) {/* Ignore invalid input */}
-
-		robotRun.lastScreen();
+			
+		} catch (NumberFormatException NFEx) {
+			// Not an integer
+			errorMessage("Index must be an integer");
+		}
 	}
-
 }

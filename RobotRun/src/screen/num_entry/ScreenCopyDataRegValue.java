@@ -41,14 +41,14 @@ public class ScreenCopyDataRegValue extends ST_ScreenNumEntry {
 			regIdx = Integer.parseInt(workingText.toString()) - 1;
 			robotRun.getActiveRobot().getDReg(regIdx).value = robotRun.getActiveRobot().getDReg(itemIdx).value;
 			DataManagement.saveRobotData(robotRun.getActiveRobot(), 3);
+			robotRun.lastScreen();
 
 		} catch (NumberFormatException MFEx) {
-			System.err.println("Only real numbers are valid!");
+			errorMessage("Only real numbers are valid!");
+			
 		} catch (IndexOutOfBoundsException IOOBEx) {
-			System.err.println("Only positve integers between 1 and 100 are valid!");
+			errorMessage("Only positve integers between 1 and 100 are valid!");
 		}
-
-		robotRun.lastScreen();
 	}
 
 }

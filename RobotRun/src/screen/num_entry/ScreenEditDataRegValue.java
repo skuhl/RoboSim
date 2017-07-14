@@ -47,12 +47,15 @@ public class ScreenEditDataRegValue extends ST_ScreenNumEntry {
 				// Save inputed value
 				dReg.value = f;
 				DataManagement.saveRobotData(robotRun.getActiveRobot(), 3);
+				robotRun.lastScreen();
+				
+			} else {
+				System.err.printf("Index %d is not a value register index!\n", itemIdx);
 			}
+			
 		} catch (NumberFormatException NFEx) {
 			// Invalid input value
-			System.err.println("Value must be a real number!");
+			errorMessage("Value must be a real number");
 		}
-
-		robotRun.lastScreen();
 	}
 }
