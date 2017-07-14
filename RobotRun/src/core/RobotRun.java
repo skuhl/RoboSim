@@ -12,7 +12,6 @@ import enums.AxesDisplay;
 import enums.CoordFrame;
 import enums.ExecState;
 import enums.ExecType;
-import enums.WindowTab;
 import expression.Operand;
 import expression.Operator;
 import frame.Frame;
