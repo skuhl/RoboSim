@@ -1710,7 +1710,17 @@ public class RoboticArm {
 	public boolean isHeld(Part p) {
 		return p == heldPart;
 	}
-
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param idx
+	 * @return
+	 */
+	public boolean isMarcoSet(int idx) {
+		return macroKeyBinds[idx] != null;
+	}
+	
 	/**
 	 * Attempts to move the Robot to the given position and orientation from its current
 	 * position using Inverse Kinematics.

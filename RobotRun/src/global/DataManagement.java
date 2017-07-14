@@ -706,7 +706,7 @@ public abstract class DataManagement {
 				int robotID = dataIn.readInt();
 				int progIdx = dataIn.readInt();
 				int keyNum = dataIn.readInt();
-				Macro m = new Macro(isManual, robotID, progIdx, keyNum);
+				Macro m = new Macro(isManual, progIdx, robotID, keyNum);
 				
 				r.getMacroList().add(m);
 				
