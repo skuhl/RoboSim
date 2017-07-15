@@ -57,10 +57,15 @@ public class ComplexShape extends RShape {
 			throws IllegalArgumentException {
 		
 		super(fill, null);
-		model_id = RegisteredModels.modelIDList.get(filename);
-		model_family_id = RegisteredModels.modelFamilyList.get(model_id);
-		srcFilePath = filename;
+		if(RegisteredModels.modelIDList.get(filename) == null) {
+			model_id = RegisteredModels.ID_GENERIC;
+			model_family_id = RegisteredModels.ID_GENERIC;
+		} else {
+			model_id = RegisteredModels.modelIDList.get(filename);
+			model_family_id = RegisteredModels.modelFamilyList.get(model_id);
+		}
 		
+		srcFilePath = filename;
 		model = mdl;
 		
 		iniDimensions();

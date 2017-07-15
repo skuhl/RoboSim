@@ -1,8 +1,8 @@
 package programming;
+import expression.BoolMath;
 import expression.BooleanBinaryExpression;
 import expression.Expression;
 import expression.Operand;
-import expression.OperandBool;
 import expression.Operator;
 
 /**
@@ -63,8 +63,8 @@ public class IfStatement extends Instruction implements ExpressionEvaluation {
 	public int evalExpression() {
 		Operand<?> result = expr.evaluate();
 
-		if (result instanceof OperandBool) {
-			if (((OperandBool) result).getBoolValue()) {
+		if (result instanceof BoolMath) {
+			if (((BoolMath) result).getBoolValue()) {
 				return 0;
 			} else {
 				return 1;

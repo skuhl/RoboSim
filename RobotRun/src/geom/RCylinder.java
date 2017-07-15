@@ -1,4 +1,5 @@
 package geom;
+import camera.RegisteredModels;
 import core.RobotRun;
 import processing.core.PApplet;
 import processing.core.PConstants;
@@ -111,11 +112,11 @@ public class RCylinder extends RShape {
 
 	@Override
 	public int getID() {
-		return -1;
+		return RegisteredModels.ID_CYLINDER;
 	}
 	
 	@Override
 	public int getFamilyID() {
-		return -1;
+		return RegisteredModels.ID_CYLINDER;
 	}
 }

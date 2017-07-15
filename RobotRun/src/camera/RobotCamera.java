@@ -268,10 +268,14 @@ public class RobotCamera {
 		return new PVector((float)x, (float)y, (float)z);
 	}
 	
-	public boolean isObjectInScene(WorldObject proto, Scenario s) {
-		return matchTaughtObject(proto, s).size() != 0;
+	public boolean isObjectInFrame(int objIdx, Scenario scene) {
+		return matchTaughtObject(objIdx, scene).size() != 0;
 	}
 	
+	public boolean isObjectInFrame(WorldObject proto, Scenario s) {
+		return matchTaughtObject(proto, s).size() != 0;
+	}
+
 	/**
 	 * Examines a given WorldObject to determine whether it is recognized by the
 	 * camera based on how much of the object is in view, the camera's brightness
@@ -316,17 +320,17 @@ public class RobotCamera {
 			return false;
 		}
 	}
-
+	
 	public ArrayList<WorldObject> matchTaughtObject(int objIdx, Scenario scene) {
 		if(objIdx >= 0 && objIdx < taughtObjects.size()) {
 			WorldObject objProto = taughtObjects.get(objIdx);
 			return matchTaughtObject(objProto, scene);
 		}
 		else {
-			return null;
+			return new ArrayList<WorldObject>();
 		}
 	}
-	
+		
 	public ArrayList<WorldObject> matchTaughtObject(WorldObject objProto, Scenario scene) {
 		RMatrix objProtoOrient = objProto.getLocalOrientation();
 		
@@ -380,7 +384,7 @@ public class RobotCamera {
 		camOrient = RMath.eulerToQuat(o);
 		return this;
 	}
-		
+
 	public RobotCamera setOrientation(RQuaternion o) {
 		camOrient = o;
 		return this;
@@ -390,17 +394,7 @@ public class RobotCamera {
 		camPos = p;
 		return this;
 	}
-
-	public boolean taughtObjectInFrame(int objIdx, Scenario scene) {
-		ArrayList<WorldObject> objects = matchTaughtObject(objIdx, scene); 
-		if(objects != null && objects.size() > 0) {
-			return true;
-		}
-		else {
-			return false;
-		}
-	}
-	
+		
 	public ArrayList<WorldObject> teachObjectToCamera(Scenario scene) {
 		ArrayList<WorldObject> objs = getObjectsInFrame(scene);
 		WorldObject teachObj = null;
