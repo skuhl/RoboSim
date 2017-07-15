@@ -6,14 +6,18 @@ import screen.ScreenMode;
 import ui.DisplayLine;
 
 public class ScreenDirectEntryTool extends ST_ScreenPointEntry {
-
-	public ScreenDirectEntryTool(RobotRun r) {
+	
+	private ToolFrame teachFrame;
+	
+	public ScreenDirectEntryTool(RobotRun r, ToolFrame tFrame) {
 		super(ScreenMode.DIRECT_ENTRY_TOOL, r);
+		teachFrame = tFrame;
+		loadWorkingText();
 	}
 
 	@Override
 	protected String loadHeader() {
-		return String.format("TOOL %d: DIRECT ENTRY", robotRun.curFrameIdx + 1);
+		return "TOOL DIRECT ENTRY";
 	}
 
 	@Override
@@ -27,8 +31,7 @@ public class ScreenDirectEntryTool extends ST_ScreenPointEntry {
 	
 	@Override
 	protected void loadWorkingText() {
-		ToolFrame tool = robotRun.getActiveRobot().getToolFrame(robotRun.curFrameIdx);
-		String[][] entries = tool.directEntryStringArray();
+		String[][] entries = teachFrame.directEntryStringArray();
 		
 		for(int i = 0; i < entries.length; i += 1) {
 			prefixes[i] = entries[i][0];
@@ -73,7 +76,7 @@ public class ScreenDirectEntryTool extends ST_ScreenPointEntry {
 				inputs[val] = Math.max(-9999f, Math.min(inputs[val], 9999f));
 			}
 
-			robotRun.createFrameDirectEntry(robotRun.teachFrame, inputs);
+			robotRun.createFrameDirectEntry(teachFrame, inputs);
 			robotRun.lastScreen();
 			
 		} catch (NumberFormatException NFEx) {

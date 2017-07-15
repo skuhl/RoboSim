@@ -7,13 +7,16 @@ import screen.ScreenMode;
 
 public class ScreenUserFrameRename extends ST_ScreenTextEntry {
 
-	public ScreenUserFrameRename(RobotRun r) {
+	private UserFrame selectedFrame;
+	
+	public ScreenUserFrameRename(RobotRun r, UserFrame uFrame) {
 		super(ScreenMode.UFRAME_RENAME, r);
+		selectedFrame = uFrame;
 	}
 
 	@Override
 	protected String loadHeader() {
-		return String.format("USER %d: RENAME", robotRun.curFrameIdx + 1);
+		return "USER RENAME";
 	}
 
 	@Override
@@ -26,11 +29,9 @@ public class ScreenUserFrameRename extends ST_ScreenTextEntry {
 			}
 		}
 		
-		UserFrame uFrame = robotRun.getActiveRobot().getUserFrame(robotRun.curFrameIdx);
-		uFrame.setName(workingText.toString());
+		selectedFrame.setName(workingText.toString());
 		
 		DataManagement.saveRobotData(robotRun.getActiveRobot(), 1);
 		robotRun.lastScreen();
 	}
-
 }

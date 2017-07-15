@@ -1874,17 +1874,19 @@ public class RobotRun extends PApplet {
 	 * Method. Otherwise, the Frame is taught by either the 4-Point or 6-Point
 	 * Method based on if the Frame is a Tool Frame or a User Frame.
 	 * 
-	 * @param frame
-	 *            The frame to be taught
+	 * @param robot
+	 * 			
+	 * @param frameToTeach
+	 * 			The frame to be taught
 	 * @param method
-	 *            The method by which to each the new Frame
+	 * 			The method by which to each the new Frame
 	 */
-	public void createFrame(Frame frame, int method) {
-		if (teachFrame.setFrame(abs(method) % 2)) {
+	public void createFrame(Frame frameToTeach, int method) {
+		if (frameToTeach.setFrame(abs(method) % 2)) {
 			Fields.debug("Frame set: %d\n", curFrameIdx);
 
 			// Set new Frame
-			if (frame instanceof ToolFrame) {
+			if (frameToTeach instanceof ToolFrame) {
 				// Update the current frame of the Robot Arm
 				activeRobot.setActiveToolFrame(curFrameIdx);
 				DataManagement.saveRobotData(activeRobot, 2);
@@ -1930,9 +1932,6 @@ public class RobotRun extends PApplet {
 		taughtFrame.setDEOrientationOffset( RMath.wEulerToNQuat(wpr) );
 		taughtFrame.setFrame(2);
 
-		Fields.debug("\n\n%s\n%s\nFrame set: %d\n", origin.toString(),
-				wpr.toString(), curFrameIdx);
-
 		// Set New Frame
 		if (taughtFrame instanceof ToolFrame) {
 			// Update the current frame of the Robot Arm
@@ -1974,8 +1973,11 @@ public class RobotRun extends PApplet {
 				UI.updateJogButtons(jogMotion);
 			}
 			
-			if (teachFrame != null && screens.getActiveScreen() instanceof ST_ScreenTeachPoints) {
-				renderTeachPoints(teachFrame);
+			Screen activeScreen = getActiveScreen();
+			
+			if (activeScreen instanceof ST_ScreenTeachPoints) {
+				// Draw the teach points for the teach point method screens
+				((ST_ScreenTeachPoints) activeScreen).drawTeachPts(getGraphics());
 			}
 	
 			/* TESTING CODE: DRAW INTERMEDIATE POINTS *
@@ -3895,87 +3897,6 @@ public class RobotRun extends PApplet {
 
 			Fields.drawAxes(getGraphics(), origin, RMath.rMatToWorld(orientation),
 					500f, Fields.BLACK);
-		}
-	}
-	
-	/**
-	 * Renders the points associated with teaching the given frame based of the
-	 * given frame's type and the active pendant screen's type.
-	 * 
-	 * @param frame	The frame, of which to render the teach points
-	 */
-	private void renderTeachPoints(Frame frame) {
-		/* Determine how many points to render based off the given screen and
-		 * frame types */
-		Screen screen = screens.getActiveScreen();
-		int size = 0;
-		
-		if (frame instanceof ToolFrame) {
-			if (screen instanceof ScreenTeach3PtTool) {
-				size = 3;
-				
-			} else if (screen instanceof ScreenTeach6Pt) {
-				size = 6;
-			}
-			
-		} else if (frame instanceof UserFrame) {
-			if (screen instanceof ScreenTeach3PtUser) {
-				size = 3;
-				
-			} else if (screen instanceof ScreenTeach4Pt) {
-				size = 4;
-			}
-		}
-
-		for (int idx = 0; idx < size; ++idx) {
-			Point pt = teachFrame.getPoint(idx);
-			
-			if (pt != null) {
-				pushMatrix();
-				// Applies the point's position
-				translate(pt.position.x, pt.position.y, pt.position.z);
-
-				// Draw color-coded sphere for the point
-				noFill();
-				int pointColor = Fields.color(255, 0, 255);
-
-				if (teachFrame instanceof ToolFrame) {
-
-					if (idx < 3) {
-						// TCP teach points
-						pointColor = Fields.color(130, 130, 130);
-					} else if (idx == 3) {
-						// Orient origin point
-						pointColor = Fields.color(255, 130, 0);
-					} else if (idx == 4) {
-						// Axes X-Direction point
-						pointColor = Fields.color(255, 0, 0);
-					} else if (idx == 5) {
-						// Axes Y-Diretion point
-						pointColor = Fields.color(0, 255, 0);
-					}
-				} else if (teachFrame instanceof UserFrame) {
-
-					if (idx == 0) {
-						// Orient origin point
-						pointColor = Fields.color(255, 130, 0);
-					} else if (idx == 1) {
-						// Axes X-Diretion point
-						pointColor = Fields.color(255, 0, 0);
-					} else if (idx == 2) {
-						// Axes Y-Diretion point
-						pointColor = Fields.color(0, 255, 0);
-					} else if (idx == 3) {
-						// Axes Origin point
-						pointColor = Fields.color(0, 0, 255);
-					}
-				}
-
-				stroke(pointColor);
-				sphere(3);
-
-				popMatrix();
-			}
 		}
 	}
 	

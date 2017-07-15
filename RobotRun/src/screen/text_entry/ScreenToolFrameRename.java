@@ -6,14 +6,17 @@ import global.DataManagement;
 import screen.ScreenMode;
 
 public class ScreenToolFrameRename extends ST_ScreenTextEntry {
-
-	public ScreenToolFrameRename(RobotRun r) {
+	
+	private ToolFrame selectedFrame;
+	
+	public ScreenToolFrameRename(RobotRun r, ToolFrame tFrame) {
 		super(ScreenMode.TFRAME_RENAME, r);
+		selectedFrame = tFrame;
 	}
 
 	@Override
 	protected String loadHeader() {
-		return String.format("TOOL %d: RENAME", robotRun.curFrameIdx + 1);
+		return String.format("TOOL FRAME RENAME");
 	}
 
 	@Override
@@ -26,11 +29,9 @@ public class ScreenToolFrameRename extends ST_ScreenTextEntry {
 			}
 		}
 		
-		ToolFrame tFrame = robotRun.getActiveRobot().getToolFrame(robotRun.curFrameIdx);
-		tFrame.setName(workingText.toString());
+		selectedFrame.setName(workingText.toString());
 		
 		DataManagement.saveRobotData(robotRun.getActiveRobot(), 1);
 		robotRun.lastScreen();
 	}
-
 }

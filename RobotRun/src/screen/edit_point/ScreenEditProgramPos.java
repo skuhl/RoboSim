@@ -13,6 +13,7 @@ public class ScreenEditProgramPos extends ST_ScreenPointEntry {
 
 	public ScreenEditProgramPos(RobotRun r) {
 		super(ScreenMode.EDIT_PROG_POS, r);
+		loadWorkingText();
 	}
 
 	@Override

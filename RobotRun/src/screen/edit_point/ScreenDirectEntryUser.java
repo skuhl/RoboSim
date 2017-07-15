@@ -6,14 +6,18 @@ import screen.ScreenMode;
 import ui.DisplayLine;
 
 public class ScreenDirectEntryUser extends ST_ScreenPointEntry {
-
-	public ScreenDirectEntryUser(RobotRun r) {
+	
+	private UserFrame teachFrame;
+	
+	public ScreenDirectEntryUser(RobotRun r, UserFrame uFrame) {
 		super(ScreenMode.DIRECT_ENTRY_USER, r);
+		teachFrame = uFrame;
+		loadWorkingText();
 	}
 	
 	@Override
 	protected String loadHeader() {
-		return String.format("USER %d: DIRECT ENTRY", robotRun.curFrameIdx + 1);
+		return "USER DIRECT ENTRY";
 	}
 	
 	@Override
@@ -27,8 +31,7 @@ public class ScreenDirectEntryUser extends ST_ScreenPointEntry {
 	
 	@Override
 	protected void loadWorkingText() {
-		UserFrame user = robotRun.getActiveRobot().getUserFrame(robotRun.curFrameIdx);
-		String[][] entries = user.directEntryStringArray();
+		String[][] entries = teachFrame.directEntryStringArray();
 		
 		for(int i = 0; i < entries.length; i += 1) {
 			prefixes[i] = entries[i][0];
@@ -73,7 +76,7 @@ public class ScreenDirectEntryUser extends ST_ScreenPointEntry {
 				inputs[val] = Math.max(-9999f, Math.min(inputs[val], 9999f));
 			}
 
-			robotRun.createFrameDirectEntry(robotRun.teachFrame, inputs);
+			robotRun.createFrameDirectEntry(teachFrame, inputs);
 			robotRun.lastScreen();
 		} catch (NumberFormatException NFEx) {
 			// Not a real number

@@ -20,7 +20,6 @@ public abstract class ST_ScreenPointEntry extends Screen {
 		super(m, r);
 		workingText = new StringBuilder[6];
 		prefixes = new String[6];
-		loadWorkingText();
 	}
 	
 	@Override

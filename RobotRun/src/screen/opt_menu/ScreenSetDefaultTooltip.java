@@ -2,14 +2,19 @@ package screen.opt_menu;
 
 import core.RobotRun;
 import enums.CoordFrame;
+import frame.ToolFrame;
 import global.DataManagement;
+import processing.core.PVector;
 import robot.RoboticArm;
 import screen.ScreenMode;
 
 public class ScreenSetDefaultTooltip extends ST_ScreenOptionsMenu {
-
-	public ScreenSetDefaultTooltip(RobotRun r) {
+	
+	private ToolFrame selectedFrame;
+	
+	public ScreenSetDefaultTooltip(RobotRun r, ToolFrame tFrame) {
 		super(ScreenMode.SET_DEF_TOOLTIP, r);
+		selectedFrame = tFrame;
 	}
 
 	@Override
@@ -20,7 +25,7 @@ public class ScreenSetDefaultTooltip extends ST_ScreenOptionsMenu {
 	@Override
 	protected void loadContents() {
 		RoboticArm r = robotRun.getActiveRobot();
-		contents.setLines(loadFrameDetail(r, CoordFrame.TOOL, robotRun.curFrameIdx));
+		contents.setLines(loadFrameDetail(selectedFrame));
 	}
 
 	@Override
@@ -31,8 +36,9 @@ public class ScreenSetDefaultTooltip extends ST_ScreenOptionsMenu {
 	@Override
 	public void actionEntr() {
 		RoboticArm r = robotRun.getActiveRobot();
-		r.setDefToolTip(robotRun.curFrameIdx, options.getLineIdx());
-		r.setActiveToolFrame(robotRun.curFrameIdx);
+		// Set the offset of the frame to the specified default tool tip
+		PVector defToolTip = r.getToolTipDefault(options.getLineIdx());
+		selectedFrame.setTCPOffset(defToolTip.copy());
 		DataManagement.saveRobotData(robotRun.getActiveRobot(), 2);
 		robotRun.lastScreen();
 	}

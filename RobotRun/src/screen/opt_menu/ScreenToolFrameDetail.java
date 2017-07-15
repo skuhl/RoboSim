@@ -1,25 +1,30 @@
 package screen.opt_menu;
 
 import core.RobotRun;
-import enums.CoordFrame;
-import robot.RoboticArm;
+import frame.ToolFrame;
 import screen.ScreenMode;
 
 public class ScreenToolFrameDetail extends ST_ScreenOptionsMenu {
-
-	public ScreenToolFrameDetail(RobotRun r) {
+	
+	private ToolFrame selectedFrame;
+	
+	public ScreenToolFrameDetail(RobotRun r, ToolFrame tFrame) {
 		super(ScreenMode.TFRAME_DETAIL, r);
+		selectedFrame = tFrame;
+	}
+	
+	public ToolFrame getSelectedFrame() {
+		return selectedFrame;
 	}
 
 	@Override
 	protected String loadHeader() {
-		return String.format("TOOL %d: DETAIL", robotRun.curFrameIdx + 1);
+		return "TOOL FRAME DETAIL";
 	}
 
 	@Override
 	protected void loadContents() {
-		RoboticArm r = robotRun.getActiveRobot();
-		contents.setLines(loadFrameDetail(r, CoordFrame.TOOL, robotRun.curFrameIdx));
+		contents.setLines(loadFrameDetail(selectedFrame));
 	}
 	
 	@Override
@@ -41,7 +46,6 @@ public class ScreenToolFrameDetail extends ST_ScreenOptionsMenu {
 
 	@Override
 	public void actionEntr() {
-		robotRun.teachFrame = robotRun.getActiveRobot().getToolFrame(robotRun.curFrameIdx);
 		// Tool Frame teaching methods
 		if (options.getLineIdx() == 0) {
 			robotRun.nextScreen(ScreenMode.TEACH_3PT_TOOL);

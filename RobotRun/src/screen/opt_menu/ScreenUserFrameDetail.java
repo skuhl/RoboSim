@@ -1,25 +1,30 @@
 package screen.opt_menu;
 
 import core.RobotRun;
-import enums.CoordFrame;
-import robot.RoboticArm;
+import frame.UserFrame;
 import screen.ScreenMode;
 
 public class ScreenUserFrameDetail extends ST_ScreenOptionsMenu {
-
-	public ScreenUserFrameDetail(RobotRun r) {
+	
+	private UserFrame selectedFrame;
+	
+	public ScreenUserFrameDetail(RobotRun r, UserFrame uFrame) {
 		super(ScreenMode.UFRAME_DETAIL, r);
+		selectedFrame = uFrame;
+	}
+	
+	public UserFrame getSelectedFrame() {
+		return selectedFrame;
 	}
 
 	@Override
 	protected String loadHeader() {
-		return String.format("USER %d: DETAIL", robotRun.curFrameIdx + 1);
+		return "USER FRAME DETAIL";
 	}
 
 	@Override
 	protected void loadContents() {
-		RoboticArm r = robotRun.getActiveRobot();
-		contents.setLines(loadFrameDetail(r, CoordFrame.USER, robotRun.curFrameIdx));
+		contents.setLines(loadFrameDetail(selectedFrame));
 	}
 	
 	@Override
@@ -42,11 +47,12 @@ public class ScreenUserFrameDetail extends ST_ScreenOptionsMenu {
 	@Override
 	public void actionEntr() {
 		// User Frame teaching methods
-		robotRun.teachFrame = robotRun.getActiveRobot().getUserFrame(robotRun.curFrameIdx);
 		if (options.getLineIdx() == 0) {
 			robotRun.nextScreen(ScreenMode.TEACH_3PT_USER);
+			
 		} else if (options.getLineIdx() == 1) {
 			robotRun.nextScreen(ScreenMode.TEACH_4PT);
+			
 		} else if (options.getLineIdx() == 2) {
 			robotRun.nextScreen(ScreenMode.DIRECT_ENTRY_USER);
 		}

@@ -12,7 +12,7 @@ public class ScreenEditPosReg extends ST_ScreenPointEntry {
 
 	public ScreenEditPosReg(RobotRun r) {
 		super(ScreenMode.EDIT_PREG, r);
-		
+		loadWorkingText();
 	}
 	
 	@Override

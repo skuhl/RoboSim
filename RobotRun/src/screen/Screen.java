@@ -210,37 +210,34 @@ public abstract class Screen {
 	}
 	
 	/**
-	 * TODO
+	 * TODO comment this
 	 * 
-	 * @param r
-	 * @param coordFrame
-	 * @param fdx
+	 * @param tFrame
 	 * @return
 	 */
-	public ArrayList<DisplayLine> loadFrameDetail(RoboticArm r,
-			CoordFrame coordFrame, int fdx) {
-		
+	public ArrayList<DisplayLine> loadFrameDetail(ToolFrame tFrame) {
 		ArrayList<DisplayLine> lines = new ArrayList<>();
-		Frame f = null;
+		String[] fields = tFrame.toLineStringArray();
 		
-		if (coordFrame == CoordFrame.TOOL) {
-			f = r.getToolFrame(fdx);
-			
-		} else if (coordFrame == CoordFrame.USER) {
-			f = r.getUserFrame(fdx);
+		for (String field : fields) {
+			lines.add(new DisplayLine(-1, 0, field));
 		}
 		
-		if (f != null) {
-			String[] fields = f.toLineStringArray();
-			
-			for (String field : fields) {
-				lines.add(new DisplayLine(-1, 0, field));
-			}
-			
-		} else {
-			// Invalid coordFrame or frame index
-			lines.add(new DisplayLine(-1, 0, String.format("CoordFrame=%s", coordFrame) ));
-			lines.add(new DisplayLine(-1, 0, String.format("Frame Index=%d", fdx) ));
+		return lines;
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param uFrame
+	 * @return
+	 */
+	public ArrayList<DisplayLine> loadFrameDetail(UserFrame uFrame) {
+		ArrayList<DisplayLine> lines = new ArrayList<>();
+		String[] fields = uFrame.toLineStringArray();
+		
+		for (String field : fields) {
+			lines.add(new DisplayLine(-1, 0, field));
 		}
 		
 		return lines;
