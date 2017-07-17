@@ -3029,7 +3029,7 @@ public class WGUI implements ControlListener {
 
 		WorldObject o = (WorldObject)getDropdown("CamObjects").getSelectedItem();
 		if(o != null) {
-			PGraphics preview = ((ComplexShape)o.getForm()).getModelPreview(o.getLocalOrientation());
+			PGraphics preview = o.getForm().getModelPreview(o.getLocalOrientation());
 			getButton(WGUI_Buttons.CamObjPreview).setImage(preview);
 			getButton(WGUI_Buttons.CamObjPreview).show();
 		}
