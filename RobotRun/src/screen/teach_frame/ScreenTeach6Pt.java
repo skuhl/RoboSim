@@ -7,30 +7,32 @@ import frame.ToolFrame;
 import geom.Point;
 import processing.core.PGraphics;
 import processing.core.PVector;
+import robot.RoboticArm;
 import screen.ScreenMode;
 import ui.DisplayLine;
 
 public class ScreenTeach6Pt extends ST_ScreenTeachPoints {
 	
-	private ToolFrame teachFrame;
-	
-	public ScreenTeach6Pt(RobotRun r, ToolFrame tFrame) {
-		super(ScreenMode.TEACH_6PT, r);
-		teachFrame = tFrame;
+	public ScreenTeach6Pt(RobotRun r, int tFrameIdx) {
+		super(ScreenMode.TEACH_6PT, String.format("TOOL: %d 6PT METHOD",
+				tFrameIdx + 1), r, tFrameIdx);
 	}
 
 	@Override
 	protected String loadHeader() {
-		return "TOOL 6PT METHOD";
+		return "";
 	}
 
 	@Override
 	protected void loadContents() {
-		contents.setLines(loadFrameDetail(teachFrame));
+		RoboticArm r = robotRun.getActiveRobot();
+		contents.setLines(loadFrameDetail(r.getToolFrame(frameIdx)));
 	}
 
 	@Override
 	protected void loadOptions() {
+		RoboticArm r = robotRun.getActiveRobot();
+		ToolFrame teachFrame = r.getToolFrame(frameIdx);
 		ArrayList<DisplayLine> lines = new ArrayList<>();
 		
 		String out = (teachFrame.getPoint(0) == null) ? "UNINIT" : "RECORDED";
@@ -56,12 +58,18 @@ public class ScreenTeach6Pt extends ST_ScreenTeachPoints {
 
 	@Override
 	public void actionEntr() {
-		robotRun.createFrame(teachFrame, 1);
+		RoboticArm r = robotRun.getActiveRobot();
+		ToolFrame teachFrame = r.getToolFrame(frameIdx);
+		// TODO refactor this
+		teachFrame.setFrame(2);
+		
 		robotRun.lastScreen();
 	}
 
 	@Override
 	public void drawTeachPts(PGraphics g) {
+		RoboticArm r = robotRun.getActiveRobot();
+		ToolFrame teachFrame = r.getToolFrame(frameIdx);
 		g.pushStyle();
 		g.noFill();
 		
@@ -84,16 +92,25 @@ public class ScreenTeach6Pt extends ST_ScreenTeachPoints {
 
 	@Override
 	public Point getTeachPoint(int idx) {
+		RoboticArm r = robotRun.getActiveRobot();
+		ToolFrame teachFrame = r.getToolFrame(frameIdx);
+		
 		return teachFrame.getPoint(idx);
 	}
 
 	@Override
 	public boolean readyToTeach() {
+		RoboticArm r = robotRun.getActiveRobot();
+		ToolFrame teachFrame = r.getToolFrame(frameIdx);
+		
 		return teachFrame.isComplete(1);
 	}
 
 	@Override
 	public void setTeachPoint(Point pt, int idx) {
+		RoboticArm r = robotRun.getActiveRobot();
+		ToolFrame teachFrame = r.getToolFrame(frameIdx);
+		
 		teachFrame.setPoint(pt, idx);
 	}
 }

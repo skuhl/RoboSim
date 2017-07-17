@@ -2,22 +2,24 @@ package screen.edit_point;
 
 import core.RobotRun;
 import frame.UserFrame;
+import robot.RoboticArm;
 import screen.ScreenMode;
 import ui.DisplayLine;
 
 public class ScreenDirectEntryUser extends ST_ScreenPointEntry {
 	
-	private UserFrame teachFrame;
+	private int frameIdx;
 	
-	public ScreenDirectEntryUser(RobotRun r, UserFrame uFrame) {
-		super(ScreenMode.DIRECT_ENTRY_USER, r);
-		teachFrame = uFrame;
+	public ScreenDirectEntryUser(RobotRun r, int frameIdx) {
+		super(ScreenMode.DIRECT_ENTRY_USER, String.format("USER: %d DIRECT",
+				frameIdx + 1), r);
+		this.frameIdx = frameIdx;
 		loadWorkingText();
 	}
 	
 	@Override
 	protected String loadHeader() {
-		return "USER DIRECT ENTRY";
+		return "";
 	}
 	
 	@Override
@@ -31,6 +33,8 @@ public class ScreenDirectEntryUser extends ST_ScreenPointEntry {
 	
 	@Override
 	protected void loadWorkingText() {
+		RoboticArm r = robotRun.getActiveRobot();
+		UserFrame teachFrame = r.getUserFrame(frameIdx);
 		String[][] entries = teachFrame.directEntryStringArray();
 		
 		for(int i = 0; i < entries.length; i += 1) {
@@ -41,6 +45,8 @@ public class ScreenDirectEntryUser extends ST_ScreenPointEntry {
 	
 	@Override
 	public void actionEntr() {
+		RoboticArm r = robotRun.getActiveRobot();
+		UserFrame teachFrame = r.getUserFrame(frameIdx);
 		// User defined x, y, z, w, p, and r values
 		float[] inputs = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
 

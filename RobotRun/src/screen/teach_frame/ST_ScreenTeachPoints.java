@@ -12,8 +12,18 @@ import screen.ScreenState;
 
 public abstract class ST_ScreenTeachPoints extends Screen {
 	
-	public ST_ScreenTeachPoints(ScreenMode m, RobotRun r) {
+	protected int frameIdx;
+	
+	public ST_ScreenTeachPoints(ScreenMode m, RobotRun r, int frameIdx) {
 		super(m, r);
+		this.frameIdx = frameIdx;
+	}
+	
+	public ST_ScreenTeachPoints(ScreenMode m, String header, RobotRun r,
+			int frameIdx) {
+		
+		super(m, header, r);
+		this.frameIdx = frameIdx;
 	}
 	
 	@Override

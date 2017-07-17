@@ -7,30 +7,32 @@ import frame.UserFrame;
 import geom.Point;
 import processing.core.PGraphics;
 import processing.core.PVector;
+import robot.RoboticArm;
 import screen.ScreenMode;
 import ui.DisplayLine;
 
 public class ScreenTeach4Pt extends ST_ScreenTeachPoints {
 	
-	private UserFrame teachFrame;
-	
-	public ScreenTeach4Pt(RobotRun r, UserFrame uFrame) {
-		super(ScreenMode.TEACH_4PT, r);
-		teachFrame = uFrame;
+	public ScreenTeach4Pt(RobotRun r, int uFrameIdx) {
+		super(ScreenMode.TEACH_4PT, String.format("USER: %d 4PT METHOD",
+				uFrameIdx + 1), r, uFrameIdx);
 	}
 
 	@Override
 	protected String loadHeader() {
-		return "USER 4PT METHOD";
+		return "";
 	}
 
 	@Override
 	protected void loadContents() {
-		contents.setLines(loadFrameDetail(teachFrame));
+		RoboticArm r = robotRun.getActiveRobot();
+		contents.setLines(loadFrameDetail(r.getUserFrame(frameIdx)));
 	}
 
 	@Override
 	protected void loadOptions() {
+		RoboticArm r = robotRun.getActiveRobot();
+		UserFrame teachFrame = r.getUserFrame(frameIdx);
 		ArrayList<DisplayLine> lines = new ArrayList<>();
 		
 		String out = (teachFrame.getPoint(0) == null) ? "UNINIT" : "RECORDED";
@@ -50,12 +52,18 @@ public class ScreenTeach4Pt extends ST_ScreenTeachPoints {
 
 	@Override
 	public void actionEntr() {
-		robotRun.createFrame(teachFrame, 1);
+		RoboticArm r = robotRun.getActiveRobot();
+		UserFrame teachFrame = r.getUserFrame(frameIdx);
+		// TODO refactor this
+		teachFrame.setFrame(1);
+		
 		robotRun.lastScreen();
 	}
 
 	@Override
 	public void drawTeachPts(PGraphics g) {
+		RoboticArm r = robotRun.getActiveRobot();
+		UserFrame teachFrame = r.getUserFrame(frameIdx);
 		g.pushStyle();
 		g.noFill();
 		
@@ -78,16 +86,25 @@ public class ScreenTeach4Pt extends ST_ScreenTeachPoints {
 
 	@Override
 	public Point getTeachPoint(int idx) {
+		RoboticArm r = robotRun.getActiveRobot();
+		UserFrame teachFrame = r.getUserFrame(frameIdx);
+		
 		return teachFrame.getPoint(idx);
 	}
 
 	@Override
 	public boolean readyToTeach() {
+		RoboticArm r = robotRun.getActiveRobot();
+		UserFrame teachFrame = r.getUserFrame(frameIdx);
+		
 		return teachFrame.isComplete(1);
 	}
 
 	@Override
 	public void setTeachPoint(Point pt, int idx) {
+		RoboticArm r = robotRun.getActiveRobot();
+		UserFrame teachFrame = r.getUserFrame(frameIdx);
+		
 		teachFrame.setPoint(pt, idx);
 	}
 }

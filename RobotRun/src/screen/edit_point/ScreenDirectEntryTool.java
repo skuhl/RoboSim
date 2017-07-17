@@ -2,22 +2,24 @@ package screen.edit_point;
 
 import core.RobotRun;
 import frame.ToolFrame;
+import robot.RoboticArm;
 import screen.ScreenMode;
 import ui.DisplayLine;
 
 public class ScreenDirectEntryTool extends ST_ScreenPointEntry {
 	
-	private ToolFrame teachFrame;
+	private int frameIdx;
 	
-	public ScreenDirectEntryTool(RobotRun r, ToolFrame tFrame) {
-		super(ScreenMode.DIRECT_ENTRY_TOOL, r);
-		teachFrame = tFrame;
+	public ScreenDirectEntryTool(RobotRun r, int frameIdx) {
+		super(ScreenMode.DIRECT_ENTRY_TOOL, String.format("TOOL: %d DIRECT",
+				frameIdx + 1), r);
+		this.frameIdx = frameIdx;
 		loadWorkingText();
 	}
 
 	@Override
 	protected String loadHeader() {
-		return "TOOL DIRECT ENTRY";
+		return "";
 	}
 
 	@Override
@@ -31,6 +33,8 @@ public class ScreenDirectEntryTool extends ST_ScreenPointEntry {
 	
 	@Override
 	protected void loadWorkingText() {
+		RoboticArm r = robotRun.getActiveRobot();
+		ToolFrame teachFrame = r.getToolFrame(frameIdx);
 		String[][] entries = teachFrame.directEntryStringArray();
 		
 		for(int i = 0; i < entries.length; i += 1) {
@@ -41,6 +45,8 @@ public class ScreenDirectEntryTool extends ST_ScreenPointEntry {
 	
 	@Override
 	public void actionEntr() {
+		RoboticArm r = robotRun.getActiveRobot();
+		ToolFrame teachFrame = r.getToolFrame(frameIdx);
 		// User defined x, y, z, w, p, and r values
 		float[] inputs = new float[6];
 
@@ -75,7 +81,7 @@ public class ScreenDirectEntryTool extends ST_ScreenPointEntry {
 				// Bring within range of values
 				inputs[val] = Math.max(-9999f, Math.min(inputs[val], 9999f));
 			}
-
+			
 			robotRun.createFrameDirectEntry(teachFrame, inputs);
 			robotRun.lastScreen();
 			

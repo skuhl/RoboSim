@@ -1,30 +1,32 @@
 package screen.opt_menu;
 
 import core.RobotRun;
-import frame.UserFrame;
+import robot.RoboticArm;
 import screen.ScreenMode;
 
 public class ScreenUserFrameDetail extends ST_ScreenOptionsMenu {
 	
-	private UserFrame selectedFrame;
+	private int frameIdx;
 	
-	public ScreenUserFrameDetail(RobotRun r, UserFrame uFrame) {
-		super(ScreenMode.UFRAME_DETAIL, r);
-		selectedFrame = uFrame;
+	public ScreenUserFrameDetail(RobotRun r, int frameIdx) {
+		super(ScreenMode.UFRAME_DETAIL, String.format("USER: %d DETAIL",
+				frameIdx + 1), r);
+		this.frameIdx = frameIdx;
 	}
 	
-	public UserFrame getSelectedFrame() {
-		return selectedFrame;
+	public int getFrameIdx() {
+		return frameIdx;
 	}
 
 	@Override
 	protected String loadHeader() {
-		return "USER FRAME DETAIL";
+		return "";
 	}
 
 	@Override
 	protected void loadContents() {
-		contents.setLines(loadFrameDetail(selectedFrame));
+		RoboticArm r = robotRun.getActiveRobot();
+		contents.setLines(loadFrameDetail(r.getUserFrame(frameIdx)));
 	}
 	
 	@Override

@@ -3,20 +3,21 @@ package screen.text_entry;
 import core.RobotRun;
 import frame.UserFrame;
 import global.DataManagement;
+import robot.RoboticArm;
 import screen.ScreenMode;
 
 public class ScreenUserFrameRename extends ST_ScreenTextEntry {
 
-	private UserFrame selectedFrame;
+	private int frameIdx;
 	
-	public ScreenUserFrameRename(RobotRun r, UserFrame uFrame) {
+	public ScreenUserFrameRename(RobotRun r, int frameIdx) {
 		super(ScreenMode.UFRAME_RENAME, r);
-		selectedFrame = uFrame;
+		this.frameIdx = frameIdx;
 	}
 
 	@Override
 	protected String loadHeader() {
-		return "USER RENAME";
+		return String.format("USER: %d RENAME", frameIdx);
 	}
 
 	@Override
@@ -29,6 +30,8 @@ public class ScreenUserFrameRename extends ST_ScreenTextEntry {
 			}
 		}
 		
+		RoboticArm r = robotRun.getActiveRobot();
+		UserFrame selectedFrame = r.getUserFrame(frameIdx);
 		selectedFrame.setName(workingText.toString());
 		
 		DataManagement.saveRobotData(robotRun.getActiveRobot(), 1);

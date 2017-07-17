@@ -22,6 +22,12 @@ public abstract class ST_ScreenPointEntry extends Screen {
 		prefixes = new String[6];
 	}
 	
+	public ST_ScreenPointEntry(ScreenMode m, String header, RobotRun r) {
+		super(m, header, r);
+		workingText = new StringBuilder[6];
+		prefixes = new String[6];
+	}
+	
 	@Override
 	protected void loadContents() {
 		String[] line;

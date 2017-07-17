@@ -3,9 +3,7 @@ package screen;
 import java.util.Stack;
 
 import core.RobotRun;
-import frame.ToolFrame;
-import frame.UserFrame;
-import robot.RoboticArm;
+import global.Fields;
 import screen.cnfrm_cncl.ScreenConfirmProgramDelete;
 import screen.cnfrm_cncl.ScreenConfirmRenumber;
 import screen.content_disp.ScreenCreateMacro;
@@ -286,25 +284,22 @@ public class ScreenManager {
 		case SELECT_REG_STMT: nextScreen = new ScreenSelectRegStmt(robotRun); break;
 		case SET_CALL_PROG: nextScreen = new ScreenSetCallProg(robotRun); break;
 		case SET_DEF_TOOLTIP:
-			RoboticArm activeRobot = robotRun.getActiveRobot();
-			ToolFrame tFrame = ((ScreenToolFrameDetail)prevScreen).getSelectedFrame();
-			nextScreen = new ScreenSetDefaultTooltip(robotRun, tFrame);
+			int frameIdx = ((ScreenToolFrameDetail)prevScreen).getFrameIdx();
+			nextScreen = new ScreenSetDefaultTooltip(robotRun, frameIdx);
 			break;
 			
 		case SET_MACRO_BINDING: nextScreen = new ScreenSetMacroBinding(robotRun); break;
 		case SET_MACRO_TYPE: nextScreen = new ScreenSetMacroType(robotRun); break;
 		case TFRAME_DETAIL:
-			activeRobot = robotRun.getActiveRobot();
 			MenuScroll prevContents = prevScreen.getContents();
-			tFrame = activeRobot.getToolFrame( prevContents.getItemLineIdx() );
-			nextScreen = new ScreenToolFrameDetail(robotRun, tFrame);
+			frameIdx = prevContents.getCurrentItemIdx();
+			nextScreen = new ScreenToolFrameDetail(robotRun, frameIdx);
 			break;
 			
 		case UFRAME_DETAIL:
-			activeRobot = robotRun.getActiveRobot();
 			prevContents = prevScreen.getContents();
-			UserFrame uFrame = activeRobot.getUserFrame( prevContents.getItemLineIdx() );
-			nextScreen = new ScreenUserFrameDetail(robotRun, uFrame);
+			frameIdx = prevContents.getCurrentItemIdx();
+			nextScreen = new ScreenUserFrameDetail(robotRun, frameIdx);
 			break;
 		
 		/*
@@ -317,15 +312,13 @@ public class ScreenManager {
 		case PROG_CREATE: nextScreen = new ScreenProgramCreate(robotRun); break;
 		case PROG_RENAME: nextScreen = new ScreenProgramRename(robotRun); break;
 		case TFRAME_RENAME:
-			activeRobot = robotRun.getActiveRobot();
-			tFrame = ((ScreenToolFrameDetail)prevScreen).getSelectedFrame();
-			nextScreen = new ScreenToolFrameRename(robotRun, tFrame);
+			frameIdx = ((ScreenToolFrameDetail)prevScreen).getFrameIdx();
+			nextScreen = new ScreenToolFrameRename(robotRun, frameIdx);
 			break;
 			
 		case UFRAME_RENAME:
-			activeRobot = robotRun.getActiveRobot();
-			uFrame = ((ScreenUserFrameDetail)prevScreen).getSelectedFrame();
-			nextScreen = new ScreenUserFrameRename(robotRun, uFrame);
+			frameIdx = ((ScreenUserFrameDetail)prevScreen).getFrameIdx();
+			nextScreen = new ScreenUserFrameRename(robotRun, frameIdx);
 			break;
 
 		/*
@@ -362,43 +355,38 @@ public class ScreenManager {
 		 * Frame input methods
 		 */
 		case TEACH_3PT_TOOL:
-			activeRobot = robotRun.getActiveRobot();
-			tFrame = ((ScreenToolFrameDetail)prevScreen).getSelectedFrame();
-			nextScreen = new ScreenTeach3PtTool(robotRun, tFrame);
+			frameIdx = ((ScreenToolFrameDetail)prevScreen).getFrameIdx();
+			nextScreen = new ScreenTeach3PtTool(robotRun, frameIdx);
 			break;
 		
 		case TEACH_3PT_USER:
-			activeRobot = robotRun.getActiveRobot();
-			uFrame = ((ScreenUserFrameDetail)prevScreen).getSelectedFrame();
-			nextScreen = new ScreenTeach3PtUser(robotRun, uFrame);
+			frameIdx = ((ScreenUserFrameDetail)prevScreen).getFrameIdx();
+			nextScreen = new ScreenTeach3PtUser(robotRun, frameIdx);
 			break;
 		
 		case TEACH_4PT:
-			activeRobot = robotRun.getActiveRobot();
-			uFrame = ((ScreenUserFrameDetail)prevScreen).getSelectedFrame();
-			nextScreen = new ScreenTeach4Pt(robotRun, uFrame);
+			frameIdx = ((ScreenUserFrameDetail)prevScreen).getFrameIdx();
+			nextScreen = new ScreenTeach4Pt(robotRun, frameIdx);
 			break;
 		
 		case TEACH_6PT:
-			activeRobot = robotRun.getActiveRobot();
-			tFrame = ((ScreenToolFrameDetail)prevScreen).getSelectedFrame();
-			nextScreen = new ScreenTeach6Pt(robotRun, tFrame);
+			frameIdx = ((ScreenToolFrameDetail)prevScreen).getFrameIdx();
+			nextScreen = new ScreenTeach6Pt(robotRun, frameIdx);
 			break;
 
 		/*
 		 * Screens involving direct entry of point values
 		 */
 		case DIRECT_ENTRY_TOOL:
-			activeRobot = robotRun.getActiveRobot();
-			tFrame = ((ScreenToolFrameDetail)prevScreen).getSelectedFrame();
-			nextScreen = new ScreenDirectEntryTool(robotRun, tFrame);
+			frameIdx = ((ScreenToolFrameDetail)prevScreen).getFrameIdx();
+			nextScreen = new ScreenDirectEntryTool(robotRun, frameIdx);
 			break;
 			
 		case DIRECT_ENTRY_USER:
-			activeRobot = robotRun.getActiveRobot();
-			uFrame = ((ScreenUserFrameDetail)prevScreen).getSelectedFrame();
-			nextScreen = new ScreenDirectEntryUser(robotRun, uFrame);
+			frameIdx = ((ScreenUserFrameDetail)prevScreen).getFrameIdx();
+			nextScreen = new ScreenDirectEntryUser(robotRun, frameIdx);
 			break;
+			
 		case EDIT_PREG: nextScreen = new ScreenEditPosReg(robotRun); break;
 		case EDIT_PROG_POS: nextScreen = new ScreenEditProgramPos(robotRun); break;
 		default: return null;

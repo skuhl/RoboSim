@@ -3,20 +3,21 @@ package screen.text_entry;
 import core.RobotRun;
 import frame.ToolFrame;
 import global.DataManagement;
+import robot.RoboticArm;
 import screen.ScreenMode;
 
 public class ScreenToolFrameRename extends ST_ScreenTextEntry {
 	
-	private ToolFrame selectedFrame;
+	private int frameIdx;
 	
-	public ScreenToolFrameRename(RobotRun r, ToolFrame tFrame) {
+	public ScreenToolFrameRename(RobotRun r, int frameIdx) {
 		super(ScreenMode.TFRAME_RENAME, r);
-		selectedFrame = tFrame;
+		this.frameIdx = frameIdx;
 	}
 
 	@Override
 	protected String loadHeader() {
-		return String.format("TOOL FRAME RENAME");
+		return String.format("TOOL: %d RENAME", frameIdx);
 	}
 
 	@Override
@@ -29,6 +30,8 @@ public class ScreenToolFrameRename extends ST_ScreenTextEntry {
 			}
 		}
 		
+		RoboticArm r = robotRun.getActiveRobot();
+		ToolFrame selectedFrame = r.getToolFrame(frameIdx);
 		selectedFrame.setName(workingText.toString());
 		
 		DataManagement.saveRobotData(robotRun.getActiveRobot(), 1);
