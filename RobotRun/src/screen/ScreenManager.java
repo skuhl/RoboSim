@@ -3,7 +3,6 @@ package screen;
 import java.util.Stack;
 
 import core.RobotRun;
-import global.Fields;
 import screen.cnfrm_cncl.ScreenConfirmProgramDelete;
 import screen.cnfrm_cncl.ScreenConfirmRenumber;
 import screen.content_disp.ScreenCreateMacro;

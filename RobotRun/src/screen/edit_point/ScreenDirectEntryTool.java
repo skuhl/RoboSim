@@ -2,6 +2,9 @@ package screen.edit_point;
 
 import core.RobotRun;
 import frame.ToolFrame;
+import global.DataManagement;
+import global.RMath;
+import processing.core.PVector;
 import robot.RoboticArm;
 import screen.ScreenMode;
 import ui.DisplayLine;
@@ -82,7 +85,15 @@ public class ScreenDirectEntryTool extends ST_ScreenPointEntry {
 				inputs[val] = Math.max(-9999f, Math.min(inputs[val], 9999f));
 			}
 			
-			robotRun.createFrameDirectEntry(teachFrame, inputs);
+			PVector origin = new PVector(inputs[0], inputs[1], inputs[2]);
+			PVector wpr = new PVector(inputs[3], inputs[4], inputs[5]);
+			// Set the direct entry values as the current frame values
+			teachFrame.setDEOrigin(origin);
+			teachFrame.setDEOrientationOffset( RMath.wEulerToNQuat(wpr) );
+			teachFrame.setFrame(2);
+			// Set the frame as active and save changes to the tmp directory
+			r.setActiveToolFrame(frameIdx);
+			DataManagement.saveRobotData(r, 2);
 			robotRun.lastScreen();
 			
 		} catch (NumberFormatException NFEx) {

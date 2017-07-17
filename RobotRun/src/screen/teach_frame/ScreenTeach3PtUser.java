@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import core.RobotRun;
 import frame.UserFrame;
 import geom.Point;
+import global.DataManagement;
+import global.Fields;
 import processing.core.PGraphics;
 import processing.core.PVector;
 import robot.RoboticArm;
@@ -52,9 +54,17 @@ public class ScreenTeach3PtUser extends ST_ScreenTeachPoints {
 		RoboticArm r = robotRun.getActiveRobot();
 		UserFrame teachFrame = r.getUserFrame(frameIdx);
 		// TODO refactor this
-		teachFrame.setFrame(0);
+		boolean success = teachFrame.setFrame(0);
 		
-		robotRun.lastScreen();
+		if (success) {
+			// Set the updated frame
+			r.setActiveUserFrame(frameIdx);
+			DataManagement.saveRobotData(r, 2);
+			robotRun.lastScreen();
+			
+		} else {
+			Fields.setMessage("Invalid teach points");
+		}
 	}
 	
 	@Override

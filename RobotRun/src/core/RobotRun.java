@@ -14,8 +14,6 @@ import enums.ExecState;
 import enums.ExecType;
 import expression.Operand;
 import expression.Operator;
-import frame.Frame;
-import frame.ToolFrame;
 import frame.UserFrame;
 import geom.BoundingBox;
 import geom.ComplexShape;
@@ -113,18 +111,9 @@ public class RobotRun extends PApplet {
 	// container for instructions being copied/ cut and pasted
 	public ArrayList<Instruction> clipBoard = new ArrayList<>();
 	
-	/**
-	 * Index of the current frame (Tool or User) selecting when in the Frame
-	 * menus
-	 */
-	public int curFrameIdx = -1;
 	public int editIdx = -1;
 
 	public Operand<?> opEdit = null;
-	/**
-	 * The Frame being taught, during a frame teaching process
-	 */
-	public Frame teachFrame = null;
 	
 	private RoboticArm activeRobot;
 	private Scenario activeScenario;
@@ -1862,82 +1851,6 @@ public class RobotRun extends PApplet {
 			r.setCoordFrame(CoordFrame.JOINT);
 			break;
 		}
-	}
-
-	/**
-	 * This method attempts to modify the Frame based on the given value of
-	 * method. If method is even, then the frame is taught via the 3-Point
-	 * Method. Otherwise, the Frame is taught by either the 4-Point or 6-Point
-	 * Method based on if the Frame is a Tool Frame or a User Frame.
-	 * 
-	 * @param robot
-	 * 			
-	 * @param frameToTeach
-	 * 			The frame to be taught
-	 * @param method
-	 * 			The method by which to each the new Frame
-	 */
-	public void createFrame(Frame frameToTeach, int method) {
-		if (frameToTeach.setFrame(abs(method) % 2)) {
-			Fields.debug("Frame set: %d\n", curFrameIdx);
-
-			// Set new Frame
-			if (frameToTeach instanceof ToolFrame) {
-				// Update the current frame of the Robot Arm
-				activeRobot.setActiveToolFrame(curFrameIdx);
-				DataManagement.saveRobotData(activeRobot, 2);
-				
-			} else {
-				// Update the current frame of the Robot Arm
-				activeRobot.setActiveUserFrame(curFrameIdx);
-				DataManagement.saveRobotData(activeRobot, 2);
-			}
-
-		} else {
-			Fields.setMessage("Invalid input points");
-		}
-	}
-
-	/**
-	 * This method takes the current values stored in contents (assuming that
-	 * they corresond to the six direct entry values X, Y, Z, W, P, R), parses
-	 * them, saves them to given Frame object, and sets the current Frame's
-	 * values to the direct entry value, setting the current frame as the active
-	 * frame in the process.
-	 * 
-	 * @param taughtFrame
-	 *            the Frame, to which the direct entry values will be stored
-	 */
-	public void createFrameDirectEntry(Frame taughtFrame, float[] inputs) {
-		// The user enters values with reference to the World Frame
-		PVector origin, wpr;
-
-		if (taughtFrame instanceof UserFrame) {
-			origin = RMath.vFromWorld(new PVector(inputs[0], inputs[1], inputs[2]));
-			
-		} else {
-			// Tool frame origins are actually an offset of the Robot's EE
-			// position
-			origin = new PVector(inputs[0], inputs[1], inputs[2]);
-		}
-		
-		wpr = new PVector(inputs[3], inputs[4], inputs[5]);
-
-		// Save direct entry values
-		taughtFrame.setDEOrigin(origin);
-		taughtFrame.setDEOrientationOffset( RMath.wEulerToNQuat(wpr) );
-		taughtFrame.setFrame(2);
-
-		// Set New Frame
-		if (taughtFrame instanceof ToolFrame) {
-			// Update the current frame of the Robot Arm
-			activeRobot.setActiveToolFrame(curFrameIdx);
-		} else {
-			// Update the current frame of the Robot Arm
-			activeRobot.setActiveUserFrame(curFrameIdx);
-		}
-		
-		DataManagement.saveRobotData(activeRobot, 2);
 	}
 
 	@Override

@@ -4,7 +4,6 @@ import java.util.ArrayList;
 
 import core.RobotRun;
 import enums.CoordFrame;
-import frame.Frame;
 import frame.ToolFrame;
 import frame.UserFrame;
 import global.Fields;
@@ -418,81 +417,6 @@ public abstract class Screen {
 					ioReg.comment);
 			lines.add(new DisplayLine(idx, 0, col0, ioReg.getState() ?
 					"ON" : "OFF"));
-		}
-		
-		return lines;
-	}
-
-	/**
-	 * Compiles a list of display lines which represent if a point is taught
-	 * for the given frame and the given teaching method.
-	 * 
-	 * The teaching method should be either 0 or 1.
-	 * For a user frame:
-	 * 	0 -> three point method
-	 * 	1 -> four point method
-	 * 
-	 * For a tool frame:
-	 * 	0 -> three point method
-	 * 	1 -> six point method
-	 * 
-	 * @param f				The frame of which to use the teach points
-	 * @param teachMethod	The flag indicating what teach points are
-	 * 						represented by the display lines (either 0 or 1)
-	 * @return				The display lines representing the teach points of
-	 * 						the given frame for the teach point defined by the
-	 * 						teachMethod field
-	 */
-	public ArrayList<DisplayLine> loadPointList(Frame f, int teachMethod) {
-		ArrayList<DisplayLine> lines = new ArrayList<>();
-		boolean validMethod = teachMethod == 0 || teachMethod == 1;
-		
-		if (f instanceof ToolFrame && validMethod) {
-			// Points used in the three and six point method of tool frames
-			String out = (f.getPoint(0) == null) ? "UNINIT" : "RECORDED";
-			lines.add(new DisplayLine(0, 0, "First Approach Point: " + out));
-			
-			out = (f.getPoint(1) == null) ? "UNINIT" : "RECORDED";
-			lines.add(new DisplayLine(1, 0, "Second Approach Point: " + out));
-			
-			out = (f.getPoint(2) == null) ? "UNINIT" : "RECORDED";
-			lines.add(new DisplayLine(2, 0, "Third Approach Point: " + out));
-			
-			if (teachMethod == 1) {
-				// Points used in the six point method of tool frames
-				out = (f.getPoint(3) == null) ? "UNINIT" : "RECORDED";
-				lines.add(new DisplayLine(3, 0, "Orient Origin Point: " + out));
-				
-				out = (f.getPoint(4) == null) ? "UNINIT" : "RECORDED";
-				lines.add(new DisplayLine(4, 0, "X Axis Point: " + out));
-				
-				out = (f.getPoint(5) == null) ? "UNINIT" : "RECORDED";
-				lines.add(new DisplayLine(5, 0, "Y Axis Point: " + out));
-			}
-			
-		} else if (f instanceof UserFrame && validMethod) {
-			// Points used in the three and four point methods of user frames
-			String out = (f.getPoint(0) == null) ? "UNINIT" : "RECORDED";
-			lines.add(new DisplayLine(0, 0, "Orient Origin Point: " + out));
-			
-			out = (f.getPoint(1) == null) ? "UNINIT" : "RECORDED";
-			lines.add(new DisplayLine(1, 0, "X Axis Point: " + out));
-			
-			out = (f.getPoint(2) == null) ? "UNINIT" : "RECORDED";
-			lines.add(new DisplayLine(2, 0, "Y Axis Point: " + out));
-			
-			if (teachMethod == 1) {
-				// The point used in the for point method of user frames
-				out = (f.getPoint(3) == null) ? "UNINIT" : "RECORDED";
-				lines.add(new DisplayLine(3, 0, "Origin: " + out));
-			}
-			
-		} else {
-			lines.add(new DisplayLine(-1, 0,
-					(f == null) ? "Null frame" : f.getClass().toString())
-					);
-			lines.add(new DisplayLine(-1, 0, String.format("Method: %d",
-					teachMethod)));
 		}
 		
 		return lines;
