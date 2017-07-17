@@ -56,8 +56,8 @@ public class ScreenTeach4Pt extends ST_ScreenTeachPoints {
 	public void actionEntr() {
 		RoboticArm r = robotRun.getActiveRobot();
 		UserFrame teachFrame = r.getUserFrame(frameIdx);
-		// TODO refactor this
-		boolean success = teachFrame.setFrame(1);
+		
+		boolean success = teachFrame.teach4Pt();
 		
 		if (success) {
 			// Set the updated frame
@@ -107,7 +107,7 @@ public class ScreenTeach4Pt extends ST_ScreenTeachPoints {
 		RoboticArm r = robotRun.getActiveRobot();
 		UserFrame teachFrame = r.getUserFrame(frameIdx);
 		
-		return teachFrame.isComplete(1);
+		return teachFrame.is4PtComplete();
 	}
 
 	@Override

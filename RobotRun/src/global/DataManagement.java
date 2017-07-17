@@ -459,24 +459,67 @@ public abstract class DataManagement {
 		}
 
 		// Read axes quaternion values
-		ref.setOrientation( loadRQuaternion(in) );
+		ref.setOrienOffset( loadRQuaternion(in) );
 		
 		// Read in orientation points (and tooltip teach points for tool frames)
 		for (int idx = 0; idx < len; ++idx) {
-			ref.setPoint(loadPoint(in), idx);
+			ref.setTeachPoint(loadPoint(in), idx);
 		}
 
 		// Read manual entry origin values
-		ref.setDEOrigin(loadPVector(in));
-		ref.setDEOrientationOffset(loadRQuaternion(in));
+		ref.setOriginDirect(loadPVector(in));
+		ref.setOrienDirect(loadRQuaternion(in));
 
 		if (ref instanceof UserFrame) {
 			// Load point for the origin offset of the frame
-			((UserFrame)ref).setOrientOrigin(loadPoint(in));
+			((UserFrame)ref).setTeachPoint(loadPoint(in), 3);
 		}
 	}
 	
 	private static int loadFrameBytes(RoboticArm robot, String srcPath) {
+		int idx = -1;
+		File src = new File(srcPath);
+		
+		try {
+			FileInputStream in = new FileInputStream(src);
+			DataInputStream dataIn = new DataInputStream(in);
+
+			// Load Tool Frames
+			int size = Math.max(0, Math.min(dataIn.readInt(), 10));
+			
+			for(idx = 0; idx < size; idx += 1) {
+				loadToolFrame(robot.getToolFrame(idx), dataIn);
+			}
+
+			// Load User Frames
+			size = Math.max(0, Math.min(dataIn.readInt(), 10));
+
+			for(idx = 0; idx < size; idx += 1) {
+				loadUserFrame(robot.getUserFrame(idx), dataIn);
+			}
+
+			dataIn.close();
+			in.close();
+			return 0;
+
+		} catch (FileNotFoundException FNFEx) {
+			System.err.printf("Current frame load method failed\n",
+					src.getName());
+			return loadFrameBytesOLDLEST(robot, srcPath);
+
+		} catch (EOFException EOFEx) {
+			System.err.printf("Current frame load method failed\n",
+					src.getName());
+			return loadFrameBytesOLDLEST(robot, srcPath);
+
+		} catch (IOException IOEx) {
+			System.err.printf("Current frame load method failed\n",
+					src.getName());
+			return loadFrameBytesOLDLEST(robot, srcPath);
+		}
+	}
+	
+	private static int loadFrameBytesOLDLEST(RoboticArm robot, String srcPath) {
 		int idx = -1;
 		File src = new File(srcPath);
 		
@@ -1147,18 +1190,16 @@ public abstract class DataManagement {
 		
 		byte type = in.readByte();
 
-		if (ref instanceof ToolFrame && type != 1) {
-			// Types do not match
-			throw new IOException("Invalid Frame type!");
+		if (type == 0) {
+			return;
 		}
 		
 		// Read the frame's name
-		String name = in.readUTF();
-		ref.setName(name);
+		ref.setName(in.readUTF());
 		
 		// Read TCP offset and orientation values
 		ref.setTCPOffset(loadPVector(in));
-		ref.setOrientation( loadRQuaternion(in) );
+		ref.setOrienOffset(loadRQuaternion(in));
 		
 		// Read in orientation points (and tooltip teach points for tool frames)
 		for (int idx = 0; idx < 6; ++idx) {
@@ -1166,39 +1207,34 @@ public abstract class DataManagement {
 		}
 
 		// Read manual entry origin values
-		ref.setDEOrigin(loadPVector(in));
-		ref.setDEOrientationOffset(loadRQuaternion(in));
+		ref.setTCPDirect(loadPVector(in));
+		ref.setOrienDirect(loadRQuaternion(in));
 	}
 	
-	private static void loadUserFrame(DataInputStream in, UserFrame ref)
+	private static void loadUserFrame(UserFrame ref, DataInputStream in)
 			throws IOException {
 		
 		byte type = in.readByte();
 
-		if (ref instanceof UserFrame && type != 2) {
-			// Types do not match
-			throw new IOException("Invalid Frame type!");
+		if (type == 0) {
+			return;
 		}
 		
 		// Read the frame's name
-		String name = in.readUTF();
-		ref.setName(name);
+		ref.setName(in.readUTF());
 		
 		// Read user frame origin and orientation values
 		ref.setOrigin(loadPVector(in));
-		ref.setOrientation( loadRQuaternion(in) );
+		ref.setOrienOffset( loadRQuaternion(in) );
 		
 		// Read in orientation points
-		for (int idx = 0; idx < 3; ++idx) {
+		for (int idx = 0; idx < 4; ++idx) {
 			ref.setPoint(loadPoint(in), idx);
 		}
 
 		// Read manual entry origin values
-		ref.setDEOrigin(loadPVector(in));
-		ref.setDEOrientationOffset(loadRQuaternion(in));
-
-		// Load point for the origin offset of the frame
-		ref.setOrientOrigin(loadPoint(in));
+		ref.setOriginDirect(loadPVector(in));
+		ref.setOrienDirect(loadRQuaternion(in));
 	}
 
 	private static Object loadWorldObject(DataInputStream in, RobotRun app) throws IOException, NullPointerException {
@@ -1424,65 +1460,6 @@ public abstract class DataManagement {
 			}
 		}
 	}
-	
-	private static void saveFrame(Frame f, DataOutputStream out) throws IOException {
-
-		// Save a flag to indicate what kind of frame was saved
-		if (f == null) {
-			out.writeByte(0);
-			return;
-
-		} else if (f instanceof ToolFrame) {
-			out.writeByte(1);
-
-		} else if (f instanceof UserFrame) {
-			out.writeByte(2);
-
-		} else {
-			throw new IOException("Invalid Frame!");
-		}
-		// Write the name of the string
-		out.writeUTF(f.getName());
-		
-		int len;
-		
-		if (f instanceof UserFrame) {
-			UserFrame uFrame = (UserFrame)f;
-			// Write User frame origin
-			savePVector(uFrame.getOrigin(), out);
-			len = 3;
-			
-			// Write frame axes
-			saveRQuaternion(uFrame.getOrientation(), out);
-
-		} else {
-			ToolFrame tf = (ToolFrame)f;
-			
-			// Write Tool frame TCP offset
-			savePVector( tf.getTCPOffset(), out );
-			len = 6;
-			
-			// Write frame axes
-			saveRQuaternion(tf.getOrientationOffset(), out);
-		}
-
-
-		
-		// Write frame orientation (and tooltip teach points for tool frames) points
-		for (int idx = 0; idx < len; ++idx) {
-			savePoint(f.getPoint(idx), out);
-		}
-
-		// Write frame manual entry origin value
-		savePVector(f.getDEOrigin(), out);
-		// Write frame manual entry origin value
-		saveRQuaternion(f.getDEOrientationOffset(), out);
-
-		if (f instanceof UserFrame) {
-			// Save point for the origin offset of the frame
-			savePoint( ((UserFrame)f).getOrientOrigin(), out );
-		}
-	}
 
 	private static int saveFrameBytes(RoboticArm robot, String destPath) {
 		File dest = new File(destPath);
@@ -1504,13 +1481,13 @@ public abstract class DataManagement {
 			// Save Tool Frames
 			dataOut.writeInt(Fields.FRAME_NUM);
 			for (int idx = 0; idx < Fields.FRAME_NUM; ++idx) {
-				saveFrame(robot.getToolFrame(idx), dataOut);
+				saveToolFrame(robot.getToolFrame(idx), dataOut);
 			}
 			
 			// Save User Frames
 			dataOut.writeInt(Fields.FRAME_NUM);
 			for (int idx = 0; idx < Fields.FRAME_NUM; ++idx) {
-				saveFrame(robot.getUserFrame(idx), dataOut);
+				saveUserFrame(robot.getUserFrame(idx), dataOut);
 			}
 
 			dataOut.close();
@@ -2106,42 +2083,6 @@ public abstract class DataManagement {
 		}
 	}
 	
-	private static void saveUserFrame(UserFrame f, DataOutputStream out)
-			throws IOException {
-
-		// Save a flag to indicate what kind of frame was saved
-		if (f == null) {
-			out.writeByte(0);
-			return;
-
-		} else {
-			// TODO fix this
-			out.writeByte(2);
-		}
-		
-		// Write the name of the string
-		out.writeUTF(f.getName());
-		
-		// Write User frame origin
-		savePVector(f.getOrigin(), out);
-		
-		// Write frame axes
-		saveRQuaternion(f.getOrientation(), out);
-		
-		// Write frame orientation (and tooltip teach points for tool frames) points
-		for (int idx = 0; idx < 3; ++idx) {
-			savePoint(f.getPoint(idx), out);
-		}
-
-		// Write frame manual entry origin value
-		savePVector(f.getDEOrigin(), out);
-		// Write frame manual entry origin value
-		saveRQuaternion(f.getDEOrientationOffset(), out);
-		
-		// Save point for the origin offset of the frame
-		savePoint( ((UserFrame)f).getOrientOrigin(), out );
-	}
-	
 	private static void saveToolFrame(ToolFrame tFrame, DataOutputStream out)
 			throws IOException {
 
@@ -2169,9 +2110,42 @@ public abstract class DataManagement {
 		}
 
 		// Write frame manual entry origin value
-		savePVector(tFrame.getDEOrigin(), out);
+		savePVector(tFrame.getTCPDirect(), out);
 		// Write frame manual entry origin value
-		saveRQuaternion(tFrame.getDEOrientationOffset(), out);
+		saveRQuaternion(tFrame.getOrienDirect(), out);
+	}
+	
+	private static void saveUserFrame(UserFrame f, DataOutputStream out)
+			throws IOException {
+
+		// Save a flag to indicate what kind of frame was saved
+		if (f == null) {
+			out.writeByte(0);
+			return;
+
+		} else {
+			// TODO fix this
+			out.writeByte(2);
+		}
+		
+		// Write the name of the string
+		out.writeUTF(f.getName());
+		
+		// Write User frame origin
+		savePVector(f.getOrigin(), out);
+		
+		// Write frame axes
+		saveRQuaternion(f.getOrientation(), out);
+		
+		// Write frame orientation points
+		for (int idx = 0; idx < 4; ++idx) {
+			savePoint(f.getPoint(idx), out);
+		}
+
+		// Write frame manual entry origin value
+		savePVector(f.getOriginDirect(), out);
+		// Write frame manual entry origin value
+		saveRQuaternion(f.getOrienDirect(), out);
 	}
 
 	private static void saveWorldObject(WorldObject wldObj, DataOutputStream out) throws IOException {

@@ -88,9 +88,9 @@ public class ScreenDirectEntryTool extends ST_ScreenPointEntry {
 			PVector origin = new PVector(inputs[0], inputs[1], inputs[2]);
 			PVector wpr = new PVector(inputs[3], inputs[4], inputs[5]);
 			// Set the direct entry values as the current frame values
-			teachFrame.setDEOrigin(origin);
-			teachFrame.setDEOrientationOffset( RMath.wEulerToNQuat(wpr) );
-			teachFrame.setFrame(2);
+			teachFrame.setTCPDirect(origin);
+			teachFrame.setOrienDirect( RMath.wEulerToNQuat(wpr) );
+			teachFrame.teachDirectEntry();
 			// Set the frame as active and save changes to the tmp directory
 			r.setActiveToolFrame(frameIdx);
 			DataManagement.saveRobotData(r, 2);

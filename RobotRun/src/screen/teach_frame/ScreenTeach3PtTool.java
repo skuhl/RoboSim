@@ -53,8 +53,8 @@ public class ScreenTeach3PtTool extends ST_ScreenTeachPoints {
 	public void actionEntr() {
 		RoboticArm r = robotRun.getActiveRobot();
 		ToolFrame teachFrame = r.getToolFrame(frameIdx);
-		// TODO refactor this
-		boolean success = teachFrame.setFrame(0);
+		
+		boolean success = teachFrame.teach3Pt();
 		
 		if (success) {
 			// Set the updated frame
@@ -104,7 +104,7 @@ public class ScreenTeach3PtTool extends ST_ScreenTeachPoints {
 		RoboticArm r = robotRun.getActiveRobot();
 		ToolFrame teachFrame = r.getToolFrame(frameIdx);
 		
-		return teachFrame.isComplete(0);
+		return teachFrame.is3PtComplete();
 	}
 
 	@Override
