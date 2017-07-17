@@ -2008,34 +2008,23 @@ public class RobotRun extends PApplet {
 				PVector far[] = rCamera.getPlaneFar();
 				pushMatrix();
 				stroke(255, 126, 0, 255);
-				beginShape();
-				//Top
-				vertex(near[0].x, near[0].y, near[0].z);
-				vertex(far[0].x, far[0].y, far[0].z);
-				vertex(far[1].x, far[1].y, far[1].z);
-				vertex(near[1].x, near[1].y, near[1].z);
-				//Right
-				vertex(near[1].x, near[1].y, near[1].z);
-				vertex(far[1].x, far[1].y, far[1].z);
-				vertex(far[3].x, far[3].y, far[3].z);
-				vertex(near[3].x, near[3].y, near[3].z);
-				//Bottom
-				vertex(near[3].x, near[3].y, near[3].z);
-				vertex(far[3].x, far[3].y, far[3].z);
-				vertex(far[2].x, far[2].y, far[2].z);
-				vertex(near[2].x, near[2].y, near[2].z);
-				//Left
-				vertex(near[2].x, near[2].y, near[2].z);
-				vertex(far[2].x, far[2].y, far[2].z);
-				vertex(far[0].x, far[0].y, far[0].z);
-				vertex(near[0].x, near[0].y, near[0].z);
-				//Near
-				vertex(near[1].x, near[1].y, near[1].z);
-				vertex(near[3].x, near[3].y, near[3].z);
-				vertex(near[2].x, near[2].y, near[2].z);
-				vertex(near[0].x, near[0].y, near[0].z);
-				endShape();
 				
+				//Near plane
+				line(near[0].x, near[0].y, near[0].z, near[1].x, near[1].y, near[1].z);
+				line(near[1].x, near[1].y, near[1].z, near[3].x, near[3].y, near[3].z);
+				line(near[3].x, near[3].y, near[3].z, near[2].x, near[2].y, near[2].z);
+				line(near[2].x, near[2].y, near[2].z, near[0].x, near[0].y, near[0].z);
+				//Far plane
+				line(far[0].x, far[0].y, far[0].z, far[1].x, far[1].y, far[1].z);
+				line(far[1].x, far[1].y, far[1].z, far[3].x, far[3].y, far[3].z);
+				line(far[3].x, far[3].y, far[3].z, far[2].x, far[2].y, far[2].z);
+				line(far[2].x, far[2].y, far[2].z, far[0].x, far[0].y, far[0].z);
+				//Connecting lines
+				line(near[0].x, near[0].y, near[0].z, far[0].x, far[0].y, far[0].z);
+				line(near[1].x, near[1].y, near[1].z, far[1].x, far[1].y, far[1].z);
+				line(near[2].x, near[2].y, near[2].z, far[2].x, far[2].y, far[2].z);
+				line(near[3].x, near[3].y, near[3].z, far[3].x, far[3].y, far[3].z);
+												
 				popMatrix();
 			}
 			

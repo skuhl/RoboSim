@@ -294,29 +294,32 @@ public class RobotCamera {
 		float len = dims[0];
 		float hgt = dims[1];
 		float wid = dims[2];
-
-		PVector s = new PVector(objCenter.x - len/2, objCenter.y - hgt/2, objCenter.z - wid/2);
-		System.out.println("Camera viewmat: ");
-		RMath.printMat(this.getViewMat());
-		RMath.printMat(new RMatrix(camOrient.toMatrix()));
-		System.out.println(camPos.toString());
-		System.out.println("Starting vectors:");
-		System.out.println(o.getLocalCenter().toString());
-		System.out.println(s.toString());
-		System.out.println();
+		
+		RMatrix objMat = ((Part)o).getOrientation();
+		PVector xAxis = new PVector(objMat.getEntryF(0, 0), objMat.getEntryF(1, 0), objMat.getEntryF(2, 0));
+		PVector yAxis = new PVector(objMat.getEntryF(0, 1), objMat.getEntryF(1, 1), objMat.getEntryF(2, 1));
+		PVector zAxis = new PVector(objMat.getEntryF(0, 2), objMat.getEntryF(1, 2), objMat.getEntryF(2, 2));
+		PVector incrX = PVector.mult(xAxis, len/(RES - 1));
+		PVector incrY = PVector.mult(yAxis, hgt/(RES - 1));
+		PVector incrZ = PVector.mult(zAxis, wid/(RES - 1));
+				
+		PVector s = PVector.add(objCenter, PVector.mult(xAxis, -len/2))
+				.add(PVector.mult(yAxis, -hgt/2))
+				.add(PVector.mult(zAxis, -wid/2));
+		
 		int inView = 0;
 		for(int i = 0; i < RES; i += 1) {
 			for(int j = 0; j < RES; j += 1) {
 				for(int k = 0; k < RES; k += 1) {
-					PVector test = new PVector(s.x + i*(len/(RES-1)), s.y + j*(hgt/(RES-1)), s.z + k*(wid/(RES-1)));
+					PVector test = PVector.add(s, PVector.mult(incrX, i))
+							.add(PVector.mult(incrY, j))
+							.add(PVector.mult(incrZ, k));
 					if(isPointInFrame(test)) {
 						inView += 1;
 					}
 				}
 			}
 		}
-		
-		System.out.println("Points in view: " + inView + "/" + RES*RES*RES);
 		
 		return (inView / (float)(RES*RES*RES)) * brightness * exposure >= sensitivity;
 	}
@@ -331,10 +334,6 @@ public class RobotCamera {
 			return true;
 		}
 		else {
-			System.out.println("Out of bounds: ");
-			System.out.println(p.toString());
-			System.out.println(camSpace.toString());
-			System.out.println(tp.toString());
 			return false;
 		}
 	}
@@ -424,7 +423,7 @@ public class RobotCamera {
 		}
 		
 		if(teachObj != null) {
-			RMatrix objOrient = teachObj.getLocalOrientation();
+			RMatrix objOrient = ((Part)teachObj).getOrientation();
 			RMatrix viewOrient = objOrient.transpose().multiply(camOrient.toMatrix());
 			teachObj.setLocalOrientation(viewOrient);
 			
@@ -464,10 +463,10 @@ public class RobotCamera {
 		float f = camClipFar;
 		
 		RMatrix pMat = new RMatrix(new float[][] {
-			{2*n/(r-l), 0, (r+l)/(r-l), 0},
-			{0, 2*n/(t-b), (t+b)/(t-b), 0},
-			{0, 0, -(f+n)/(f-n), -(2*f*n)/(f-n)},
-			{0, 0, -1, 0}
+			{2*n/(r-l),	0, 			(r+l)/(r-l), 	0},
+			{0, 		2*n/(t-b), 	(t+b)/(t-b), 	0},
+			{0, 		0, 			-(f+n)/(f-n),	-(2*f*n)/(f-n)},
+			{0, 		0, 			-1, 			0}
 		});
 		
 		return pMat;
@@ -476,10 +475,14 @@ public class RobotCamera {
 	private RMatrix getViewMat() {
 		float[][] rot = getOrientationMat().getDataF();
 		
+		float tPosX = -camPos.x*rot[0][0] - camPos.y*rot[1][0] - camPos.z*rot[2][0];
+		float tPosY = -camPos.x*rot[0][1] - camPos.y*rot[1][1] - camPos.z*rot[2][1];
+		float tPosZ =  camPos.x*rot[0][2] + camPos.y*rot[1][2] + camPos.z*rot[2][2];
+		
 		float[][] vMat = new float[][] {
-			{ rot[0][0],  rot[0][1], -rot[0][2], -camPos.x},
-			{ rot[1][0],  rot[1][1], -rot[1][2], -camPos.y},
-			{ rot[2][0],  rot[2][1], -rot[2][2], camPos.z},
+			{ rot[0][0],  rot[1][0],  rot[2][0], tPosX},
+			{ rot[0][1],  rot[1][1],  rot[2][1], tPosY},
+			{-rot[0][2], -rot[1][2], -rot[2][2], tPosZ},
 			{0, 0, 0, 1}
 		};
 				
