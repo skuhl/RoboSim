@@ -186,7 +186,7 @@ public abstract class WorldObject implements Cloneable {
 
 	public RShape getForm() { return form; }
 	
-	public int getModelID() { return form.getID(); }
+	public int getModelID() { return form.getModelID(); }
 	
 	public int getModelFamilyID() { return form.getFamilyID(); }
 

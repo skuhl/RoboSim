@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import core.RobotRun;
 import geom.ComplexShape;
+import geom.Fixture;
 import geom.Part;
 import geom.RMatrix;
 import geom.RQuaternion;
@@ -23,7 +24,7 @@ public class RobotCamera {
 	private PVector camPos;
 	
 	private float exposure;
-	private final int RES = 5;
+	private final int RES = 8;
 	private float sensitivity;
 	private ArrayList<WorldObject> taughtObjects;
 	
@@ -161,6 +162,7 @@ public class RobotCamera {
 		
 		for(WorldObject o : scene.getObjectList()) {
 			if(isPointInFrame(o.getLocalCenter()) && isObjectVisible(o)) {
+				System.out.println(o.getName());
 				objList.add(o);
 			}
 		}
@@ -285,13 +287,23 @@ public class RobotCamera {
 	 * @return Whether or not the object is recognized.
 	 */
 	public boolean isObjectVisible(WorldObject o) {
-		PVector objCenter = o.getLocalCenter();
+		if(o instanceof Fixture) return false;
+		
+		PVector objCenter = ((Part)o).getCenter();
 		float[] dims = o.getForm().getDimArray();
 		float len = dims[0];
 		float hgt = dims[1];
 		float wid = dims[2];
-		
+
 		PVector s = new PVector(objCenter.x - len/2, objCenter.y - hgt/2, objCenter.z - wid/2);
+		System.out.println("Camera viewmat: ");
+		RMath.printMat(this.getViewMat());
+		RMath.printMat(new RMatrix(camOrient.toMatrix()));
+		System.out.println(camPos.toString());
+		System.out.println("Starting vectors:");
+		System.out.println(o.getLocalCenter().toString());
+		System.out.println(s.toString());
+		System.out.println();
 		int inView = 0;
 		for(int i = 0; i < RES; i += 1) {
 			for(int j = 0; j < RES; j += 1) {
@@ -304,19 +316,25 @@ public class RobotCamera {
 			}
 		}
 		
+		System.out.println("Points in view: " + inView + "/" + RES*RES*RES);
+		
 		return (inView / (float)(RES*RES*RES)) * brightness * exposure >= sensitivity;
 	}
 	
 	public boolean isPointInFrame(PVector p) {
 		RMatrix vMat = getViewMat();
 		RMatrix pMat = getPerspProjMat();
-		
-		PVector tp = pMat.multiply(vMat.multiply(p));
+		PVector camSpace = vMat.multiply(p);
+		PVector tp = pMat.multiply(camSpace);
 		
 		if(Math.abs(tp.x) < 1 && Math.abs(tp.y) < 1) {
 			return true;
 		}
 		else {
+			System.out.println("Out of bounds: ");
+			System.out.println(p.toString());
+			System.out.println(camSpace.toString());
+			System.out.println(tp.toString());
 			return false;
 		}
 	}
@@ -458,14 +476,10 @@ public class RobotCamera {
 	private RMatrix getViewMat() {
 		float[][] rot = getOrientationMat().getDataF();
 		
-		float tPosX = -camPos.x*rot[0][0] - camPos.y*rot[1][0] - camPos.z*rot[2][0];
-		float tPosY = -camPos.x*rot[0][1] - camPos.y*rot[1][1] - camPos.z*rot[2][1];
-		float tPosZ =  camPos.x*rot[0][2] + camPos.y*rot[1][2] + camPos.z*rot[2][2];
-		
 		float[][] vMat = new float[][] {
-			{ rot[0][0],  rot[1][0],  rot[2][0], tPosX},
-			{ rot[0][1],  rot[1][1],  rot[2][1], tPosY},
-			{-rot[0][2], -rot[1][2], -rot[2][2], tPosZ},
+			{ rot[0][0],  rot[0][1], -rot[0][2], -camPos.x},
+			{ rot[1][0],  rot[1][1], -rot[1][2], -camPos.y},
+			{ rot[2][0],  rot[2][1], -rot[2][2], camPos.z},
 			{0, 0, 0, 1}
 		};
 				

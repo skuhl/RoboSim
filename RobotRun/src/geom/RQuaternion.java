@@ -403,9 +403,11 @@ public class RQuaternion implements Cloneable {
 		r[0][0] = 1 - 2 * (y*y + z*z);
 		r[1][0] = 2 * (x*y - w*z);
 		r[2][0] = 2 * (w*y + x*z);
+		
 		r[0][1] = 2 * (x*y + w*z);
 		r[1][1] = 1 - 2 * (x*x + z*z);
 		r[2][1] = 2 * (y*z - w*x);
+		
 		r[0][2] = 2 * (x*z - w*y);
 		r[1][2] = 2 * (w*x + y*z);
 		r[2][2] = 1 - 2 * (x*x + y*y);

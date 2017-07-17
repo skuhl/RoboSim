@@ -860,7 +860,7 @@ public abstract class RMath {
 	}
 
 	public static void printMat(RMatrix mat) {
-		System.out.println( mat.toString() );
+		System.out.println(mat.toString());
 	}
 
 	// calculates euler angles from quaternion

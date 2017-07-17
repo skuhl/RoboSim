@@ -10,6 +10,7 @@ import processing.core.PGraphics;
 public abstract class RShape implements Cloneable {
 	private Integer fillCVal;
 	private Integer strokeCVal;
+	protected PGraphics preview;
 
 	public RShape() {
 		fillCVal = Fields.BLACK;
@@ -21,39 +22,16 @@ public abstract class RShape implements Cloneable {
 		strokeCVal = strokeVal;
 	}
 	
-	/**
-	 * Applies the shape's stroke and outline colors to the given graphics.
-	 * 
-	 * @param g	The graphics to which to apply this shape's style
-	 */
-	protected void applyStyle(PGraphics g) {
-		
-		if (fillCVal != null) {
-			g.fill(fillCVal);
-			
-		} else {
-			g.noFill();
-		}
-		
-		if (strokeCVal != null) {
-			g.stroke(strokeCVal);
-			
-		} else {
-			g.noStroke();
-		}
-		
-	}
-
 	@Override
 	public abstract RShape clone();
-	
+
 	/**
 	 * Draws the shape with its stroke and outline values.
 	 * 
 	 * @param g	the graphics used to render this shape
 	 */
 	public abstract void draw(PGraphics g);
-
+	
 	/**
 	 * Returns the value of the given dimension associated with
 	 * this shape. If no such dimension exists, then -1 should
@@ -64,7 +42,7 @@ public abstract class RShape implements Cloneable {
 	 *             such dimension exists
 	 */
 	public abstract float getDim(DimType dim);
-	
+
 	public abstract float[] getDimArray();
 	
 	/**
@@ -110,11 +88,13 @@ public abstract class RShape implements Cloneable {
 			return -1f;
 		}
 	}
-
-	/* Getters and Setters for shapes fill and stroke colors */
-
+	
+	public abstract int getFamilyID();
 	public Integer getFillValue() { return fillCVal; }
+	public abstract int getModelID();
+	public abstract PGraphics getModelPreview(RMatrix m);
 	public Integer getStrokeValue() { return strokeCVal; }
+	
 	/**
 	 * Sets the value of the given dimension associated with
 	 * this shape, if that dimension exists.
@@ -124,10 +104,32 @@ public abstract class RShape implements Cloneable {
 	 */
 	public abstract void setDim(Float newVal, DimType dim);
 	public void setFillValue(Integer newVal) { fillCVal = newVal; }
-
 	public void setStrokeValue(Integer newVal) { strokeCVal = newVal; }
-
-	public abstract int getID();
-
-	public abstract int getFamilyID();
+	
+	public PGraphics updateModelPreview(RMatrix m) {
+		preview = null;
+		return getModelPreview(m);
+	}
+	
+	/**
+	 * Applies the shape's stroke and outline colors to the given graphics.
+	 * 
+	 * @param g	The graphics to which to apply this shape's style
+	 */
+	protected void applyStyle(PGraphics g) {
+		
+		if (fillCVal != null) {
+			g.fill(fillCVal);
+			
+		} else {
+			g.noFill();
+		}
+		
+		if (strokeCVal != null) {
+			g.stroke(strokeCVal);
+			
+		} else {
+			g.noStroke();
+		}	
+	}
 }

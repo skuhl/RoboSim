@@ -24,8 +24,6 @@ public class ComplexShape extends RShape {
 	private MyPShape model;
 	private PVector centerOffset, baseDims;
 	
-	private PGraphics preview;
-	
 	private float mdlScale = 1f;
 	private final int model_id;
 	private final int model_family_id;
@@ -195,7 +193,7 @@ public class ComplexShape extends RShape {
 	}
 	
 	@Override
-	public int getID() {
+	public int getModelID() {
 		return model_id;
 	}
 	
@@ -305,11 +303,6 @@ public class ComplexShape extends RShape {
 		}
 		
 		return preview;
-	}
-	
-	public PGraphics updateModelPreview(RMatrix m) {
-		preview = null;
-		return getModelPreview(m);
 	}
 
 	@Override
