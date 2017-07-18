@@ -185,10 +185,18 @@ public class UserFrame {
 	}
 
 	/**
-	 * TODO comment this
+	 * Returns the teach point associated with the given index, if one exists.
+	 * The index-point pairs are as follows:
 	 * 
-	 * @param idx
-	 * @return
+	 * 0	->	orient origin point
+	 * 1	->	x direction point
+	 * 2	->	y direction point
+	 * 3	->	origin point
+	 * 
+	 * If no point is associated with the given index, then null is returned.
+	 * 
+	 * @param idx	The index of a teach point
+	 * @return		The teach point associated with the given index, or null
 	 */
 	public Point getTeachPt(int idx) {
 
@@ -200,9 +208,10 @@ public class UserFrame {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Determines if the teach points for the frame's orientation are all
+	 * taught.
 	 * 
-	 * @return
+	 * @return	If all points for the frame's orientation are taught
 	 */
 	public boolean is3PtComplete() {
 		// Check if all points are taught for the three point method
@@ -211,9 +220,10 @@ public class UserFrame {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Determines if the teach points for the frame's orientation and origin
+	 * are all taught.
 	 * 
-	 * @return
+	 * @return	If all points are taught
 	 */
 	public boolean is4PtComplete() {
 		// Check if all points are taught for the fourth point method
@@ -222,7 +232,7 @@ public class UserFrame {
 	}
 
 	/**
-	 * TODO comment this
+	 * Reinitializes ALL the frame's fields to their default values.
 	 */
 	public void reset() {
 		name = "";
@@ -247,55 +257,59 @@ public class UserFrame {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Updates the name of this frame.
 	 * 
-	 * @param newName
+	 * @param newName	The new name for the frame
 	 */
 	public void setName(String newName) {
 		name = newName;
 	}
 	
 	/**
-	 * TODO comment this
+	 * Updates the last orientation taught to this frame via the direct entry
+	 * method.
 	 * 
-	 * @param newOrien
+	 * @param newOrien	The latest orientation taught to this frame
 	 */
 	public void setOrienDirect(RQuaternion newOrien) {
 		orienDirect = newOrien;
 	}
 	
 	/**
-	 * TODO comment this
-	 * 
-	 * @param newOrien
+	 * Updates the frames orientation offset.
+	 *  
+	 * @param newOrien	The new orientation offset of this frame
 	 */
 	public void setOrienOffset(RQuaternion newOrien) {
 		orienOffset = newOrien;
 	}
 	
 	/**
-	 * TODO comment this
+	 * Updates the last origin taught to this frame with the direct entry
+	 * method.
 	 * 
-	 * @param newOrigin
+	 * @param newOrigin	The latest origin taught to this frame with the direct
+	 * 					entry method
 	 */
 	public void setOriginDirect(PVector newOrigin) {
 		originDirect = newOrigin;
 	}
 	
 	/**
-	 * TODO comment this
+	 * Updates the origin of this frame.
 	 * 
-	 * @param newOrigin
+	 * @param newOrigin	The new origin of this frame
 	 */
 	public void setOrigin(PVector newOrigin) {
 		originOffset = newOrigin;
 	}
 
 	/**
-	 * TODO comment this
+	 * Updates the teach point associated with the given index, if the given
+	 * index is valid.
 	 * 
-	 * @param pt
-	 * @param idx
+	 * @param pt	The new teach point
+	 * @param idx	The index associated with the new teach point
 	 */
 	public void setTeachPt(Point pt, int idx) {
 		if (idx >= 0 && idx < teachPoints.length) {
@@ -304,9 +318,11 @@ public class UserFrame {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Updates the frame's orientation based off the three teach points
+	 * associated with teaching orientation.
 	 * 
-	 * @return
+	 * @return	If the frame was successfully taught with the three point
+	 * 			method
 	 */
 	public boolean teach3Pt() {
 		if (is3PtComplete()) {
@@ -329,9 +345,10 @@ public class UserFrame {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Updates the frame's origin and orientation based off its teach
+	 * points.
 	 * 
-	 * @return
+	 * @return	If the frame was successfully taught with the four point method
 	 */
 	public boolean teach4Pt() {
 		if (is4PtComplete()) {
@@ -354,9 +371,10 @@ public class UserFrame {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Updates the frame based on direct entry origin and orientation.
 	 * 
-	 * @return
+	 * @return	If the frame was successfully taught with the direct entry
+	 * 			method
 	 */
 	public boolean teachDirectEntry() {
 		if (originDirect != null && orienDirect != null) {

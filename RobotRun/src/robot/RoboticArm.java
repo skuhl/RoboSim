@@ -1712,10 +1712,11 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Checks if the macro key binding associated with the given index is set
+	 * to a macro.
 	 * 
-	 * @param idx
-	 * @return
+	 * @param idx	The index of a macro key binding
+	 * @return		Whether the macro key binding is being used
 	 */
 	public boolean isMarcoSet(int idx) {
 		return macroKeyBinds[idx] != null;

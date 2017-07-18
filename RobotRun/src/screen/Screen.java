@@ -209,10 +209,12 @@ public abstract class Screen {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Converts the frames TCP and orientation offset into a set of display
+	 * lines to render on the pendant screen.
 	 * 
-	 * @param tFrame
-	 * @return
+	 * @param tFrame	The tool frame to render on the pendant screen
+	 * @return			The display lines that represent the given frame's TCP
+	 * 					and orientation offset
 	 */
 	public ArrayList<DisplayLine> loadFrameDetail(ToolFrame tFrame) {
 		ArrayList<DisplayLine> lines = new ArrayList<>();
@@ -226,10 +228,12 @@ public abstract class Screen {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Converts the frame's origin and orientation offset into a set of display
+	 * lines, so that the frame's values can be shown on the pendant screen.
 	 * 
-	 * @param uFrame
-	 * @return
+	 * @param uFrame	The user frame to render on the pendant screen
+	 * @return			The display lines that represent the given frame's
+	 * 					origin and orientation offset
 	 */
 	public ArrayList<DisplayLine> loadFrameDetail(UserFrame uFrame) {
 		ArrayList<DisplayLine> lines = new ArrayList<>();
