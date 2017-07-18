@@ -12,6 +12,7 @@ import java.io.PrintWriter;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
+import camera.RobotCamera;
 import core.RobotRun;
 import expression.BoolMath;
 import expression.BooleanBinaryExpression;
@@ -80,13 +81,6 @@ import robot.RoboticArm;
 public abstract class DataManagement {
 	
 	private static String dataDirPath, errDirPath, tmpDirPath, scenarioDirPath;
-	
-	static {
-		dataDirPath = null;
-		errDirPath = null;
-		tmpDirPath = null;
-		scenarioDirPath = null;
-	}
 	
 	/**
 	 * Prints the given error's stack trace to a log file in the err sub
@@ -166,6 +160,7 @@ public abstract class DataManagement {
 		loadScenarioBytes(process, scenarioDirPath);
 		loadRobotData(process.getRobot(0));
 		loadRobotData(process.getRobot(1));
+		loadCameraData(process);
 		
 		for (int rdx = 0; rdx < 2; ++rdx) {
 			robotPostProcessing(process.getRobot(rdx), process);
@@ -239,8 +234,106 @@ public abstract class DataManagement {
 				null : process.getActiveScenario().getName(), scenarioDirPath);
 		saveRobotData(process.getRobot(0), 15);
 		saveRobotData(process.getRobot(1), 15);
+		saveCameraData(process, process.getRobotCamera());
 	}
 	
+	private static void saveCameraData(RobotRun robotRun, RobotCamera rCam) {
+		File camSave = new File(tmpDirPath + "/camera.bin");
+		
+		// Create dest if it does not already exist
+		if(!camSave.exists()) {   
+			try {
+				camSave.createNewFile();
+				System.err.printf("Successfully created %s.\n", camSave.getName());
+			} catch (IOException IOEx) {
+				System.err.printf("Could not create %s ...\n", camSave.getName());
+				IOEx.printStackTrace();
+				return;
+			}
+		}
+		
+		try {
+			FileOutputStream out = new FileOutputStream(camSave);
+			DataOutputStream dataOut = new DataOutputStream(out);
+			
+			dataOut.writeBoolean(robotRun.isRCamEnable());
+			
+			PVector camPos = rCam.getPosition();
+			RQuaternion camOrient = rCam.getOrientation();
+			
+			// Save cam position
+			dataOut.writeFloat(camPos.x);
+			dataOut.writeFloat(camPos.y);
+			dataOut.writeFloat(camPos.z);
+			
+			// Save cam orientation
+			dataOut.writeFloat(camOrient.w());
+			dataOut.writeFloat(camOrient.x());
+			dataOut.writeFloat(camOrient.y());
+			dataOut.writeFloat(camOrient.z());
+			
+			// Save other parameters (FOV, aspect ratio, etc)
+			dataOut.writeFloat(rCam.getFOV());
+			dataOut.writeFloat(rCam.getAspectRatio());
+			dataOut.writeFloat(rCam.getNearClipDist());
+			dataOut.writeFloat(rCam.getFarClipDist());
+			dataOut.writeFloat(rCam.getExposure());
+			dataOut.writeFloat(rCam.getBrightness());
+			
+			for(WorldObject o : rCam.getTaughtObjects()) {
+				DataManagement.saveWorldObject(o, dataOut);
+			}
+			
+			dataOut.close();
+			out.close();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch(IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private static void loadCameraData(RobotRun robotRun) {
+		File camSave = new File(tmpDirPath + "/camera.bin");
+		
+		try {
+			FileInputStream in = new FileInputStream(camSave);
+			DataInputStream dataIn = new DataInputStream(in);
+			
+			boolean camEnable = dataIn.readBoolean();
+			if(camEnable) {
+				robotRun.button_camToggleActive();
+			}
+			
+			float camPosX = dataIn.readFloat();
+			float camPosY = dataIn.readFloat();
+			float camPosZ = dataIn.readFloat();
+			PVector camPos = new PVector(camPosX, camPosY, camPosZ);
+			
+			float orientW = dataIn.readFloat();
+			float orientX = dataIn.readFloat();
+			float orientY = dataIn.readFloat();
+			float orientZ = dataIn.readFloat();
+			RQuaternion camOrient = new RQuaternion(orientW, orientX, orientY, orientZ);
+			
+			float FOV = dataIn.readFloat();
+			float aspect = dataIn.readFloat();
+			float near = dataIn.readFloat();
+			float far = dataIn.readFloat();
+			float exp = dataIn.readFloat();
+			float br = dataIn.readFloat();
+			
+			robotRun.getRobotCamera().update(camPos, camOrient, FOV, aspect, near, far, exp, br);
+			
+			dataIn.close();
+			in.close();
+		} catch(FileNotFoundException e) {
+			e.printStackTrace();
+		} catch(IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 	public static void exportProgsToTxt(RoboticArm r, String directory) {
 		for(int i = 0; i < r.numOfPrograms(); i += 1) {
 			Program p = r.getProgram(i);
