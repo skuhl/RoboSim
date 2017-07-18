@@ -1,6 +1,7 @@
 package screen.content_disp;
 
 import core.RobotRun;
+import global.Fields;
 import regs.IORegister;
 import robot.RoboticArm;
 import screen.ScreenMode;
@@ -15,6 +16,15 @@ public class ScreenNavIORegs extends ST_ScreenListContents {
 	@Override
 	protected String loadHeader() {
 		return "I/O REGISTERS";
+	}
+	
+	@Override
+	protected void loadLabels() {
+		labels[0] = "[OFF]";
+		labels[1] = "[ON]";
+		labels[2] = "";
+		labels[3] = "";
+		labels[4] = "";
 	}
 	
 	@Override
@@ -48,17 +58,22 @@ public class ScreenNavIORegs extends ST_ScreenListContents {
 	public void actionRt() {
 		// Disable the ability to change columns
 	}
-
+	
 	@Override
-	public void actionEntr() {
+	public void actionF1() {
 		RoboticArm r = robotRun.getActiveRobot();
-		int ioIdx = contents.getCurrentItemIdx();
-		IORegister ioReg = r.getIOReg(ioIdx);
-		
-		if (ioReg != null) {
-			// Toggle the state of the I/O register
-			ioReg.setState(!ioReg.getState());
-			robotRun.updatePendantScreen();
-		}
+		IORegister ioReg = r.getIOReg(contents.getCurrentItemIdx());
+		// Set the selected I/ register's state to off
+		ioReg.setState(Fields.OFF);
+		robotRun.updatePendantScreen();
+	}
+	
+	@Override
+	public void actionF2() {
+		RoboticArm r = robotRun.getActiveRobot();
+		IORegister ioReg = r.getIOReg(contents.getCurrentItemIdx());
+		// Set the selected I/ register's state to on
+		ioReg.setState(Fields.ON);
+		robotRun.updatePendantScreen();
 	}
 }

@@ -2,7 +2,6 @@ package ui;
 
 import java.util.ArrayList;
 
-import global.Fields;
 import global.RMath;
 
 public class MenuScroll {

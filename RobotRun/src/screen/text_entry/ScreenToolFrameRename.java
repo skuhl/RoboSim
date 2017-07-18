@@ -11,13 +11,14 @@ public class ScreenToolFrameRename extends ST_ScreenTextEntry {
 	private int frameIdx;
 	
 	public ScreenToolFrameRename(RobotRun r, int frameIdx) {
-		super(ScreenMode.TFRAME_RENAME, r);
+		super(ScreenMode.TFRAME_RENAME, String.format("TOOL: %d RENAME",
+				frameIdx + 1), r);
 		this.frameIdx = frameIdx;
 	}
 
 	@Override
 	protected String loadHeader() {
-		return String.format("TOOL: %d RENAME", frameIdx);
+		return "";
 	}
 
 	@Override

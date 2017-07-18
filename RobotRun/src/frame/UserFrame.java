@@ -317,7 +317,7 @@ public class UserFrame {
 			
 			if (axesOffset != null) {
 				// Set frame offsets
-				setOrigin(getTeachPt(4).position);
+				setOrigin(getTeachPt(3).position);
 				setOrienOffset( RMath.matrixToQuat(axesOffset) );
 				return true;
 			}

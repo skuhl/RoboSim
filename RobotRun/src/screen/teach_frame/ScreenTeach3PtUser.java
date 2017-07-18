@@ -38,13 +38,13 @@ public class ScreenTeach3PtUser extends ST_ScreenTeachPoints {
 		ArrayList<DisplayLine> lines = new ArrayList<>();
 		
 		String out = (teachFrame.getTeachPt(0) == null) ? "UNINIT" : "RECORDED";
-		lines.add(new DisplayLine(3, 0, "Orient Origin Point: " + out));
+		lines.add(new DisplayLine(0, 0, "Orient Origin Point: " + out));
 		
 		out = (teachFrame.getTeachPt(1) == null) ? "UNINIT" : "RECORDED";
-		lines.add(new DisplayLine(4, 0, "X Axis Point: " + out));
+		lines.add(new DisplayLine(1, 0, "X Axis Point: " + out));
 		
 		out = (teachFrame.getTeachPt(2) == null) ? "UNINIT" : "RECORDED";
-		lines.add(new DisplayLine(5, 0, "Y Axis Point: " + out));
+		lines.add(new DisplayLine(2, 0, "Y Axis Point: " + out));
 		
 		options.setLines(lines);
 	}

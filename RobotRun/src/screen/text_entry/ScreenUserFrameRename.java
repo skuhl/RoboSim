@@ -11,13 +11,14 @@ public class ScreenUserFrameRename extends ST_ScreenTextEntry {
 	private int frameIdx;
 	
 	public ScreenUserFrameRename(RobotRun r, int frameIdx) {
-		super(ScreenMode.UFRAME_RENAME, r);
+		super(ScreenMode.UFRAME_RENAME, String.format("USER: %d RENAME",
+				frameIdx + 1), r);
 		this.frameIdx = frameIdx;
 	}
 
 	@Override
 	protected String loadHeader() {
-		return String.format("USER: %d RENAME", frameIdx);
+		return "";
 	}
 
 	@Override

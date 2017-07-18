@@ -2,7 +2,6 @@ package screen.num_entry;
 
 import core.RobotRun;
 import global.Fields;
-import global.RMath;
 import programming.Program;
 import screen.ScreenMode;
 

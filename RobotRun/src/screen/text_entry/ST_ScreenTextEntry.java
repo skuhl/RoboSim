@@ -33,6 +33,12 @@ public abstract class ST_ScreenTextEntry extends Screen {
 		workingText = new StringBuilder("\0");
 	}
 	
+	public ST_ScreenTextEntry(ScreenMode m, String header, RobotRun r) {
+		super(m, header, r);
+		letterStates = new int[5];
+		workingText = new StringBuilder("\0");
+	}
+	
 	public String getWorkingText() {
 		return workingText.toString();
 	}
