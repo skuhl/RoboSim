@@ -1,4 +1,5 @@
 package frame;
+
 import geom.Point;
 import geom.RMatrix;
 import geom.RQuaternion;
@@ -12,7 +13,7 @@ import processing.core.PVector;
  * 
  * @author Joshua Hooker
  */
-public class UserFrame implements Frame {
+public class UserFrame {
 	
 	private String name;
 	
@@ -34,6 +35,27 @@ public class UserFrame implements Frame {
 		teachPoints = new Point[] { null, null, null, null };
 		originDirect = new PVector(0f, 0f, 0f);
 		orienDirect = new RQuaternion();
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param name
+	 * @param originOffset
+	 * @param orienOffset
+	 * @param teachPoints
+	 * @param originDirect
+	 * @param orienDirect
+	 */
+	public UserFrame(String name, PVector originOffset, RQuaternion orienOffset,
+			Point[] teachPoints, PVector originDirect, RQuaternion orienDirect) {
+		
+		this.name = name;
+		this.originOffset = originOffset;
+		this.orienOffset = orienOffset;
+		this.teachPoints = teachPoints;
+		this.originDirect = originDirect;
+		this.orienDirect = orienDirect;
 	}
 	
 	/**
@@ -141,7 +163,7 @@ public class UserFrame implements Frame {
 	 * @param idx
 	 * @return
 	 */
-	public Point getPoint(int idx) {
+	public Point getTeachPt(int idx) {
 
 		if (idx >= 0 && idx < teachPoints.length) {
 			return teachPoints[idx];
@@ -184,10 +206,10 @@ public class UserFrame implements Frame {
 		orienOffset.setValue(1, 0f);
 		orienOffset.setValue(2, 0f);
 		orienOffset.setValue(3, 0f);
-		setPoint(null, 0);
-		setPoint(null, 1);
-		setPoint(null, 2);
-		setPoint(null, 3);
+		setTeachPt(null, 0);
+		setTeachPt(null, 1);
+		setTeachPt(null, 2);
+		setTeachPt(null, 3);
 		originDirect.x = 0f;
 		originDirect.y = 0f;
 		originDirect.z = 0f;
@@ -248,7 +270,7 @@ public class UserFrame implements Frame {
 	 * @param p
 	 * @param idx
 	 */
-	public void setPoint(Point p, int idx) {
+	public void setTeachPt(Point p, int idx) {
 		if (idx >= 0 && idx < teachPoints.length) {
 			teachPoints[idx] = p;
 		}
@@ -261,9 +283,9 @@ public class UserFrame implements Frame {
 	 */
 	public boolean teach3Pt() {
 		if (is3PtComplete()) {
-			Point pt0 = getPoint(0);
-			Point pt1 = getPoint(1);
-			Point pt2 = getPoint(2);
+			Point pt0 = getTeachPt(0);
+			Point pt1 = getTeachPt(1);
+			Point pt2 = getTeachPt(2);
 			// Form the orientation offset from the taught points
 			RMatrix axesOffset = Fields.createAxesFromThreePoints(pt0.position,
 					pt1.position, pt2.position);
@@ -286,16 +308,16 @@ public class UserFrame implements Frame {
 	 */
 	public boolean teach4Pt() {
 		if (is4PtComplete()) {
-			Point pt0 = getPoint(0);
-			Point pt1 = getPoint(1);
-			Point pt2 = getPoint(2);
+			Point pt0 = getTeachPt(0);
+			Point pt1 = getTeachPt(1);
+			Point pt2 = getTeachPt(2);
 			// Form the orientation offset from the taught points
 			RMatrix axesOffset = Fields.createAxesFromThreePoints(pt0.position,
 					pt1.position, pt2.position);
 			
 			if (axesOffset != null) {
 				// Set frame offsets
-				setOrigin(getPoint(4).position);
+				setOrigin(getTeachPt(4).position);
 				setOrienOffset( RMath.matrixToQuat(axesOffset) );
 				return true;
 			}

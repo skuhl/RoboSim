@@ -1,4 +1,5 @@
 package frame;
+
 import geom.Point;
 import geom.RMatrix;
 import geom.RQuaternion;
@@ -12,7 +13,7 @@ import processing.core.PVector;
  * 
  * @author Joshua Hooker
  */
-public class ToolFrame implements Frame {
+public class ToolFrame {
 	
 	private String name;
 	
@@ -27,7 +28,7 @@ public class ToolFrame implements Frame {
 	
 	
 	/**
-	 * Initialize all fields to their defualt values.
+	 * Initialize all fields to their default values.
 	 */
 	public ToolFrame() {
 		name = "";
@@ -55,7 +56,7 @@ public class ToolFrame implements Frame {
 		this.TCPOffset = TCPOffset;
 		this.orienOffset = orienOffset;
 		this.teachPoints = teachPoints;
-		this.TCPOffset = TCPDirect;
+		this.TCPDirect = TCPDirect;
 		this.orienDirect = orienDirect;
 	}
 	
@@ -146,7 +147,7 @@ public class ToolFrame implements Frame {
 	 * @param idx
 	 * @return
 	 */
-	public Point getPoint(int idx) {
+	public Point getTeactPt(int idx) {
 		if (idx >= 0 && idx < teachPoints.length) {
 			return teachPoints[idx];
 		}
@@ -208,12 +209,12 @@ public class ToolFrame implements Frame {
 		orienOffset.setValue(1, 0f);
 		orienOffset.setValue(2, 0f);
 		orienOffset.setValue(3, 0f);
-		setPoint(null, 0);
-		setPoint(null, 1);
-		setPoint(null, 2);
-		setPoint(null, 3);
-		setPoint(null, 4);
-		setPoint(null, 5);
+		setTeachPt(null, 0);
+		setTeachPt(null, 1);
+		setTeachPt(null, 2);
+		setTeachPt(null, 3);
+		setTeachPt(null, 4);
+		setTeachPt(null, 5);
 		TCPDirect.x = 0f;
 		TCPDirect.y = 0f;
 		TCPDirect.z = 0f;
@@ -257,7 +258,7 @@ public class ToolFrame implements Frame {
 	 * @param p
 	 * @param idx
 	 */
-	public void setPoint(Point p, int idx) {
+	public void setTeachPt(Point p, int idx) {
 		if (idx >= 0 && idx < teachPoints.length) {
 			teachPoints[idx] = p;
 		}
@@ -288,9 +289,9 @@ public class ToolFrame implements Frame {
 	 */
 	public boolean teach3Pt() {
 		if (is3PtComplete()) {
-			Point pt0 = getPoint(0);
-			Point pt1 = getPoint(1);
-			Point pt2 = getPoint(2);
+			Point pt0 = getTeactPt(0);
+			Point pt1 = getTeactPt(1);
+			Point pt2 = getTeactPt(2);
 			
 			RMatrix pt0Orien = pt0.orientation.toMatrix();
 			RMatrix pt1Orien = pt1.orientation.toMatrix();
@@ -319,12 +320,12 @@ public class ToolFrame implements Frame {
 	 */
 	public boolean teach6Pt() {
 		if (is6PtComplete()) {
-			Point pt0 = getPoint(0);
-			Point pt1 = getPoint(1);
-			Point pt2 = getPoint(2);
-			Point pt3 = getPoint(3);
-			Point pt4 = getPoint(4);
-			Point pt5 = getPoint(5);
+			Point pt0 = getTeactPt(0);
+			Point pt1 = getTeactPt(1);
+			Point pt2 = getTeactPt(2);
+			Point pt3 = getTeactPt(3);
+			Point pt4 = getTeactPt(4);
+			Point pt5 = getTeactPt(5);
 			
 			RMatrix pt0Orien = pt0.orientation.toMatrix();
 			RMatrix pt1Orien = pt1.orientation.toMatrix();

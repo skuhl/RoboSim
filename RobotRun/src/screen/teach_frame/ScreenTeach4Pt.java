@@ -37,16 +37,16 @@ public class ScreenTeach4Pt extends ST_ScreenTeachPoints {
 		UserFrame teachFrame = r.getUserFrame(frameIdx);
 		ArrayList<DisplayLine> lines = new ArrayList<>();
 		
-		String out = (teachFrame.getPoint(0) == null) ? "UNINIT" : "RECORDED";
+		String out = (teachFrame.getTeachPt(0) == null) ? "UNINIT" : "RECORDED";
 		lines.add(new DisplayLine(3, 0, "Orient Origin Point: " + out));
 		
-		out = (teachFrame.getPoint(1) == null) ? "UNINIT" : "RECORDED";
+		out = (teachFrame.getTeachPt(1) == null) ? "UNINIT" : "RECORDED";
 		lines.add(new DisplayLine(4, 0, "X Axis Point: " + out));
 		
-		out = (teachFrame.getPoint(2) == null) ? "UNINIT" : "RECORDED";
+		out = (teachFrame.getTeachPt(2) == null) ? "UNINIT" : "RECORDED";
 		lines.add(new DisplayLine(5, 0, "Y Axis Point: " + out));
 		
-		out = (teachFrame.getPoint(2) == null) ? "UNINIT" : "RECORDED";
+		out = (teachFrame.getTeachPt(2) == null) ? "UNINIT" : "RECORDED";
 		lines.add(new DisplayLine(5, 0, "Origin: " + out));
 		
 		options.setLines(lines);
@@ -78,7 +78,7 @@ public class ScreenTeach4Pt extends ST_ScreenTeachPoints {
 		g.noFill();
 		
 		for (int idx = 0; idx < 4; ++idx){
-			Point pt = teachFrame.getPoint(idx);
+			Point pt = teachFrame.getTeachPt(idx);
 			// Draw each initialized teach point
 			if (pt != null) {
 				PVector pos = pt.position;
@@ -99,7 +99,7 @@ public class ScreenTeach4Pt extends ST_ScreenTeachPoints {
 		RoboticArm r = robotRun.getActiveRobot();
 		UserFrame teachFrame = r.getUserFrame(frameIdx);
 		
-		return teachFrame.getPoint(idx);
+		return teachFrame.getTeachPt(idx);
 	}
 
 	@Override
@@ -115,6 +115,6 @@ public class ScreenTeach4Pt extends ST_ScreenTeachPoints {
 		RoboticArm r = robotRun.getActiveRobot();
 		UserFrame teachFrame = r.getUserFrame(frameIdx);
 		
-		teachFrame.setPoint(pt, idx);
+		teachFrame.setTeachPt(pt, idx);
 	}
 }

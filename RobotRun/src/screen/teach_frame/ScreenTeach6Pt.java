@@ -37,22 +37,22 @@ public class ScreenTeach6Pt extends ST_ScreenTeachPoints {
 		ToolFrame teachFrame = r.getToolFrame(frameIdx);
 		ArrayList<DisplayLine> lines = new ArrayList<>();
 		
-		String out = (teachFrame.getPoint(0) == null) ? "UNINIT" : "RECORDED";
+		String out = (teachFrame.getTeactPt(0) == null) ? "UNINIT" : "RECORDED";
 		lines.add(new DisplayLine(0, 0, "First Approach Point: " + out));
 		
-		out = (teachFrame.getPoint(1) == null) ? "UNINIT" : "RECORDED";
+		out = (teachFrame.getTeactPt(1) == null) ? "UNINIT" : "RECORDED";
 		lines.add(new DisplayLine(1, 0, "Second Approach Point: " + out));
 		
-		out = (teachFrame.getPoint(2) == null) ? "UNINIT" : "RECORDED";
+		out = (teachFrame.getTeactPt(2) == null) ? "UNINIT" : "RECORDED";
 		lines.add(new DisplayLine(2, 0, "Third Approach Point: " + out));
 		
-		out = (teachFrame.getPoint(3) == null) ? "UNINIT" : "RECORDED";
+		out = (teachFrame.getTeactPt(3) == null) ? "UNINIT" : "RECORDED";
 		lines.add(new DisplayLine(3, 0, "Orient Origin Point: " + out));
 		
-		out = (teachFrame.getPoint(4) == null) ? "UNINIT" : "RECORDED";
+		out = (teachFrame.getTeactPt(4) == null) ? "UNINIT" : "RECORDED";
 		lines.add(new DisplayLine(4, 0, "X Axis Point: " + out));
 		
-		out = (teachFrame.getPoint(5) == null) ? "UNINIT" : "RECORDED";
+		out = (teachFrame.getTeactPt(5) == null) ? "UNINIT" : "RECORDED";
 		lines.add(new DisplayLine(5, 0, "Y Axis Point: " + out));
 		
 		options.setLines(lines);
@@ -84,7 +84,7 @@ public class ScreenTeach6Pt extends ST_ScreenTeachPoints {
 		g.noFill();
 		
 		for (int idx = 0; idx < 6; ++idx){
-			Point pt = teachFrame.getPoint(idx);
+			Point pt = teachFrame.getTeactPt(idx);
 			// Draw each initialized teach point
 			if (pt != null) {
 				PVector pos = pt.position;
@@ -105,7 +105,7 @@ public class ScreenTeach6Pt extends ST_ScreenTeachPoints {
 		RoboticArm r = robotRun.getActiveRobot();
 		ToolFrame teachFrame = r.getToolFrame(frameIdx);
 		
-		return teachFrame.getPoint(idx);
+		return teachFrame.getTeactPt(idx);
 	}
 
 	@Override
@@ -121,6 +121,6 @@ public class ScreenTeach6Pt extends ST_ScreenTeachPoints {
 		RoboticArm r = robotRun.getActiveRobot();
 		ToolFrame teachFrame = r.getToolFrame(frameIdx);
 		
-		teachFrame.setPoint(pt, idx);
+		teachFrame.setTeachPt(pt, idx);
 	}
 }
