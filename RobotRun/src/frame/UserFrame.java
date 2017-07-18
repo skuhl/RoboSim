@@ -9,20 +9,42 @@ import global.RMath;
 import processing.core.PVector;
 
 /**
- * TODO general comments
+ * Defines user frames associated with a robotic arm.
  * 
  * @author Joshua Hooker
  */
 public class UserFrame {
 	
+	/**
+	 * The name associated with this frame.
+	 */
 	private String name;
 	
+	/**
+	 * The origin of this frame's coordinate frame.
+	 */
 	private PVector originOffset;
+	
+	/**
+	 * The orientation of this frame's coordinate frame.
+	 */
 	private RQuaternion orienOffset;
 	
+	/**
+	 * The set of taught and untaught points for this frame's point teaching
+	 * methods. A user frame has a maximum of 4 points that can be taught
+	 * (three for orientation and one for the origin).
+	 */
 	private Point[] teachPoints;
 	
+	/**
+	 * The last origin taught as a direct entry for this frame.
+	 */
 	private PVector originDirect;
+	
+	/**
+	 * The last orientation offset taught as a direct entry for this frame.
+	 */
 	private RQuaternion orienDirect;
 
 	/**
@@ -38,14 +60,17 @@ public class UserFrame {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Defines a user frame with the given fields.
 	 * 
-	 * @param name
-	 * @param originOffset
-	 * @param orienOffset
-	 * @param teachPoints
-	 * @param originDirect
-	 * @param orienDirect
+	 * @param name			The name associated with the frame
+	 * @param originOffset	The current origin offset of this frame
+	 * @param orienOffset	The current orientation offset of this frame
+	 * @param teachPoints	The set of taught and untaught points for this
+	 * 						frame (must be of length 4)
+	 * @param originDirect	The last origin taught to this frame with the
+	 * 						direct entry method
+	 * @param orienDirect	The last orientation taught to this with the direct
+	 * 						entry method
 	 */
 	public UserFrame(String name, PVector originOffset, RQuaternion orienOffset,
 			Point[] teachPoints, PVector originDirect, RQuaternion orienDirect) {
@@ -104,54 +129,56 @@ public class UserFrame {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Returns the name associated with this frame
 	 * 
-	 * @return
+	 * @return	This frame's name
 	 */
 	public String getName() {
 		return name;
 	}
 	
 	/**
-	 * TODO comment this
+	 * Returns this frame's orientation offset as a rotation matrix.
 	 * 
-	 * @return
+	 * @return	The orientation offset of this frame
 	 */
 	public RMatrix getNativeAxisVectors() {
 		return orienOffset.toMatrix();
 	}
 	
 	/**
-	 * TODO comment this
+	 * Returns the last orientation taught to this frame with the direct entry
+	 * method.
 	 * 
-	 * @return
+	 * @return	The last direct entry orientation offset taught
 	 */
 	public RQuaternion getOrienDirect() {
 		return orienDirect;
 	}
 	
 	/**
-	 * TODO comment this
+	 * Returns the current orientation offset of this frame.
 	 * 
-	 * @return
+	 * @return	This frame's orientation offset
 	 */
 	public RQuaternion getOrientation() {
 		return orienOffset;
 	}
 	
 	/**
-	 * TODO comment this
+	 * Returns the last origin taught to this frame with the direct entry
+	 * method.
 	 * 
-	 * @return
+	 * @return	the last direct entry origin taught
 	 */
 	public PVector getOriginDirect() {
 		return originDirect;
 	}
 	
 	/**
-	 * TODO comment this
+	 * Returns the current origin of this frame.
 	 * 
-	 * @return
+	 * @return	This frame's origin
 	 */
 	public PVector getOrigin() {
 		return originOffset;
@@ -267,12 +294,12 @@ public class UserFrame {
 	/**
 	 * TODO comment this
 	 * 
-	 * @param p
+	 * @param pt
 	 * @param idx
 	 */
-	public void setTeachPt(Point p, int idx) {
+	public void setTeachPt(Point pt, int idx) {
 		if (idx >= 0 && idx < teachPoints.length) {
-			teachPoints[idx] = p;
+			teachPoints[idx] = pt;
 		}
 	}
 	

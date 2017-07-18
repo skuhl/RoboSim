@@ -544,8 +544,8 @@ public class WGUI implements ControlListener {
 		addTextarea("WOEditLbl", "Object:", editWO, mLblWidth, fieldHeight, Fields.medium);
 
 		togValues = new float[] { 0f, 1f };
-		togNames = new String[] { "PositionOpt", "OtherOpt" };
-		togLbls = new String[] { "Position", "Other" };
+		togNames = new String[] { "PositionOpt", "EditOpt" };
+		togLbls = new String[] { "Position", "Edit" };
 		
 		addTextarea("EditTabLbl", "Options:", editWO, mLblWidth, fieldHeight,
 				Fields.medium);

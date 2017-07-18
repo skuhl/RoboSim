@@ -9,21 +9,43 @@ import global.RMath;
 import processing.core.PVector;
 
 /**
- * TODO general comments
+ * Defines tool frames of a robotic arm.
  * 
  * @author Joshua Hooker
  */
 public class ToolFrame {
 	
+	/**
+	 * The name associated with this frame.
+	 */
 	private String name;
 	
+	/**
+	 * The current TCP offset of this frame.
+	 */
 	private PVector TCPOffset;
 	
+	/**
+	 * The current orientation offset of this frame.
+	 */
 	private RQuaternion orienOffset;
 	
+	/**
+	 * The set of taught and untaught points for this frame's point teaching
+	 * methods. A tool frame has a maximum of six points that can be taught
+	 * (three for the TCP and three for the orientation).
+	 */
 	private final Point[] teachPoints;
 	
+	/**
+	 * The last TCP taught with the direct entry method to this frame.
+	 */
 	private PVector TCPDirect;
+	
+	/**
+	 * The last orientation offset taught with the direct entry method to this
+	 * frame.
+	 */
 	private RQuaternion orienDirect;
 	
 	
@@ -40,14 +62,17 @@ public class ToolFrame {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Creates the frame defined by the given fields.
 	 * 
-	 * @param name
-	 * @param TCPOffset
-	 * @param orienOffset
-	 * @param teachPoints
-	 * @param TCPDirect
-	 * @param orienDirect
+	 * @param name			The name associated with the frame
+	 * @param TCPOffset		The current TCP offset of the frame
+	 * @param orienOffset	The current orientation offset of the frame
+	 * @param teachPoints	The current set of taught and untaught points
+	 * 						(must be of length 6)
+	 * @param TCPDirect		The last TCP offset taught via a direct entry to
+	 * 						the frame
+	 * @param orienDirect	The last orientation offset taught via direct entry
+	 * 						to the frame
 	 */
 	public ToolFrame(String name, PVector TCPOffset, RQuaternion orienOffset,
 			Point[] teachPoints, PVector TCPDirect, RQuaternion orienDirect) {
@@ -106,46 +131,55 @@ public class ToolFrame {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Getter method for this frame's name.
 	 * 
-	 * @return
+	 * @return	This frame's name
 	 */
 	public String getName() {
 		return name;
 	}
 	
 	/**
-	 * TODO comment this
+	 * Returns the frame's orientation offset as a rotation matrix.
 	 * 
-	 * @return
+	 * @return	The orientation offset of this frame
 	 */
 	public RMatrix getNativeAxisVectors() {
 		return orienOffset.toMatrix();
 	}
 	
 	/**
-	 * TODO comment this
+	 * Returns the last orientation taught to this frame via a direct entry.
 	 * 
-	 * @return
+	 * @return	The last direct entry orientation offset
 	 */
 	public RQuaternion getOrienDirect() {
 		return orienDirect;
 	}
 	
 	/**
-	 * TODO comment this
+	 * Returns the current orientation offset of this frame.
 	 * 
-	 * @return
+	 * @return	This frame's orientation offset
 	 */
 	public RQuaternion getOrientationOffset() {
 		return orienOffset;
 	}
 	
 	/**
-	 * TODO comment this
+	 * Returns the teach point of this frame associated with the given index.
+	 * The index-point association is as follows:
 	 * 
-	 * @param idx
-	 * @return
+	 * 0-2	->	the TCP points
+	 * 3	->	the orient origin point
+	 * 4	->	the x direction point
+	 * 5	->	the y direction point
+	 * 
+	 * If a point is untaught or if the given index is invalid, then null is
+	 * returned.
+	 * 
+	 * @param idx	The index of a taught point
+	 * @return		The point associated with the given index or null
 	 */
 	public Point getTeactPt(int idx) {
 		if (idx >= 0 && idx < teachPoints.length) {
@@ -156,27 +190,29 @@ public class ToolFrame {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Returns the last TCP offset taught to this frame with the direct entry
+	 * method.
 	 * 
-	 * @return
+	 * @return	The last direct entry TCP offset
 	 */
 	public PVector getTCPDirect() {
 		return TCPDirect;
 	}
 	
 	/**
-	 * TODO comment this
+	 * The current TCP offset of this frame.
 	 * 
-	 * @return
+	 * @return	This frame's TCP offset
 	 */
 	public PVector getTCPOffset() {
 		return TCPOffset;
 	}
 	
 	/**
-	 * TODO comment this
+	 * Determines if all the teach points for the TCP offset are taught for
+	 * this frame.
 	 * 
-	 * @return
+	 * @return	If the teach points for the TCP offset are taught
 	 */
 	public boolean is3PtComplete() {
 		// Check if all points are taught for the three point method
@@ -185,9 +221,10 @@ public class ToolFrame {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Determines if all the teach points for both the TCP and orientation
+	 * offset are taught for this frame.
 	 * 
-	 * @return
+	 * @return	If all teach points are taught
 	 */
 	public boolean is6PtComplete() {
 		// Check if all points are taught for the six point method
@@ -198,7 +235,7 @@ public class ToolFrame {
 	
 
 	/**
-	 * TODO comment this
+	 * Reinitializes ALL this frames fields to their default values.
 	 */
 	public void reset() {
 		name = "";
@@ -225,67 +262,69 @@ public class ToolFrame {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Updates this frames name.
 	 * 
-	 * @param newName
-	 * @return
+	 * @param newName	The new name for this frame
 	 */
 	public void setName(String newName) {
 		name = newName;
 	}
 	
 	/**
-	 * TODO comment this
+	 * Updates the last orientation direct entry taught to this frame.
 	 * 
-	 * @param newOrien
+	 * @param newOrien	The latest orientation offset taught via the direct
+	 * 					entry method
 	 */
 	public void setOrienDirect(RQuaternion newOrien) {
 		orienDirect = newOrien;
 	}
 	
 	/**
-	 * TODO comment this
+	 * Updates the orientation offset of this frame.
 	 * 
-	 * @param newOrien
+	 * @param newOrien	The new orientation offset
 	 */
 	public void setOrienOffset(RQuaternion newOrien) {
 		orienOffset = newOrien;
 	}
 
 	/**
-	 * TODO comment this
+	 * Updates a point taught to this frame.
 	 * 
-	 * @param p
-	 * @param idx
+	 * @param pt		The new taught point
+	 * @param idx		The index of the new taught point
 	 */
-	public void setTeachPt(Point p, int idx) {
+	public void setTeachPt(Point pt, int idx) {
 		if (idx >= 0 && idx < teachPoints.length) {
-			teachPoints[idx] = p;
+			teachPoints[idx] = pt;
 		}
 	}
 	
 	/**
-	 * TODO comment this
+	 * Updates the last TCP taught to this frame with the direct entry method.
 	 * 
-	 * @param newTCP
+	 * @param newTCP	The latest TCP offset taught via the direct entry
+	 * 					method
 	 */
 	public void setTCPDirect(PVector newTCP) {
 		TCPDirect = newTCP;
 	}
 	
 	/**
-	 * TODO comment this
+	 * Updates the TCP offset of this frame.
 	 * 
-	 * @param newOffset
+	 * @param newOffset	The new TCP offset of this frame
 	 */
 	public void setTCPOffset(PVector newTCP) {
 		TCPOffset = newTCP;
 	}
 	
 	/**
-	 * TODO comment this
+	 * Updates the TCP of this frame based off the TCP teach points associated
+	 * with this frame.
 	 * 
-	 * @return
+	 * @return	If the frame was taught correctly with the three point method
 	 */
 	public boolean teach3Pt() {
 		if (is3PtComplete()) {
@@ -314,9 +353,10 @@ public class ToolFrame {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Updates the TCP and orientation offset of this frame based off the teach
+	 * points associated with this frame.
 	 * 
-	 * @return
+	 * @return	If the frame was taught successfully with the six point method
 	 */
 	public boolean teach6Pt() {
 		if (is6PtComplete()) {
@@ -351,9 +391,11 @@ public class ToolFrame {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Updates the TCP and orientation offset of this frame with the direct
+	 * entry TCP and orientation offsets.
 	 * 
-	 * @return
+	 * @return	If the frame was taught successfully with the direct entry
+	 * 			method
 	 */
 	public boolean teachDirectEntry() {
 		if (TCPDirect != null && orienDirect != null) {
