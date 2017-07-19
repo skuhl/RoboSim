@@ -18,7 +18,7 @@ public class OperandCamObj extends Operand<WorldObject> implements BoolMath {
 	@Override
 	public Boolean getBoolValue() {
 		if(value != null) {
-			return CAM.isObjectInFrame(value, RobotRun.getInstanceScenario());
+			return CAM.isMatchVisible(value, RobotRun.getInstanceScenario());
 		} else {
 			return false;
 		}

@@ -330,10 +330,10 @@ public abstract class DataManagement {
 			float aspect = dataIn.readFloat();
 			float near = dataIn.readFloat();
 			float far = dataIn.readFloat();
-			float exp = dataIn.readFloat();
 			float br = dataIn.readFloat();
+			float exp = dataIn.readFloat();
 			
-			robotRun.getRobotCamera().update(camPos, camOrient, FOV, aspect, near, far, exp, br);
+			robotRun.getRobotCamera().update(camPos, camOrient, FOV, aspect, near, far, br, exp);
 			
 			dataIn.close();
 			in.close();
@@ -1351,8 +1351,8 @@ public abstract class DataManagement {
 			dataOut.writeFloat(rCam.getAspectRatio());
 			dataOut.writeFloat(rCam.getNearClipDist());
 			dataOut.writeFloat(rCam.getFarClipDist());
-			dataOut.writeFloat(rCam.getExposure());
 			dataOut.writeFloat(rCam.getBrightness());
+			dataOut.writeFloat(rCam.getExposure());
 			
 			for(WorldObject o : rCam.getTaughtObjects()) {
 				DataManagement.saveWorldObject(o, dataOut);
