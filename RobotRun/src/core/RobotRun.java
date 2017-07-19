@@ -70,6 +70,7 @@ import ui.Camera;
 import ui.DisplayLine;
 import ui.KeyCodeMap;
 import ui.MenuScroll;
+import ui.RecordScreen;
 import undo.WOUndoCurrent;
 import undo.WOUndoDelete;
 import undo.WOUndoState;
@@ -88,10 +89,6 @@ public class RobotRun extends PApplet {
 	
 	public static RobotRun getInstance() {
 		return instance;
-	}
-	
-	public static RoboticArm getInstanceRobot() {
-		return instance.getActiveRobot();
 	}
 
 	public static void main(String[] args) {
@@ -141,7 +138,6 @@ public class RobotRun extends PApplet {
 	private ProgExecution progExecState;
 	private boolean rCamEnable = false;
 	private RobotCamera rCamera;
-	private boolean record;
 
 	private final HashMap<Integer, RoboticArm> ROBOTS = new HashMap<>();
 	private RTrace robotTrace;
@@ -150,11 +146,14 @@ public class RobotRun extends PApplet {
 	private final ArrayList<Scenario> SCENARIOS = new ArrayList<>();
 	
 	private ScreenManager screens;
-	private boolean shift = false; // Is shift button pressed or not?
 	
+	private boolean shift = false; // Is shift button pressed or not?
 	private boolean step = false; // Is step button pressed or not?
 
 	private WGUI UI;
+	
+	private RecordScreen record;
+	
 	/**
 	 * Applies the active camera to the matrix stack.
 	 * 
@@ -2128,7 +2127,7 @@ public class RobotRun extends PApplet {
 	}
 
 	public boolean getRecord() {
-		return record;
+		return record.isRecording();
 	}
 
 	/**
@@ -3070,7 +3069,7 @@ public class RobotRun extends PApplet {
 	}
 
 	public void setRecord(boolean state) {
-		record = state;
+		record.setRecording(state);
 	}
 	
 	/**
@@ -3143,20 +3142,20 @@ public class RobotRun extends PApplet {
 		
 		instance = this;
 		
-		RegisteredModels.loadModelDefs();
+		RegisteredModels.loadModelDefs(this);
 		
 		// create font and text display background
 		Fields.medium = createFont("fonts/Consolas.ttf", 14);
 		Fields.small = createFont("fonts/Consolas.ttf", 12);
 		Fields.bond = createFont("fonts/ConsolasBold.ttf", 12);
 		
-		record = false;
 		camera = new Camera();
 		rCamera = new RobotCamera();
 		robotTrace = new RTrace();
 		activeRobot = new Pointer<>(null);
 		activeScenario = new Pointer<>(null);
 		
+		CallInstruction.setRobotRef(activeRobot);
 		OperandCamObj.setCamRef(rCamera);
 		OperandCamObj.setScenarioRef(activeScenario);
 		
@@ -3166,6 +3165,7 @@ public class RobotRun extends PApplet {
 		mInstRobotAt = new HashMap<>();
 		
 		UI = new WGUI(this, buttonImages);
+		record = new RecordScreen();
 		
 		background(255);
 		
@@ -3978,7 +3978,7 @@ public class RobotRun extends PApplet {
 			lastTextPositionY += 20;
 		}
 		
-		if (record) {
+		if (record.isRecording()) {
 			text("Recording (press Ctrl + Alt + r)",
 					lastTextPositionX, lastTextPositionY);
 			lastTextPositionY += 20;

@@ -608,10 +608,8 @@ public abstract class DataManagement {
 			boolean isCommented = in.readBoolean();
 			int tgtRID = in.readInt();
 			String pName = in.readUTF();
-			// TODO Refactor THIS
-			RoboticArm tgt = RobotRun.getInstance().getRobot(tgtRID);
 			
-			inst = new CallInstruction(tgt, pName);
+			inst = new CallInstruction(tgtRID, pName);
 			inst.setIsCommented(isCommented);
 
 		} else if (instType == 8) {
@@ -1315,9 +1313,12 @@ public abstract class DataManagement {
 				if (inst instanceof CallInstruction) {
 					// Update a top call instruction
 					CallInstruction cInst = (CallInstruction)inst;
+					RoboticArm tgtDevice = process.getRobot(cInst.getLoadedID());
+					String tgtName = cInst.getLoadedName();
 					
-					if (cInst.getTgtDevice() != null && cInst.getLoadedName() != null) {
-						Program tgt = cInst.getTgtDevice().getProgram(cInst.getLoadedName());
+					cInst.setTgtDevice(tgtDevice);
+					if (tgtDevice != null && tgtName != null) {
+						Program tgt = tgtDevice.getProgram(cInst.getLoadedName());
 						cInst.setProg(tgt);
 					}
 					

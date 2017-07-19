@@ -5,10 +5,26 @@ import java.util.Calendar;
 import core.RobotRun;
 import global.Fields;
 
+/**
+ * TODO general comments
+ * 
+ * @author James Walker
+ */
 public class RecordScreen implements Runnable {
 	
+	private boolean recording;
+	
 	public RecordScreen() {
-		Fields.debug("Record screen...\n");
+		recording = false;
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @return
+	 */
+	public boolean isRecording() {
+		return recording;
 	}
 	
 	@Override
@@ -29,15 +45,23 @@ public class RecordScreen implements Runnable {
 					"video=\"screen-capture-recorder\":audio=\"Microphone" + 
 					" (Conexant SmartAudio HD)\" " + filename );
 			Process proc = rt.exec(script); */
-			while(RobotRun.getInstance().getRecord()) {
+			while(!recording) {
 				Thread.sleep(4000);
 			}
 			rt.exec("taskkill /F /IM ffmpeg.exe"); // close ffmpeg
 			Fields.debug("finish recording\n");
 
-		}catch (Throwable t) {
+		} catch (Throwable t) {
 			t.printStackTrace();
 		}
-
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param state
+	 */
+	public void setRecording(boolean state) {
+		recording = state;
 	}
 }

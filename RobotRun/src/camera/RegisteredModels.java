@@ -17,8 +17,8 @@ public class RegisteredModels {
 	public static final int ID_CUBE 	= -2;
 	public static final int ID_CYLINDER	= -3;
 		
-	public static void loadModelDefs() {
-		String path = RobotRun.getInstance().sketchPath();
+	public static void loadModelDefs(RobotRun robotRun) {
+		String path = robotRun.sketchPath();
 		JSONObject root = RobotRun.loadJSONObject(new File(path + "/data/defs/models.json"));
 		JSONArray objList = root.getJSONArray("objList");
 		
