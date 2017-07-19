@@ -18,11 +18,9 @@ public class RobotCamera {
 	private float camAspectRatio; // Ratio of horizontal : vertical camera frustum size 
 	private float camClipFar; // The distance from the camera to the far clipping plane
 	private float camClipNear; // The distance from the camera to the near clipping plane
-	
 	private float camFOV; // Horizontal view angle of the camera, in degrees
 	private RQuaternion camOrient;
 	private PVector camPos;
-	
 	private float exposure;
 	private final int RES = 8;
 	private float sensitivity;
@@ -32,18 +30,29 @@ public class RobotCamera {
 		this(-500, 0, 500, new RQuaternion(), 75, 1.5f, 0.5f, 1000);
 	}
 	
-	public RobotCamera(float posX, float posY, float posZ, RQuaternion q, 
+	public RobotCamera(float posX, float posY, float posZ, RQuaternion orient, 
 			float fov, float ar, float near, float far) {
-		camPos = new PVector(posX, posY, posZ);
-		camOrient = q;
+		this(new PVector(posX, posY, posZ), orient, fov, ar, near, far, 10.0f, 0.1f);
+	}
+	
+	public RobotCamera(PVector pos, RQuaternion orient, float fov, float ar, float near, float far,
+			float br, float exp) {
+		camPos = pos;
+		camOrient = orient;
 		camFOV = fov;
 		camAspectRatio = ar;
 		camClipNear = near;
 		camClipFar = far;
 		sensitivity = 0.75f;
-		brightness = 10.0f;
-		exposure = 0.1f;
+		brightness = br;
+		exposure = exp;
 		taughtObjects = new ArrayList<WorldObject>();
+	}
+
+	public void addTaughtObject(WorldObject o) {
+		if(o instanceof Part) {
+			taughtObjects.add(o);
+		}
 	}
 	
 	public void camLookAt(PVector p, PVector up) {
@@ -445,6 +454,19 @@ public class RobotCamera {
 			float near, float far, float br, float exp) {
 		camPos = RMath.vFromWorld(pos);
 		camOrient = RMath.wEulerToNQuat(rot);
+		camFOV = fov;
+		camAspectRatio = ar;
+		camClipNear = near;
+		camClipFar = far;
+		brightness = br;
+		exposure = exp;
+		return this;
+	}
+	
+	public RobotCamera update(PVector pos, RQuaternion orient, float fov, float ar, 
+			float near, float far, float br, float exp) {
+		camPos = pos;
+		camOrient = orient;
 		camFOV = fov;
 		camAspectRatio = ar;
 		camClipNear = near;

@@ -665,6 +665,14 @@ public class WGUI implements ControlListener {
 		addButton(WGUI_Buttons.RobotToggleTrace, "Enable Trace", miscellaneous, mdropItemWidth, sButtonHeight, Fields.small);
 		addButton(WGUI_Buttons.RobotClearTrace, "Clear Trace", miscellaneous, mdropItemWidth, sButtonHeight, Fields.small);
 		
+		if(app.isRCamEnable()) {
+			getButton(WGUI_Buttons.CamToggleActive).setSwitch(true);
+			getButton(WGUI_Buttons.CamToggleActive).setOn();
+			getButton(WGUI_Buttons.CamToggleActive).setSwitch(false);
+			System.out.println(getButton(WGUI_Buttons.CamToggleActive).isOn());
+
+		}
+		
 		/* Initialize dropdown list elements
 		 * 
 		 * NOTE: the order in which the dropdown lists matters!
@@ -2360,13 +2368,13 @@ public class WGUI implements ControlListener {
 	}
 	
 	public boolean toggleCamera() {
-		
 		if (menu == WindowTab.CAMERA) {
 			windowTabs.setLabel("Hide");
 		}
 
 		// Remove or add the camera tab based on the camera toggle button
 		Button tc = getButton(WGUI_Buttons.CamToggleActive);
+		
 		if(tc.isOn()) {
 			tc.setLabel("Disable RCam");
 		}

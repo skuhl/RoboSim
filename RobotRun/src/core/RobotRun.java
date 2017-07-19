@@ -115,9 +115,7 @@ public class RobotRun extends PApplet {
 	private Pointer<RoboticArm> activeRobot;
 	private Pointer<Scenario> activeScenario;
 	
-	private boolean camEnable = false;
 	private Camera camera;
-	
 	private KeyCodeMap keyCodeMap;
 	
 	/**
@@ -141,11 +139,10 @@ public class RobotRun extends PApplet {
 	
 	private Stack<ProgExecution> progCallStack;
 	private ProgExecution progExecState;
-	
+	private boolean rCamEnable = false;
 	private RobotCamera rCamera;
-
 	private boolean record;
-	
+
 	private final HashMap<Integer, RoboticArm> ROBOTS = new HashMap<>();
 	private RTrace robotTrace;
 	
@@ -153,12 +150,11 @@ public class RobotRun extends PApplet {
 	private final ArrayList<Scenario> SCENARIOS = new ArrayList<>();
 	
 	private ScreenManager screens;
-
 	private boolean shift = false; // Is shift button pressed or not?
+	
 	private boolean step = false; // Is step button pressed or not?
-	
+
 	private WGUI UI;
-	
 	/**
 	 * Applies the active camera to the matrix stack.
 	 * 
@@ -254,7 +250,7 @@ public class RobotRun extends PApplet {
 			throw Ex;
 		}
 	}
-
+	
 	/**
 	 * Pendant RIGHT button
 	 * 
@@ -337,7 +333,7 @@ public class RobotRun extends PApplet {
 			throw Ex;
 		}
 	}
-	
+
 	public void button_camTeachObj() {
 		try {
 			if(getActiveScenario() != null) {
@@ -352,10 +348,10 @@ public class RobotRun extends PApplet {
 			throw Ex;
 		}
 	}
-
+	
 	public void button_camToggleActive() {
 		try {
-			camEnable = UI.toggleCamera();
+			rCamEnable = UI.toggleCamera();
 					
 			UI.updateUIContentPositions();
 			updatePendantScreen();
@@ -380,7 +376,7 @@ public class RobotRun extends PApplet {
 			throw Ex;
 		}
 	}
-	
+
 	/**
 	 * Camera Bk button
 	 * 
@@ -474,7 +470,7 @@ public class RobotRun extends PApplet {
 			throw Ex;
 		}
 	}
-
+	
 	/**
 	 * Camera T button
 	 * 
@@ -534,7 +530,7 @@ public class RobotRun extends PApplet {
 			throw Ex;
 		}
 	}
-
+	
 	/**
 	 * Pendant DATA button
 	 * 
@@ -551,7 +547,7 @@ public class RobotRun extends PApplet {
 			throw Ex;
 		}
 	}
-	
+
 	/**
 	 * Pendant EDIT button
 	 * 
@@ -582,7 +578,7 @@ public class RobotRun extends PApplet {
 			throw Ex;
 		}
 	}
-	
+
 	/**
 	 * Pendant ENTER button
 	 * 
@@ -619,7 +615,7 @@ public class RobotRun extends PApplet {
 			throw Ex;
 		}
 	}
-
+	
 	/**
 	 * Pendant F2 button
 	 * 
@@ -638,7 +634,7 @@ public class RobotRun extends PApplet {
 			throw Ex;
 		}
 	}
-
+	
 	/**
 	 * Pendant F3 button
 	 * 
@@ -676,7 +672,7 @@ public class RobotRun extends PApplet {
 			throw Ex;
 		}
 	}
-  
+
 	/**
 	 * Pendant F5 button
 	 * 
@@ -721,7 +717,7 @@ public class RobotRun extends PApplet {
 			throw Ex;
 		}
 	}
-	
+  
 	/**
 	 * Pendant HOLD button
 	 * 
@@ -745,7 +741,7 @@ public class RobotRun extends PApplet {
 			throw Ex;
 		}
 	}
-	
+
 	/**
 	 * Pendant I/O button
 	 * 
@@ -953,7 +949,7 @@ public class RobotRun extends PApplet {
 			throw Ex;
 		}
 	}
-
+	
 	/**
 	 * Pendant +XR/(J4) button
 	 * 
@@ -971,7 +967,7 @@ public class RobotRun extends PApplet {
 			throw Ex;
 		}
 	}
-
+	
 	/**
 	 * Pendant +YR/(J5) button
 	 * 
@@ -1023,7 +1019,7 @@ public class RobotRun extends PApplet {
 			throw Ex;
 		}
 	}
-	
+
 	/**
 	 * Pendant MVMU button
 	 * 
@@ -1041,7 +1037,7 @@ public class RobotRun extends PApplet {
 			throw Ex;
 		}
 	}
-	
+
 	/**
 	 * Pendant '0' button
 	 * 
@@ -1058,7 +1054,7 @@ public class RobotRun extends PApplet {
 			throw Ex;
 		}
 	}
-
+	
 	/**
 	 * Pendant '1' button
 	 * 
@@ -1075,7 +1071,7 @@ public class RobotRun extends PApplet {
 			throw Ex;
 		}
 	}
-
+	
 	/**
 	 * Pendant '2' button
 	 * 
@@ -1126,7 +1122,7 @@ public class RobotRun extends PApplet {
 			throw Ex;
 		}
 	}
-	
+
 	/**
 	 * Pendant '5' button
 	 * 
@@ -1143,7 +1139,7 @@ public class RobotRun extends PApplet {
 			throw Ex;
 		}
 	}
-	
+
 	/**
 	 * Pendant '6' button
 	 * 
@@ -1194,7 +1190,7 @@ public class RobotRun extends PApplet {
 			throw Ex;
 		}
 	}
-
+	
 	/**
 	 * Pendant '9' button
 	 * 
@@ -1324,7 +1320,7 @@ public class RobotRun extends PApplet {
 			throw Ex;
 		}
 	}
-
+	
 	/**
 	 * Move to Current button in the edit window
 	 * 
@@ -1422,7 +1418,7 @@ public class RobotRun extends PApplet {
 			throw Ex;
 		}
 	}
-	
+
 	/**
 	 * HIDE/SHOW OBBBS button in the miscellaneous window
 	 * 
@@ -1500,7 +1496,7 @@ public class RobotRun extends PApplet {
 			throw Ex;
 		}
 	}
-
+	
 	/**
 	 * Pendant PREV button
 	 * 
@@ -1538,6 +1534,17 @@ public class RobotRun extends PApplet {
 		}
 	}
 
+	public void button_robotClearTrace() {
+		try {
+			robotTrace.clear();
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
+	}
+
 	/**
 	 * ADD/REMOVE ROBOT button in the miscellaneous window
 	 * 
@@ -1561,7 +1568,7 @@ public class RobotRun extends PApplet {
 			throw Ex;
 		}
 	}
-	
+
 	/**
 	 * ENABLE/DISABLE TRACE button in miscellaneous window
 	 * 
@@ -1583,17 +1590,6 @@ public class RobotRun extends PApplet {
 		}
 	}
 	
-	public void button_robotClearTrace() {
-		try {
-			robotTrace.clear();
-			
-		} catch (Exception Ex) {
-			// Log any errors
-			DataManagement.errLog(Ex);
-			throw Ex;
-		}
-	}
-
 	/**
 	 * The scenario window confirmation button
 	 * 
@@ -1622,7 +1618,7 @@ public class RobotRun extends PApplet {
 			throw Ex;
 		}
 	}
-
+	
 	/**
 	 * Pendant SELECT button
 	 * 
@@ -1639,7 +1635,7 @@ public class RobotRun extends PApplet {
 			throw Ex;
 		}
 	}
-	
+
 	/**
 	 * Pendant SETUP button
 	 * 
@@ -1708,7 +1704,7 @@ public class RobotRun extends PApplet {
 			throw Ex;
 		}
 	}
-	
+
 	/**
 	 * Pendant -% button
 	 * 
@@ -1858,7 +1854,7 @@ public class RobotRun extends PApplet {
 		DataManagement.saveState(this);
 		super.dispose();
 	}
-	
+
 	@Override
 	public void draw() {
 		try {
@@ -1905,7 +1901,7 @@ public class RobotRun extends PApplet {
 			}
 			
 			/*Camera Test Code*/
-			if(camEnable) {
+			if(rCamEnable) {
 				Fields.drawAxes(getGraphics(), rCamera.getPosition(), rCamera.getOrientationMat(), 300, 0);
 				
 				PVector near[] = rCamera.getPlaneNear();
@@ -1954,7 +1950,7 @@ public class RobotRun extends PApplet {
 		screens.getActiveScreen().getContents().setColumnIdx(0);
 		progExec(m.getRobotID(), m.getProgIdx(), 0, ExecType.EXEC_FULL);
 	}
-
+	
 	/**
 	 * @return	The index of the active program's active instruction
 	 */
@@ -2005,7 +2001,7 @@ public class RobotRun extends PApplet {
 	public Scenario getActiveScenario() {
 		return activeScenario.get();
 	}
-	
+
 	public Screen getActiveScreen() {
 		return screens.getActiveScreen();
 	}
@@ -2061,7 +2057,7 @@ public class RobotRun extends PApplet {
 		cs.setOrigin(origin);
 		cs.setAxes(axes);
 	}
-
+	
 	public RoboticArm getInactiveRobot() {
 		try {
 			return ROBOTS.get((getActiveRobot().RID + 1) % 2);
@@ -2096,15 +2092,15 @@ public class RobotRun extends PApplet {
 			return row;
 		}
 	}
-	
+
 	public KeyCodeMap getKeyCodeMap() {
 		return keyCodeMap;
 	}
-	
+
 	public Screen getLastScreen() {
 		return screens.getPrevScreen();
 	}
-
+	
 	public ScreenMode getMode() {
 		return screens.getActiveScreen().mode;
 	}
@@ -2126,7 +2122,7 @@ public class RobotRun extends PApplet {
 	public PVector getPosFromMatrix(float x, float y, float z) {
 		return RMath.getPosition(getGraphics(), x, y, z);
 	}
-
+	
 	public Stack<ProgExecution> getProgCallStack() {
 		return progCallStack;
 	}
@@ -2193,6 +2189,10 @@ public class RobotRun extends PApplet {
 		return !progExecState.isDone();
 	}
 
+	public boolean isRCamEnable() {
+		return rCamEnable;
+	}
+
 	public Boolean isRobotAtPostn(int i) {
 		return mInstRobotAt.get(new Integer(i));
 	}
@@ -2203,7 +2203,7 @@ public class RobotRun extends PApplet {
 	public boolean isSecondRobotUsed() {
 		return UI.getRobotButtonState();
 	}
-	
+
 	public boolean isShift() {
 		return shift;
 	}
@@ -2609,7 +2609,7 @@ public class RobotRun extends PApplet {
 		mouseOverWO = null;
 		mouseDragWO = false;
 	}
-
+	
 	@Override
 	public void mouseWheel(MouseEvent event) {
 		if (UI != null && UI.isMouseOverUIElement()) {
@@ -2650,7 +2650,7 @@ public class RobotRun extends PApplet {
 			r.addInstAtEnd(p, f, false);
 		}
 	}
-	
+
 	public void newIfExpression() {
 		RoboticArm r = getActiveRobot();
 		Program p = getActiveProg();
@@ -2662,7 +2662,7 @@ public class RobotRun extends PApplet {
 			r.addInstAtEnd(p, stmt, false);
 		}
 	}
-
+	
 	public void newIfStatement() {
 		RoboticArm r = getActiveRobot();
 		Program p = getActiveProg();
@@ -2808,7 +2808,7 @@ public class RobotRun extends PApplet {
 			r.addInstAtEnd(p, stmt, false);
 		}
 	}
-	
+
 	public void newRobotCallInstruction() {
 		RoboticArm r = getActiveRobot();
 		Program p = getActiveProg();
@@ -2820,7 +2820,7 @@ public class RobotRun extends PApplet {
 			r.addInstAtEnd(p, rcall, false);
 		}
 	}
-
+	
 	public void newSelectStatement() {
 		RoboticArm r = getActiveRobot();
 		Program p = getActiveProg();
@@ -2832,7 +2832,7 @@ public class RobotRun extends PApplet {
 			r.addInstAtEnd(p, stmt, false);
 		}
 	}
-	
+
 	/**
 	 * Updates the save state of the active screen and loads the given screen
 	 * mode afterwards.
@@ -3020,7 +3020,7 @@ public class RobotRun extends PApplet {
 		
 		return exists;
 	}
-
+	
 	/**
 	 * Sets the active program of this Robot corresponding to the index value
 	 * given.
@@ -3038,7 +3038,7 @@ public class RobotRun extends PApplet {
 		
 		return exists;
 	}
-	
+
 	/**
 	 * Sets the scenario with the given name as the active scenario in the
 	 * application, if a scenario with the given name exists.
@@ -3063,6 +3063,10 @@ public class RobotRun extends PApplet {
 
 		return false;
 
+	}
+	
+	public void setRCamEnable(boolean enable) {
+		rCamEnable = enable;
 	}
 
 	public void setRecord(boolean state) {
@@ -3180,8 +3184,14 @@ public class RobotRun extends PApplet {
 			DataManagement.loadState(this);
 			
 			screens = new ScreenManager(this);
-			updatePendantScreen();
 			
+			if(rCamEnable) {
+				UI.toggleCamera();
+				UI.updateUIContentPositions();
+			}
+			
+			updatePendantScreen();
+
 		} catch (NullPointerException NPEx) {
 			DataManagement.errLog(NPEx);
 			throw NPEx;
