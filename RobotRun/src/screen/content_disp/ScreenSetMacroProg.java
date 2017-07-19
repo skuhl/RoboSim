@@ -27,7 +27,7 @@ public class ScreenSetMacroProg extends ST_ScreenListContents {
 		RoboticArm r = robotRun.getActiveRobot();
 		int idx = robotRun.getLastScreen().getContentIdx();
 		
-		r.getMacro(idx).setProgram(contents.getLineIdx());
+		r.getMacro(idx).setProgIdx(contents.getLineIdx());
 		DataManagement.saveRobotData(r, 8);
 		robotRun.lastScreen();
 	}

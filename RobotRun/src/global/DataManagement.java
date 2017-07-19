@@ -728,10 +728,10 @@ public abstract class DataManagement {
 			
 			for(int i = 0; i < numMacros; i += 1) {
 				boolean isManual = dataIn.readBoolean();
-				int robotID = dataIn.readInt();
-				int progIdx = dataIn.readInt();
+				int pdx = dataIn.readInt();
 				int keyNum = dataIn.readInt();
-				Macro m = new Macro(isManual, progIdx, robotID, keyNum);
+				
+				Macro m = new Macro(isManual, r, pdx, keyNum);
 				
 				r.getMacroList().add(m);
 				
@@ -1337,7 +1337,6 @@ public abstract class DataManagement {
 								cInst.setProg(tgt);
 							}
 						}
-						
 					}
 					
 				} else if (inst instanceof IfStatement) {
@@ -1794,9 +1793,8 @@ public abstract class DataManagement {
 			
 			dataOut.writeInt(r.getMacroList().size());
 			
-			for(Macro m: r.getMacroList()) {
+			for (Macro m: r.getMacroList()) {
 				dataOut.writeBoolean(m.isManual());
-				dataOut.writeInt(m.getRobotID());
 				dataOut.writeInt(m.getProgIdx());
 				dataOut.writeInt(m.getKeyNum());
 			}

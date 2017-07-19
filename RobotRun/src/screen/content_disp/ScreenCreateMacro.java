@@ -26,7 +26,7 @@ public class ScreenCreateMacro extends ST_ScreenListContents {
 	@Override
 	public void actionEntr() {
 		RoboticArm r = robotRun.getActiveRobot();
-		r.getMacroList().add(new Macro(contents.getLineIdx(), r.RID));
+		r.getMacroList().add(new Macro(r, contents.getLineIdx()));
 		DataManagement.saveRobotData(r, 8);
 		
 		robotRun.getLastScreen().setContentIdx(r.getMacroList().size() - 1);

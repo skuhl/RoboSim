@@ -1947,7 +1947,7 @@ public class RobotRun extends PApplet {
 		button_hold();
 		// Safeguard against editing a program while it is running
 		screens.getActiveScreen().getContents().setColumnIdx(0);
-		progExec(m.getRobotID(), m.getProgIdx(), 0, ExecType.EXEC_FULL);
+		progExec(m.getRobot().RID, m.getProgIdx(), 0, ExecType.EXEC_FULL);
 	}
 	
 	/**
@@ -3648,7 +3648,7 @@ public class RobotRun extends PApplet {
 						resetMatrix();
 						
 						if (refFixture != null) {
-							refFixture.removeCoordinateSystem();
+							applyMatrix(refFixture.getInvCoordinateSystem());
 						}
 						
 						applyMatrix(curTip);
