@@ -170,9 +170,10 @@ public class RobotCamera {
 		if(scene == null) return objList;
 		
 		for(WorldObject o : scene.getObjectList()) {
-			if(isPointInFrame(o.getLocalCenter()) && isObjectVisible(o)) {
-				System.out.println(o.getName());
-				objList.add(o);
+			if(o instanceof Part) {
+				if(isPointInFrame(((Part)o).getCenter()) && isObjectVisible(o)) {
+					objList.add(o);
+				}
 			}
 		}
 		
@@ -279,11 +280,11 @@ public class RobotCamera {
 		return new PVector((float)x, (float)y, (float)z);
 	}
 	
-	public boolean isObjectInFrame(int objIdx, Scenario scene) {
+	public boolean isMatchVisible(int objIdx, Scenario scene) {
 		return matchTaughtObject(objIdx, scene).size() != 0;
 	}
 	
-	public boolean isObjectInFrame(WorldObject proto, Scenario s) {
+	public boolean isMatchVisible(WorldObject proto, Scenario s) {
 		return matchTaughtObject(proto, s).size() != 0;
 	}
 
@@ -330,6 +331,7 @@ public class RobotCamera {
 			}
 		}
 		
+		System.out.println(inView + "/" + RES*RES*RES);
 		return (inView / (float)(RES*RES*RES)) * brightness * exposure >= sensitivity;
 	}
 	
@@ -338,7 +340,7 @@ public class RobotCamera {
 		RMatrix pMat = getPerspProjMat();
 		PVector camSpace = vMat.multiply(p);
 		PVector tp = pMat.multiply(camSpace);
-		
+				
 		if(Math.abs(tp.x) < 1 && Math.abs(tp.y) < 1) {
 			return true;
 		}
