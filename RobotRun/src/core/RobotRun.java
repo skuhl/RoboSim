@@ -3278,6 +3278,12 @@ public class RobotRun extends PApplet {
 			screens = new ScreenManager(this);
 			updatePendantScreen();
 			
+			if(rCamEnable) {
+				UI.toggleCamera();
+				UI.updateUIContentPositions();
+				updatePendantScreen();
+			}			
+			
 			progExecState = new ProgExecution();
 			progCallStack = new Stack<>();
 			

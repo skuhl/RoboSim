@@ -120,6 +120,48 @@ public abstract class DataManagement {
 		}
 	}
 	
+	public static void exportProgsToTxt(RoboticArm r, String directory) {
+		for(int i = 0; i < r.numOfPrograms(); i += 1) {
+			Program p = r.getProgram(i);
+			File textfile = new File(directory + "/" + p.getName() + ".txt");
+			
+			try {
+				PrintWriter out = new PrintWriter(textfile);
+				out.write(p.getName() + ":");
+				out.write(System.lineSeparator());
+				out.write(System.lineSeparator());
+				
+				for(int j = 0; j < p.getNumOfInst(); j += 1) {
+					Instruction instr = p.getInstAt(j);
+					String[] text = instr.toStringArray();
+					
+					out.write((j + 1) + ") ");
+					
+					for(int k = 0; k < text.length; k += 1) {
+						String str = text[k];
+						
+						if(str.compareTo("\n") != 0) {
+							out.write(str + " ");
+						}
+						
+						if(instr instanceof SelectStatement && k >= 5 && (k - 1) % 4 == 0 && k < text.length - 1) {
+							out.write(System.lineSeparator());
+							out.write("    ");
+						}
+					}
+					
+					out.write(System.lineSeparator());
+				}
+				
+				out.write("[END]");
+				out.close();
+			} 
+			catch (FileNotFoundException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
 	/**
 	 * Returns a list of all the names of files in the data sub directory
 	 * with the .stl file extension.
@@ -237,73 +279,41 @@ public abstract class DataManagement {
 		saveCameraData(process, process.getRobotCamera());
 	}
 	
-	private static void saveCameraData(RobotRun robotRun, RobotCamera rCam) {
-		File camSave = new File(tmpDirPath + "/camera.bin");
-		
-		// Create dest if it does not already exist
-		if(!camSave.exists()) {   
-			try {
-				camSave.createNewFile();
-				System.err.printf("Successfully created %s.\n", camSave.getName());
-			} catch (IOException IOEx) {
-				System.err.printf("Could not create %s ...\n", camSave.getName());
-				IOEx.printStackTrace();
-				return;
-			}
+	private static double[][] load2DDoubleArray(DataInputStream in) throws IOException {
+		// Read byte flag
+		byte flag = in.readByte();
+
+		if (flag == 0) {
+			return null;
 		}
 		
-		try {
-			FileOutputStream out = new FileOutputStream(camSave);
-			DataOutputStream dataOut = new DataOutputStream(out);
-			
-			dataOut.writeBoolean(robotRun.isRCamEnable());
-			
-			PVector camPos = rCam.getPosition();
-			RQuaternion camOrient = rCam.getOrientation();
-			
-			// Save cam position
-			dataOut.writeFloat(camPos.x);
-			dataOut.writeFloat(camPos.y);
-			dataOut.writeFloat(camPos.z);
-			
-			// Save cam orientation
-			dataOut.writeFloat(camOrient.w());
-			dataOut.writeFloat(camOrient.x());
-			dataOut.writeFloat(camOrient.y());
-			dataOut.writeFloat(camOrient.z());
-			
-			// Save other parameters (FOV, aspect ratio, etc)
-			dataOut.writeFloat(rCam.getFOV());
-			dataOut.writeFloat(rCam.getAspectRatio());
-			dataOut.writeFloat(rCam.getNearClipDist());
-			dataOut.writeFloat(rCam.getFarClipDist());
-			dataOut.writeFloat(rCam.getExposure());
-			dataOut.writeFloat(rCam.getBrightness());
-			
-			for(WorldObject o : rCam.getTaughtObjects()) {
-				DataManagement.saveWorldObject(o, dataOut);
+		// Read the length of the list
+		int numOfRows = in.readInt(),
+				numOfCols = in.readInt();
+		double[][] list = new double[numOfRows][numOfCols];
+		// Read each value of the list
+		for (int row = 0; row < list.length; ++row) {
+			for (int col = 0; col < list[0].length; ++col) {
+				list[row][col] = in.readDouble();
 			}
-			
-			dataOut.close();
-			out.close();
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch(IOException e) {
-			e.printStackTrace();
 		}
+
+		return list;
 	}
-	
+
 	private static void loadCameraData(RobotRun robotRun) {
 		File camSave = new File(tmpDirPath + "/camera.bin");
+		
+		if(!camSave.exists()) {
+			return;
+		}
 		
 		try {
 			FileInputStream in = new FileInputStream(camSave);
 			DataInputStream dataIn = new DataInputStream(in);
 			
 			boolean camEnable = dataIn.readBoolean();
-			if(camEnable) {
-				robotRun.button_camToggleActive();
-			}
+			robotRun.setRCamEnable(camEnable);
 			
 			float camPosX = dataIn.readFloat();
 			float camPosY = dataIn.readFloat();
@@ -333,71 +343,7 @@ public abstract class DataManagement {
 			e.printStackTrace();
 		}
 	}
-
-	public static void exportProgsToTxt(RoboticArm r, String directory) {
-		for(int i = 0; i < r.numOfPrograms(); i += 1) {
-			Program p = r.getProgram(i);
-			File textfile = new File(directory + "/" + p.getName() + ".txt");
-			
-			try {
-				PrintWriter out = new PrintWriter(textfile);
-				out.write(p.getName() + ":");
-				out.write(System.lineSeparator());
-				out.write(System.lineSeparator());
-				
-				for(int j = 0; j < p.getNumOfInst(); j += 1) {
-					Instruction instr = p.getInstAt(j);
-					String[] text = instr.toStringArray();
-					
-					out.write((j + 1) + ") ");
-					
-					for(int k = 0; k < text.length; k += 1) {
-						String str = text[k];
-						
-						if(str.compareTo("\n") != 0) {
-							out.write(str + " ");
-						}
-						
-						if(instr instanceof SelectStatement && k >= 5 && (k - 1) % 4 == 0 && k < text.length - 1) {
-							out.write(System.lineSeparator());
-							out.write("    ");
-						}
-					}
-					
-					out.write(System.lineSeparator());
-				}
-				
-				out.write("[END]");
-				out.close();
-			} 
-			catch (FileNotFoundException e) {
-				e.printStackTrace();
-			}
-		}
-	}
 	
-	private static double[][] load2DDoubleArray(DataInputStream in) throws IOException {
-		// Read byte flag
-		byte flag = in.readByte();
-
-		if (flag == 0) {
-			return null;
-		}
-		
-		// Read the length of the list
-		int numOfRows = in.readInt(),
-				numOfCols = in.readInt();
-		double[][] list = new double[numOfRows][numOfCols];
-		// Read each value of the list
-		for (int row = 0; row < list.length; ++row) {
-			for (int col = 0; col < list[0].length; ++col) {
-				list[row][col] = in.readDouble();
-			}
-		}
-
-		return list;
-	}
-
 	private static ExpressionElement loadExpressionElement(RoboticArm robot,
 			DataInputStream in) throws IOException, ClassCastException {
 		ExpressionElement ee = null;
@@ -505,7 +451,7 @@ public abstract class DataManagement {
 
 		return ee;
 	}
-	
+
 	private static float[] loadFloatArray(DataInputStream in) throws IOException {
 		// Read byte flag
 		byte flag = in.readByte();
@@ -524,7 +470,7 @@ public abstract class DataManagement {
 
 		return list;
 	}
-
+	
 	private static void loadFrame(Frame ref, DataInputStream in) throws IOException {
 		byte type = in.readByte();
 
@@ -568,7 +514,7 @@ public abstract class DataManagement {
 			((UserFrame)ref).setOrientOrigin(loadPoint(in));
 		}
 	}
-	
+
 	private static int loadFrameBytes(RoboticArm robot, String srcPath) {
 		int idx = -1;
 		File src = new File(srcPath);
@@ -781,7 +727,7 @@ public abstract class DataManagement {
 		// Read integer value
 		return in.readInt();
 	}
-
+	
 	private static void loadMacros(RoboticArm r, String filePath) {	
 		try {
 			File destDir = new File(filePath);
@@ -941,7 +887,7 @@ public abstract class DataManagement {
 		v.z = in.readFloat();
 		return v;
 	}
-	
+
 	private static int loadRegisterBytes(RoboticArm robot, String srcPath) {
 		File src = new File(srcPath);
 		
@@ -1017,7 +963,7 @@ public abstract class DataManagement {
 			return 2;
 		}
 	}
-
+	
 	private static int loadRobotData(RoboticArm robot) {
 		File srcDir = new File( String.format("%srobot%d/", tmpDirPath, robot.RID) );
 		
@@ -1051,7 +997,7 @@ public abstract class DataManagement {
 
 		return new RQuaternion(w, x, y, z);
 	}
-	
+
 	private static Scenario loadScenario(DataInputStream in, RobotRun app) throws IOException, NullPointerException {
 		// Read flag byte
 		byte flag = in.readByte();
@@ -1185,7 +1131,7 @@ public abstract class DataManagement {
 		
 		return 0;
 	}
-
+	
 	private static RShape loadShape(DataInputStream in, RobotRun app) throws IOException,
 			NullPointerException, RuntimeException {
 		
@@ -1276,7 +1222,7 @@ public abstract class DataManagement {
 
 		return wldObjFields;
 	}
-	
+
 	private static void robotPostProcessing(RoboticArm robot, RobotRun process) {
 		ArrayList<Scenario> scenes = process.getScenarios();
 		
@@ -1344,7 +1290,7 @@ public abstract class DataManagement {
 			}
 		}
 	}
-
+	
 	private static void save2DDoubleArray(double[][] list, DataOutputStream out) throws IOException {
 		if (list == null) {
 			// Write flag value
@@ -1362,6 +1308,62 @@ public abstract class DataManagement {
 					out.writeDouble(list[row][col]);
 				}
 			}
+		}
+	}
+
+	private static void saveCameraData(RobotRun robotRun, RobotCamera rCam) {
+		File camSave = new File(tmpDirPath + "/camera.bin");
+		
+		// Create dest if it does not already exist
+		if(!camSave.exists()) {   
+			try {
+				camSave.createNewFile();
+				System.err.printf("Successfully created %s.\n", camSave.getName());
+			} catch (IOException IOEx) {
+				System.err.printf("Could not create %s ...\n", camSave.getName());
+				IOEx.printStackTrace();
+				return;
+			}
+		}
+		
+		try {
+			FileOutputStream out = new FileOutputStream(camSave);
+			DataOutputStream dataOut = new DataOutputStream(out);
+			
+			dataOut.writeBoolean(robotRun.isRCamEnable());
+			
+			PVector camPos = rCam.getPosition();
+			RQuaternion camOrient = rCam.getOrientation();
+			
+			// Save cam position
+			dataOut.writeFloat(camPos.x);
+			dataOut.writeFloat(camPos.y);
+			dataOut.writeFloat(camPos.z);
+			
+			// Save cam orientation
+			dataOut.writeFloat(camOrient.w());
+			dataOut.writeFloat(camOrient.x());
+			dataOut.writeFloat(camOrient.y());
+			dataOut.writeFloat(camOrient.z());
+			
+			// Save other parameters (FOV, aspect ratio, etc)
+			dataOut.writeFloat(rCam.getFOV());
+			dataOut.writeFloat(rCam.getAspectRatio());
+			dataOut.writeFloat(rCam.getNearClipDist());
+			dataOut.writeFloat(rCam.getFarClipDist());
+			dataOut.writeFloat(rCam.getExposure());
+			dataOut.writeFloat(rCam.getBrightness());
+			
+			for(WorldObject o : rCam.getTaughtObjects()) {
+				DataManagement.saveWorldObject(o, dataOut);
+			}
+			
+			dataOut.close();
+			out.close();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch(IOException e) {
+			e.printStackTrace();
 		}
 	}
 	
