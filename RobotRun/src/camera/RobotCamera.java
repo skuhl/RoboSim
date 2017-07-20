@@ -479,13 +479,13 @@ public class RobotCamera {
 		
 		img.translate(-cPos.x + width / 2f, -cPos.y + height / 2f,  -cPos.z);
 				
-		img.printMatrix();
+		//img.printMatrix();
 		
 		float light = brightness * exposure;
 		
-		img.noLights();
-		img.ambientLight(255*light, 255*light, 255*light);
-		img.background(255*light);
+		img.lights();
+		//img.ambientLight(255*light, 255*light, 255*light);
+		img.background(255);
 		img.stroke(255);
 		
 		if(RobotRun.getInstanceScenario() != null) {
