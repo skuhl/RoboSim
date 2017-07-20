@@ -3,6 +3,7 @@ package camera;
 import java.util.ArrayList;
 
 import core.RobotRun;
+import enums.AxesDisplay;
 import geom.ComplexShape;
 import geom.Fixture;
 import geom.Part;
@@ -11,6 +12,8 @@ import geom.RQuaternion;
 import geom.Scenario;
 import geom.WorldObject;
 import global.RMath;
+import processing.core.PGraphics;
+import processing.core.PImage;
 import processing.core.PVector;
 
 public class RobotCamera {
@@ -22,6 +25,7 @@ public class RobotCamera {
 	private RQuaternion camOrient;
 	private PVector camPos;
 	private float exposure;
+	private PGraphics snapshot;
 	private final int RES = 8;
 	private float sensitivity;
 	private ArrayList<WorldObject> taughtObjects;
@@ -44,8 +48,10 @@ public class RobotCamera {
 		camClipNear = near;
 		camClipFar = far;
 		sensitivity = 0.75f;
+		
 		brightness = br;
 		exposure = exp;
+		
 		taughtObjects = new ArrayList<WorldObject>();
 	}
 
@@ -331,7 +337,6 @@ public class RobotCamera {
 			}
 		}
 		
-		System.out.println(inView + "/" + RES*RES*RES);
 		return (inView / (float)(RES*RES*RES)) * brightness * exposure >= sensitivity;
 	}
 	
@@ -424,8 +429,15 @@ public class RobotCamera {
 	}
 		
 	public ArrayList<WorldObject> teachObjectToCamera(Scenario scene) {
+		//Objects must be taught with a high degree of accuracy
+		sensitivity = 0.95f;
+		
 		ArrayList<WorldObject> objs = getObjectsInFrame(scene);
 		WorldObject teachObj = null;
+		takeSnapshot();
+		
+		//Return sensitivity to default
+		sensitivity = 0.75f;
 		
 		for(WorldObject o: objs) {
 			if(o instanceof Part) {
@@ -452,6 +464,43 @@ public class RobotCamera {
 		return taughtObjects;
 	}
 
+	private void takeSnapshot() {
+		int width = 250, height = (int)(width/camAspectRatio);
+		PGraphics img = RobotRun.getInstance().createGraphics(width, height, RobotRun.P3D);
+		
+		img.beginDraw();
+		PVector cPos = camPos;
+		PVector cOrien = camOrient.toVector();
+		img.perspective((camFOV/camAspectRatio)*RobotRun.DEG_TO_RAD, camAspectRatio, camClipNear, camClipFar);
+		
+		img.rotateX(cOrien.x);
+		img.rotateY(cOrien.y);
+		img.rotateZ(cOrien.z);
+		
+		img.translate(-cPos.x + width / 2f, -cPos.y + height / 2f,  -cPos.z);
+				
+		img.printMatrix();
+		
+		float light = brightness * exposure;
+		
+		img.noLights();
+		img.ambientLight(255*light, 255*light, 255*light);
+		img.background(255*light);
+		img.stroke(255);
+		
+		if(RobotRun.getInstanceScenario() != null) {
+			for(WorldObject o : RobotRun.getInstanceScenario().getObjectList()) {
+				o.draw(img);
+			}
+		}
+		
+		RobotRun.getInstanceRobot().draw(img, false, AxesDisplay.NONE);
+		
+		img.endDraw();
+		
+		snapshot = img;
+	}
+	
 	public RobotCamera update(PVector pos, PVector rot,	float fov, float ar, 
 			float near, float far, float br, float exp) {
 		camPos = RMath.vFromWorld(pos);
@@ -511,5 +560,9 @@ public class RobotCamera {
 		};
 				
 		return new RMatrix(vMat);
+	}
+
+	public PImage getSnapshot() {
+		return snapshot;
 	}
 }

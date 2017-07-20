@@ -362,7 +362,7 @@ public class RobotRun extends PApplet {
 			}
 			
 			UI.updateCameraListContents();
-			
+			UI.updateUIContentPositions();
 		} catch (Exception Ex) {
 			// Log any errors
 			DataManagement.errLog(Ex);
@@ -1981,7 +1981,7 @@ public class RobotRun extends PApplet {
 			if (teachFrame != null && screens.getActiveScreen() instanceof ST_ScreenTeachPoints) {
 				renderTeachPoints(teachFrame);
 			}
-	
+			
 			/* TESTING CODE: DRAW INTERMEDIATE POINTS *
 			if(Fields.DEBUG && intermediatePositions != null) {
 				int count = 0;

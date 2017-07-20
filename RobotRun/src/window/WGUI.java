@@ -3036,15 +3036,21 @@ public class WGUI implements ControlListener {
 		c = getDropdown("CamObjects").setPosition(relPos[0], relPos[1]);
 
 		WorldObject o = (WorldObject)getDropdown("CamObjects").getSelectedItem();
-		if(o != null) {
+		/*if(o != null) {
 			PGraphics preview = o.getForm().getModelPreview(o.getLocalOrientation());
 			getButton(WGUI_Buttons.CamObjPreview).setImage(preview);
 			getButton(WGUI_Buttons.CamObjPreview).show();
 		}
 		else {
 			getButton(WGUI_Buttons.CamObjPreview).hide();
-		}
+		}*/
 		
+		if(app.getRobotCamera().getSnapshot() != null) {
+			getButton(WGUI_Buttons.CamObjPreview).setImage(app.getRobotCamera().getSnapshot());
+			getButton(WGUI_Buttons.CamObjPreview).show();
+		} else {
+			getButton(WGUI_Buttons.CamObjPreview).hide();
+		}
 		// Update window background display
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		background.setPosition(camera.getPosition())
