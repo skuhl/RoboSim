@@ -4,6 +4,7 @@ import core.RobotRun;
 import geom.Point;
 import geom.RMatrix;
 import geom.RQuaternion;
+import processing.core.PConstants;
 import processing.core.PGraphics;
 import processing.core.PVector;
 import robot.RoboticArm;
@@ -20,6 +21,25 @@ public abstract class RMath {
 	
 	public static final float RAD_TO_DEG = RobotRun.RAD_TO_DEG;
 	public static final float TWO_PI = RobotRun.TWO_PI;
+	
+	/**
+	 * Tests orientation conversion methods
+	 * 
+	 * @param args	Unused
+	 */
+	public static void main(String[] args) {
+		
+		float[] testVals = new float[] { 0f, 1f / 8f, 1f / 4f,  };
+		
+		PVector wpr = new PVector(-170f, 90f, 170f);
+		wpr.mult(PConstants.DEG_TO_RAD);
+		
+		RMatrix m = eulerToMatrix(wpr);
+		
+		PVector wpr1 = matrixToEuler(m);
+		
+		System.out.printf("\n%s\n%s\n%s\n", wpr, m, wpr1);
+	}
 	
 	public static PVector convertRGBtoHSL(PVector rgb) {
 		float rP = rgb.x / 255f;
@@ -867,23 +887,6 @@ public abstract class RMath {
 	public static PVector quatToEuler(RQuaternion q) {
 		RMatrix r = q.toMatrix();
 		return matrixToEuler(r);
-	}
-	
-	// calculates rotation matrix from quaternion
-	public static RMatrix quatToMatrix(RQuaternion q) {
-		double[][] r = new double[3][3];
-
-		r[0][0] = 1 - 2 * (q.getValue(2) * q.getValue(2) + q.getValue(3) * q.getValue(3));
-		r[1][0] = 2 * (q.getValue(1) * q.getValue(2) - q.getValue(0) * q.getValue(3));
-		r[2][0] = 2 * (q.getValue(0) * q.getValue(2) + q.getValue(1) * q.getValue(3));
-		r[0][1] = 2 * (q.getValue(1) * q.getValue(2) + q.getValue(0) * q.getValue(3));
-		r[1][1] = 1 - 2 * (q.getValue(1) * q.getValue(1) + q.getValue(3) * q.getValue(3));
-		r[2][1] = 2 * (q.getValue(2) * q.getValue(3) - q.getValue(0) * q.getValue(1));
-		r[0][2] = 2 * (q.getValue(1) * q.getValue(3) - q.getValue(0) * q.getValue(2));
-		r[1][2] = 2 * (q.getValue(0) * q.getValue(1) + q.getValue(2) * q.getValue(3));
-		r[2][2] = 1 - 2 * (q.getValue(1) * q.getValue(1) + q.getValue(2) * q.getValue(2));
-
-		return new RMatrix(r).normalize();
 	}
 
 	/**
