@@ -79,7 +79,9 @@ public interface WGUI_Buttons {
 	public static final String CamToggleActive = "button_camToggleActive";
 	public static final String CamUpdate = "button_camUpdate";
 	public static final String CamTeachObj = "button_camTeachObj";
+	public static final String CamDeleteObj = "button_camDeleteObj";
 	public static final String CamObjPreview = "button_camObjPreview";
+	public static final String CamSnapPreview = "button_camSnapPreview";
 	public static final String ObjCreate = "button_objCreate";
 	public static final String ObjDelete = "button_objDelete";
 	public static final String ObjClearFields = "button_objClearFields";

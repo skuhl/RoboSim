@@ -465,7 +465,7 @@ public class RobotCamera {
 	}
 
 	private void takeSnapshot() {
-		int width = 250, height = (int)(width/camAspectRatio);
+		int height = 200, width = 250;
 		PGraphics img = RobotRun.getInstance().createGraphics(width, height, RobotRun.P3D);
 		
 		img.beginDraw();
@@ -481,12 +481,13 @@ public class RobotCamera {
 				
 		//img.printMatrix();
 		
-		float light = brightness * exposure;
+		float light = 20 + 235 * brightness * exposure;
 		
-		img.lights();
-		//img.ambientLight(255*light, 255*light, 255*light);
-		img.background(255);
-		img.stroke(255);
+		img.noLights();
+		img.directionalLight(light, light, light, 0, 0, -1);
+		img.ambientLight(light, light, light);
+		img.background(light);
+		img.stroke(0);
 		
 		if(RobotRun.getInstanceScenario() != null) {
 			for(WorldObject o : RobotRun.getInstanceScenario().getObjectList()) {

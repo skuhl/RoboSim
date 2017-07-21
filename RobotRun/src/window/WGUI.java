@@ -647,8 +647,12 @@ public class WGUI implements ControlListener {
 		addButton(WGUI_Buttons.CamUpdate, "Update Camera", camera, fieldWidthMed, sButtonHeight, Fields.small);
 		addDropdown("CamObjects", camera, ldropItemWidth, dropItemHeight, 0,
 				Fields.small, Fields.ITYPE_PERMENANT);
+		addTextarea("ObjPreviewLbl", "Recorded object:", camera, 150, fieldHeight, Fields.medium);
 		addButton(WGUI_Buttons.CamObjPreview, "ObjPreview", camera, 150, 200, Fields.small);
+		addTextarea("SnapPreviewLbl", "Camera view:", camera, 250, fieldHeight, Fields.medium);
+		addButton(WGUI_Buttons.CamSnapPreview, "SnapPreview", camera, 250, 200, Fields.small);
 		addButton(WGUI_Buttons.CamTeachObj, "Teach Object", camera, fieldWidthMed, sButtonHeight, Fields.small);
+		addButton(WGUI_Buttons.CamDeleteObj, "Remove Object", camera, fieldWidthMed, sButtonHeight, Fields.small);
 		
 		// Initialize the miscellaneous window elements
 		addTextarea("ActiveRobotEE", "EE:", miscellaneous, lLblWidth, sButtonHeight, Fields.medium);
@@ -3027,29 +3031,41 @@ public class WGUI implements ControlListener {
 		c = getButton(WGUI_Buttons.CamUpdate).setPosition(relPos[0], relPos[1]);
 		
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		c0 = getTextArea("ObjPreviewLbl").setPosition(relPos[0], relPos[1]);
+		
+		relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
+		getTextArea("SnapPreviewLbl").setPosition(relPos[0], relPos[1]);
+
+		relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		c = getButton(WGUI_Buttons.CamObjPreview).setPosition(relPos[0], relPos[1]);
+		
+		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
+		getButton(WGUI_Buttons.CamSnapPreview).setPosition(relPos[0], relPos[1]);
 		
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		c = getButton(WGUI_Buttons.CamTeachObj).setPosition(relPos[0], relPos[1]);
+		
+		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
+		getButton(WGUI_Buttons.CamDeleteObj).setPosition(relPos[0], relPos[1]);
 		
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		c = getDropdown("CamObjects").setPosition(relPos[0], relPos[1]);
 
 		WorldObject o = (WorldObject)getDropdown("CamObjects").getSelectedItem();
-		/*if(o != null) {
+		if(o != null) {
 			PGraphics preview = o.getForm().getModelPreview(o.getLocalOrientation());
 			getButton(WGUI_Buttons.CamObjPreview).setImage(preview);
 			getButton(WGUI_Buttons.CamObjPreview).show();
 		}
 		else {
 			getButton(WGUI_Buttons.CamObjPreview).hide();
-		}*/
+		}
 		
 		if(app.getRobotCamera().getSnapshot() != null) {
-			getButton(WGUI_Buttons.CamObjPreview).setImage(app.getRobotCamera().getSnapshot());
-			getButton(WGUI_Buttons.CamObjPreview).show();
+			getButton(WGUI_Buttons.CamSnapPreview).setImage(app.getRobotCamera().getSnapshot());
+			getButton(WGUI_Buttons.CamSnapPreview).show();
 		} else {
-			getButton(WGUI_Buttons.CamObjPreview).hide();
+			getButton(WGUI_Buttons.CamSnapPreview).hide();
 		}
 		// Update window background display
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);

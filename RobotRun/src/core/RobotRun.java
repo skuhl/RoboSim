@@ -370,6 +370,10 @@ public class RobotRun extends PApplet {
 		}
 	}
 	
+	public void button_camRemoveObj() {
+		//TODO
+	}
+	
 	public void button_camToggleActive() {
 		try {
 			rCamEnable = UI.toggleCamera();
