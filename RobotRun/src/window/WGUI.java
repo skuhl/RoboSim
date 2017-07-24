@@ -2691,7 +2691,7 @@ public class WGUI implements ControlListener {
 		}
 	}
 	
-	public void updateCameraWindowFields() { //TODO
+	public void updateCameraWindowFields() {
 		if(app.getCamera() != null) {
 			RobotCamera c = app.getRobotCamera();
 			PVector pos = RMath.vToWorld(c.getPosition());
@@ -3194,11 +3194,15 @@ public class WGUI implements ControlListener {
 	
 	public void updateCameraListContents() {
 		if(app.getRobotCamera() != null) {
-			MyDropdownList d = getDropdown("CamObjects"); 
+			MyDropdownList d = getDropdown("CamObjects");
 			d.clear();
 			
 			for(WorldObject o: app.getRobotCamera().getTaughtObjects()) {
 				d.addItem(o.getName(), o);
+			}
+			
+			if(d.getItems().size() == 0) {
+				d.setValue(0);
 			}
 			
 			d.setSize(ldropItemWidth, dropItemHeight * (app.getRobotCamera().getTaughtObjects().size() + 1));

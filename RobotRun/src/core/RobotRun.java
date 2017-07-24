@@ -358,6 +358,8 @@ public class RobotRun extends PApplet {
 	public void button_camDeleteObj() {
 		WorldObject o = UI.getSelectedCamObj();
 		rCamera.getTaughtObjects().remove(o);
+		UI.updateCameraListContents();
+		UI.updateUIContentPositions();
 	}
 	
 	public void button_camTeachObj() {
