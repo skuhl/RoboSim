@@ -24,8 +24,23 @@ public abstract class RMath {
 	
 	public static void main(String[] args) {
 		
-		System.out.printf("%f\n", Math.atan2(Math.sqrt(2) / 2.0, 0.0));
+		//System.out.printf("%f\n", Math.atan2(Math.sqrt(2) / 2.0, 0.0));
 		
+		PVector e0 = new PVector(5f, -90f, 75f);
+		e0.mult(PConstants.DEG_TO_RAD);
+		
+		RMatrix m0 = RMath.eulerToMatrix(e0);
+		
+		PVector e1 = new PVector(5f, -90f, 105f);
+		e1.mult(PConstants.DEG_TO_RAD);
+		RMatrix m1 = RMath.eulerToMatrix(e1);
+		
+		PVector e2 = RMath.matrixToEuler(m0);
+		PVector e3 = RMath.matrixToEuler(m1);
+
+		System.out.printf("%s\n\n%s\n%s\n\n%s\n\n%s\n\n%s\n", e0,
+				m0.toString(4, 10), e2, e1, m1.toString(4, 10),
+				e3);
 	}
 	
 	public static PVector convertRGBtoHSL(PVector rgb) {
@@ -119,6 +134,7 @@ public abstract class RMath {
 	 */
 	public static double atan2Rounded(double x, double y) {
 		
+		/**
 		if (x < 0.0 && x >= -0.00001f) {
 			x *= -1;
 		}
@@ -126,7 +142,7 @@ public abstract class RMath {
 		if (y < 0.0 && y >= -0.00001f) {
 			y *= -1;
 		}
-		
+		/**/
 		return Math.atan2(x, y);
 	}
 
@@ -634,12 +650,14 @@ public abstract class RMath {
 		
 		if (Math.abs(1 - s2) > 0.00002f) {
 			// No singularity
-			x = (float) atan2Rounded(-m.getEntry(2, 1), m.getEntry(2, 2));
-			y = (float) atan2Rounded(m.getEntry(2, 0), Math.sqrt(
+			double c2 = Math.sqrt(
 					m.getEntry(2, 1)*m.getEntry(2, 1) +
 					m.getEntry(2, 2)*m.getEntry(2, 2)
-					));
-			z = (float) atan2Rounded(-m.getEntry(1, 0), m.getEntry(0, 0));
+					);
+			
+			x = (float) atan2Rounded(m.getEntry(2, 1) / -c2, m.getEntry(2, 2) / c2);
+			y = (float) atan2Rounded(s2, c2);
+			z = (float) atan2Rounded(m.getEntry(1, 0) / -c2, m.getEntry(0, 0) / c2);
 			
 		} else {
 			// Set z rotation to some value
@@ -922,6 +940,7 @@ public abstract class RMath {
 	// calculates rotation matrix from quaternion
 	public static RMatrix quatToMatrix(RQuaternion q) {
 		double[][] r = new double[3][3];
+		q.normalize();
 
 		r[0][0] = 1 - 2 * (q.getValue(2) * q.getValue(2) + q.getValue(3) * q.getValue(3));
 		r[1][0] = 2 * (q.getValue(1) * q.getValue(2) - q.getValue(0) * q.getValue(3));

@@ -50,17 +50,28 @@ public class RMatrix extends Array2DRowRealMatrix {
 		return new RMatrix(s.getSolver().getInverse());
 	}
 	
-	@Override
-	public String toString() {
+	/**
+	 * TODO comment this
+	 * 
+	 * @param digitsBefore
+	 * @param digitsAfter
+	 * @return
+	 */
+	public String toString(int digitsBefore, int digitsAfter) {
 		String str = new String();
+		final String NUM_FORMAT = String.format("%%%d.%df", digitsBefore,
+				digitsAfter);
+		final String TOTAL_FORMAT = String.format("%%%ds ", digitsBefore +
+				digitsAfter + 2);
 		
 		for (int row = 0; row < getRowDimension(); ++row) {
 			str += "[ ";
 			
 			for (int column = 0; column < getColumnDimension(); ++column) {
-				String val = String.format("%4.3f", this.getEntry(row, column));
+				String val = String.format(NUM_FORMAT, this.getEntry(row,
+						column));
 				// Add padding
-				str += String.format("%9s ", val);
+				str += String.format(TOTAL_FORMAT, val);
 			}
 			
 			str += "]\n";
@@ -68,6 +79,11 @@ public class RMatrix extends Array2DRowRealMatrix {
 		
 		
 		return str;
+	}
+	
+	@Override
+	public String toString() {
+		return toString(4, 3);
 	}
 	
 	@Override
