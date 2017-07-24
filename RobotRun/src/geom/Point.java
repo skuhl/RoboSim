@@ -2,7 +2,7 @@ package geom;
 
 import java.util.Arrays;
 
-import global.MyFloatFormat;
+import global.DebugFloatFormat;
 import global.RMath;
 import processing.core.PConstants;
 import processing.core.PVector;
@@ -303,27 +303,27 @@ public class Point  {
 		
 		if (catersian) {
 			PVector limbo = worldFramePosition();
-			str0 = "X: " + MyFloatFormat.format(limbo.x);
-			str1 = "Y: " + MyFloatFormat.format(limbo.y);
-			str2 = "Z: " + MyFloatFormat.format(limbo.z);
+			str0 = "X: " + DebugFloatFormat.format(limbo.x);
+			str1 = "Y: " + DebugFloatFormat.format(limbo.y);
+			str2 = "Z: " + DebugFloatFormat.format(limbo.z);
 			
 			limbo = worldFrameOrientation();
-			str3 = "W: " + MyFloatFormat.format(limbo.x);
-			str4 = "P: " + MyFloatFormat.format(limbo.y);
-			str5 = "R: " + MyFloatFormat.format(limbo.z);
+			str3 = "W: " + DebugFloatFormat.format(limbo.x);
+			str4 = "P: " + DebugFloatFormat.format(limbo.y);
+			str5 = "R: " + DebugFloatFormat.format(limbo.z);
 			
 		} else {
-			str0 = "J1: " + MyFloatFormat.format(angles[0]
+			str0 = "J1: " + DebugFloatFormat.format(angles[0]
 					* PConstants.RAD_TO_DEG);
-			str1 = "J2: " + MyFloatFormat.format(angles[1]
+			str1 = "J2: " + DebugFloatFormat.format(angles[1]
 					* PConstants.RAD_TO_DEG);
-			str2 = "J3: " + MyFloatFormat.format(angles[2]
+			str2 = "J3: " + DebugFloatFormat.format(angles[2]
 					* PConstants.RAD_TO_DEG);
-			str3 = "J4: " + MyFloatFormat.format(angles[3]
+			str3 = "J4: " + DebugFloatFormat.format(angles[3]
 					* PConstants.RAD_TO_DEG);
-			str4 = "J5: " + MyFloatFormat.format(angles[4]
+			str4 = "J5: " + DebugFloatFormat.format(angles[4]
 					* PConstants.RAD_TO_DEG);
-			str5 = "J6: " + MyFloatFormat.format(angles[5]
+			str5 = "J6: " + DebugFloatFormat.format(angles[5]
 					* PConstants.RAD_TO_DEG);
 		}
 		

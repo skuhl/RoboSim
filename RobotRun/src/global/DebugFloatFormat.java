@@ -6,7 +6,7 @@ package global;
  * 
  * @author Joshua Hooker
  */
-public abstract class MyFloatFormat {
+public abstract class DebugFloatFormat {
 	private static String format;
 	private static int maxLen;
 	

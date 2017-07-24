@@ -3,7 +3,7 @@ import geom.Point;
 import geom.RMatrix;
 import geom.RQuaternion;
 import global.Fields;
-import global.MyFloatFormat;
+import global.DebugFloatFormat;
 import global.RMath;
 import processing.core.PVector;
 
@@ -182,12 +182,12 @@ public class ToolFrame extends Frame {
 
 		displayOffset = getTCPOffset();
 
-		values[0] = MyFloatFormat.format(displayOffset.x);
-		values[1] = MyFloatFormat.format(displayOffset.y);
-		values[2] = MyFloatFormat.format(displayOffset.z);
-		values[3] = MyFloatFormat.format(wpr.x);
-		values[4] = MyFloatFormat.format(wpr.y);
-		values[5] = MyFloatFormat.format(wpr.z);
+		values[0] = DebugFloatFormat.format(displayOffset.x);
+		values[1] = DebugFloatFormat.format(displayOffset.y);
+		values[2] = DebugFloatFormat.format(displayOffset.z);
+		values[3] = DebugFloatFormat.format(wpr.x);
+		values[4] = DebugFloatFormat.format(wpr.y);
+		values[5] = DebugFloatFormat.format(wpr.z);
 
 		return values;
 	}

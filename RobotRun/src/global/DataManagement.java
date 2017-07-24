@@ -40,7 +40,6 @@ import geom.ComplexShape;
 import geom.CoordinateSystem;
 import geom.DimType;
 import geom.Fixture;
-import geom.LoadedPart;
 import geom.MyPShape;
 import geom.Part;
 import geom.Point;
@@ -334,6 +333,11 @@ public abstract class DataManagement {
 			float exp = dataIn.readFloat();
 			
 			robotRun.getRobotCamera().update(camPos, camOrient, FOV, aspect, near, far, br, exp);
+			
+			int numObj = dataIn.readInt();
+			for(int i = 0; i < numObj; i += 1) {
+				robotRun.getRobotCamera().addTaughtObject(loadWorldObject(dataIn, robotRun).obj);
+			}
 			
 			dataIn.close();
 			in.close();
@@ -1012,38 +1016,23 @@ public abstract class DataManagement {
 		// An extra set of only the loaded fixtures
 		ArrayList<Fixture> fixtures = new ArrayList<>();
 		// A list of parts which have a fixture reference defined
-		ArrayList<LoadedPart> partsWithReferences = new ArrayList<>();
+		ArrayList<LoadedObject> partsWithReferences = new ArrayList<>();
 
 		// Read the number of objects in the scenario
 		int size = in.readInt();
 		// Read all the world objects contained in the scenario
 		while (size-- > 0) {
 			try {
-				Object loadedObject = loadWorldObject(in, app);
-
-				if (loadedObject instanceof WorldObject) {
-					// Add all normal world objects to the scenario
-					s.addWorldObject( (WorldObject)loadedObject );
-
-					if (loadedObject instanceof Fixture) {
-						// Save an extra reference of each fixture
-						fixtures.add( (Fixture)loadedObject );
-					}
-
-				} else if (loadedObject instanceof LoadedPart) {
-					LoadedPart lPart = (LoadedPart)loadedObject;
-
-					if (lPart.part != null) {
-						// Save the part in the scenario
-						s.addWorldObject(lPart.part);
-
-						if (lPart.referenceName != null) {
-							// Save any part with a defined reference
-							partsWithReferences.add(lPart);
-						}
-					}
-				}
+				LoadedObject loadedObject = loadWorldObject(in, app);
+				s.addWorldObject(loadedObject.obj);
 				
+				if (loadedObject.obj instanceof Fixture) {
+					// Save an extra reference of each fixture
+					fixtures.add((Fixture)loadedObject.obj);
+				} else if(loadedObject.referenceName != null) {
+					// Save any part with a defined reference
+					partsWithReferences.add(loadedObject);
+				}
 			} catch (NullPointerException NPEx) {
 				/* Invalid model source file name */
 				System.err.println( NPEx.getMessage() );
@@ -1055,10 +1044,10 @@ public abstract class DataManagement {
 		}
 		
 		// Set all the Part's references
-		for (LoadedPart lPart : partsWithReferences) {
+		for (LoadedObject lPart : partsWithReferences) {
 			for (Fixture f : fixtures) {
 				if (lPart.referenceName.equals(f.getName())) {
-					lPart.part.setFixtureRef(f);
+					((Part)lPart.obj).setFixtureRef(f);
 				}
 			}
 		}
@@ -1181,10 +1170,10 @@ public abstract class DataManagement {
 		return shape;
 	}
 
-	private static Object loadWorldObject(DataInputStream in, RobotRun app) throws IOException, NullPointerException {
+	private static LoadedObject loadWorldObject(DataInputStream in, RobotRun app) throws IOException, NullPointerException {
 		// Load the flag byte
 		byte flag = in.readByte();
-		Object wldObjFields = null;
+		LoadedObject wldObjFields = null;
 
 		if (flag != 0) {
 			// Load the name and shape of the object
@@ -1205,18 +1194,19 @@ public abstract class DataManagement {
 				// Load the part's bounding-box and fixture reference name
 				PVector OBBDims = loadPVector(in);
 				String refName = in.readUTF();
+				Part p = new Part(name, form, OBBDims, localOrientation, defaultOrientation, null);
 
 				if (refName.equals("")) {
 					// A part object
-					wldObjFields = new Part(name, form, OBBDims, localOrientation, defaultOrientation, null);
+					wldObjFields = new LoadedObject(p, null);
 				} else {
 					// A part object with its reference's name
-					wldObjFields = new LoadedPart( new Part(name, form, OBBDims, localOrientation, defaultOrientation, null), refName );
+					wldObjFields = new LoadedObject(p, refName);
 				}
 
 			} else if (flag == 2) {
 				// A fixture object
-				wldObjFields = new Fixture(name, form, localOrientation);
+				wldObjFields = new LoadedObject(new Fixture(name, form, localOrientation));
 			} 
 		}
 
@@ -1354,6 +1344,7 @@ public abstract class DataManagement {
 			dataOut.writeFloat(rCam.getBrightness());
 			dataOut.writeFloat(rCam.getExposure());
 			
+			dataOut.writeInt(rCam.getTaughtObjects().size());
 			for(WorldObject o : rCam.getTaughtObjects()) {
 				DataManagement.saveWorldObject(o, dataOut);
 			}

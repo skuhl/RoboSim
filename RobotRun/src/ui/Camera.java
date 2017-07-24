@@ -1,6 +1,6 @@
 package ui;
 
-import global.MyFloatFormat;
+import global.DebugFloatFormat;
 import global.RMath;
 import processing.core.PConstants;
 import processing.core.PVector;
@@ -150,13 +150,13 @@ public class Camera {
 		// Display rotation in degrees
 		PVector inDegrees = PVector.mult(rotation, PConstants.RAD_TO_DEG);
 		
-		fields[0] = "X: " + MyFloatFormat.format(position.x);
-		fields[1] = "Y: " + MyFloatFormat.format(position.y);
-		fields[2] = "Z: " + MyFloatFormat.format(position.z);
-		fields[3] = "W: " + MyFloatFormat.format(inDegrees.x);
-		fields[4] = "P: " + MyFloatFormat.format(inDegrees.y);
-		fields[5] = "R: " + MyFloatFormat.format(inDegrees.z);
-		fields[6] = "S: " + MyFloatFormat.format(scale);
+		fields[0] = "X: " + DebugFloatFormat.format(position.x);
+		fields[1] = "Y: " + DebugFloatFormat.format(position.y);
+		fields[2] = "Z: " + DebugFloatFormat.format(position.z);
+		fields[3] = "W: " + DebugFloatFormat.format(inDegrees.x);
+		fields[4] = "P: " + DebugFloatFormat.format(inDegrees.y);
+		fields[5] = "R: " + DebugFloatFormat.format(inDegrees.z);
+		fields[6] = "S: " + DebugFloatFormat.format(scale);
 		
 		return fields;
 	}

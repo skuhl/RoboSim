@@ -1,7 +1,7 @@
 package geom;
 
 import global.Fields;
-import global.MyFloatFormat;
+import global.DebugFloatFormat;
 import global.RMath;
 import processing.core.PGraphics;
 import processing.core.PVector;
@@ -129,15 +129,15 @@ public abstract class WorldObject implements Cloneable {
 		if (form instanceof RBox) {
 			fields = new String[3];
 			// Add the box's length, height, and width values
-			fields[0] = "L: " + MyFloatFormat.format(form.getDim(DimType.LENGTH));
-			fields[1] = "H: " + MyFloatFormat.format(form.getDim(DimType.HEIGHT));
-			fields[2] = "W: " + MyFloatFormat.format(form.getDim(DimType.WIDTH));
+			fields[0] = "L: " + DebugFloatFormat.format(form.getDim(DimType.LENGTH));
+			fields[1] = "H: " + DebugFloatFormat.format(form.getDim(DimType.HEIGHT));
+			fields[2] = "W: " + DebugFloatFormat.format(form.getDim(DimType.WIDTH));
 
 		} else if (form instanceof RCylinder) {
 			fields = new String[2];
 			// Add the cylinder's radius and height values
-			fields[0] = "R: " + MyFloatFormat.format(form.getDim(DimType.RADIUS));
-			fields[1] = "H: " + MyFloatFormat.format(form.getDim(DimType.HEIGHT));
+			fields[0] = "R: " + DebugFloatFormat.format(form.getDim(DimType.RADIUS));
+			fields[1] = "H: " + DebugFloatFormat.format(form.getDim(DimType.HEIGHT));
 
 		} else if (form instanceof ComplexShape) {
 
@@ -146,14 +146,14 @@ public abstract class WorldObject implements Cloneable {
 				fields = new String[4];
 				PVector dims = ((Part)this).getOBBDims();
 
-				fields[0] = "S: " + MyFloatFormat.format(form.getDim(DimType.SCALE));
-				fields[1] = "L: " + MyFloatFormat.format(dims.x);
-				fields[2] = "H: " + MyFloatFormat.format(dims.y);
-				fields[3] = "W: " + MyFloatFormat.format(dims.z);
+				fields[0] = "S: " + DebugFloatFormat.format(form.getDim(DimType.SCALE));
+				fields[1] = "L: " + DebugFloatFormat.format(dims.x);
+				fields[2] = "H: " + DebugFloatFormat.format(dims.y);
+				fields[3] = "W: " + DebugFloatFormat.format(dims.z);
 
 			} else if (this instanceof Fixture) {
 				fields = new String[1];
-				fields[0] = "S: " + MyFloatFormat.format(form.getDim(DimType.SCALE));
+				fields[0] = "S: " + DebugFloatFormat.format(form.getDim(DimType.SCALE));
 
 			} else {
 				// No dimensios to display

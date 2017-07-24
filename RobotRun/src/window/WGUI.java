@@ -1982,7 +1982,16 @@ public class WGUI implements ControlListener {
 
 		if (wldObj instanceof WorldObject) {
 			return (WorldObject)wldObj;
-
+		} else {
+			return null;
+		}
+	}
+	
+	public WorldObject getSelectedCamObj() {
+		Object wldObj = getDropdown("CamObjects").getSelectedItem();
+		
+		if (wldObj instanceof WorldObject) {
+			return (WorldObject)wldObj;
 		} else {
 			return null;
 		}

@@ -355,6 +355,11 @@ public class RobotRun extends PApplet {
 		}
 	}
 
+	public void button_camDeleteObj() {
+		WorldObject o = UI.getSelectedCamObj();
+		rCamera.getTaughtObjects().remove(o);
+	}
+	
 	public void button_camTeachObj() {
 		try {
 			if(activeScenario != null) {
@@ -368,10 +373,6 @@ public class RobotRun extends PApplet {
 			DataManagement.errLog(Ex);
 			throw Ex;
 		}
-	}
-	
-	public void button_camRemoveObj() {
-		//TODO
 	}
 	
 	public void button_camToggleActive() {

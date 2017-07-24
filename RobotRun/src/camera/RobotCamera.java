@@ -491,7 +491,10 @@ public class RobotCamera {
 		
 		if(RobotRun.getInstanceScenario() != null) {
 			for(WorldObject o : RobotRun.getInstanceScenario().getObjectList()) {
-				o.draw(img);
+				if(o instanceof Part) 
+					((Part)o).draw(img, false);
+				else
+					o.draw(img);
 			}
 		}
 		

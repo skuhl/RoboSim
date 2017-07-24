@@ -615,12 +615,12 @@ public abstract class Fields {
 	 */
 	public static String[] toLineStringArray(PVector position, PVector rotation) {
 		
-		String strX = "X: " + MyFloatFormat.format(position.x);
-		String strY = "Y: " + MyFloatFormat.format(position.y);
-		String strZ = "Z: " + MyFloatFormat.format(position.z);
-		String strW = "W: " + MyFloatFormat.format(rotation.x);
-		String strP = "P: " + MyFloatFormat.format(rotation.y);
-		String strR = "R: " + MyFloatFormat.format(rotation.z);
+		String strX = "X: " + DebugFloatFormat.format(position.x);
+		String strY = "Y: " + DebugFloatFormat.format(position.y);
+		String strZ = "Z: " + DebugFloatFormat.format(position.z);
+		String strW = "W: " + DebugFloatFormat.format(rotation.x);
+		String strP = "P: " + DebugFloatFormat.format(rotation.y);
+		String strR = "R: " + DebugFloatFormat.format(rotation.z);
 		
 		return new String[] {
 				String.format("%-12s %-12s %-12s", strX, strY, strZ),

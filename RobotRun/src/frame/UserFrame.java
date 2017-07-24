@@ -2,7 +2,7 @@ package frame;
 import geom.Point;
 import geom.RMatrix;
 import geom.RQuaternion;
-import global.MyFloatFormat;
+import global.DebugFloatFormat;
 import global.RMath;
 import processing.core.PVector;
 
@@ -153,12 +153,12 @@ public class UserFrame extends Frame {
 		 * to the world frame */
 		PVector wpr = RMath.nQuatToWEuler(orientationOffset);
 
-		values[0] = MyFloatFormat.format(displayOrigin.x);
-		values[1] = MyFloatFormat.format(displayOrigin.y);
-		values[2] = MyFloatFormat.format( displayOrigin.z);
-		values[3] = MyFloatFormat.format(wpr.x);
-		values[4] = MyFloatFormat.format(wpr.y);
-		values[5] = MyFloatFormat.format(wpr.z);
+		values[0] = DebugFloatFormat.format(displayOrigin.x);
+		values[1] = DebugFloatFormat.format(displayOrigin.y);
+		values[2] = DebugFloatFormat.format( displayOrigin.z);
+		values[3] = DebugFloatFormat.format(wpr.x);
+		values[4] = DebugFloatFormat.format(wpr.y);
+		values[5] = DebugFloatFormat.format(wpr.z);
 
 		return values;
 	}
