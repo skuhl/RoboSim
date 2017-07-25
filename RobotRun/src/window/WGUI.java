@@ -2355,6 +2355,25 @@ public class WGUI implements ControlListener {
 			getDropdown("WO").setItem(wo);
 		}
 	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param butName
+	 * @param state
+	 */
+	public void setButtonState(String butName, boolean state) {
+		Button b = getButton(butName);
+		
+		if (b != null && b.isSwitch()) {
+			if (state) {
+				b.setOn();
+				
+			} else {
+				b.setOff();
+			}
+		}
+	}
 
 	/**
 	 * Updates the tabs that are available in the applications main window.

@@ -90,6 +90,14 @@ public class RobotRun extends PApplet {
 	public static RobotRun getInstance() {
 		return instance;
 	}
+	
+	public static RoboticArm getInstanceRobot() {
+		return instance.getActiveRobot();
+	}
+	
+	public static Scenario getInstanceScenario() {
+		return instance.getActiveScenario();
+	}
 
 	public static void main(String[] args) {
 		String[] appletArgs = new String[] { "core.RobotRun" };
@@ -1432,6 +1440,7 @@ public class RobotRun extends PApplet {
 	 */
 	public void button_objToggleBounds() {
 		try {
+			System.out.println("Hello world!");
 			UI.updateUIContentPositions();
 			
 		} catch (Exception Ex) {
@@ -2585,7 +2594,7 @@ public class RobotRun extends PApplet {
 			// Check for collisions with objects in the scene
 			WorldObject collision = checkForCollisionsInScene(mouseRay);
 			
-			if (mouseButton == LEFT) {
+			if (mouseButton == LEFT && collision != null) {
 				UI.setSelectedWO(collision);
 			}
 			

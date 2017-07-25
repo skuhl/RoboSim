@@ -472,7 +472,7 @@ public class RobotCamera {
 		
 		img.beginDraw();
 		PVector cPos = camPos;
-		PVector cOrien = camOrient.toVector();
+		PVector cOrien = RMath.quatToEuler(camOrient);
 		img.perspective((camFOV/camAspectRatio)*RobotRun.DEG_TO_RAD, camAspectRatio, camClipNear, camClipFar);
 		
 		img.rotateX(cOrien.x);
