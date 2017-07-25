@@ -35,6 +35,7 @@ import geom.WorldObject;
 import global.DataManagement;
 import global.Fields;
 import global.RMath;
+import processing.core.PConstants;
 import processing.core.PFont;
 import processing.core.PGraphics;
 import processing.core.PImage;
@@ -117,8 +118,12 @@ public class WGUI implements ControlListener {
 	 *  options output. */
 	private final ArrayList<Textarea> displayLines;
 	
-	/** Creates a new window with the given ControlP5 object as the parent
-	 *  and the given fonts which will be applied to the text in the window. */
+	/**
+	 * Creates a UI with the given RobotRun reference and button images.
+	 * 
+	 * @param appRef		A reference to the RobotRun class
+	 * @param buttonImages	Sets of images used for certain buttons in the UI
+	 */
 	public WGUI(RobotRun appRef, PImage[][] buttonImages) {
 		app = appRef;
 		
@@ -428,7 +433,7 @@ public class WGUI implements ControlListener {
 			MyButton b = addButton(name, lbl, pendant, relPos[0], relPos[1],
 					Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 
-			b.getCaptionLabel().alignY(RobotRun.TOP);
+			b.getCaptionLabel().alignY(PConstants.TOP);
 			relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, 1);
 
 			name = String.format(WGUI_Buttons.JointNeg[idx-1], idx);
@@ -438,7 +443,7 @@ public class WGUI implements ControlListener {
 			b = addButton(name, lbl, pendant, relPos2[0], relPos2[1],
 					Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 
-			b.getCaptionLabel().alignY(RobotRun.TOP);
+			b.getCaptionLabel().alignY(PConstants.TOP);
 			relPos2 = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, 1);
 		}
 
@@ -520,7 +525,7 @@ public class WGUI implements ControlListener {
 		String[] togLbls = new String[] { "Part", "Fixture" };
 		
 		addRadioButton("WOType", createWO, radioDim, radioDim, Fields.medium,
-				togValues, togNames, togLbls, 0f, Fields.ITYPE_TRANSIENT);
+				togValues, togNames, togLbls, Fields.ITYPE_TRANSIENT);
 		
 		addTextarea("WOShapeLbl", "Shape:", createWO, mLblWidth, sButtonHeight, Fields.medium);
 		
@@ -529,7 +534,7 @@ public class WGUI implements ControlListener {
 		togLbls = new String[] { "Box", "Cylinder", "Import" };
 		
 		addRadioButton("Shape", createWO, radioDim, radioDim, Fields.medium,
-				togValues, togNames, togLbls, 0f, Fields.ITYPE_TRANSIENT);
+				togValues, togNames, togLbls, Fields.ITYPE_TRANSIENT);
 		
 		addTextarea("WOFillSmp", "\0", createWO, sButtonHeight, sButtonHeight, Fields.medium);
 		addTextarea("WOOutlineSmp", "\0", createWO, sButtonHeight, sButtonHeight, Fields.medium);
@@ -539,13 +544,13 @@ public class WGUI implements ControlListener {
 		addTextarea("WOEditLbl", "Object:", editWO, mLblWidth, fieldHeight, Fields.medium);
 
 		togValues = new float[] { 0f, 1f };
-		togNames = new String[] { "PositionOpt", "OtherOpt" };
-		togLbls = new String[] { "Position", "Other" };
+		togNames = new String[] { "PositionOpt", "EditOpt" };
+		togLbls = new String[] { "Position", "Edit" };
 		
 		addTextarea("EditTabLbl", "Options:", editWO, mLblWidth, fieldHeight,
 				Fields.medium);
 		MyRadioButton rb = addRadioButton("EditTab", editWO, radioDim, radioDim,
-				Fields.medium, togValues, togNames, togLbls, 0f,
+				Fields.medium, togValues, togNames, togLbls,
 				Fields.ITYPE_PERMENANT);
 		rb.setItemsPerRow(2);
 		rb.setSpacingColumnOffset(distFieldToFieldX);
@@ -597,7 +602,7 @@ public class WGUI implements ControlListener {
 		togLbls = new String[] { "New", "Load", "Rename" };
 
 		rb = addRadioButton("ScenarioOpt", scenario, radioDim,
-				radioDim, Fields.medium, togValues, togNames, togLbls, 0f,
+				radioDim, Fields.medium, togValues, togNames, togLbls,
 				Fields.ITYPE_PERMENANT);
 		rb.setItemsPerRow(3);
 		rb.setSpacingColumnOffset(distFieldToFieldX);
@@ -640,9 +645,9 @@ public class WGUI implements ControlListener {
 		addTextfield("CCFarCur", camera, fieldWidthSm, fieldHeight, Fields.medium, app.getKeyCodeMap());
 		
 		addSlider("CBright", camera, fieldWidthMed, fieldHeight, 0f, 10f, 1f,
-				Fields.medium, Fields.ITYPE_TRANSIENT);
+				Fields.ITYPE_TRANSIENT);
 		addSlider("CExp", camera, fieldWidthMed, fieldHeight, 0.01f, 1f, 0.1f,
-				Fields.medium, Fields.ITYPE_TRANSIENT);
+				Fields.ITYPE_TRANSIENT);
 		
 		addButton(WGUI_Buttons.CamUpdate, "Update Camera", camera, fieldWidthMed, sButtonHeight, Fields.small);
 		addDropdown("CamObjects", camera, ldropItemWidth, dropItemHeight, 0,
@@ -846,6 +851,7 @@ public class WGUI implements ControlListener {
 	 * @param listLen	The maximum number of list elements to display at once
 	 * 					(the display is scrollable)
 	 * @param lblFont	The dropdown list's label font
+	 * @param inputType	How should this field by treated for input clear events
 	 * @return			A reference to the new dropdown list
 	 */
 	private MyDropdownList addDropdown(String name, Group parent, int lblWdh,
@@ -881,6 +887,7 @@ public class WGUI implements ControlListener {
 	 * @param listLen	The maximum number of list elements to display at once
 	 * 					(the display is scrollable)
 	 * @param lblFont	The dropdown list's label font
+	 * @param inputType	How should this field by treated for input clear events
 	 * @return			A reference to the new dropdown list
 	 */
 	private MyDropdownList addDropdownSearch(String name, Group parent, int lblWdh,
@@ -947,12 +954,12 @@ public class WGUI implements ControlListener {
 	 * @param togNames	The names associated with each toggle (must be unique
 	 * 					amongst all UI elements)
 	 * @param togLbls	The labels associated with each toggle
-	 * @param iniActive	The value of the toggle, which is initially active
+	 * @param inputType	How should this field by treated for input clear events
 	 * @return			A reference to the new radio button
 	 */
 	private MyRadioButton addRadioButton(String name, Group parent, int togWdh,
 			int togHgt, PFont lblFont, float[] togValues, String[] togNames,
-			String[] togLbls, Float iniActive, int inputType) {
+			String[] togLbls, int inputType) {
 
 		MyRadioButton rb = new MyRadioButton(manager, name, inputType);
 		rb.setColorValue(Fields.B_DEFAULT_C)
@@ -974,16 +981,13 @@ public class WGUI implements ControlListener {
 			.setColorLabel(Fields.F_TEXT_C)
 			.setColorActive(Fields.B_ACTIVE_C)
 			.getCaptionLabel().setFont(lblFont);
-			
 		}
-		
-		
 		
 		return rb;
 	}
 
 	private MySlider addSlider(String name, Group parent, int wdh, int hgt,
-			float min, float max, float def, PFont lblFont, int inputType) {
+			float min, float max, float def, int inputType) {
 		
 		MySlider s = new MySlider(manager, name, inputType);
 		s.setColorValue(Fields.B_DEFAULT_C)
@@ -1064,7 +1068,7 @@ public class WGUI implements ControlListener {
 	 * @param txtColor	The color of the text-area's text
 	 * @param bgColor	The color of the text-area's background
 	 * @param lblFont	The font of the text-area
-	 * @return
+	 * @return			A reference to the new text-area
 	 */
 	private Textarea addTextarea(String name, String iniTxt, Group parent,
 			int posX, int posY, int wdh, int hgt, int txtColor, int bgColor,
@@ -1105,6 +1109,7 @@ public class WGUI implements ControlListener {
 		.setColorBackground(Fields.F_BG_C)
 		.setColorForeground(Fields.F_FG_C)
 		.moveTo(parent)
+		.setFont(lblFont)
 		.setBehavior(new KeyDownBehavior(keys));
 		
 		t.getCaptionLabel().hide();
@@ -1186,8 +1191,7 @@ public class WGUI implements ControlListener {
 				}
 
 			} else if (arg0.isFrom("RobotEE")) {
-				@SuppressWarnings("static-access")
-				RoboticArm r = app.getInstanceRobot();
+				RoboticArm r = app.getActiveRobot();
 
 				if (r != null) {
 					/* Link the active robot's end effector to the selected
@@ -1204,10 +1208,10 @@ public class WGUI implements ControlListener {
 				
 				CamSelectArea a = ((ComplexShape)o.getForm()).getSelectAreaClicked(x, y, mdlOrient);
 				if(a != null) {
-					if(app.mouseButton == RobotRun.RIGHT && !a.isIgnored()) {
+					if(app.mouseButton == PConstants.RIGHT && !a.isIgnored()) {
 						a.ignoreArea();
 					}
-					else if(app.mouseButton == RobotRun.LEFT && !a.isEmphasized()) {
+					else if(app.mouseButton == PConstants.LEFT && !a.isEmphasized()) {
 						a.emphasizeArea();
 					}
 					else {
@@ -1301,6 +1305,8 @@ public class WGUI implements ControlListener {
 
 	/**
 	 * Creates a world object form the input fields in the Create window.
+	 * 
+	 * @return	The new world object or null, if the input was invalid
 	 */
 	public WorldObject createWorldObject() {
 		// Determine if the object to be create is a Fixture or a Part
@@ -1517,8 +1523,8 @@ public class WGUI implements ControlListener {
 	 * @param offsetY	The y position offset with respect to ref
 	 * @return			A doubleton containing the absolute xy position
 	 */
-	private int[] getAbsPosFrom(ControllerInterface<?> ref, Alignment align,
-			int offsetX, int offsetY) {
+	private static int[] getAbsPosFrom(ControllerInterface<?> ref,
+			Alignment align, int offsetX, int offsetY) {
 
 		return getAbsPosFrom(ref, align, offsetX, ref, align, offsetY);
 	}
@@ -1648,6 +1654,7 @@ public class WGUI implements ControlListener {
 	 * Attempts to find a button with the given name and returns its state.
 	 * 
 	 * @param name	The name of the button, of which to find the state
+	 * @return		The state of the button with the given name
 	 */
 	public boolean getButtonState(String name) {
 		ControllerInterface<?> controller = manager.get(name);
@@ -1799,7 +1806,7 @@ public class WGUI implements ControlListener {
 	 * 	SCALE					->	Dim0 or Dim1 text-field
 	 * 	*depends on what window tab is active
 	 * 
-	 * @param name	A type of world object dimension, which corresponds to a
+	 * @param t	A type of world object dimension, which corresponds to a
 	 * 			text-field input in the UI
 	 * @return		The text-field corresponding to the given dimension type
 	 * @throws ClassCastException	Really shouldn't happen
@@ -1953,7 +1960,7 @@ public class WGUI implements ControlListener {
 	 * Returns the scenario associated with the label that is active
 	 * for the scenario drop-down list.
 	 * 
-	 * @returning  The index value or null if no such index exists
+	 * @return  The index value or null if no such index exists
 	 */
 	public Scenario getSelectedScenario() {
 
@@ -2079,6 +2086,8 @@ public class WGUI implements ControlListener {
 
 	/**
 	 * Determines whether a single text field is active.
+	 * 
+	 * @return	If a text-field is active
 	 */
 	public boolean isATextFieldActive() {
 		List<ControllerInterface<?>> controllers = manager.getAll();
@@ -2103,6 +2112,8 @@ public class WGUI implements ControlListener {
 
 	/**
 	 * Determines whether the mouse is over certain UI elements.
+	 * 
+	 * @return	If the mouse is currently hovering over a UI element
 	 */
 	public boolean isMouseOverUIElement() {
 		List<ControllerInterface<?>> controllers = manager.getAll();
@@ -2130,10 +2141,7 @@ public class WGUI implements ControlListener {
 	/**
 	 * Renders all the text on the pendant's screen based on the given input.
 	 * 
-	 * @param header	The header of the pendant screen
-	 * @param contents	The main content fields
-	 * @param options	The option fields
-	 * @param funcLbls	The function button labels
+	 * @param screen	A reference to the screen to render
 	 */
 	public void renderPendantScreen(Screen screen) {
 		Textarea headerLbl = getTextArea("header");
@@ -2185,28 +2193,32 @@ public class WGUI implements ControlListener {
 	 * pendant display text-fields, to use for rendering the menu. In addition,
 	 * the index of the next unused text-field is returned by this method.
 	 * 
-	 * @param menu	The menu contents to display on the pendant
-	 * @param TAIdx	The index of the first text-field in displayLines to use
-	 * 				for rendering the contents of menu.
-	 * @return		The index of the next unused text-field in displayLines
+	 * @param lineSelectStates	The list of line states indicating if a line is
+	 * 							selected (i.e. should be highlighted)
+	 * @param mScroll			The menu contents to display on the pendant
+	 * @param TAIdx				The index of the first text-field in
+	 * 							displayLines to use for rendering the contents
+	 * 							of menu.
+	 * @return					The index of the next unused text-field in
+	 * 							displayLines
 	 */
-	private int renderMenu(boolean[] lineSelectStates, MenuScroll menu, int TAIdx) {
+	private int renderMenu(boolean[] lineSelectStates, MenuScroll mScroll, int TAIdx) {
 		DisplayLine active;
 
-		menu.updateRenderIndices();
-		active = menu.getCurrentItem();
+		mScroll.updateRenderIndices();
+		active = mScroll.getCurrentItem();
 
 		int lineNo = 0;
 		int bg, txt, selectInd = -1;
-		int next_py = menu.getYPos();
+		int next_py = mScroll.getYPos();
 
-		for(int i = menu.getRenderStart(); i < menu.size() && lineNo < menu.getMaxDisplay(); i += 1) {
+		for(int i = mScroll.getRenderStart(); i < mScroll.size() && lineNo < mScroll.getMaxDisplay(); i += 1) {
 			//get current line
-			DisplayLine temp = menu.get(i);
-			int next_px = temp.getxAlign() + menu.getXPos();
+			DisplayLine temp = mScroll.get(i);
+			int next_px = temp.getxAlign() + mScroll.getXPos();
 
-			if(i == 0 || menu.get(i - 1).getItemIdx() != menu.get(i).getItemIdx()) {
-				selectInd = menu.get(i).getItemIdx();
+			if(i == 0 || mScroll.get(i - 1).getItemIdx() != mScroll.get(i).getItemIdx()) {
+				selectInd = mScroll.get(i).getItemIdx();
 
 				if (active != null && active.getItemIdx() == selectInd) {
 					bg = Fields.UI_DARK_C;
@@ -2226,8 +2238,8 @@ public class WGUI implements ControlListener {
 
 			//draw each element in current line
 			for(int j = 0; j < temp.size(); j += 1) {
-				if(i == menu.getLineIdx()) {
-					if(j == menu.getColumnIdx() && lineSelectStates == null){
+				if(i == mScroll.getLineIdx()) {
+					if(j == mScroll.getColumnIdx() && lineSelectStates == null){
 						//highlight selected row + column
 						txt = Fields.UI_LIGHT_C;
 						bg = Fields.UI_DARK_C;          
@@ -2267,7 +2279,7 @@ public class WGUI implements ControlListener {
 			} //end draw line elements
 
 			//Trailing row select indicator []
-			if(i == menu.size() - 1 || menu.get(i).getItemIdx() != menu.get(i + 1).getItemIdx()) {
+			if(i == mScroll.size() - 1 || mScroll.get(i).getItemIdx() != mScroll.get(i + 1).getItemIdx()) {
 
 				if (active != null && active.getItemIdx() == selectInd) {
 					txt = Fields.UI_DARK_C;
@@ -2293,9 +2305,10 @@ public class WGUI implements ControlListener {
 	 * Convenience method for checking the bounds and getting an element from a
 	 * boolean array. If the index is out of bounds, then false is returned.
 	 * 
-	 * @param arr
-	 * @param idx
-	 * @return
+	 * @param arr	The array from which to get an element
+	 * @param idx	The index of the element to get
+	 * @return		The element at the given index in arr or false, if the
+	 * 				index is invalid
 	 */
 	private static boolean validateAndGet(boolean[] arr, int idx) {
 		if (arr != null && idx >= 0 && idx < arr.length) {
@@ -2319,7 +2332,7 @@ public class WGUI implements ControlListener {
 	 * Only update the group visibility if it does not
 	 * match the given visibility flag.
 	 */
-	private void setGroupVisible(Group g, boolean setVisible) {
+	private static void setGroupVisible(Group g, boolean setVisible) {
 		if (g.isVisible() != setVisible) {
 			g.setVisible(setVisible);
 		}
@@ -3182,8 +3195,7 @@ public class WGUI implements ControlListener {
 			dropdown.addItem(s.getName(), s);
 		}
 		
-		@SuppressWarnings("static-access")
-		RoboticArm r = app.getInstanceRobot();
+		RoboticArm r = app.getActiveRobot();
 
 		if (r != null) {
 			// Link the active robot's end effector to the dropdown list

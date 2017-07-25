@@ -1,11 +1,19 @@
 package programming;
-import core.RobotRun;
+
+import core.Pointer;
 import robot.RoboticArm;
 
 public class CallInstruction extends Instruction {
 	
+	private static Pointer<RoboticArm> robotRef;
+	
 	private RoboticArm tgtDevice;
 	private Program tgt;
+	
+	/**
+	 * TODO comment this
+	 */
+	private int loadedID;
 	
 	/**
 	 * Primarily used for loading programs. Since programs are loaded
@@ -18,38 +26,64 @@ public class CallInstruction extends Instruction {
 	public CallInstruction(RoboticArm robot) {
 		tgtDevice = robot;
 		tgt = null;
-		loadedName = "...";
+		
+		loadedID = -1;
+		loadedName = null;
 	}
 		
 	public CallInstruction(RoboticArm tgtDevice, Program tgt) {
 		this.tgtDevice = tgtDevice;
 		this.tgt = tgt;
-
+		
+		loadedID = -1;
 		loadedName = null;
 	}
 	
-	public CallInstruction(RoboticArm tgtDevice, String tgtName) {
-		this.tgtDevice = tgtDevice;
-		tgt= null;
-		this.loadedName = tgtName;
+	public CallInstruction(int tgtDID, String tgtName) {
+		tgtDevice = null;
+		tgt = null;
+		
+		loadedID = tgtDID;
+		loadedName = tgtName;
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param ref
+	 */
+	public static void setRobotRef(Pointer<RoboticArm> ref) {
+		robotRef = ref;
 	}
 
 	@Override
 	public Instruction clone() {
 		return new CallInstruction(tgtDevice, tgt);
 	}
+	
+	public Program getProg() {
+		return tgt;
+	}
+	
+	public int getLoadedID() {
+		return loadedID;
+	}
+	
+	public String getLoadedName() {
+		return loadedName;
+	}
+	
+	public RoboticArm getTgtDevice() {
+		return tgtDevice;
+	}
 
-	// Getters and setters for a call instruction's program id field
+	public void setProg(Program p) {
+		tgt = p;
+	}
 	
-	public Program getProg() { return tgt; }
-	
-	public String getLoadedName() { return loadedName; }
-	
-	public RoboticArm getTgtDevice() { return tgtDevice; }
-
-	public void setProg(Program p) { tgt = p; }
-	
-	public void setTgtDevice(RoboticArm tgt) { tgtDevice = tgt; }
+	public void setTgtDevice(RoboticArm tgt) {
+		tgtDevice = tgt;
+	}
 	
 	private String getProgName() {
 		return (tgt == null) ? "..." : tgt.getName();
@@ -57,7 +91,7 @@ public class CallInstruction extends Instruction {
 
 	@Override
 	public String toString() {
-		if(tgtDevice == RobotRun.getInstanceRobot()) {
+		if(tgtDevice == robotRef.get()) {
 			return "Call " + getProgName();
 			
 		} else {
@@ -68,7 +102,7 @@ public class CallInstruction extends Instruction {
 	@Override
 	public String[] toStringArray() {
 		String[] ret = new String[2];
-		ret[0] = (tgtDevice == RobotRun.getInstanceRobot()) ? "Call" : "RCall";
+		ret[0] = (tgtDevice == robotRef.get()) ? "Call" : "RCall";
 		ret[1] = getProgName();
 
 		return ret;

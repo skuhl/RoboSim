@@ -11,6 +11,12 @@ public abstract class ST_ScreenOptionsMenu extends Screen {
 		super(m, r);
 	}
 	
+	public ST_ScreenOptionsMenu(ScreenMode m, String header,
+			RobotRun r) {
+		
+		super(m, header, r);
+	}
+	
 	@Override
 	protected void loadContents() {}
 	

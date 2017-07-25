@@ -12,7 +12,7 @@ public class ScreenEditPosReg extends ST_ScreenPointEntry {
 
 	public ScreenEditPosReg(RobotRun r) {
 		super(ScreenMode.EDIT_PREG, r);
-		
+		loadWorkingText();
 	}
 	
 	@Override
@@ -78,10 +78,6 @@ public class ScreenEditPosReg extends ST_ScreenPointEntry {
 			DataManagement.saveRobotData(r, 3);
 			robotRun.lastScreen();
 			
-		} else {
-			errorMessage("All entries must be a real number");
 		}
-
-		
 	}
 }

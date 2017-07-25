@@ -13,9 +13,8 @@ import enums.CoordFrame;
 import enums.ExecState;
 import enums.ExecType;
 import expression.Operand;
+import expression.OperandCamObj;
 import expression.Operator;
-import frame.Frame;
-import frame.ToolFrame;
 import frame.UserFrame;
 import geom.BoundingBox;
 import geom.ComplexShape;
@@ -66,15 +65,12 @@ import screen.content_disp.ScreenNavPrograms;
 import screen.edit_point.ST_ScreenPointEntry;
 import screen.num_entry.ST_ScreenNumEntry;
 import screen.teach_frame.ST_ScreenTeachPoints;
-import screen.teach_frame.ScreenTeach3PtTool;
-import screen.teach_frame.ScreenTeach3PtUser;
-import screen.teach_frame.ScreenTeach4Pt;
-import screen.teach_frame.ScreenTeach6Pt;
 import screen.text_entry.ST_ScreenTextEntry;
 import ui.Camera;
 import ui.DisplayLine;
 import ui.KeyCodeMap;
 import ui.MenuScroll;
+import ui.RecordScreen;
 import undo.WOUndoCurrent;
 import undo.WOUndoDelete;
 import undo.WOUndoState;
@@ -91,19 +87,8 @@ import window.WGUI_Buttons;
 public class RobotRun extends PApplet {
 	private static RobotRun instance;
 	
-	/**
-	 * Returns the instance of this PApplet	
-	 */
 	public static RobotRun getInstance() {
 		return instance;
-	}
-	
-	public static RoboticArm getInstanceRobot() {
-		return instance.activeRobot;
-	}
-
-	public static Scenario getInstanceScenario() {
-		return instance.activeScenario;
 	}
 
 	public static void main(String[] args) {
@@ -120,22 +105,13 @@ public class RobotRun extends PApplet {
 	// container for instructions being copied/ cut and pasted
 	public ArrayList<Instruction> clipBoard = new ArrayList<>();
 	
-	/**
-	 * Index of the current frame (Tool or User) selecting when in the Frame
-	 * menus
-	 */
-	public int curFrameIdx = -1;
 	public int editIdx = -1;
 
 	public Operand<?> opEdit = null;
 	
-	/**
-	 * The Frame being taught, during a frame teaching process
-	 */
-	public Frame teachFrame = null;
+	private Pointer<RoboticArm> activeRobot;
+	private Pointer<Scenario> activeScenario;
 	
-	private RoboticArm activeRobot;
-	private Scenario activeScenario;
 	private Camera camera;
 	private KeyCodeMap keyCodeMap;
 	
@@ -162,7 +138,6 @@ public class RobotRun extends PApplet {
 	private ProgExecution progExecState;
 	private boolean rCamEnable = false;
 	private RobotCamera rCamera;
-	private boolean record;
 
 	private final HashMap<Integer, RoboticArm> ROBOTS = new HashMap<>();
 	private RTrace robotTrace;
@@ -171,15 +146,18 @@ public class RobotRun extends PApplet {
 	private final ArrayList<Scenario> SCENARIOS = new ArrayList<>();
 	
 	private ScreenManager screens;
-	private boolean shift = false; // Is shift button pressed or not?
 	
+	private boolean shift = false; // Is shift button pressed or not?
 	private boolean step = false; // Is step button pressed or not?
 
 	private WGUI UI;
+	
+	private RecordScreen record;
+	
 	/**
 	 * Applies the active camera to the matrix stack.
 	 * 
-	 * @param	The camera to apply
+	 * @param c	The camera to apply
 	 */
 	public void applyCamera(Camera c) {
 		PVector cPos = c.getPosition();
@@ -223,7 +201,7 @@ public class RobotRun extends PApplet {
 	 * Wrapper method for applying the coordinate frame defined by the given
 	 * column major transformation matrix.
 	 * 
-	 * @param tMatrix	A 4x4 row major transformation matrix
+	 * @param mat	A 4x4 row major transformation matrix
 	 */
 	public void applyMatrix(RMatrix mat) {
 		super.applyMatrix(
@@ -364,8 +342,8 @@ public class RobotRun extends PApplet {
 	
 	public void button_camTeachObj() {
 		try {
-			if(activeScenario != null) {
-				rCamera.teachObjectToCamera(activeScenario);
+			if(getActiveScenario() != null) {
+				rCamera.teachObjectToCamera(getActiveScenario());
 			}
 			
 			UI.updateCameraListContents();
@@ -753,12 +731,12 @@ public class RobotRun extends PApplet {
 	 */
 	public void button_hold() {
 		try {
-			boolean robotInMotion = activeRobot.inMotion();
+			boolean robotInMotion = getActiveRobot().inMotion();
 			// Stop all robot motion and program execution
-			activeRobot.halt();
+			getActiveRobot().halt();
 			progExecState.halt();
 			
-			if (robotInMotion && !activeRobot.inMotion()) {
+			if (robotInMotion && !getActiveRobot().inMotion()) {
 				// Robot has stopped moving
 				updateInstList();
 			}
@@ -780,14 +758,14 @@ public class RobotRun extends PApplet {
 	public void button_io() {
 		try {
 			if (isShift()) {
-				if (activeRobot.getMacroKeyBinds()[6] != null) {
-					execute(activeRobot.getMacroKeyBinds()[6]);
+				if (getActiveRobot().getMacroKeyBinds()[6] != null) {
+					execute(getActiveRobot().getMacroKeyBinds()[6]);
 				}
 	
 			} else {
 				if (!isProgExec()) {
 					// Map I/O to the robot's end effector state, if shift is off
-					toggleEEState(activeRobot);
+					toggleEEState(getActiveRobot());
 				}
 			}
 			
@@ -1055,8 +1033,8 @@ public class RobotRun extends PApplet {
 	 */
 	public void button_mvmu() {
 		try {
-			if (activeRobot.getMacroKeyBinds()[2] != null && isShift()) {
-				execute(activeRobot.getMacroKeyBinds()[2]);
+			if (getActiveRobot().getMacroKeyBinds()[2] != null && isShift()) {
+				execute(getActiveRobot().getMacroKeyBinds()[2]);
 			}
 			
 		} catch (Exception Ex) {
@@ -1262,7 +1240,7 @@ public class RobotRun extends PApplet {
 	 */
 	public void button_objConfirmDims() {
 		try {
-			if (activeScenario != null) {
+			if (getActiveScenario() != null) {
 				Fields.resetMessage();
 				WorldObject selectedWO = UI.getSelectedWO();
 				
@@ -1298,13 +1276,13 @@ public class RobotRun extends PApplet {
 	 */
 	public void button_objCreate() {
 		try {
-			if (activeScenario != null) {
+			if (getActiveScenario() != null) {
 				Fields.resetMessage();
 				WorldObject newObject = UI.createWorldObject();
 	
 				if (newObject != null) {
 					newObject.setLocalCenter(new PVector(-500f, 0f, 0f));
-					activeScenario.addWorldObject(newObject);
+					getActiveScenario().addWorldObject(newObject);
 					DataManagement.saveScenarios(this);
 				}
 			}
@@ -1330,7 +1308,7 @@ public class RobotRun extends PApplet {
 			WorldObject selected = UI.getSelectedWO();
 			
 			if (selected != null) {
-				updateScenarioUndo(new WOUndoDelete(selected, activeScenario));
+				updateScenarioUndo(new WOUndoDelete(selected, getActiveScenario()));
 				int ret = getActiveScenario().removeWorldObject( selected );
 				
 				if (ret == 0) {
@@ -1359,7 +1337,7 @@ public class RobotRun extends PApplet {
 		try {
 			// Only allow world object editing when no program is executing
 			if (!isProgExec()) {
-				RoboticArm r = activeRobot;
+				RoboticArm r = getActiveRobot();
 				Fields.resetMessage();
 				WorldObject selectedWO = UI.getSelectedWO();
 				
@@ -1397,7 +1375,7 @@ public class RobotRun extends PApplet {
 		try {
 			// Only allow world object editing when no program is executing
 			if (!isProgExec()) {
-				RoboticArm r = activeRobot;
+				RoboticArm r = getActiveRobot();
 				Fields.resetMessage();
 				WorldObject selectedWO = UI.getSelectedWO();
 				
@@ -1429,7 +1407,7 @@ public class RobotRun extends PApplet {
 		try {
 			Fields.resetMessage();
 			
-			for (WorldObject wo : activeScenario) {
+			for (WorldObject wo : getActiveScenario()) {
 				// Only applies to parts
 				if (wo instanceof Part) {
 					updateScenarioUndo(new WOUndoCurrent(wo));
@@ -1514,8 +1492,8 @@ public class RobotRun extends PApplet {
 	 */
 	public void button_posn() {
 		try {
-			if (activeRobot.getMacroKeyBinds()[5] != null && isShift()) {
-				execute(activeRobot.getMacroKeyBinds()[5]);
+			if (getActiveRobot().getMacroKeyBinds()[5] != null && isShift()) {
+				execute(getActiveRobot().getMacroKeyBinds()[5]);
 			}
 			
 		} catch (Exception Ex) {
@@ -1552,7 +1530,7 @@ public class RobotRun extends PApplet {
 			if (isShift()) {
 				button_hold();
 				// Reset motion fault for the active robot
-				activeRobot.setMotionFault(false);
+				getActiveRobot().setMotionFault(false);
 			}
 			
 		} catch (Exception Ex) {
@@ -1583,8 +1561,8 @@ public class RobotRun extends PApplet {
 			UI.toggleSecondRobot();
 			/* Reset the active robot to the first if the second robot is
 			 * removed */
-			if (activeRobot != ROBOTS.get(0)) {
-				activeRobot = ROBOTS.get(0);
+			if (getActiveRobot() != ROBOTS.get(0)) {
+				activeRobot.set(ROBOTS.get(0));
 			}
 	
 			UI.updateUIContentPositions();
@@ -1631,7 +1609,7 @@ public class RobotRun extends PApplet {
 			int ret = UI.updateScenarios(SCENARIOS);
 	
 			if (ret > 0) {
-				activeScenario = UI.getSelectedScenario();
+				activeScenario.set( UI.getSelectedScenario() );
 				DataManagement.saveScenarios(this);
 	
 			} else if (ret == 0) {
@@ -1671,8 +1649,8 @@ public class RobotRun extends PApplet {
 	 */
 	public void button_setup() {
 		try {
-			if (activeRobot.getMacroKeyBinds()[3] != null && isShift()) {
-				execute(activeRobot.getMacroKeyBinds()[3]);
+			if (getActiveRobot().getMacroKeyBinds()[3] != null && isShift()) {
+				execute(getActiveRobot().getMacroKeyBinds()[3]);
 			}
 			
 		} catch (Exception Ex) {
@@ -1706,23 +1684,23 @@ public class RobotRun extends PApplet {
 	 */
 	public void button_speedDn() {
 		try {
-			int curSpeed = activeRobot.getLiveSpeed();
+			int curSpeed = getActiveRobot().getLiveSpeed();
 			// Reduce the speed at which the Robot jogs
 			if (isShift()) {
 				if (curSpeed > 50) {
-					activeRobot.setLiveSpeed(50);
+					getActiveRobot().setLiveSpeed(50);
 				} else if (curSpeed > 5) {
-					activeRobot.setLiveSpeed(5);
+					getActiveRobot().setLiveSpeed(5);
 				} else {
-					activeRobot.setLiveSpeed(1);
+					getActiveRobot().setLiveSpeed(1);
 				}
 			} else if (curSpeed > 1) {
 				if (curSpeed > 50) {
-					activeRobot.setLiveSpeed(curSpeed - 10);
+					getActiveRobot().setLiveSpeed(curSpeed - 10);
 				} else if (curSpeed > 5) {
-					activeRobot.setLiveSpeed(curSpeed - 5);
+					getActiveRobot().setLiveSpeed(curSpeed - 5);
 				} else {
-					activeRobot.setLiveSpeed(curSpeed - 1);
+					getActiveRobot().setLiveSpeed(curSpeed - 1);
 				}
 			}
 			
@@ -1740,23 +1718,23 @@ public class RobotRun extends PApplet {
 	 */
 	public void button_speedUp() {
 		try {
-			int curSpeed = activeRobot.getLiveSpeed();
+			int curSpeed = getActiveRobot().getLiveSpeed();
 			// Increase the speed at which the Robot jogs
 			if (isShift()) {
 				if (curSpeed < 5) {
-					activeRobot.setLiveSpeed(5);
+					getActiveRobot().setLiveSpeed(5);
 				} else if (curSpeed < 50) {
-					activeRobot.setLiveSpeed(50);
+					getActiveRobot().setLiveSpeed(50);
 				} else {
-					activeRobot.setLiveSpeed(100);
+					getActiveRobot().setLiveSpeed(100);
 				}
 			} else if (curSpeed < 100) {
 				if (curSpeed < 5) {
-					activeRobot.setLiveSpeed(curSpeed + 1);
+					getActiveRobot().setLiveSpeed(curSpeed + 1);
 				} else if (curSpeed < 50) {
-					activeRobot.setLiveSpeed(curSpeed + 5);
+					getActiveRobot().setLiveSpeed(curSpeed + 5);
 				} else {
-					activeRobot.setLiveSpeed(curSpeed + 10);
+					getActiveRobot().setLiveSpeed(curSpeed + 10);
 				}
 			}
 			
@@ -1774,8 +1752,8 @@ public class RobotRun extends PApplet {
 	 */
 	public void button_status() {
 		try {
-			if (activeRobot.getMacroKeyBinds()[4] != null && isShift()) {
-				execute(activeRobot.getMacroKeyBinds()[4]);
+			if (getActiveRobot().getMacroKeyBinds()[4] != null && isShift()) {
+				execute(getActiveRobot().getMacroKeyBinds()[4]);
 			}
 			
 		} catch (Exception Ex) {
@@ -1809,8 +1787,8 @@ public class RobotRun extends PApplet {
 	 */
 	public void button_tool1() {
 		try {
-			if (activeRobot.getMacroKeyBinds()[0] != null && isShift()) {
-				execute(activeRobot.getMacroKeyBinds()[0]);
+			if (getActiveRobot().getMacroKeyBinds()[0] != null && isShift()) {
+				execute(getActiveRobot().getMacroKeyBinds()[0]);
 			}
 			
 		} catch (Exception Ex) {
@@ -1827,8 +1805,8 @@ public class RobotRun extends PApplet {
 	 */
 	public void button_tool2() {
 		try {
-			if (activeRobot.getMacroKeyBinds()[1] != null && isShift()) {
-				execute(activeRobot.getMacroKeyBinds()[1]);
+			if (getActiveRobot().getMacroKeyBinds()[1] != null && isShift()) {
+				execute(getActiveRobot().getMacroKeyBinds()[1]);
 			}
 			
 		} catch (Exception Ex) {
@@ -1850,12 +1828,9 @@ public class RobotRun extends PApplet {
 	 * Robot's current frame in the process and skipping the Tool or User frame
 	 * if there are no active frames in either one. Since the Robot's frame is
 	 * potentially reset in this method, all Robot motion is halted.
-	 *
-	 * @param model
-	 *            The Robot Arm, for which to switch coordinate frames
 	 */
 	public void coordFrameTransition() {
-		RoboticArm r = activeRobot;
+		RoboticArm r = getActiveRobot();
 		// Stop Robot movement
 		button_hold();
 
@@ -1878,83 +1853,6 @@ public class RobotRun extends PApplet {
 			break;
 		}
 	}
-	
-	/**
-	 * This method attempts to modify the Frame based on the given value of
-	 * method. If method is even, then the frame is taught via the 3-Point
-	 * Method. Otherwise, the Frame is taught by either the 4-Point or 6-Point
-	 * Method based on if the Frame is a Tool Frame or a User Frame.
-	 * 
-	 * @param frame
-	 *            The frame to be taught
-	 * @param method
-	 *            The method by which to each the new Frame
-	 */
-	public void createFrame(Frame frame, int method) {
-		if (teachFrame.setFrame(abs(method) % 2)) {
-			Fields.debug("Frame set: %d\n", curFrameIdx);
-
-			// Set new Frame
-			if (frame instanceof ToolFrame) {
-				// Update the current frame of the Robot Arm
-				activeRobot.setActiveToolFrame(curFrameIdx);
-				DataManagement.saveRobotData(activeRobot, 2);
-				
-			} else {
-				// Update the current frame of the Robot Arm
-				activeRobot.setActiveUserFrame(curFrameIdx);
-				DataManagement.saveRobotData(activeRobot, 2);
-			}
-
-		} else {
-			Fields.setMessage("Invalid input points");
-		}
-	}
-	
-	/**
-	 * This method takes the current values stored in contents (assuming that
-	 * they corresond to the six direct entry values X, Y, Z, W, P, R), parses
-	 * them, saves them to given Frame object, and sets the current Frame's
-	 * values to the direct entry value, setting the current frame as the active
-	 * frame in the process.
-	 * 
-	 * @param taughtFrame
-	 *            the Frame, to which the direct entry values will be stored
-	 */
-	public void createFrameDirectEntry(Frame taughtFrame, float[] inputs) {
-		// The user enters values with reference to the World Frame
-		PVector origin, wpr;
-
-		if (taughtFrame instanceof UserFrame) {
-			origin = RMath.vFromWorld(new PVector(inputs[0], inputs[1], inputs[2]));
-			
-		} else {
-			// Tool frame origins are actually an offset of the Robot's EE
-			// position
-			origin = new PVector(inputs[0], inputs[1], inputs[2]);
-		}
-		
-		wpr = new PVector(inputs[3], inputs[4], inputs[5]);
-
-		// Save direct entry values
-		taughtFrame.setDEOrigin(origin);
-		taughtFrame.setDEOrientationOffset( RMath.wEulerToNQuat(wpr) );
-		taughtFrame.setFrame(2);
-
-		Fields.debug("\n\n%s\n%s\nFrame set: %d\n", origin.toString(),
-				wpr.toString(), curFrameIdx);
-
-		// Set New Frame
-		if (taughtFrame instanceof ToolFrame) {
-			// Update the current frame of the Robot Arm
-			activeRobot.setActiveToolFrame(curFrameIdx);
-		} else {
-			// Update the current frame of the Robot Arm
-			activeRobot.setActiveUserFrame(curFrameIdx);
-		}
-		
-		DataManagement.saveRobotData(activeRobot, 2);
-	}
 
 	@Override
 	public void dispose() {
@@ -1976,7 +1874,7 @@ public class RobotRun extends PApplet {
 			applyCamera(camera);
 			renderScene();
 			// Update jog buttons
-			int[] jogMotion = activeRobot.getJogMotion();
+			int[] jogMotion = getActiveRobot().getJogMotion();
 			
 			if (jogMotion == null) {
 				UI.updateJogButtons(new int[] {0, 0, 0, 0, 0, 0});
@@ -1985,8 +1883,11 @@ public class RobotRun extends PApplet {
 				UI.updateJogButtons(jogMotion);
 			}
 			
-			if (teachFrame != null && screens.getActiveScreen() instanceof ST_ScreenTeachPoints) {
-				renderTeachPoints(teachFrame);
+			Screen activeScreen = getActiveScreen();
+			
+			if (activeScreen instanceof ST_ScreenTeachPoints) {
+				// Draw the teach points for the teach point method screens
+				((ST_ScreenTeachPoints) activeScreen).drawTeachPts(getGraphics());
 			}
 			
 			/* TESTING CODE: DRAW INTERMEDIATE POINTS *
@@ -2053,7 +1954,7 @@ public class RobotRun extends PApplet {
 		button_hold();
 		// Safeguard against editing a program while it is running
 		screens.getActiveScreen().getContents().setColumnIdx(0);
-		progExec(m.getRobotID(), m.getProgIdx(), 0, ExecType.EXEC_FULL);
+		progExec(m.getRobot().RID, m.getProg(), 0, ExecType.EXEC_FULL);
 	}
 	
 	/**
@@ -2082,29 +1983,15 @@ public class RobotRun extends PApplet {
 	 * @return	The active for the active Robot, or null if no program is active
 	 */
 	public Program getActiveProg() {
-		if (getActiveProgIdx() >= 0 && getActiveProgIdx() <
-				activeRobot.numOfPrograms()) {
-			
-			return activeRobot.getProgram(getActiveProgIdx());
-		}
-		
-		// Invalid program index
-		return null;
-	}
-
-	/**
-	 * @return	The index of the active program
-	 */
-	public int getActiveProgIdx() {
-		return progExecState.getProgIdx();
+		return progExecState.getProg();
 	}
 
 	public RoboticArm getActiveRobot() {
-		return activeRobot;
+		return activeRobot.get();
 	}
 
 	public Scenario getActiveScenario() {
-		return activeScenario;
+		return activeScenario.get();
 	}
 
 	public Screen getActiveScreen() {
@@ -2165,7 +2052,7 @@ public class RobotRun extends PApplet {
 	
 	public RoboticArm getInactiveRobot() {
 		try {
-			return ROBOTS.get((activeRobot.RID + 1) % 2);
+			return ROBOTS.get((getActiveRobot().RID + 1) % 2);
 
 		} catch (Exception Ex) {
 			return null;
@@ -2233,7 +2120,7 @@ public class RobotRun extends PApplet {
 	}
 
 	public boolean getRecord() {
-		return record;
+		return record.isRecording();
 	}
 
 	/**
@@ -2373,22 +2260,22 @@ public class RobotRun extends PApplet {
 				} else if (keyCode == KeyEvent.VK_E) {
 					// Cycle End Effectors
 					if (!isProgExec()) {
-						activeRobot.cycleEndEffector();
+						getActiveRobot().cycleEndEffector();
 						UI.updateListContents();
 					}
 					
 				} else if (keyCode == KeyEvent.VK_F) {
 					// Toggle the Robot's End Effector state
 					if (!isProgExec()) {
-						toggleEEState(activeRobot);
+						toggleEEState(getActiveRobot());
 					}
 					
 				} else if (keyCode == KeyEvent.VK_T) {
 					// Restore default Robot joint angles
 					button_hold();
 					float[] rot = { 0, 0, 0, 0, 0, 0 };
-					activeRobot.releaseHeldObject();
-					activeRobot.setJointAngles(rot);
+					getActiveRobot().releaseHeldObject();
+					getActiveRobot().setJointAngles(rot);
 					
 				} else if (keyCode == KeyEvent.VK_R) {
 					// Toggle record state
@@ -2465,6 +2352,7 @@ public class RobotRun extends PApplet {
 		}
 	}
 	
+	@Override
 	public void keyReleased() {
 		keyCodeMap.keyReleased(keyCode, key);
 		
@@ -2490,8 +2378,6 @@ public class RobotRun extends PApplet {
 	/**
 	 * Pulls off the current screen state from the screen state stack and loads
 	 * the previous screen state as the active screen state.
-	 * 
-	 * @return	If a previous screen exists
 	 */
 	public void lastScreen() {
 		Screen cur = screens.getActiveScreen();
@@ -2509,6 +2395,9 @@ public class RobotRun extends PApplet {
 	 * Build a PShape object from the contents of the given .stl source file
 	 * stored in /RobotRun/data/.
 	 * 
+	 * @param filename	The name of the .stl file to use to build the model
+	 * @param fill		The fill color to use for the model
+	 * @return	The PShape generated from the given file
 	 * @throws NullPointerException
 	 *             if the given filename does not pertain to a valid .stl file
 	 *             located in RobotRun/data/
@@ -2567,6 +2456,7 @@ public class RobotRun extends PApplet {
 		return mesh;
 	}
 	
+	@Override
 	public void mouseDragged(MouseEvent e) {
 		WorldObject selectedWO = UI.getSelectedWO();
 		
@@ -2611,7 +2501,7 @@ public class RobotRun extends PApplet {
 				float mouseXDiff = mouseX - pmouseX;
 				float mouseYDiff = mouseY - pmouseY;
 				float mouseDiff = (float) Math.sqrt(mouseXDiff * mouseXDiff + mouseYDiff * mouseYDiff);
-				float angle = RobotRun.DEG_TO_RAD * mouseDiff / 4f;
+				float angle = DEG_TO_RAD * mouseDiff / 4f;
 				
 				/* Form an axis perpendicular to the line formed by the previous
 				 * and current mouse position to use as the axis of rotation. */
@@ -2656,8 +2546,8 @@ public class RobotRun extends PApplet {
 	@Override
 	public void mousePressed() {
 		/* Check if the mouse position is colliding with a world object */
-		if (!isProgExec() && !UI.isFocus() && activeRobot != null &&
-				activeScenario != null) {
+		if (!isProgExec() && !UI.isFocus() && getActiveRobot() != null &&
+				getActiveScenario() != null) {
 			
 			// Scale the camera and mouse positions
 			
@@ -2730,9 +2620,9 @@ public class RobotRun extends PApplet {
 	}
 
 	public void newCallInstruction() {
-		RoboticArm r = activeRobot;
+		RoboticArm r = getActiveRobot();
 		Program p = getActiveProg();
-		CallInstruction call = new CallInstruction(activeRobot);
+		CallInstruction call = new CallInstruction(getActiveRobot());
 
 		if (getActiveInstIdx() != p.getNumOfInst()) {
 			r.replaceInstAt(p, getActiveInstIdx(), call);
@@ -2742,7 +2632,7 @@ public class RobotRun extends PApplet {
 	}
 
 	public void newFrameInstruction(int fType) {
-		RoboticArm r = activeRobot;
+		RoboticArm r = getActiveRobot();
 		Program p = getActiveProg();
 		FrameInstruction f = new FrameInstruction(fType, -1);
 
@@ -2754,7 +2644,7 @@ public class RobotRun extends PApplet {
 	}
 
 	public void newIfExpression() {
-		RoboticArm r = activeRobot;
+		RoboticArm r = getActiveRobot();
 		Program p = getActiveProg();
 		IfStatement stmt = new IfStatement();
 
@@ -2766,7 +2656,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	public void newIfStatement() {
-		RoboticArm r = activeRobot;
+		RoboticArm r = getActiveRobot();
 		Program p = getActiveProg();
 		IfStatement stmt = new IfStatement(Operator.EQUAL, null);
 		opEdit = stmt.getExpr();
@@ -2779,7 +2669,7 @@ public class RobotRun extends PApplet {
 	}
 
 	public void newIOInstruction(int ioIdx, boolean state) {
-		RoboticArm r = activeRobot;
+		RoboticArm r = getActiveRobot();
 		Program p = getActiveProg();
 		IOInstruction io = new IOInstruction(ioIdx, state);
 
@@ -2792,7 +2682,7 @@ public class RobotRun extends PApplet {
 	}
 
 	public void newJumpInstruction() {
-		RoboticArm r = activeRobot;
+		RoboticArm r = getActiveRobot();
 		Program p = getActiveProg();
 		JumpInstruction j = new JumpInstruction(-1);
 
@@ -2804,7 +2694,7 @@ public class RobotRun extends PApplet {
 	}
 
 	public void newLabel() {
-		RoboticArm r = activeRobot;
+		RoboticArm r = getActiveRobot();
 		Program p = getActiveProg();
 
 		LabelInstruction l = new LabelInstruction(-1);
@@ -2826,7 +2716,7 @@ public class RobotRun extends PApplet {
 	public void newPosMotionInst() {
 		Program prog = getActiveProg();
 		
-		Point pt = activeRobot.getToolTipUser();
+		Point pt = getActiveRobot().getToolTipUser();
 		
 		Instruction activeInst = getActiveInstruction();
 		PosMotionInst mInst;
@@ -2841,17 +2731,17 @@ public class RobotRun extends PApplet {
 			
 			if (getActiveInstIdx() != prog.getNumOfInst()) {
 				// Overwrite an existing non-motion instruction
-				activeRobot.replaceInstAt(prog, getActiveInstIdx(), mInst);
+				getActiveRobot().replaceInstAt(prog, getActiveInstIdx(), mInst);
 			} 
 			else {
 				// Insert the new motion instruction
-				activeRobot.addInstAtEnd(prog, mInst, false);
+				getActiveRobot().addInstAtEnd(prog, mInst, false);
 			}
 		}
 		
 		// Set the fields of the motion instruction
 		
-		CoordFrame coord = activeRobot.getCurCoordFrame();
+		CoordFrame coord = getActiveRobot().getCurCoordFrame();
 		
 		if (coord == CoordFrame.JOINT) {
 			mInst.setMotionType(Fields.MTYPE_JOINT);
@@ -2868,7 +2758,7 @@ public class RobotRun extends PApplet {
 		}
 		
 		if (mInst.getPosType() == Fields.PTYPE_PREG) {
-			PositionRegister pReg = activeRobot.getPReg(regNum);
+			PositionRegister pReg = getActiveRobot().getPReg(regNum);
 			pReg.point = pt;
 			
 		}  else if (mInst.getPosType() == Fields.PTYPE_PROG) {
@@ -2883,12 +2773,12 @@ public class RobotRun extends PApplet {
 		}
 		
 		mInst.setSpdMod(0.5f);
-		mInst.setTFrameIdx(activeRobot.getActiveToolIdx());
-		mInst.setUFrameIdx(activeRobot.getActiveUserIdx());
+		mInst.setTFrameIdx(getActiveRobot().getActiveToolIdx());
+		mInst.setUFrameIdx(getActiveRobot().getActiveUserIdx());
 	}
 
 	public void newRegisterStatement(Register reg) {
-		RoboticArm r = activeRobot;
+		RoboticArm r = getActiveRobot();
 		Program p = getActiveProg();
 		RegisterStatement stmt = new RegisterStatement(reg);
 
@@ -2900,7 +2790,7 @@ public class RobotRun extends PApplet {
 	}
 
 	public void newRegisterStatement(Register reg, int i) {
-		RoboticArm r = activeRobot;
+		RoboticArm r = getActiveRobot();
 		Program p = getActiveProg();
 		RegisterStatement stmt = new RegisterStatement(reg, i);
 
@@ -2912,7 +2802,7 @@ public class RobotRun extends PApplet {
 	}
 
 	public void newRobotCallInstruction() {
-		RoboticArm r = activeRobot;
+		RoboticArm r = getActiveRobot();
 		Program p = getActiveProg();
 		CallInstruction rcall = new CallInstruction(getInactiveRobot());
 
@@ -2924,7 +2814,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	public void newSelectStatement() {
-		RoboticArm r = activeRobot;
+		RoboticArm r = getActiveRobot();
 		Program p = getActiveProg();
 		SelectStatement stmt = new SelectStatement();
 
@@ -2955,7 +2845,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	public void pasteInstructions(int options) {
-		RoboticArm r = activeRobot;
+		RoboticArm r = getActiveRobot();
 		ArrayList<Instruction> pasteList = new ArrayList<>();
 		Program p = getActiveProg();
 
@@ -3105,22 +2995,12 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Sets the given program as the robot's active program if the program
-	 * exists in the robot's list of programs. Otherwise, the robot's active
-	 * program remains unchanged.
+	 * Sets the given program as the active program.
 	 * 
-	 * @param active	The program to set as active
-	 * @return			If the program exists in the robot's list of programs
+	 * @param p	The program to set as active
 	 */
-	public boolean setActiveProg(Program active) {
-		int progIdx = activeRobot.getProgIdx(active.getName());
-		boolean exists = progIdx > 0;
-		
-		if (exists || progIdx == -1) {
-			progExecState.setProgIdx(progIdx);
-		}
-		
-		return exists;
+	public void setActiveProg(Program p) {
+		progExecState.setProg(p);
 	}
 	
 	/**
@@ -3131,14 +3011,14 @@ public class RobotRun extends PApplet {
 	 * @return			Whether the given index is valid
 	 */
 	public boolean setActiveProgIdx(int progIdx) {
-		boolean exists = activeRobot.getProgram(progIdx) != null;
+		Program p = getActiveRobot().getProgram(progIdx);
 		
-		if (exists || progIdx == -1) {
+		if (p != null || progIdx == -1) {
 			// Set the active program
-			progExecState.setProgIdx(progIdx);
+			progExecState.setProg(p);
 		}
 		
-		return exists;
+		return p != null;
 	}
 
 	/**
@@ -3153,7 +3033,7 @@ public class RobotRun extends PApplet {
 
 		for (Scenario s : SCENARIOS) {
 			if (s.getName().equals(name)) {
-				activeScenario = s;
+				activeScenario.set(s);
 				
 				if (UI != null) {
 					UI.setSelectedWO(null);
@@ -3172,7 +3052,7 @@ public class RobotRun extends PApplet {
 	}
 
 	public void setRecord(boolean state) {
-		record = state;
+		record.setRecording(state);
 	}
 	
 	/**
@@ -3183,13 +3063,13 @@ public class RobotRun extends PApplet {
 	 *            The index of the new active Robot
 	 */
 	public void setRobot(int rdx) {
-		if (rdx >= 0 && rdx < ROBOTS.size() && ROBOTS.get(rdx) != activeRobot) {
+		if (rdx >= 0 && rdx < ROBOTS.size() && ROBOTS.get(rdx) != getActiveRobot()) {
 			button_hold();
 
-			RoboticArm prevActive = activeRobot;
-			activeRobot = ROBOTS.get(rdx);
+			RoboticArm prevActive = getActiveRobot();
+			activeRobot.set( ROBOTS.get(rdx) );
 
-			if (prevActive != activeRobot) {
+			if (prevActive != activeRobot.get()) {
 				/*
 				 * If the active robot actually changes then resort to the
 				 * default screen
@@ -3208,7 +3088,7 @@ public class RobotRun extends PApplet {
 	public void setShift(boolean flag) {
 		if (!flag) {
 			// Stop all robot motion and program execution
-			activeRobot.halt();
+			getActiveRobot().halt();
 			progExecState.halt();
 		}
 
@@ -3245,63 +3125,60 @@ public class RobotRun extends PApplet {
 		
 		instance = this;
 		
-		RegisteredModels.loadModelDefs();
+		RegisteredModels.loadModelDefs(this);
 		
 		// create font and text display background
 		Fields.medium = createFont("fonts/Consolas.ttf", 14);
 		Fields.small = createFont("fonts/Consolas.ttf", 12);
 		Fields.bond = createFont("fonts/ConsolasBold.ttf", 12);
 		
-		record = false;
-		activeScenario = null;
+		camera = new Camera();
+		rCamera = new RobotCamera();
+		robotTrace = new RTrace();
+		activeRobot = new Pointer<>(null);
+		activeScenario = new Pointer<>(null);
+		
+		CallInstruction.setRobotRef(activeRobot);
+		OperandCamObj.setCamRef(rCamera);
+		OperandCamObj.setScenarioRef(activeScenario);
+		
+		keyCodeMap = new KeyCodeMap();
+		progExecState = new ProgExecution();
+		progCallStack = new Stack<>();
+		mInstRobotAt = new HashMap<>();
+		
+		UI = new WGUI(this, buttonImages);
+		record = new RecordScreen();
 		
 		background(255);
 		
 		// load model and save data
 		try {
-			keyCodeMap = new KeyCodeMap();
 			DataManagement.initialize(this);
 			
-			robotTrace = new RTrace();
-			
-			RoboticArm r = createRobot(0, new PVector(200, Fields.FLOOR_Y, 200),
-					robotTrace);
+			RoboticArm r = createRobot(0, new PVector(200, Fields.FLOOR_Y, 200));
 			ROBOTS.put(r.RID, r);
 			
-			r = createRobot(1, new PVector(200, Fields.FLOOR_Y, -750),
-					robotTrace);
+			r = createRobot(1, new PVector(200, Fields.FLOOR_Y, -750));
 			ROBOTS.put(r.RID, r);
 
-			activeRobot = ROBOTS.get(0);
-			rCamera = new RobotCamera();
-			
-			activeScenario = null;
-			camera = new Camera();
+			activeRobot.set( ROBOTS.get(0) );
 			
 			DataManagement.loadState(this);
 			
-			setManager(new WGUI(this, buttonImages));
-			
 			screens = new ScreenManager(this);
-			updatePendantScreen();
 			
 			if(rCamEnable) {
 				UI.toggleCamera();
 				UI.updateUIContentPositions();
-				updatePendantScreen();
-			}			
+			}
 			
-			progExecState = new ProgExecution();
-			progCallStack = new Stack<>();
-			
-			mInstRobotAt = new HashMap<Integer, Boolean>();
-			
+			updatePendantScreen();
+
 		} catch (NullPointerException NPEx) {
 			DataManagement.errLog(NPEx);
 			throw NPEx;
 		}
-		
-		Fields.setMessage("This is a test");
 		
 		/**
 		RMatrix rx = RMath.formRMat(new PVector(1f, 0f, 0f), 135f * DEG_TO_RAD);
@@ -3344,7 +3221,7 @@ public class RobotRun extends PApplet {
 			robot.setEEState(edx, Fields.ON);
 		}
 		// Check pickup collisions in active scenario
-		robot.checkPickupCollision(activeScenario);
+		robot.checkPickupCollision(getActiveScenario());
 	}
 	
 	/**
@@ -3356,7 +3233,7 @@ public class RobotRun extends PApplet {
 	 * @return	If the trace functionality is enabled
 	 */
 	public boolean traceEnabled() {
-		return activeRobot.isEETraceEnabled() ||
+		return getActiveRobot().isEETraceEnabled() ||
 				UI.getButtonState(WGUI_Buttons.RobotToggleTrace);
 	}
 
@@ -3388,7 +3265,7 @@ public class RobotRun extends PApplet {
 			
 			/* Since objects are copied onto the undo stack, the robot may be
 			 * reference the wrong copy of an undone object. */
-			activeRobot.releaseHeldObject();
+			getActiveRobot().releaseHeldObject();
 		}
 	}
 
@@ -3420,7 +3297,7 @@ public class RobotRun extends PApplet {
 	 * @param newState	The new state of the end effector
 	 */
 	public void updateRobotEEState(int edx, boolean newState) {
-		updateRobotEEState(activeRobot, edx, newState);
+		updateRobotEEState(getActiveRobot(), edx, newState);
 	}
 
 	/**
@@ -3436,18 +3313,18 @@ public class RobotRun extends PApplet {
 	public void updateRobotEEState(RoboticArm r, int edx, boolean newState) {
 		r.setEEState(edx, newState);
 		
-		if (activeScenario != null) {
-			r.checkPickupCollision(activeScenario);
+		if (getActiveScenario() != null) {
+			r.checkPickupCollision(getActiveScenario());
 		}
 	}
 	
 	public void updateRobotJogMotion(int set, int direction) {
 		if (isShift() && !isProgExec()) {
-			boolean robotInMotion = activeRobot.inMotion();
+			boolean robotInMotion = getActiveRobot().inMotion();
 			
-			activeRobot.updateJogMotion(set, direction);
+			getActiveRobot().updateJogMotion(set, direction);
 			
-			if (robotInMotion && !activeRobot.inMotion()) {
+			if (robotInMotion && !getActiveRobot().inMotion()) {
 				// Robot has stopped moving
 				updateInstList();
 			}
@@ -3482,13 +3359,12 @@ public class RobotRun extends PApplet {
 	 */
 	private WorldObject checkForCollisionsInScene(RRay ray) {
 		if (UI.getRobotButtonState()) {
-			return checkForRayCollisions(ray, activeScenario, ROBOTS.get(0));
+			return checkForRayCollisions(ray, getActiveScenario(), ROBOTS.get(0));
 			
-		} else {
-			return checkForRayCollisions(ray, activeScenario, ROBOTS.get(0),
-					ROBOTS.get(1));
 		}
 		
+		return checkForRayCollisions(ray, getActiveScenario(), ROBOTS.get(0),
+				ROBOTS.get(1));
 	}
 	
 	/**
@@ -3500,8 +3376,9 @@ public class RobotRun extends PApplet {
 	 * @param ray		A ray, for which to check collisions
 	 * @param scenario	The scenario, with which to check collisions with the
 	 * 					given ray
-	 * @param robot		The robots, which which to check collisions with the
+	 * @param robots	The robots, which which to check collisions with the
 	 * 					given ray
+	 * @return			The object, with which, the given ray collides
 	 */
 	private WorldObject checkForRayCollisions(RRay ray, Scenario scenario,
 			RoboticArm... robots) {
@@ -3567,16 +3444,15 @@ public class RobotRun extends PApplet {
 	 * @param rid			The id of the robot, which must be unique amongst
 	 * 						all other robots
 	 * @param basePosition	The position of the robot's base segment
-	 * @param robotTrace	A reference to this.robotTrace
 	 * @return				The initialized robot
 	 */
-	private RoboticArm createRobot(int rid, PVector basePosition, RTrace robotTrace) {
+	private RoboticArm createRobot(int rid, PVector basePosition) {
 		MyPShape[] segModels = new MyPShape[6];
 		MyPShape[] eeModels = new MyPShape[7];
 		
 		segModels[0] = loadSTLModel("robot/ROBOT_BASE.STL", color(200, 200, 0));
 		segModels[1] = loadSTLModel("robot/ROBOT_SEGMENT_1.STL", color(40, 40, 40));
-		segModels[2] = loadSTLModel("robot/ROBOT_SEGMENT_2.STL", color(200, 200, 0));;
+		segModels[2] = loadSTLModel("robot/ROBOT_SEGMENT_2.STL", color(200, 200, 0));
 		segModels[3] = loadSTLModel("robot/ROBOT_SEGMENT_3.STL", color(40, 40, 40));
 		segModels[4] = loadSTLModel("robot/ROBOT_SEGMENT_4.STL", color(40, 40, 40));
 		segModels[5] = loadSTLModel("robot/ROBOT_SEGMENT_5.STL", color(200, 200, 0));
@@ -3584,7 +3460,7 @@ public class RobotRun extends PApplet {
 		// Load end effector models
 		eeModels[0] = loadSTLModel("robot/EE/FACEPLATE.STL", color(40, 40, 40));
 		eeModels[1] = loadSTLModel("robot/EE/SUCTION.stl", color(108, 206, 214));
-		eeModels[2] = loadSTLModel("robot/EE/GRIPPER.stl", color(108, 206, 214));;
+		eeModels[2] = loadSTLModel("robot/EE/GRIPPER.stl", color(108, 206, 214));
 		eeModels[3] = loadSTLModel("robot/EE/PINCER.stl", color(200, 200, 0));
 		eeModels[4] = loadSTLModel("robot/EE/POINTER.stl", color(108, 206, 214));
 		eeModels[5] = loadSTLModel("robot/EE/GLUE_GUN.stl", color(108, 206, 214));
@@ -3617,7 +3493,7 @@ public class RobotRun extends PApplet {
 	 */
 	@SuppressWarnings("unused")
 	private void progExec(int instIdx, boolean singleExec) {
-		progExec(progExecState.getProgIdx(), instIdx, singleExec);
+		progExec(progExecState.getProg(), instIdx, singleExec);
 	}
 
 	/**
@@ -3631,14 +3507,13 @@ public class RobotRun extends PApplet {
 	 * @param singleExec	Whether to execute a single instruction or the
 	 * 						entire program
 	 */
-	private void progExec(int progIdx, int instIdx, boolean singleExec) {
-		Program p = activeRobot.getProgram(progIdx);
+	private void progExec(Program p, int instIdx, boolean singleExec) {
 		// Validate active indices
 		if (p != null && instIdx >= 0 && instIdx < p.getNumOfInst()) {
 			ExecType pExec = (singleExec) ? ExecType.EXEC_SINGLE
 					: ExecType.EXEC_FULL;
 			
-			progExec(activeRobot.RID, progIdx, instIdx, pExec);
+			progExec(getActiveRobot().RID, p, instIdx, pExec);
 		}
 	}
 	
@@ -3655,8 +3530,8 @@ public class RobotRun extends PApplet {
 	 * @param exec		Whether to execute a single instruction or the entire
 	 * 					program
 	 */
-	private void progExec(int rid, int progIdx, int instIdx, ExecType exec) {
-		progExecState.setExec(rid, exec, progIdx, instIdx);
+	private void progExec(int rid, Program p, int instIdx, ExecType exec) {
+		progExecState.setExec(rid, exec, p, instIdx);
 	}
 	
 	/**
@@ -3672,7 +3547,7 @@ public class RobotRun extends PApplet {
 			Instruction prevInst = p.getInstAt(getActiveInstIdx() - 1);
 			
 			if (prevInst instanceof MotionInstruction) {
-				progExec(activeRobot.RID, progExecState.getProgIdx(),
+				progExec(getActiveRobot().RID, progExecState.getProg(),
 						getActiveInstIdx() - 1, ExecType.EXEC_BWD);
 			}
 		}
@@ -3701,11 +3576,11 @@ public class RobotRun extends PApplet {
 			updateProgExec();
 		}
 		
-		boolean robotInMotion = activeRobot.inMotion();
+		boolean robotInMotion = getActiveRobot().inMotion();
 		
-		activeRobot.updateRobot();
+		getActiveRobot().updateRobot();
 		
-		if (robotInMotion && !activeRobot.inMotion()) {
+		if (robotInMotion && !getActiveRobot().inMotion()) {
 			// Robot has stopped moving
 			updateInstList();
 		}
@@ -3714,25 +3589,25 @@ public class RobotRun extends PApplet {
 			updateCurIdx();
 		}
 
-		if (activeScenario != null) {
-			activeScenario.resetObjectHitBoxColors();
+		if (getActiveScenario() != null) {
+			getActiveScenario().resetObjectHitBoxColors();
 		}
 
-		activeRobot.resetOBBColors();
-		activeRobot.checkSelfCollisions();
+		getActiveRobot().resetOBBColors();
+		getActiveRobot().checkSelfCollisions();
 
-		if (activeScenario != null) {
+		if (getActiveScenario() != null) {
 			WorldObject selected = UI.getSelectedWO();
-			int numOfObjects = activeScenario.size();
+			int numOfObjects = getActiveScenario().size();
 
 			for (int idx = 0; idx < numOfObjects; ++idx) {
-				WorldObject wldObj = activeScenario.getWorldObject(idx);
+				WorldObject wldObj = getActiveScenario().getWorldObject(idx);
 				
 				if (wldObj instanceof Part) {
 					Part p = (Part)wldObj;
 
 					/* Update the transformation matrix of an object held by the Robotic Arm */
-					if(activeRobot != null && activeRobot.isHeld(p) && activeRobot.inMotion()) {
+					if(getActiveRobot() != null && getActiveRobot().isHeld(p) && getActiveRobot().inMotion()) {
 						
 						/***********************************************
 						     Moving a part with the Robot:
@@ -3747,15 +3622,15 @@ public class RobotRun extends PApplet {
 						     P  - current part local orientation
 						 ***********************************************/
 						
-						RMatrix curTip = activeRobot.getFaceplateTMat(activeRobot.getJointAngles());
-						RMatrix invMat = activeRobot.getLastTipTMatrix().getInverse();
+						RMatrix curTip = getActiveRobot().getFaceplateTMat(getActiveRobot().getJointAngles());
+						RMatrix invMat = getActiveRobot().getLastTipTMatrix().getInverse();
 						Fixture refFixture = p.getFixtureRef();
 						
 						pushMatrix();
 						resetMatrix();
 						
 						if (refFixture != null) {
-							refFixture.removeCoordinateSystem();
+							applyMatrix(refFixture.getInvCoordinateSystem());
 						}
 						
 						applyMatrix(curTip);
@@ -3770,7 +3645,7 @@ public class RobotRun extends PApplet {
 					}
 					
 					
-					if (activeScenario.isGravity() && activeRobot.isHeld(p) &&
+					if (getActiveScenario().isGravity() && getActiveRobot().isHeld(p) &&
 							p != selected && p.getFixtureRef() == null &&
 							p.getLocalCenter().y < Fields.FLOOR_Y) {
 						
@@ -3781,15 +3656,15 @@ public class RobotRun extends PApplet {
 
 					/* Collision Detection */
 					if(isOBBRendered()) {
-						if( activeRobot != null && activeRobot.checkCollision(p) ) {
+						if( getActiveRobot() != null && getActiveRobot().checkCollision(p) ) {
 							p.setBBColor(Fields.OBB_COLLISION);
 						}
 
 						// Detect collision with other objects
-						for(int cdx = idx + 1; cdx < activeScenario.size(); ++cdx) {
+						for(int cdx = idx + 1; cdx < getActiveScenario().size(); ++cdx) {
 
-							if (activeScenario.getWorldObject(cdx) instanceof Part) {
-								Part p2 = (Part)activeScenario.getWorldObject(cdx);
+							if (getActiveScenario().getWorldObject(cdx) instanceof Part) {
+								Part p2 = (Part)getActiveScenario().getWorldObject(cdx);
 
 								if(p.collision(p2)) {
 									// Change hit box color to indicate Object collision
@@ -3800,8 +3675,8 @@ public class RobotRun extends PApplet {
 							}
 						}
 
-						if (activeRobot != null && !activeRobot.isHeld(p) &&
-								activeRobot.canPickup(p)) {
+						if (getActiveRobot() != null && !getActiveRobot().isHeld(p) &&
+								getActiveRobot().canPickup(p)) {
 							
 							// Change hit box color to indicate tool tip collision
 							p.setBBColor(Fields.OBB_HELD);
@@ -3823,15 +3698,15 @@ public class RobotRun extends PApplet {
 			}
 		}
 		
-		activeRobot.updateLastTipTMatrix();
+		getActiveRobot().updateLastTipTMatrix();
 		
 		AxesDisplay axesType = getAxesState();
 		
 		if (axesType != AxesDisplay.NONE &&
-			(activeRobot.getCurCoordFrame() == CoordFrame.WORLD
-				|| activeRobot.getCurCoordFrame() == CoordFrame.TOOL
-				|| (activeRobot.getCurCoordFrame() == CoordFrame.USER
-					&& activeRobot.getActiveUser() == null))) {
+			(getActiveRobot().getCurCoordFrame() == CoordFrame.WORLD
+				|| getActiveRobot().getCurCoordFrame() == CoordFrame.TOOL
+				|| (getActiveRobot().getCurCoordFrame() == CoordFrame.USER
+					&& getActiveRobot().getActiveUser() == null))) {
 			
 			// Render the world frame
 			PVector origin = new PVector(0f, 0f, 0f);
@@ -3843,9 +3718,9 @@ public class RobotRun extends PApplet {
 			} else if (axesType == AxesDisplay.GRID) {
 				g.pushMatrix();
 				// Draw the gridlines at the base of the robot
-				PVector basePos = activeRobot.getBasePosition();
+				PVector basePos = getActiveRobot().getBasePosition();
 				g.translate(0f, basePos.y, 0f);
-				activeRobot.drawGridlines(getGraphics(), Fields.WORLD_AXES_MAT,
+				getActiveRobot().drawGridlines(getGraphics(), Fields.WORLD_AXES_MAT,
 						origin, 35, 100f);
 				g.popMatrix();
 			}
@@ -3856,7 +3731,7 @@ public class RobotRun extends PApplet {
 			// Draw all robots
 			for (RoboticArm r : ROBOTS.values()) {
 				
-				if (r == activeRobot) {
+				if (r == getActiveRobot()) {
 					// active robot
 					r.draw(getGraphics(), isOBBRendered(), axesType);
 					
@@ -3868,11 +3743,11 @@ public class RobotRun extends PApplet {
 
 		} else {
 			// Draw only the active robot
-			activeRobot.draw(getGraphics(), isOBBRendered(), axesType);
+			getActiveRobot().draw(getGraphics(), isOBBRendered(), axesType);
 		}
 		
-		if (activeRobot.inMotion() && traceEnabled()) {
-			Point tipPosNative = activeRobot.getToolTipNative();
+		if (getActiveRobot().inMotion() && traceEnabled()) {
+			Point tipPosNative = getActiveRobot().getToolTipNative();
 			// Update the robots trace points
 			if(robotTrace.isEmpty()) {
 				robotTrace.addPt(tipPosNative.position);
@@ -3913,87 +3788,6 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Renders the points associated with teaching the given frame based of the
-	 * given frame's type and the active pendant screen's type.
-	 * 
-	 * @param frame	The frame, of which to render the teach points
-	 */
-	private void renderTeachPoints(Frame frame) {
-		/* Determine how many points to render based off the given screen and
-		 * frame types */
-		Screen screen = screens.getActiveScreen();
-		int size = 0;
-		
-		if (frame instanceof ToolFrame) {
-			if (screen instanceof ScreenTeach3PtTool) {
-				size = 3;
-				
-			} else if (screen instanceof ScreenTeach6Pt) {
-				size = 6;
-			}
-			
-		} else if (frame instanceof UserFrame) {
-			if (screen instanceof ScreenTeach3PtUser) {
-				size = 3;
-				
-			} else if (screen instanceof ScreenTeach4Pt) {
-				size = 4;
-			}
-		}
-
-		for (int idx = 0; idx < size; ++idx) {
-			Point pt = teachFrame.getPoint(idx);
-			
-			if (pt != null) {
-				pushMatrix();
-				// Applies the point's position
-				translate(pt.position.x, pt.position.y, pt.position.z);
-
-				// Draw color-coded sphere for the point
-				noFill();
-				int pointColor = Fields.color(255, 0, 255);
-
-				if (teachFrame instanceof ToolFrame) {
-
-					if (idx < 3) {
-						// TCP teach points
-						pointColor = Fields.color(130, 130, 130);
-					} else if (idx == 3) {
-						// Orient origin point
-						pointColor = Fields.color(255, 130, 0);
-					} else if (idx == 4) {
-						// Axes X-Direction point
-						pointColor = Fields.color(255, 0, 0);
-					} else if (idx == 5) {
-						// Axes Y-Diretion point
-						pointColor = Fields.color(0, 255, 0);
-					}
-				} else if (teachFrame instanceof UserFrame) {
-
-					if (idx == 0) {
-						// Orient origin point
-						pointColor = Fields.color(255, 130, 0);
-					} else if (idx == 1) {
-						// Axes X-Diretion point
-						pointColor = Fields.color(255, 0, 0);
-					} else if (idx == 2) {
-						// Axes Y-Diretion point
-						pointColor = Fields.color(0, 255, 0);
-					} else if (idx == 3) {
-						// Axes Origin point
-						pointColor = Fields.color(0, 0, 255);
-					}
-				}
-
-				stroke(pointColor);
-				sphere(3);
-
-				popMatrix();
-			}
-		}
-	}
-	
-	/**
 	 * Displays all the windows and the right-hand text display.
 	 */
 	private void renderUI() {
@@ -4009,7 +3803,7 @@ public class RobotRun extends PApplet {
 		textAlign(RIGHT, TOP);
 		
 		int lastTextPositionX = width - 20, lastTextPositionY = 20;
-		CoordFrame coord = activeRobot.getCurCoordFrame();
+		CoordFrame coord = getActiveRobot().getCurCoordFrame();
 		String coordFrame;
 		
 		if (coord == null) {
@@ -4020,19 +3814,19 @@ public class RobotRun extends PApplet {
 			coordFrame = "Coordinate Frame: " + coord.toString();
 		}
 		
-		Point RP = activeRobot.getToolTipNative();
+		Point RP = getActiveRobot().getToolTipNative();
 
 		String[] cartesian = RP.toLineStringArray(true), joints = RP.toLineStringArray(false);
 		// Display the current Coordinate Frame name
 		text(coordFrame, lastTextPositionX, lastTextPositionY);
 		lastTextPositionY += 20;
 		// Display the Robot's speed value as a percent
-		text(String.format("Jog Speed: %d%%", activeRobot.getLiveSpeed()),
+		text(String.format("Jog Speed: %d%%", getActiveRobot().getLiveSpeed()),
 				lastTextPositionX, lastTextPositionY);
 		lastTextPositionY += 20;
 
-		if (activeScenario != null) {
-			String out = String.format("Active scenario: %s", activeScenario.getName());
+		if (getActiveScenario() != null) {
+			String out = String.format("Active scenario: %s", getActiveScenario().getName());
 			text(out, lastTextPositionX, lastTextPositionY);
 			
 		} else {
@@ -4052,7 +3846,7 @@ public class RobotRun extends PApplet {
 			lastTextPositionY += 20;
 		}
 
-		UserFrame active = activeRobot.getActiveUser();
+		UserFrame active = getActiveRobot().getActiveUser();
 
 		if (active != null) {
 			// Display Robot's current position and orientation in the currently
@@ -4062,7 +3856,7 @@ public class RobotRun extends PApplet {
 			cartesian = RP.toLineStringArray(true);
 
 			lastTextPositionY += 20;
-			text(String.format("User: %d", activeRobot.getActiveUserIdx() + 1), lastTextPositionX,
+			text(String.format("User: %d", getActiveRobot().getActiveUserIdx() + 1), lastTextPositionX,
 					lastTextPositionY);
 			lastTextPositionY += 20;
 
@@ -4142,14 +3936,14 @@ public class RobotRun extends PApplet {
 		lastTextPositionY += 20;
 		
 		// Display a message while the robot is carrying an object
-		if (!activeRobot.isHeld(null)) {
+		if (!getActiveRobot().isHeld(null)) {
 			text("Object held", lastTextPositionX, lastTextPositionY);
 			lastTextPositionY += 20;
 		}
 
 		// Display a message when there is an error with the Robot's
 		// movement
-		if (activeRobot.hasMotionFault()) {
+		if (getActiveRobot().hasMotionFault()) {
 			text("Motion Fault (press SHIFT + RESET)", lastTextPositionX,
 					lastTextPositionY);
 			lastTextPositionY += 20;
@@ -4161,12 +3955,12 @@ public class RobotRun extends PApplet {
 		}
 
 		// Display a message if the Robot is in motion
-		if (activeRobot.inMotion()) {
+		if (getActiveRobot().inMotion()) {
 			text("Robot is moving", lastTextPositionX, lastTextPositionY);
 			lastTextPositionY += 20;
 		}
 		
-		if (record) {
+		if (record.isRecording()) {
 			text("Recording (press Ctrl + Alt + r)",
 					lastTextPositionX, lastTextPositionY);
 			lastTextPositionY += 20;
@@ -4192,18 +3986,13 @@ public class RobotRun extends PApplet {
 		popStyle();
 		popMatrix();
 	}
-	
-	private void setManager(WGUI ui) {
-		this.UI = ui;
-	}
 
 	/**
-	 * TODO comment this
+	 * Determines if the the current window uses keyboard input.
 	 * 
-	 * @return
+	 * @return	if the active UI element or window uses keyboard input
 	 */
 	private boolean UIKeyboardUse() {
-		
 		if (UI != null) {
 			if (UI.isPendantActive()) {
 				// Screens extending these screen types use keyboard input.
@@ -4221,12 +4010,16 @@ public class RobotRun extends PApplet {
 		
 		return false;
 	}
-
+	
+	/**
+	 * Updates the instruction index based on the current program execution
+	 * state and the base program execution state.
+	 */
 	private void updateCurIdx() {
 		if (progExecState.getState() == ExecState.EXEC_MINST &&
-				!activeRobot.inMotion()) {
+				!getActiveRobot().inMotion()) {
 			
-			if (activeRobot.hasMotionFault()) {
+			if (getActiveRobot().hasMotionFault()) {
 				// An issue occurred when running a motion instruction
 				progExecState.setState(ExecState.EXEC_FAULT);
 				
@@ -4261,9 +4054,9 @@ public class RobotRun extends PApplet {
 						if (r != null) {
 							progExecState = prevExec;
 							
-							if (r.RID != activeRobot.RID) {
+							if (r.RID != getActiveRobot().RID) {
 								// Update the active robot
-								activeRobot = ROBOTS.get(progExecState.getRID());
+								activeRobot.set(ROBOTS.get(progExecState.getRID()));
 								screens.getActiveScreen().getContents().setColumnIdx(0);
 							}
 							
@@ -4305,7 +4098,7 @@ public class RobotRun extends PApplet {
 	private void updateInstList() {
 		if (screens.getActiveScreen() instanceof ScreenNavProgInstructions) {
 			Program prog = getActiveProg();
-			Point robotPos = activeRobot.getToolTipNative();
+			Point robotPos = getActiveRobot().getToolTipNative();
 			boolean updatedLines = false;
 			
 			// Check each instruction in the active program
@@ -4315,7 +4108,7 @@ public class RobotRun extends PApplet {
 				
 				if (inst instanceof PosMotionInst) { 
 					PosMotionInst mInst = (PosMotionInst)prog.getInstAt(idx);
-					Point instPt = activeRobot.getVector(mInst, prog, false);
+					Point instPt = getActiveRobot().getVector(mInst, prog, false);
 					
 					if (instPt != null) {
 						boolean closeEnough = (mInst.getMotionType() == Fields.MTYPE_JOINT
@@ -4342,7 +4135,13 @@ public class RobotRun extends PApplet {
 		}
 		
 	}
-
+	
+	/**
+	 * Executes the program associated with the active instruction index for
+	 * the current program execution state.
+	 * 
+	 * @return	0 ...
+	 */
 	private int updateProgExec() {
 		Program prog = getActiveProg();
 		Instruction activeInstr = prog.getInstAt(progExecState.getCurIdx());
@@ -4366,7 +4165,7 @@ public class RobotRun extends PApplet {
 			if (activeInstr != null && !activeInstr.isCommented()) {
 				if (activeInstr instanceof MotionInstruction) {
 					MotionInstruction motInstr = (MotionInstruction) activeInstr;
-					int ret = activeRobot.setupMInstMotion(prog, motInstr, nextIdx,
+					int ret = getActiveRobot().setupMInstMotion(prog, motInstr, nextIdx,
 							progExecState.isSingleExec());
 					
 					if (ret != 0) {
@@ -4378,10 +4177,10 @@ public class RobotRun extends PApplet {
 					FrameInstruction fInst = (FrameInstruction)activeInstr;
 					
 					if (fInst.getFrameType() == Fields.FTYPE_TOOL) {
-						activeRobot.setActiveToolFrame(fInst.getFrameIdx());
+						getActiveRobot().setActiveToolFrame(fInst.getFrameIdx());
 						
 					} else if (fInst.getFrameType() == Fields.FTYPE_USER) {
-						activeRobot.setActiveUserFrame(fInst.getFrameIdx());
+						getActiveRobot().setActiveUserFrame(fInst.getFrameIdx());
 					}
 					
 				} else if (activeInstr instanceof IOInstruction) {
@@ -4395,7 +4194,7 @@ public class RobotRun extends PApplet {
 				} else if (activeInstr instanceof CallInstruction) {
 					CallInstruction cInst = (CallInstruction)activeInstr;
 					
-					if (cInst.getTgtDevice() != activeRobot &&
+					if (cInst.getTgtDevice() != getActiveRobot() &&
 							!isSecondRobotUsed()) {
 						// Cannot use robot call, when second robot is not active
 						nextIdx = -1;
@@ -4404,17 +4203,18 @@ public class RobotRun extends PApplet {
 						progExecState.setNextIdx(nextIdx);
 						pushActiveProg();
 						
-						if (cInst.getTgtDevice() == activeRobot) {
+						if (cInst.getTgtDevice() == getActiveRobot()) {
 							// Normal call instruction
-							int progIdx = activeRobot.getProgIdx(cInst.getProg().getName());
-							progExecState.setExec(activeRobot.RID, progExecState.getType(), progIdx, 0);
+							progExecState.setExec(getActiveRobot().RID,
+									progExecState.getType(), cInst.getProg(),
+									0);
 														
 						} else {
 							// Robot call instruction
 							RoboticArm r = getInactiveRobot();
-							activeRobot = r;
-							int progIdx = r.getProgIdx(cInst.getProg().getName());
-							progExecState.setExec(r.RID, progExecState.getType(), progIdx, 0);
+							activeRobot.set(r);
+							progExecState.setExec(r.RID, progExecState.getType(),
+									cInst.getProg(), 0);
 						}
 						
 						nextIdx = 0;
@@ -4436,7 +4236,7 @@ public class RobotRun extends PApplet {
 						} else if (subInst instanceof CallInstruction) {
 							CallInstruction cInst = (CallInstruction)subInst;
 							
-							if (cInst.getTgtDevice() != activeRobot &&
+							if (cInst.getTgtDevice() != getActiveRobot() &&
 									!isSecondRobotUsed()) {
 								// Cannot use robot call, when second robot is not active
 								nextIdx = -1;
@@ -4445,17 +4245,19 @@ public class RobotRun extends PApplet {
 								progExecState.setNextIdx(nextIdx);
 								pushActiveProg();
 								
-								if (cInst.getTgtDevice() == activeRobot) {
+								if (cInst.getTgtDevice() == getActiveRobot()) {
 									// Normal call instruction
-									int progIdx = activeRobot.getProgIdx(cInst.getProg().getName());
-									progExecState.setExec(activeRobot.RID, progExecState.getType(), progIdx, 0);
+									progExecState.setExec(getActiveRobot().RID,
+											progExecState.getType(),
+											cInst.getProg(), 0);
 																
 								} else {
 									// Robot call instruction
 									RoboticArm r = getInactiveRobot();
-									activeRobot = r;
-									int progIdx = r.getProgIdx(cInst.getProg().getName());
-									progExecState.setExec(r.RID, progExecState.getType(), progIdx, 0);
+									activeRobot.set(r);
+									progExecState.setExec(r.RID,
+											progExecState.getType(),
+											cInst.getProg(), 0);
 								}
 								
 								nextIdx = 0;
@@ -4489,7 +4291,7 @@ public class RobotRun extends PApplet {
 						} else if (subInst instanceof CallInstruction) {
 							CallInstruction cInst = (CallInstruction)subInst;
 							
-							if (cInst.getTgtDevice() != activeRobot &&
+							if (cInst.getTgtDevice() != getActiveRobot() &&
 									!isSecondRobotUsed()) {
 								// Cannot use robot call, when second robot is not active
 								nextIdx = -1;
@@ -4498,17 +4300,18 @@ public class RobotRun extends PApplet {
 								progExecState.setNextIdx(nextIdx);
 								pushActiveProg();
 								
-								if (cInst.getTgtDevice() == activeRobot) {
+								if (cInst.getTgtDevice() == getActiveRobot()) {
 									// Normal call instruction
-									int progIdx = activeRobot.getProgIdx(cInst.getProg().getName());
-									progExecState.setExec(activeRobot.RID, progExecState.getType(), progIdx, 0);
+									progExecState.setExec(getActiveRobot().RID,
+											progExecState.getType(),
+											cInst.getProg(), 0);
 																
 								} else {
 									// Robot call instruction
 									RoboticArm r = getInactiveRobot();
-									activeRobot = r;
-									int progIdx = r.getProgIdx(cInst.getProg().getName());
-									progExecState.setExec(r.RID, progExecState.getType(), progIdx, 0);
+									activeRobot.set(r);
+									progExecState.setExec(r.RID, progExecState.getType(),
+											cInst.getProg(), 0);
 								}
 								
 								nextIdx = 0;

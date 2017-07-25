@@ -1,25 +1,32 @@
 package screen.opt_menu;
 
 import core.RobotRun;
-import enums.CoordFrame;
 import robot.RoboticArm;
 import screen.ScreenMode;
 
 public class ScreenUserFrameDetail extends ST_ScreenOptionsMenu {
-
-	public ScreenUserFrameDetail(RobotRun r) {
-		super(ScreenMode.UFRAME_DETAIL, r);
+	
+	private int frameIdx;
+	
+	public ScreenUserFrameDetail(RobotRun r, int frameIdx) {
+		super(ScreenMode.UFRAME_DETAIL, String.format("USER: %d DETAIL",
+				frameIdx + 1), r);
+		this.frameIdx = frameIdx;
+	}
+	
+	public int getFrameIdx() {
+		return frameIdx;
 	}
 
 	@Override
 	protected String loadHeader() {
-		return String.format("USER %d: DETAIL", robotRun.curFrameIdx + 1);
+		return "";
 	}
 
 	@Override
 	protected void loadContents() {
 		RoboticArm r = robotRun.getActiveRobot();
-		contents.setLines(loadFrameDetail(r, CoordFrame.USER, robotRun.curFrameIdx));
+		contents.setLines(loadFrameDetail(r.getUserFrame(frameIdx)));
 	}
 	
 	@Override
@@ -42,11 +49,12 @@ public class ScreenUserFrameDetail extends ST_ScreenOptionsMenu {
 	@Override
 	public void actionEntr() {
 		// User Frame teaching methods
-		robotRun.teachFrame = robotRun.getActiveRobot().getUserFrame(robotRun.curFrameIdx);
 		if (options.getLineIdx() == 0) {
 			robotRun.nextScreen(ScreenMode.TEACH_3PT_USER);
+			
 		} else if (options.getLineIdx() == 1) {
 			robotRun.nextScreen(ScreenMode.TEACH_4PT);
+			
 		} else if (options.getLineIdx() == 2) {
 			robotRun.nextScreen(ScreenMode.DIRECT_ENTRY_USER);
 		}

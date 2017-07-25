@@ -55,6 +55,9 @@ public abstract class ST_ScreenListContents extends Screen {
 	public void actionBkspc() {}
 	
 	@Override
+	public void actionEntr() {}
+	
+	@Override
 	public void actionF1() {}
 
 	@Override

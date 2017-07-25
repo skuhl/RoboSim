@@ -424,19 +424,6 @@ public class RQuaternion implements Cloneable {
 		return String.format("{ %4.3f, (%4.3f, %4.3f, %4.3f) }", w, x, y, z);
 	}
 
-	public PVector toVector() {
-		float[][] r = toMatrix().getDataF();
-		float x, y, z;
-		PVector wpr;
-		
-		x = (float) Math.atan2(-r[2][1], r[2][2]);
-		y = (float) Math.atan2(r[2][0], Math.sqrt(r[2][1]*r[2][1] + r[2][2]*r[2][2]));
-		z = (float) Math.atan2(-r[1][0], r[0][0]);
-
-		wpr = new PVector(x, y, z);
-		return wpr;
-	}
-
 	/**
 	 * Returns q in reference to this [quaternion's] orientation.
 	 */

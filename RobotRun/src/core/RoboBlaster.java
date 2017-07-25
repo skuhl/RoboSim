@@ -3,6 +3,7 @@ package core;
 import java.util.ArrayList;
 
 import geom.RQuaternion;
+import processing.core.PGraphics;
 import processing.core.PVector;
 
 public class RoboBlaster {
@@ -34,7 +35,7 @@ public class RoboBlaster {
 		return new PVector(m[0][0], m[1][0], m[2][0]);
 	}
 	
-	public void updateAndDrawProjectiles() {
+	public void updateAndDrawProjectiles(PGraphics g) {
 		for(int i = 0; i < projectilesInFlight.size(); i += 1) {
 			PVector pPos = projectilesInFlight.get(i).updatePos(10f);
 			
@@ -42,11 +43,11 @@ public class RoboBlaster {
 				projectilesInFlight.remove(i);
 			}
 			else {
-				RobotRun.getInstance().pushMatrix();
-				RobotRun.getInstance().stroke(0);
-				RobotRun.getInstance().translate(pPos.x, pPos.y, pPos.z);
-				RobotRun.getInstance().sphere(3);
-				RobotRun.getInstance().popMatrix();
+				g.pushMatrix();
+				g.stroke(0);
+				g.translate(pPos.x, pPos.y, pPos.z);
+				g.sphere(3);
+				g.popMatrix();
 			}
 		}
 	}
