@@ -9,7 +9,6 @@ public class ScreenSetFrameInstrType extends ST_ScreenEditItem {
 	
 	public ScreenSetFrameInstrType(RobotRun r) {
 		super(ScreenMode.SELECT_FRAME_INSTR_TYPE, r);
-		
 	}
 	
 	@Override
