@@ -10,6 +10,7 @@ import processing.data.JSONObject;
 public class RegisteredModels {
 	public static final HashMap<String, Integer> modelIDList = new HashMap<String, Integer>();
 	public static final HashMap<Integer, Integer> modelFamilyList = new HashMap<Integer, Integer>();
+	public static final HashMap<Integer, Float> modelReflectivity = new HashMap<Integer, Float>();
 	public static final HashMap<Integer, CamSelectArea[]> modelAreasOfInterest = new HashMap<Integer, CamSelectArea[]>();
 	
 	// Reserved IDs for models not defined in models.json
@@ -31,8 +32,13 @@ public class RegisteredModels {
 			int familyID = obj.getInt("modelFamilyID");
 			modelFamilyList.put(mdlID, familyID);
 			
+			float reflectivity = obj.getFloat("reflectiveIndex", 1f);
+			modelReflectivity.put(mdlID,  reflectivity);
+			System.out.println(reflectivity);
+			
 			JSONArray selectList = obj.getJSONArray("selectAreas");
 			CamSelectArea[] selectAreas = new CamSelectArea[selectList.size()];
+			System.out.println(selectList.size());
 						
 			for(int j = 0; j < selectList.size(); j += 1) {
 				JSONObject area = selectList.getJSONObject(j);

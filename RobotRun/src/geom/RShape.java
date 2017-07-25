@@ -10,16 +10,25 @@ import processing.core.PGraphics;
 public abstract class RShape implements Cloneable {
 	private Integer fillCVal;
 	private Integer strokeCVal;
+	private Float reflectiveIdx;
 	protected PGraphics preview;
 
 	public RShape() {
 		fillCVal = Fields.BLACK;
 		strokeCVal = Fields.WHITE;
+		reflectiveIdx = 1f;
 	}
 
 	public RShape(Integer fill, Integer strokeVal) {
 		fillCVal = fill;
 		strokeCVal = strokeVal;
+		reflectiveIdx = 1f;
+	}
+	
+	public RShape(Integer fill, Integer strokeVal, Float reflect) {
+		fillCVal = fill;
+		strokeCVal = strokeVal;
+		reflectiveIdx = reflect;
 	}
 	
 	@Override
@@ -93,6 +102,7 @@ public abstract class RShape implements Cloneable {
 	public Integer getFillValue() { return fillCVal; }
 	public abstract int getModelID();
 	public abstract PGraphics getModelPreview(RMatrix m);
+	public Float getReflectiveIndex() { return reflectiveIdx; }
 	public Integer getStrokeValue() { return strokeCVal; }
 	
 	/**

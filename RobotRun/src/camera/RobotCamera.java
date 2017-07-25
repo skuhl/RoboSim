@@ -337,7 +337,9 @@ public class RobotCamera {
 			}
 		}
 		
-		return (inView / (float)(RES*RES*RES)) * brightness * exposure >= sensitivity;
+		float reflect = o.getForm().getReflectiveIndex();
+		float lightFactor = (float)Math.max(1 - Math.pow(Math.log(brightness * exposure * reflect), 2), 0);
+		return (inView / (float)(RES*RES*RES)) * lightFactor >= sensitivity;
 	}
 	
 	public boolean isPointInFrame(PVector p) {

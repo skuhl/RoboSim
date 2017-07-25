@@ -83,6 +83,7 @@
 		{
 			"modelID": 3,
 			"modelFamilyID": 3,
+			"reflectiveIndex": 1.4,
 			"modelFileName": "inclinedblock.stl",
 			"selectAreas": []
 		},
