@@ -669,7 +669,6 @@ public class WGUI implements ControlListener {
 			getButton(WGUI_Buttons.CamToggleActive).setOn();
 			getButton(WGUI_Buttons.CamToggleActive).setSwitch(false);
 			System.out.println(getButton(WGUI_Buttons.CamToggleActive).isOn());
-
 		}
 		
 		/* Initialize dropdown list elements
@@ -2349,13 +2348,13 @@ public class WGUI implements ControlListener {
 	 * @return	Whether the second Robot is hidden
 	 */
 	public boolean toggleSecondRobot() {
-
 		if (menu == WindowTab.ROBOT2) {
 			windowTabs.setLabel("Hide");
 		}
 
 		// Remove or add the robot2 tab based on the robot toggle button
 		Button tr = getButton(WGUI_Buttons.RobotToggleActive);
+		
 		if(tr.isOn()) {
 			tr.setLabel("Remove Robot");
 		}

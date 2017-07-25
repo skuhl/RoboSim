@@ -32,6 +32,9 @@ public abstract class WorldObject implements Cloneable {
 		localOrientation = cs;
 	}
 	
+	@Override
+	public abstract WorldObject clone();
+	
 	/**
 	 * Calculates the point of collision between this world object and the
 	 * given ray that is closest to the ray. If no collision exists, then null
@@ -112,9 +115,6 @@ public abstract class WorldObject implements Cloneable {
 		// No collision
 		return null;
 	}
-	
-	@Override
-	public abstract WorldObject clone();
 
 	/**
 	 * Returns a list of values with short prefix labels, which describe
@@ -186,19 +186,18 @@ public abstract class WorldObject implements Cloneable {
 
 	public RShape getForm() { return form; }
 	
-	public int getModelID() { return form.getModelID(); }
-	
-	public int getModelFamilyID() { return form.getFamilyID(); }
-
 	public PVector getLocalCenter() {
 		return localOrientation.getOrigin();
 	}
-
+	
 	public RMatrix getLocalOrientation() {
 		return localOrientation.getAxes();
 	}
-
+	
+	public int getModelFamilyID() { return form.getFamilyID(); }
+	public int getModelID() { return form.getModelID(); }
 	public String getName() { return name; }
+	public float getReflectiveIndex() { return form.getReflectiveIndex(); }
 	
 	/**
 	 * Rotates the world object about the axis represented by the given unit

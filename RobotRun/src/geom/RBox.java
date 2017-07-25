@@ -92,26 +92,8 @@ public class RBox extends RShape {
 		return dims;
 	}
 
-	@Override
-	public void setDim(Float newVal, DimType dim) {
-
-		switch (dim) {
-		case LENGTH:
-			// Update length
-			dimensions.x = newVal;
-			break;
-		case HEIGHT:
-			// Update height
-			dimensions.y = newVal;
-			break;
-
-		case WIDTH:
-			// Update width
-			dimensions.z = newVal;
-			break;
-			// Invalid dimension
-		default:
-		}
+	public int getFamilyID() {
+		return RegisteredModels.ID_CUBE;
 	}
 
 	@Override
@@ -119,10 +101,6 @@ public class RBox extends RShape {
 		return RegisteredModels.ID_CUBE;
 	}
 	
-	public int getFamilyID() {
-		return RegisteredModels.ID_CUBE;
-	}
-
 	@Override
 	public PGraphics getModelPreview(RMatrix m) {
 		if(preview == null) {
@@ -149,5 +127,32 @@ public class RBox extends RShape {
 		}
 		
 		return preview;
+	}
+
+	@Override
+	public Float getReflectiveIndex() {
+		return 1f;
+	}
+	
+	@Override
+	public void setDim(Float newVal, DimType dim) {
+
+		switch (dim) {
+		case LENGTH:
+			// Update length
+			dimensions.x = newVal;
+			break;
+		case HEIGHT:
+			// Update height
+			dimensions.y = newVal;
+			break;
+
+		case WIDTH:
+			// Update width
+			dimensions.z = newVal;
+			break;
+			// Invalid dimension
+		default:
+		}
 	}
 }

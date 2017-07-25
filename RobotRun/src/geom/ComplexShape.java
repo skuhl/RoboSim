@@ -27,6 +27,7 @@ public class ComplexShape extends RShape {
 	private float mdlScale = 1f;
 	private final int model_id;
 	private final int model_family_id;
+	private final float reflectiveIdx;
 	private ArrayList<CamSelectArea> selectAreas;
 
 	/**
@@ -58,9 +59,11 @@ public class ComplexShape extends RShape {
 		if(RegisteredModels.modelIDList.get(filename) == null) {
 			model_id = RegisteredModels.ID_GENERIC;
 			model_family_id = RegisteredModels.ID_GENERIC;
+			reflectiveIdx = 1f;
 		} else {
 			model_id = RegisteredModels.modelIDList.get(filename);
 			model_family_id = RegisteredModels.modelFamilyList.get(model_id);
+			reflectiveIdx = RegisteredModels.modelReflectivity.get(model_id);
 		}
 		
 		srcFilePath = filename;
@@ -91,39 +94,6 @@ public class ComplexShape extends RShape {
 		loadCamSelectAreas();
 	}
 	
-	private void loadCamSelectAreas() {
-		if(RegisteredModels.modelAreasOfInterest.get(model_id) != null) {
-			for(CamSelectArea c: RegisteredModels.modelAreasOfInterest.get(model_id)) {
-				selectAreas.add(c.copy());
-			}
-		}
-	}
-	
-	public CamSelectArea getCamSelectArea(int i) {
-		return selectAreas.get(i);
-	}
-	
-	public int getNumSelectAreas() {
-		return selectAreas.size();
-	}
-	
-	public CamSelectArea getSelectAreaClicked(int x, int y, RMatrix m) {
-		for(CamSelectArea a: selectAreas) {
-			CamSelectView v = a.getView(m);
-			
-			if(v != null) {
-				PVector tl = v.getTopLeftBound();
-				PVector br = v.getBottomRightBound();
-				
-				if(x >= tl.x && x <= br.x && y >= tl.y && y <= br.y) {
-					return a;
-				}
-			}
-		}
-		
-		return null;
-	}
-
 	@Override
 	public ComplexShape clone() {
 		return new ComplexShape(srcFilePath, model.clone(), getFillValue(),
@@ -140,6 +110,10 @@ public class ComplexShape extends RShape {
 		g.popMatrix();
 	}
 	
+	public CamSelectArea getCamSelectArea(int i) {
+		return selectAreas.get(i);
+	}
+	
 	/**
 	 * @return	The center offset associated with this model
 	 */
@@ -148,7 +122,7 @@ public class ComplexShape extends RShape {
 				centerOffset.x, centerOffset.y, centerOffset.z
 		};
 	}
-	
+
 	@Override
 	public float getDim(DimType dim) {
 		switch(dim) {
@@ -160,7 +134,7 @@ public class ComplexShape extends RShape {
 		default:     return -1f;
 		}
 	}
-
+	
 	@Override
 	public float[] getDimArray() {
 		float[] dims = new float[3];
@@ -191,12 +165,7 @@ public class ComplexShape extends RShape {
 			return super.getDimLBound(dim);
 		}
 	}
-	
-	@Override
-	public int getModelID() {
-		return model_id;
-	}
-	
+
 	@Override
 	public int getFamilyID() {
 		return model_family_id;
@@ -205,52 +174,10 @@ public class ComplexShape extends RShape {
 	public PShape getForm() {
 		return model;
 	}
-
-	public String getSourcePath() { return srcFilePath; }
-
-	/**
-	 * Calculates the maximum length, height, and width of this shape as well as the center
-	 * offset of the shape. The length, height, and width are based off of the maximum and
-	 * minimum X, Y, Z values of the shape's vertices. The center offset is based off of
-	 * the estimated center of the shape relative to the minimum X, Y, Z values as a position.
-	 */
-	private void iniDimensions() {
-		PVector maximums = new PVector(Float.MIN_VALUE, Float.MIN_VALUE, Float.MIN_VALUE),
-				minimums = new PVector(Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE);
-
-		int vertexCount = model.getVertexCount();
-
-		// Calculate the maximum and minimum values for each dimension
-		for (int idx = 0; idx < vertexCount; ++idx) {
-			PVector v = model.getVertex(idx);
-
-			if (v.x > maximums.x) {
-				maximums.x = v.x;
-
-			} else if (v.x < minimums.x) {
-				minimums.x = v.x;
-			}
-
-			if (v.y > maximums.y) {
-				maximums.y = v.y;
-
-			} else if (v.y < minimums.y) {
-				minimums.y = v.y;
-			}
-
-			if (v.z > maximums.z) {
-				maximums.z = v.z;
-
-			} else if (v.z < minimums.z) {
-				minimums.z = v.z;
-			}
-		}
-
-		/* Calculate the base maximum span for each dimension as well as the base
-		 * offset of the center of the shape, based on the dimensions, from the
-		 * first vertex in the shape */
-		baseDims = PVector.sub(maximums, minimums);
-		centerOffset = PVector.add(minimums, PVector.mult(baseDims, 0.5f)).mult(-1);
+	
+	@Override
+	public int getModelID() {
+		return model_id;
 	}
 	
 	public PGraphics getModelPreview(RMatrix m) {
@@ -304,7 +231,35 @@ public class ComplexShape extends RShape {
 		
 		return preview;
 	}
+	
+	public int getNumSelectAreas() {
+		return selectAreas.size();
+	}
+	
+	@Override
+	public Float getReflectiveIndex() {
+		return reflectiveIdx;
+	}
 
+	public CamSelectArea getSelectAreaClicked(int x, int y, RMatrix m) {
+		for(CamSelectArea a: selectAreas) {
+			CamSelectView v = a.getView(m);
+			
+			if(v != null) {
+				PVector tl = v.getTopLeftBound();
+				PVector br = v.getBottomRightBound();
+				
+				if(x >= tl.x && x <= br.x && y >= tl.y && y <= br.y) {
+					return a;
+				}
+			}
+		}
+		
+		return null;
+	}
+
+	public String getSourcePath() { return srcFilePath; }
+	
 	@Override
 	public void setDim(Float newVal, DimType dim) {
 		switch(dim) {
@@ -318,12 +273,65 @@ public class ComplexShape extends RShape {
 		default:
 		}
 	}
-	
+
 	@Override
 	public void setFillValue(Integer newVal) {
 		if (newVal != null) {
 			super.setFillValue(newVal);
 			model.setFill((int)newVal);
+		}
+	}
+	
+	/**
+	 * Calculates the maximum length, height, and width of this shape as well as the center
+	 * offset of the shape. The length, height, and width are based off of the maximum and
+	 * minimum X, Y, Z values of the shape's vertices. The center offset is based off of
+	 * the estimated center of the shape relative to the minimum X, Y, Z values as a position.
+	 */
+	private void iniDimensions() {
+		PVector maximums = new PVector(Float.MIN_VALUE, Float.MIN_VALUE, Float.MIN_VALUE),
+				minimums = new PVector(Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE);
+
+		int vertexCount = model.getVertexCount();
+
+		// Calculate the maximum and minimum values for each dimension
+		for (int idx = 0; idx < vertexCount; ++idx) {
+			PVector v = model.getVertex(idx);
+
+			if (v.x > maximums.x) {
+				maximums.x = v.x;
+
+			} else if (v.x < minimums.x) {
+				minimums.x = v.x;
+			}
+
+			if (v.y > maximums.y) {
+				maximums.y = v.y;
+
+			} else if (v.y < minimums.y) {
+				minimums.y = v.y;
+			}
+
+			if (v.z > maximums.z) {
+				maximums.z = v.z;
+
+			} else if (v.z < minimums.z) {
+				minimums.z = v.z;
+			}
+		}
+
+		/* Calculate the base maximum span for each dimension as well as the base
+		 * offset of the center of the shape, based on the dimensions, from the
+		 * first vertex in the shape */
+		baseDims = PVector.sub(maximums, minimums);
+		centerOffset = PVector.add(minimums, PVector.mult(baseDims, 0.5f)).mult(-1);
+	}
+	
+	private void loadCamSelectAreas() {
+		if(RegisteredModels.modelAreasOfInterest.get(model_id) != null) {
+			for(CamSelectArea c: RegisteredModels.modelAreasOfInterest.get(model_id)) {
+				selectAreas.add(c.copy());
+			}
 		}
 	}
 }

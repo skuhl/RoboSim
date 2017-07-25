@@ -337,7 +337,7 @@ public class RobotCamera {
 			}
 		}
 		
-		float reflect = o.getForm().getReflectiveIndex();
+		float reflect = o.getReflectiveIndex();
 		float lightFactor = (float)Math.max(1 - Math.pow(Math.log(brightness * exposure * reflect), 2), 0);
 		return (inView / (float)(RES*RES*RES)) * lightFactor >= sensitivity;
 	}

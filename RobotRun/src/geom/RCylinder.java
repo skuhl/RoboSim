@@ -95,20 +95,8 @@ public class RCylinder extends RShape {
 	}
 
 	@Override
-	public void setDim(Float newVal, DimType dim) {
-		switch(dim) {
-		case RADIUS:
-			// Update radius
-			radius = newVal;
-			break;
-
-		case HEIGHT:
-			// Update height
-			height = newVal;
-			break;
-
-		default:
-		}
+	public int getFamilyID() {
+		return RegisteredModels.ID_CYLINDER;
 	}
 
 	@Override
@@ -116,11 +104,6 @@ public class RCylinder extends RShape {
 		return RegisteredModels.ID_CYLINDER;
 	}
 	
-	@Override
-	public int getFamilyID() {
-		return RegisteredModels.ID_CYLINDER;
-	}
-
 	public PGraphics getModelPreview(RMatrix m) {
 		if(preview == null) {
 			PGraphics img = RobotRun.getInstance().createGraphics(150, 200, RobotRun.P3D);
@@ -146,5 +129,27 @@ public class RCylinder extends RShape {
 		}
 		
 		return preview;
+	}
+
+	@Override
+	public Float getReflectiveIndex() {
+		return 1f;
+	}
+
+	@Override
+	public void setDim(Float newVal, DimType dim) {
+		switch(dim) {
+		case RADIUS:
+			// Update radius
+			radius = newVal;
+			break;
+
+		case HEIGHT:
+			// Update height
+			height = newVal;
+			break;
+
+		default:
+		}
 	}
 }
