@@ -4006,12 +4006,11 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * TODO comment this
+	 * Determines if the the current window uses keyboard input.
 	 * 
-	 * @return
+	 * @return	if the active UI element or window uses keyboard input
 	 */
 	private boolean UIKeyboardUse() {
-		
 		if (UI != null) {
 			if (UI.isPendantActive()) {
 				// Screens extending these screen types use keyboard input.
@@ -4029,7 +4028,11 @@ public class RobotRun extends PApplet {
 		
 		return false;
 	}
-
+	
+	/**
+	 * Updates the instruction index based on the current program execution
+	 * state and the base program execution state.
+	 */
 	private void updateCurIdx() {
 		if (progExecState.getState() == ExecState.EXEC_MINST &&
 				!getActiveRobot().inMotion()) {
@@ -4150,7 +4153,13 @@ public class RobotRun extends PApplet {
 		}
 		
 	}
-
+	
+	/**
+	 * Executes the program associated with the active instruction index for
+	 * the current program execution state.
+	 * 
+	 * @return	0 ...
+	 */
 	private int updateProgExec() {
 		Program prog = getActiveProg();
 		Instruction activeInstr = prog.getInstAt(progExecState.getCurIdx());
