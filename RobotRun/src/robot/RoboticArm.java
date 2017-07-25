@@ -2011,6 +2011,16 @@ public class RoboticArm {
 	}
 	
 	/**
+	 * TODO comment this
+	 * 
+	 * @param p
+	 * @return
+	 */
+	public boolean rmProg(Program p) {
+		return PROGRAM.remove(p);
+	}
+	
+	/**
 	 * Removes the program, associated with the given index, from the Robot.
 	 * 
 	 * @param pdx	A positive integer value less than the number of programs

@@ -1947,7 +1947,7 @@ public class RobotRun extends PApplet {
 		button_hold();
 		// Safeguard against editing a program while it is running
 		screens.getActiveScreen().getContents().setColumnIdx(0);
-		progExec(m.getRobot().RID, m.getProgIdx(), 0, ExecType.EXEC_FULL);
+		progExec(m.getRobot().RID, m.getProg(), 0, ExecType.EXEC_FULL);
 	}
 	
 	/**
@@ -1976,21 +1976,7 @@ public class RobotRun extends PApplet {
 	 * @return	The active for the active Robot, or null if no program is active
 	 */
 	public Program getActiveProg() {
-		if (getActiveProgIdx() >= 0 && getActiveProgIdx() <
-				getActiveRobot().numOfPrograms()) {
-			
-			return getActiveRobot().getProgram(getActiveProgIdx());
-		}
-		
-		// Invalid program index
-		return null;
-	}
-
-	/**
-	 * @return	The index of the active program
-	 */
-	public int getActiveProgIdx() {
-		return progExecState.getProgIdx();
+		return progExecState.getProg();
 	}
 
 	public RoboticArm getActiveRobot() {
@@ -3002,22 +2988,12 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Sets the given program as the robot's active program if the program
-	 * exists in the robot's list of programs. Otherwise, the robot's active
-	 * program remains unchanged.
+	 * Sets the given program as the active program.
 	 * 
-	 * @param active	The program to set as active
-	 * @return			If the program exists in the robot's list of programs
+	 * @param p	The program to set as active
 	 */
-	public boolean setActiveProg(Program active) {
-		int progIdx = getActiveRobot().getProgIdx(active.getName());
-		boolean exists = progIdx > 0;
-		
-		if (exists || progIdx == -1) {
-			progExecState.setProgIdx(progIdx);
-		}
-		
-		return exists;
+	public void setActiveProg(Program p) {
+		progExecState.setProg(p);
 	}
 	
 	/**
@@ -3028,14 +3004,14 @@ public class RobotRun extends PApplet {
 	 * @return			Whether the given index is valid
 	 */
 	public boolean setActiveProgIdx(int progIdx) {
-		boolean exists = getActiveRobot().getProgram(progIdx) != null;
+		Program p = getActiveRobot().getProgram(progIdx);
 		
-		if (exists || progIdx == -1) {
+		if (p != null || progIdx == -1) {
 			// Set the active program
-			progExecState.setProgIdx(progIdx);
+			progExecState.setProg(p);
 		}
 		
-		return exists;
+		return p != null;
 	}
 
 	/**
@@ -3510,7 +3486,7 @@ public class RobotRun extends PApplet {
 	 */
 	@SuppressWarnings("unused")
 	private void progExec(int instIdx, boolean singleExec) {
-		progExec(progExecState.getProgIdx(), instIdx, singleExec);
+		progExec(progExecState.getProg(), instIdx, singleExec);
 	}
 
 	/**
@@ -3524,14 +3500,13 @@ public class RobotRun extends PApplet {
 	 * @param singleExec	Whether to execute a single instruction or the
 	 * 						entire program
 	 */
-	private void progExec(int progIdx, int instIdx, boolean singleExec) {
-		Program p = getActiveRobot().getProgram(progIdx);
+	private void progExec(Program p, int instIdx, boolean singleExec) {
 		// Validate active indices
 		if (p != null && instIdx >= 0 && instIdx < p.getNumOfInst()) {
 			ExecType pExec = (singleExec) ? ExecType.EXEC_SINGLE
 					: ExecType.EXEC_FULL;
 			
-			progExec(getActiveRobot().RID, progIdx, instIdx, pExec);
+			progExec(getActiveRobot().RID, p, instIdx, pExec);
 		}
 	}
 	
@@ -3548,8 +3523,8 @@ public class RobotRun extends PApplet {
 	 * @param exec		Whether to execute a single instruction or the entire
 	 * 					program
 	 */
-	private void progExec(int rid, int progIdx, int instIdx, ExecType exec) {
-		progExecState.setExec(rid, exec, progIdx, instIdx);
+	private void progExec(int rid, Program p, int instIdx, ExecType exec) {
+		progExecState.setExec(rid, exec, p, instIdx);
 	}
 	
 	/**
@@ -3565,7 +3540,7 @@ public class RobotRun extends PApplet {
 			Instruction prevInst = p.getInstAt(getActiveInstIdx() - 1);
 			
 			if (prevInst instanceof MotionInstruction) {
-				progExec(getActiveRobot().RID, progExecState.getProgIdx(),
+				progExec(getActiveRobot().RID, progExecState.getProg(),
 						getActiveInstIdx() - 1, ExecType.EXEC_BWD);
 			}
 		}
@@ -4223,15 +4198,16 @@ public class RobotRun extends PApplet {
 						
 						if (cInst.getTgtDevice() == getActiveRobot()) {
 							// Normal call instruction
-							int progIdx = getActiveRobot().getProgIdx(cInst.getProg().getName());
-							progExecState.setExec(getActiveRobot().RID, progExecState.getType(), progIdx, 0);
+							progExecState.setExec(getActiveRobot().RID,
+									progExecState.getType(), cInst.getProg(),
+									0);
 														
 						} else {
 							// Robot call instruction
 							RoboticArm r = getInactiveRobot();
 							activeRobot.set(r);
-							int progIdx = r.getProgIdx(cInst.getProg().getName());
-							progExecState.setExec(r.RID, progExecState.getType(), progIdx, 0);
+							progExecState.setExec(r.RID, progExecState.getType(),
+									cInst.getProg(), 0);
 						}
 						
 						nextIdx = 0;
@@ -4264,15 +4240,17 @@ public class RobotRun extends PApplet {
 								
 								if (cInst.getTgtDevice() == getActiveRobot()) {
 									// Normal call instruction
-									int progIdx = getActiveRobot().getProgIdx(cInst.getProg().getName());
-									progExecState.setExec(getActiveRobot().RID, progExecState.getType(), progIdx, 0);
+									progExecState.setExec(getActiveRobot().RID,
+											progExecState.getType(),
+											cInst.getProg(), 0);
 																
 								} else {
 									// Robot call instruction
 									RoboticArm r = getInactiveRobot();
 									activeRobot.set(r);
-									int progIdx = r.getProgIdx(cInst.getProg().getName());
-									progExecState.setExec(r.RID, progExecState.getType(), progIdx, 0);
+									progExecState.setExec(r.RID,
+											progExecState.getType(),
+											cInst.getProg(), 0);
 								}
 								
 								nextIdx = 0;
@@ -4317,15 +4295,16 @@ public class RobotRun extends PApplet {
 								
 								if (cInst.getTgtDevice() == getActiveRobot()) {
 									// Normal call instruction
-									int progIdx = getActiveRobot().getProgIdx(cInst.getProg().getName());
-									progExecState.setExec(getActiveRobot().RID, progExecState.getType(), progIdx, 0);
+									progExecState.setExec(getActiveRobot().RID,
+											progExecState.getType(),
+											cInst.getProg(), 0);
 																
 								} else {
 									// Robot call instruction
 									RoboticArm r = getInactiveRobot();
 									activeRobot.set(r);
-									int progIdx = r.getProgIdx(cInst.getProg().getName());
-									progExecState.setExec(r.RID, progExecState.getType(), progIdx, 0);
+									progExecState.setExec(r.RID, progExecState.getType(),
+											cInst.getProg(), 0);
 								}
 								
 								nextIdx = 0;

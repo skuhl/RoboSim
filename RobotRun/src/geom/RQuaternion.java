@@ -1,6 +1,5 @@
 package geom;
 
-import global.RMath;
 import processing.core.PVector;
 
 /**

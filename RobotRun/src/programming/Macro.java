@@ -5,20 +5,20 @@ import robot.RoboticArm;
 public class Macro {
 	boolean manual;
 	private RoboticArm robot;
-	private int progIdx;
+	private Program prog;
 	private int keyNum;
 
-	public Macro(RoboticArm r, int pdx) {
+	public Macro(RoboticArm r, Program p) {
 		manual = false;
 		robot = r;
-		progIdx = pdx;
+		prog = p;
 		keyNum = -1;
 	}
 	
-	public Macro(boolean mf, RoboticArm r, int pdx, int num) {
+	public Macro(boolean mf, RoboticArm r, Program p, int num) {
 		manual = mf;
 		robot = r;
-		progIdx = pdx;
+		prog = p;
 		keyNum = num;
 	}
 
@@ -31,11 +31,11 @@ public class Macro {
 	
 	public boolean isManual() { return manual; }
 	public RoboticArm getRobot() { return robot; }
-	public int getProgIdx() { return progIdx; }	
+	public Program getProg() { return prog; }	
 	public int getKeyNum() { return keyNum; }
 	
 	public void setManual(boolean b) { manual = b; }
-	public void setProgIdx(int pdx) { progIdx = pdx; }
+	public void setProg(Program p) { prog = p; }
 	
 	public Macro setNum(int n) {
 		if(n <= 6 && n >= 0 && robot.getMacroKeyBinds()[n] == null) {
@@ -57,7 +57,7 @@ public class Macro {
 
 	public String[] toStringArray() {
 		String[] ret = new String[3];
-		String name = robot.getProgram(progIdx).getName();
+		String name = (prog == null) ? "_" : prog.getName();
 		int name_pad = Math.max(16 - name.length(), 0);
 
 		ret[0] = String.format("[%-"+name_pad+"s]", name);

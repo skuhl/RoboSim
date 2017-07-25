@@ -728,10 +728,11 @@ public abstract class DataManagement {
 			
 			for(int i = 0; i < numMacros; i += 1) {
 				boolean isManual = dataIn.readBoolean();
-				int pdx = dataIn.readInt();
+				String progName = dataIn.readUTF();
 				int keyNum = dataIn.readInt();
 				
-				Macro m = new Macro(isManual, r, pdx, keyNum);
+				Program p = r.getProgram(progName);
+				Macro m = new Macro(isManual, r, p, keyNum);
 				
 				r.getMacroList().add(m);
 				
@@ -1794,8 +1795,17 @@ public abstract class DataManagement {
 			dataOut.writeInt(r.getMacroList().size());
 			
 			for (Macro m: r.getMacroList()) {
+				Program p = m.getProg();
+				
 				dataOut.writeBoolean(m.isManual());
-				dataOut.writeInt(m.getProgIdx());
+				
+				if (p == null) {
+					dataOut.writeUTF("");
+					
+				} else {
+					dataOut.writeUTF(p.getName());
+				}
+				
 				dataOut.writeInt(m.getKeyNum());
 			}
 			
