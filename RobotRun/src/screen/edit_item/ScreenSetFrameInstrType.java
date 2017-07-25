@@ -2,6 +2,7 @@ package screen.edit_item;
 
 import core.RobotRun;
 import global.Fields;
+import programming.FrameInstruction;
 import screen.ScreenMode;
 
 public class ScreenSetFrameInstrType extends ST_ScreenEditItem {
@@ -19,13 +20,15 @@ public class ScreenSetFrameInstrType extends ST_ScreenEditItem {
 
 	@Override
 	public void actionEntr() {
+		FrameInstruction fInst = (FrameInstruction) robotRun.getActiveInstruction();
+		
 		if (options.getLineIdx() == 0) {
-			robotRun.newFrameInstruction(Fields.FTYPE_TOOL);
+			fInst.setFrameType(Fields.FTYPE_TOOL);
+			
 		} else {
-			robotRun.newFrameInstruction(Fields.FTYPE_USER);
+			fInst.setFrameType(Fields.FTYPE_USER);
 		}
 
-		robotRun.lastScreen();
 		robotRun.switchScreen(ScreenMode.SET_FRAME_INSTR_IDX);
 	}
 }

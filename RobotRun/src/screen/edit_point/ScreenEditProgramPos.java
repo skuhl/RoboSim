@@ -63,8 +63,6 @@ public class ScreenEditProgramPos extends ST_ScreenPointEntry {
 			DataManagement.saveRobotData(r, 1);
 			robotRun.lastScreen();
 			
-		} else {
-			errorMessage("All entries must be a real number");
 		}
 	}
 }

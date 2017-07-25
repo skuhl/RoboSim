@@ -126,7 +126,8 @@ public abstract class ST_ScreenPointEntry extends Screen {
 				
 				if (jointAngles == null) {
 					// Inverse kinematics failed
-					return new Point(position, orientation, defJointAngles);
+					Fields.setMessage("No joint angles could be found for the given position and orientation");
+					return null;
 				}
 				
 				return new Point(position, orientation, jointAngles);
@@ -138,9 +139,9 @@ public abstract class ST_ScreenPointEntry extends Screen {
 			}
 			
 			return robotRun.getActiveRobot().getToolTipNative(inputs);
+			
 		} catch (NumberFormatException NFEx) {
-			// Invalid input
-			Fields.setMessage("Values must be real numbers!");
+			Fields.setMessage("All input must be real numbers");
 			return null;
 		}
 	}
