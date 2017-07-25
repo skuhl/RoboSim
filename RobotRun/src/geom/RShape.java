@@ -10,7 +10,6 @@ import processing.core.PGraphics;
 public abstract class RShape implements Cloneable {
 	private Integer fillCVal;
 	private Integer strokeCVal;
-	protected PGraphics preview;
 
 	public RShape() {
 		fillCVal = Fields.BLACK;
@@ -42,7 +41,7 @@ public abstract class RShape implements Cloneable {
 	 *             such dimension exists
 	 */
 	public abstract float getDim(DimType dim);
-
+	
 	public abstract float[] getDimArray();
 	
 	/**
@@ -89,11 +88,7 @@ public abstract class RShape implements Cloneable {
 		}
 	}
 	
-	public abstract int getFamilyID();
 	public Integer getFillValue() { return fillCVal; }
-	public abstract int getModelID();
-	public abstract PGraphics getModelPreview(RMatrix m);
-	public abstract Float getReflectiveIndex();
 	public Integer getStrokeValue() { return strokeCVal; }
 	
 	/**
@@ -106,11 +101,6 @@ public abstract class RShape implements Cloneable {
 	public abstract void setDim(Float newVal, DimType dim);
 	public void setFillValue(Integer newVal) { fillCVal = newVal; }
 	public void setStrokeValue(Integer newVal) { strokeCVal = newVal; }
-	
-	public PGraphics updateModelPreview(RMatrix m) {
-		preview = null;
-		return getModelPreview(m);
-	}
 	
 	/**
 	 * Applies the shape's stroke and outline colors to the given graphics.

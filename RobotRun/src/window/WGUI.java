@@ -21,10 +21,10 @@ import core.RobotRun;
 import enums.Alignment;
 import enums.AxesDisplay;
 import enums.WindowTab;
+import geom.CameraObject;
 import geom.ComplexShape;
 import geom.DimType;
 import geom.Fixture;
-import geom.MyPShape;
 import geom.Part;
 import geom.RBox;
 import geom.RCylinder;
@@ -1195,13 +1195,14 @@ public class WGUI implements ControlListener {
 					r.setActiveEE( (Integer)ddl.getSelectedItem() );
 				}
 			} else if (arg0.isFrom("CamObjPreview")) {
-				WorldObject o = (WorldObject) getDropdown("CamObjects").getSelectedItem();	
+				CameraObject o = (CameraObject)getDropdown("CamObjects").getSelectedItem();	
 				RMatrix mdlOrient = o.getLocalOrientation();
 				Pointer p = getButton(WGUI_Buttons.CamObjPreview).getPointer();
 				int x = p.x();
 				int y = p.y();
 				
-				CamSelectArea a = ((ComplexShape)o.getForm()).getSelectAreaClicked(x, y, mdlOrient);
+				CamSelectArea a = o.getSelectAreaClicked(x, y, mdlOrient);
+				
 				if(a != null) {
 					if(app.mouseButton == RobotRun.RIGHT && !a.isIgnored()) {
 						a.ignoreArea();
@@ -1214,7 +1215,7 @@ public class WGUI implements ControlListener {
 					}
 				}
 				
-				((ComplexShape)o.getForm()).updateModelPreview(mdlOrient);
+				o.updateModelPreview(mdlOrient);
 				updateUIContentPositions();
 				
 			} else if (arg0.isFrom("WOFillR") || arg0.isFrom("WOFillG") ||
@@ -1235,7 +1236,7 @@ public class WGUI implements ControlListener {
 						/* Update the fill color of the selected world object
 						 * based on the fill color slider values */
 						int newFill = getFillColor();
-						wo.getForm().setFillValue(newFill);
+						wo.getModel().setFillValue(newFill);
 					}
 				}
 				
@@ -1253,11 +1254,11 @@ public class WGUI implements ControlListener {
 				} else if (menu == WindowTab.EDIT) {
 					WorldObject wo = getSelectedWO();
 					// Complex shapes have no stroke color
-					if (wo != null && !(wo.getForm() instanceof ComplexShape)) {
+					if (wo != null && !(wo.getModel() instanceof ComplexShape)) {
 						/* Update the stroke color of the selected world object
 						 * based on the stroke color slider values */
 						int newStroke = getStrokeColor();
-						wo.getForm().setStrokeValue(newStroke);
+						wo.getModel().setStrokeValue(newStroke);
 					}
 				}
 			}
@@ -1341,15 +1342,14 @@ public class WGUI implements ControlListener {
 					shapeDims = getModelDimensions();
 					// Construct a complex model
 					if (shapeDims != null) {
-						MyPShape model = app.loadSTLModel(srcFile, fill);
 						ComplexShape shape;
 
 						if (shapeDims[0] != null) {
 							// Define shape scale
-							shape = new ComplexShape(srcFile, model, fill, shapeDims[0]);
+							shape = new ComplexShape(srcFile, fill, shapeDims[0]);
 							
 						} else {
-							shape = new ComplexShape(srcFile, model, fill);
+							shape = new ComplexShape(srcFile, fill);
 						}
 
 						wldObj = new Part(name, shape);
@@ -1387,14 +1387,13 @@ public class WGUI implements ControlListener {
 					String srcFile = getShapeSourceFile();
 					shapeDims = getModelDimensions();
 					// Construct a complex model
-					MyPShape form = app.loadSTLModel(srcFile, fill);
 					ComplexShape shape;
 
 					if (shapeDims != null && shapeDims[0] != null) {
 						// Define model scale value
-						shape = new ComplexShape(srcFile, form, fill, shapeDims[0]);
+						shape = new ComplexShape(srcFile, fill, shapeDims[0]);
 					} else {
-						shape = new ComplexShape(srcFile, form, fill);
+						shape = new ComplexShape(srcFile, fill);
 					}
 
 					wldObj = new Fixture(name, shape);
@@ -2581,7 +2580,7 @@ public class WGUI implements ControlListener {
 			Object val = getDropdown("WO").getSelectedItem();
 
 			if (val instanceof WorldObject) {
-				RShape s = ((WorldObject)val).getForm();
+				RShape s = ((WorldObject)val).getModel();
 
 				if (s instanceof RBox) {
 					lblNames = new String[] { "Length:", "Height:", "Width:" };
@@ -2640,7 +2639,7 @@ public class WGUI implements ControlListener {
 	 * 					edit window
 	 */
 	public void updateEditWindowFields(WorldObject selected) {
-		RShape form = selected.getForm();
+		RShape form = selected.getModel();
 		
 		// Update the dimension fields
 		if (form instanceof RBox) {
@@ -2914,7 +2913,7 @@ public class WGUI implements ControlListener {
 			relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
 			c = getSlider("WOFillB").setPosition(relPos[0], relPos[1]);
 
-			if (wo != null && wo.getForm() instanceof ComplexShape) {
+			if (wo != null && wo.getModel() instanceof ComplexShape) {
 				// No stroke color for Model Shapes
 				getTextArea("WOOutlineLbl").hide();
 				getSlider("WOOutlineR").hide();
@@ -3059,9 +3058,9 @@ public class WGUI implements ControlListener {
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		c = getDropdown("CamObjects").setPosition(relPos[0], relPos[1]);
 
-		WorldObject o = (WorldObject)getDropdown("CamObjects").getSelectedItem();
+		CameraObject o = (CameraObject)getDropdown("CamObjects").getSelectedItem();
 		if(o != null) {
-			PGraphics preview = o.getForm().getModelPreview(o.getLocalOrientation());
+			PGraphics preview = o.getModelPreview(o.getLocalOrientation());
 			getButton(WGUI_Buttons.CamObjPreview).setImage(preview);
 			getButton(WGUI_Buttons.CamObjPreview).show();
 		}
@@ -3789,7 +3788,7 @@ public class WGUI implements ControlListener {
 	public WOUndoState updateWODims(WorldObject selectedWO) {
 		boolean dimChanged = false;
 		WOUndoState undoState = new WOUndoDim(selectedWO);
-		RShape s = selectedWO.getForm();
+		RShape s = selectedWO.getModel();
 
 		if (s instanceof RBox) {
 			Float[] newDims = getBoxDimensions();

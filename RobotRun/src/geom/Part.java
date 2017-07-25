@@ -22,7 +22,7 @@ public class Part extends WorldObject {
 	}
 	
 	private BoundingBox absOBB;
-	private CoordinateSystem defaultOrientation;
+	protected CoordinateSystem defaultOrientation;
 	private Fixture reference;
 
 	/**
@@ -84,7 +84,7 @@ public class Part extends WorldObject {
 	@Override
 	public Part clone() {
 		// The new object's reference still points to the same fixture!
-		return new Part(getName(), getForm().clone(), getOBBDims().copy(),
+		return new Part(getName(), getModel().clone(), getOBBDims().copy(),
 				localOrientation.clone(), defaultOrientation.clone(),
 				reference);
 	}
@@ -126,7 +126,7 @@ public class Part extends WorldObject {
 		g.pushMatrix();
 		Fields.transform(g, absOBB.getCenter(), absOBB.getOrientationAxes());
 		
-		getForm().draw(g);
+		getModel().draw(g);
 		
 		if (drawOBBs) {
 			absOBB.getFrame().draw(g);
@@ -290,7 +290,7 @@ public class Part extends WorldObject {
 	 * dimensions of its form.
 	 */
 	public void updateOBBDims() {
-		RShape s = getForm();
+		RShape s = getModel();
 		float minAddition = Float.MAX_VALUE;
 
 		if (s instanceof RBox || s instanceof ComplexShape) {

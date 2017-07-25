@@ -122,7 +122,7 @@ public class CamMoveToObject extends MotionInstruction {
 			WorldObject tgt = getTgtObject();
 			RMatrix tgtOri = tgt.getLocalOrientation();
 			PVector vecX = new PVector(tgtOri.getEntryF(0, 0), tgtOri.getEntryF(1, 0), tgtOri.getEntryF(2, 0));
-			PVector offset = vecX.mult(tgt.getForm().getDimArray()[0] / 2f + 5);
+			PVector offset = vecX.mult(tgt.getModel().getDimArray()[0] / 2f + 5);
 						
 			Point pt = new Point(PVector.add(tgt.getLocalCenter(), offset), tgt.getLocalOrientation());
 			//float[] angles = RMath.inverseKinematics(this, getJointAngles(), pt.position, pt.orientation);

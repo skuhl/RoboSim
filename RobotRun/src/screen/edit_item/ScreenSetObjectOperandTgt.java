@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import camera.RobotCamera;
 import core.RobotRun;
 import expression.OperandCamObj;
+import geom.CameraObject;
 import geom.WorldObject;
 import screen.ScreenMode;
 
@@ -33,7 +34,7 @@ public class ScreenSetObjectOperandTgt extends ST_ScreenEditItem {
 	@Override
 	public void actionEntr() {
 		RobotCamera cam = robotRun.getRobotCamera();
-		ArrayList<WorldObject> objects = cam.getTaughtObjects();
+		ArrayList<CameraObject> objects = cam.getTaughtObjects();
 		((OperandCamObj)robotRun.opEdit).setValue(objects.get(options.getLineIdx() - 1));
 		robotRun.lastScreen();
 	}

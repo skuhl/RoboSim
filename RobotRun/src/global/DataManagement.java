@@ -40,7 +40,6 @@ import geom.ComplexShape;
 import geom.CoordinateSystem;
 import geom.DimType;
 import geom.Fixture;
-import geom.MyPShape;
 import geom.Part;
 import geom.Point;
 import geom.RBox;
@@ -1161,9 +1160,8 @@ public abstract class DataManagement {
 					throw new NullPointerException(error);
 				}
 				
-				MyPShape form = app.loadSTLModel(srcPath, fill);
 				// Creates a complex shape from the srcPath located in RobotRun/data/
-				shape = new ComplexShape(srcPath, form, fill, scale);
+				shape = new ComplexShape(srcPath, fill, scale);
 			}
 		}
 
@@ -2150,7 +2148,7 @@ public abstract class DataManagement {
 
 			// Save the name and form of the object
 			out.writeUTF(wldObj.getName());
-			saveShape(wldObj.getForm(), out);
+			saveShape(wldObj.getModel(), out);
 			// Save the local orientation of the object
 			savePVector(wldObj.getLocalCenter(), out);
 			save2DDoubleArray(wldObj.getLocalOrientation().getData(), out);

@@ -12,23 +12,23 @@ import processing.core.PVector;
 public abstract class WorldObject implements Cloneable {
 	protected CoordinateSystem localOrientation;
 	private String name;
-	private RShape form;
+	private RShape model;
 	
 	public WorldObject() {
 		name = "Object";
-		form = new RBox();
+		model = new RBox();
 		localOrientation = new CoordinateSystem();
 	}
 
-	public WorldObject(String n, RShape f) {
+	public WorldObject(String n, RShape mdl) {
 		name = n;
-		form = f;
+		model = mdl;
 		localOrientation = new CoordinateSystem();
 	}
 
-	public WorldObject(String n, RShape f, CoordinateSystem cs) {
+	public WorldObject(String n, RShape mdl, CoordinateSystem cs) {
 		name = n;
-		form = f;
+		model = mdl;
 		localOrientation = cs;
 	}
 	
@@ -55,7 +55,7 @@ public abstract class WorldObject implements Cloneable {
 		PVector rayOrigin = RMath.rotateVector(PVector.sub(ray.getOrigin(), origin), axes);
 		PVector rayDirect = RMath.rotateVector(ray.getDirection(), axes);
 		
-		float[] dims = form.getDimArray();
+		float[] dims = model.getDimArray();
 		dims[0] /= 2f;
 		dims[1] /= 2f;
 		dims[2] /= 2f;
@@ -126,34 +126,34 @@ public abstract class WorldObject implements Cloneable {
 	public String[] dimFieldsToStringArray() {
 		String[] fields;
 
-		if (form instanceof RBox) {
+		if (model instanceof RBox) {
 			fields = new String[3];
 			// Add the box's length, height, and width values
-			fields[0] = "L: " + DebugFloatFormat.format(form.getDim(DimType.LENGTH));
-			fields[1] = "H: " + DebugFloatFormat.format(form.getDim(DimType.HEIGHT));
-			fields[2] = "W: " + DebugFloatFormat.format(form.getDim(DimType.WIDTH));
+			fields[0] = "L: " + DebugFloatFormat.format(model.getDim(DimType.LENGTH));
+			fields[1] = "H: " + DebugFloatFormat.format(model.getDim(DimType.HEIGHT));
+			fields[2] = "W: " + DebugFloatFormat.format(model.getDim(DimType.WIDTH));
 
-		} else if (form instanceof RCylinder) {
+		} else if (model instanceof RCylinder) {
 			fields = new String[2];
 			// Add the cylinder's radius and height values
-			fields[0] = "R: " + DebugFloatFormat.format(form.getDim(DimType.RADIUS));
-			fields[1] = "H: " + DebugFloatFormat.format(form.getDim(DimType.HEIGHT));
+			fields[0] = "R: " + DebugFloatFormat.format(model.getDim(DimType.RADIUS));
+			fields[1] = "H: " + DebugFloatFormat.format(model.getDim(DimType.HEIGHT));
 
-		} else if (form instanceof ComplexShape) {
+		} else if (model instanceof ComplexShape) {
 
 			if (this instanceof Part)  {
 				// Use bounding-box dimensions instead
 				fields = new String[4];
 				PVector dims = ((Part)this).getOBBDims();
 
-				fields[0] = "S: " + DebugFloatFormat.format(form.getDim(DimType.SCALE));
+				fields[0] = "S: " + DebugFloatFormat.format(model.getDim(DimType.SCALE));
 				fields[1] = "L: " + DebugFloatFormat.format(dims.x);
 				fields[2] = "H: " + DebugFloatFormat.format(dims.y);
 				fields[3] = "W: " + DebugFloatFormat.format(dims.z);
 
 			} else if (this instanceof Fixture) {
 				fields = new String[1];
-				fields[0] = "S: " + DebugFloatFormat.format(form.getDim(DimType.SCALE));
+				fields[0] = "S: " + DebugFloatFormat.format(model.getDim(DimType.SCALE));
 
 			} else {
 				// No dimensios to display
@@ -177,14 +177,14 @@ public abstract class WorldObject implements Cloneable {
 		g.pushMatrix();
 		Fields.transform(g, this.localOrientation);
 		
-		form.draw(g);
+		model.draw(g);
 		
 		g.popMatrix();
 	}
 
 	// Getter and Setter methods for the World Object's local orientation, name, and form
 
-	public RShape getForm() { return form; }
+	public RShape getModel() { return model; }
 	
 	public PVector getLocalCenter() {
 		return localOrientation.getOrigin();
@@ -194,10 +194,7 @@ public abstract class WorldObject implements Cloneable {
 		return localOrientation.getAxes();
 	}
 	
-	public int getModelFamilyID() { return form.getFamilyID(); }
-	public int getModelID() { return form.getModelID(); }
 	public String getName() { return name; }
-	public float getReflectiveIndex() { return form.getReflectiveIndex(); }
 	
 	/**
 	 * Rotates the world object about the axis represented by the given unit

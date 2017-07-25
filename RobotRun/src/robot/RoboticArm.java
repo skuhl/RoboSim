@@ -9,7 +9,6 @@ import enums.InstUndoType;
 import frame.ToolFrame;
 import frame.UserFrame;
 import geom.BoundingBox;
-import geom.MyPShape;
 import geom.Part;
 import geom.Point;
 import geom.RMatrix;
@@ -21,6 +20,7 @@ import global.Fields;
 import global.RMath;
 import processing.core.PConstants;
 import processing.core.PGraphics;
+import processing.core.PShape;
 import processing.core.PVector;
 import programming.CamMoveToObject;
 import programming.InstElement;
@@ -180,8 +180,8 @@ public class RoboticArm {
 	 * @param endEffectorModels	The list of models for the robot's end effectors
 	 * @param robotTrace		A reference to the trace in the robotRun application
 	 */
-	public RoboticArm(int rid, PVector basePos, MyPShape[] segmentModels,
-			MyPShape[] endEffectorModels, RTrace robotTrace) {
+	public RoboticArm(int rid, PVector basePos, PShape[] segmentModels,
+			PShape[] endEffectorModels, RTrace robotTrace) {
 		
 		RID = rid;
 		liveSpeed = 10;
@@ -288,7 +288,7 @@ public class RoboticArm {
 		);
 		
 		EE_LIST[2] = new EndEffector(
-				new MyPShape[] {
+				new PShape[] {
 						endEffectorModels[2],
 						endEffectorModels[3],
 				},
