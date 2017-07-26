@@ -10,20 +10,24 @@ import processing.core.PVector;
  * and the methods to manipulate apply the Camera's transformation.
  */
 public class Camera {
-	private static final float MIN_SCALE = 0.2f, MAX_SCALE = 8f;
+	private final float DEF_ZOFFSET, MIN_ZOFFSET, MAX_ZOFFSET;
 	
 	private PVector position;
 	// Rotations in X, Y, Z in radians
 	private PVector rotation;
-	private float scale;
+	private float zOffset;
 	
 	/**
 	 * Creates a camera with the default position, orientation and scale.
 	 */
-	public Camera() {
+	public Camera(float defZOffset, float minZOffset, float maxZOffset) {
+		DEF_ZOFFSET = defZOffset;
+		MIN_ZOFFSET = minZOffset;
+		MAX_ZOFFSET = maxZOffset;
+		
 		position = new PVector(0f, 0f, 0f);
 		rotation = new PVector(0f, 0f, 0f);
-		scale = 2f;
+		zOffset = 2f * DEF_ZOFFSET;
 	}
 
 	/**
@@ -31,18 +35,77 @@ public class Camera {
 	 */
 	@Override
 	public Camera clone() {
-		Camera copy = new Camera();
+		Camera copy = new Camera(DEF_ZOFFSET, MIN_ZOFFSET, MAX_ZOFFSET);
 		// Copy position, orientation, and scale
 		copy.position = position.copy();
 		copy.rotation = rotation.copy();
-		copy.scale = scale;
+		copy.zOffset = zOffset;
 
 		return copy;
 	}
-
-	public PVector getOrientation() { return rotation.copy(); }
-	public PVector getPosition() { return position.copy(); }
-	public float getScale() { return scale; }
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @return
+	 */
+	public float getDefZOffset() {
+		return DEF_ZOFFSET;
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @return
+	 */
+	public PVector getOrientation() {
+		return rotation.copy();
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @return
+	 */
+	public PVector getBasePosition() {
+		return position.copy();
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @return
+	 */
+	public float getMinZOffset() {
+		return MIN_ZOFFSET;
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @return
+	 */
+	public float getMaxZOffset() {
+		return MAX_ZOFFSET;
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @return
+	 */
+	public float getScale() {
+		return zOffset / DEF_ZOFFSET;
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @return
+	 */
+	public float getZOffset() {
+		return zOffset;
+	}
 
 	/**
 	 * Return the camera perspective to the
@@ -55,7 +118,7 @@ public class Camera {
 		rotation.x = 0f;
 		rotation.y = 0f;
 		rotation.z = 0f;
-		scale = 2f;
+		zOffset = 2f * DEF_ZOFFSET;
 	}
 
 	/**
@@ -70,8 +133,8 @@ public class Camera {
 		float deltaScale = RMath.DEG_TO_RAD / 4f;
 		
 		// Only scale rotations down
-		if (scale < 1f) {
-			delta.mult(scale);
+		if (zOffset < DEF_ZOFFSET) {
+			delta.mult(getScale());
 		}
 		
 		// Apply rotation
@@ -84,16 +147,6 @@ public class Camera {
 	}
 	
 	/**
-	 * Scales the camera by the given multiplier
-	 * 
-	 * @param multiplier	The multiplier to apply to the camer's current
-	 * 						scale
-	 */
-	public void scale(float multiplier) {
-		scale = RMath.clamp(scale * multiplier, MIN_SCALE, MAX_SCALE);
-	}
-	
-	/**
 	 * Set the position of the camera.
 	 * 
 	 * @param x	The x-axis position
@@ -101,7 +154,7 @@ public class Camera {
 	 * @param z	The z-axis position
 	 */
 	public void setPosition(float x, float y, float z) {
-		float limit = scale * 9999f / 2f;
+		float limit = zOffset * 9999f / 2f;
 		
 		position.x = RMath.clamp(x, -limit, limit);
 		position.y = RMath.clamp(y, -limit, limit);
@@ -122,12 +175,12 @@ public class Camera {
 	}
 	
 	/**
-	 * Set the camera's scale value.
+	 * TODO comment this
 	 * 
-	 * @param scale	The new scale value of the camera
+	 * @param newOffset
 	 */
-	public void setScale(float scale) {
-		this.scale = RMath.clamp(scale, MIN_SCALE, MAX_SCALE);
+	public void setZOffset(float newOffset) {
+		zOffset = RMath.clamp(newOffset, MIN_ZOFFSET, MAX_ZOFFSET);
 	}
 	
 	/**
@@ -156,7 +209,7 @@ public class Camera {
 		fields[3] = "W: " + DebugFloatFormat.format(inDegrees.x);
 		fields[4] = "P: " + DebugFloatFormat.format(inDegrees.y);
 		fields[5] = "R: " + DebugFloatFormat.format(inDegrees.z);
-		fields[6] = "S: " + DebugFloatFormat.format(scale);
+		fields[6] = "O: " + DebugFloatFormat.format(zOffset);
 		
 		return fields;
 	}
@@ -170,8 +223,8 @@ public class Camera {
 	 */
 	public void translate(float dx, float dy, float dz) {
 		PVector delta = new PVector(dx, dy, dz);
-		float limit = scale * 9999f;
-		delta.mult(scale);
+		float limit = 9999f;
+		delta.mult(getScale());
 		
 		// Apply translation with position restrictions
 		position.x = RMath.clamp(position.x + delta.x, -limit, limit);

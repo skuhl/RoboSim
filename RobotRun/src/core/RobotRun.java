@@ -162,24 +162,28 @@ public class RobotRun extends PApplet {
 	
 	private RecordScreen record;
 	
+	private RRay mouseRay;
+	
 	/**
 	 * Applies the active camera to the matrix stack.
 	 * 
 	 * @param c	The camera to apply
 	 */
 	public void applyCamera(Camera c) {
-		PVector cPos = c.getPosition();
+		PVector cPos = c.getBasePosition();
 		PVector cOrien = c.getOrientation();
 		float horizontalMargin = c.getScale() * width / 2f,
 				verticalMargin = c.getScale() * height / 2f,
-				near = -5000f,
-				far = 5000f;
-		
-		translate(cPos.x + width / 2f, cPos.y + height / 2f,  cPos.z);
+				near = 1f,
+				far = 1.5f * camera.getMaxZOffset();
+
+		translate(width / 2f, height / 2f, -camera.getZOffset());
 
 		rotateX(cOrien.x);
 		rotateY(cOrien.y);
 		rotateZ(cOrien.z);
+		
+		translate(cPos.x, cPos.y,  cPos.z);
 		
 		// Apply orthogonal camera view
 		ortho(-horizontalMargin, horizontalMargin, -verticalMargin,
@@ -400,7 +404,6 @@ public class RobotRun extends PApplet {
 	public void button_camViewBack() {
 		try {
 			// Back view
-			camera.reset();
 			camera.setRotation(0f, PI, 0f);
 			
 		} catch (Exception Ex) {
@@ -419,7 +422,6 @@ public class RobotRun extends PApplet {
 	public void button_camViewBottom() {
 		try {
 			// Bottom view
-			camera.reset();
 			camera.setRotation(HALF_PI, 0f, 0f);
 			
 		} catch (Exception Ex) {
@@ -438,7 +440,7 @@ public class RobotRun extends PApplet {
 	public void button_camViewFront() {
 		try {
 			// Default view
-			camera.reset();
+			camera.setRotation(0f, 0f, 0f);
 			
 		} catch (Exception Ex) {
 			// Log any errors
@@ -456,7 +458,6 @@ public class RobotRun extends PApplet {
 	public void button_camViewLeft() {
 		try {
 			// Left view
-			camera.reset();
 			camera.setRotation(0f, HALF_PI, 0f);
 			
 		} catch (Exception Ex) {
@@ -475,7 +476,6 @@ public class RobotRun extends PApplet {
 	public void button_camViewRight() {
 		try {
 			// Right view
-			camera.reset();
 			camera.setRotation(0, 3f * HALF_PI, 0f);
 			
 		} catch (Exception Ex) {
@@ -494,7 +494,6 @@ public class RobotRun extends PApplet {
 	public void button_camViewTop() {
 		try {
 			// Top view
-			camera.reset();
 			camera.setRotation(3f * HALF_PI, 0f, 0f);
 			
 		} catch (Exception Ex) {
@@ -2542,7 +2541,30 @@ public class RobotRun extends PApplet {
 			
 			if (mouseButton == CENTER) {
 				// Drag the center mouse button to pan the camera
-				camera.translate(mouseX - pmouseX, mouseY - pmouseY, 0f);
+				PVector camOrien = camera.getOrientation();
+				
+				pushMatrix();
+				resetMatrix();
+				rotateX(camOrien.x);
+				rotateY(camOrien.y);
+				rotateZ(camOrien.z);
+				
+				RMatrix camRMat = getOrientation();
+				
+				popMatrix();
+				
+				// Drag the center mouse button to move the object
+				PVector translation = new PVector(
+						(mouseX - pmouseX),
+						(mouseY - pmouseY),
+						0f
+				);
+				
+				/* Translate the world object with respect to the native
+				 * coordinate system */
+				translation = RMath.rotateVector(translation, camRMat);
+				
+				camera.translate(translation.x, translation.y, translation.z);
 			}
 	
 			if (mouseButton == RIGHT) {
@@ -2558,15 +2580,11 @@ public class RobotRun extends PApplet {
 		if (!isProgExec() && !UI.isFocus() && getActiveRobot() != null &&
 				getActiveScenario() != null) {
 			
-			// Scale the camera and mouse positions
-			
-			PVector camPos = camera.getPosition();
-			camPos.x += width / 2f * camera.getScale();
-			camPos.y += height / 2f * camera.getScale();
-			
+			PVector camPos = camera.getBasePosition();
 			PVector camOrien = camera.getOrientation();
-			
-			PVector mScreenPos = new PVector(mouseX, mouseY, camPos.z + 1500f);
+			// Scale the mouse screen position
+			PVector mScreenPos = new PVector(mouseX - width / 2f, mouseY -
+					height / 2f, camera.getZOffset() + 600f);
 			mScreenPos.x *= camera.getScale();
 			mScreenPos.y *= camera.getScale();
 			
@@ -2575,10 +2593,11 @@ public class RobotRun extends PApplet {
 			pushMatrix();
 			resetMatrix();
 			// Apply the inverse of the camera's coordinate system
+			translate(-camPos.x, -camPos.y, -camPos.z);
+			
 			rotateZ(-camOrien.z);
 			rotateY(-camOrien.y);
 			rotateX(-camOrien.x);
-			translate(-camPos.x, -camPos.y, -camPos.z);
 			
 			translate(mScreenPos.x, mScreenPos.y, mScreenPos.z);
 			
@@ -2590,6 +2609,10 @@ public class RobotRun extends PApplet {
 			popMatrix();
 			// Set the mouse ray origin and direction
 			RRay mouseRay = new RRay(mWorldPos, ptOnMRay, 10000f, Fields.BLACK);
+			
+			if (mouseButton == LEFT) {
+				this.mouseRay = mouseRay;
+			}
 			
 			// Check for collisions with objects in the scene
 			WorldObject collision = checkForCollisionsInScene(mouseRay);
@@ -2621,10 +2644,12 @@ public class RobotRun extends PApplet {
 		float wheelCount = event.getCount();
 		/* Control scaling of the camera with the mouse wheel */
 		if (wheelCount > 0) {
-			camera.scale(1.05f);
+			float limboOffset = camera.getZOffset();
+			camera.setZOffset(1.05f * limboOffset);
 			
 		} else if (wheelCount < 0) {
-			camera.scale(0.95f);
+			float limboOffset = camera.getZOffset();
+			camera.setZOffset(0.95f * limboOffset);
 		}
 	}
 
@@ -3120,6 +3145,7 @@ public class RobotRun extends PApplet {
 	public void setup() {
 		super.setup();
 		
+		mouseRay = null;
 		mouseOverWO = null;
 		mouseDragWO = false;
 		
@@ -3141,7 +3167,7 @@ public class RobotRun extends PApplet {
 		Fields.small = createFont("fonts/Consolas.ttf", 12);
 		Fields.bond = createFont("fonts/ConsolasBold.ttf", 12);
 		
-		camera = new Camera();
+		camera = new Camera(1000f, 100f, 8000f);
 		rCamera = new RobotCamera();
 		robotTrace = new RTrace();
 		activeRobot = new Pointer<>(null);
@@ -3795,6 +3821,12 @@ public class RobotRun extends PApplet {
 			Fields.drawAxes(getGraphics(), origin, RMath.rMatToWorld(orientation),
 					500f, Fields.BLACK);
 		}
+		
+		/* TODO add radio button for toggle *
+		if (mouseRay != null) {
+			mouseRay.draw(getGraphics());
+		}
+		/**/
 	}
 	
 	/**
@@ -3934,6 +3966,23 @@ public class RobotRun extends PApplet {
 				lastTextPositionY += 20;
 			}
 		}
+		
+		// Render camera values
+		String[] cameraValues = camera.toStringArray();
+		lastTextPositionY += 20;
+		text("Camera", lastTextPositionX, lastTextPositionY);
+		lastTextPositionY += 20;
+		String line = String.format("%-12s %-12s %-12s", cameraValues[0],
+				cameraValues[1], cameraValues[2]);
+		text(line, lastTextPositionX, lastTextPositionY);
+		lastTextPositionY += 20;
+		line = String.format("%-12s %-12s %-12s", cameraValues[3],
+				cameraValues[4], cameraValues[5]);
+		text(line, lastTextPositionX, lastTextPositionY);
+		lastTextPositionY += 20;
+		line = String.format("%-12s", cameraValues[6]);
+		text(line, lastTextPositionX, lastTextPositionY);
+		lastTextPositionY += 20;
 		
 		// Display the current axes display state
 		lastTextPositionY += 20;

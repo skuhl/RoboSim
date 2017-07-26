@@ -245,7 +245,6 @@ public class BoundingBox {
 		};
 		
 		for (int planeAxis = 0; planeAxis < planeAxes.length; ++planeAxis) {
-			
 			float E, G;
 			
 			if (planeAxis == 0) {
