@@ -1,10 +1,10 @@
 package robot;
 
 import geom.BoundingBox;
-import geom.MyPShape;
 import geom.Part;
 import geom.RRay;
 import global.Fields;
+import processing.core.PShape;
 import processing.core.PVector;
 
 /**
@@ -22,7 +22,7 @@ public class RSegment {
 	/**
 	 * The models defining the shape of this segment.
 	 */
-	protected final MyPShape[] MODEL_SET;
+	protected final PShape[] MODEL_SET;
 	
 	/**
 	 * Defines a segment with the given model, bounding boxes, and draw
@@ -31,9 +31,9 @@ public class RSegment {
 	 * @param model			The model defining the shape of this segment
 	 * @param obbs			The bounding boxes associated with this segment
 	 */
-	public RSegment(MyPShape model, BoundingBox[] obbs) {
+	public RSegment(PShape model, BoundingBox[] obbs) {
 		OBBS = obbs;
-		this.MODEL_SET = new MyPShape[] { model };
+		this.MODEL_SET = new PShape[] { model };
 	}
 	
 	/**
@@ -43,7 +43,7 @@ public class RSegment {
 	 * @param MODEL			The models defining the shape of this segment
 	 * @param obbs			The bounding boxes associated with this segment
 	 */
-	public RSegment(MyPShape[] modelSet, BoundingBox[] obbs) {
+	public RSegment(PShape[] modelSet, BoundingBox[] obbs) {
 		OBBS = obbs;
 		this.MODEL_SET = modelSet;
 	}

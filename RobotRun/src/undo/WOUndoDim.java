@@ -23,7 +23,7 @@ public class WOUndoDim extends WOUndoState {
 	public WOUndoDim(WorldObject ref) {
 		super(ref);
 		// Sets the dims list based on the world object's shape
-		RShape form = ref.getForm();
+		RShape form = ref.getModel();
 		
 		if (form instanceof RBox) {
 			dims = new Object[] {
@@ -49,7 +49,7 @@ public class WOUndoDim extends WOUndoState {
 	public void undo() {
 		/* Reset the dimensions of world object's shape to the values
 		 * defined by this undo state */
-		RShape form = woRef.getForm();
+		RShape form = woRef.getModel();
 		
 		if (form instanceof RBox) {
 			form.setDim((Float)dims[0], DimType.LENGTH);

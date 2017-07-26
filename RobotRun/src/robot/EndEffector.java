@@ -1,9 +1,9 @@
 package robot;
 
 import geom.BoundingBox;
-import geom.MyPShape;
 import geom.Part;
 import global.Fields;
+import processing.core.PShape;
 import regs.IORegTrace;
 import regs.IORegister;
 
@@ -25,7 +25,7 @@ public class EndEffector extends RSegment {
 	 */
 	protected final IORegister reg;
 	
-	public EndEffector(MyPShape model, BoundingBox[] obbs,
+	public EndEffector(PShape model, BoundingBox[] obbs,
 			BoundingBox[] pickupOBBs, int idx, String name) {
 		
 		super(model, obbs);
@@ -39,7 +39,7 @@ public class EndEffector extends RSegment {
 		}
 	}
 	
-	public EndEffector(MyPShape model, BoundingBox[] obbs,
+	public EndEffector(PShape model, BoundingBox[] obbs,
 			BoundingBox[] pickupOBBs, int idx, String name, RTrace robotTrace) {
 		
 		super(model, obbs);
@@ -53,7 +53,7 @@ public class EndEffector extends RSegment {
 		}
 	}
 	
-	public EndEffector(MyPShape[] modelSet, BoundingBox[] obbs,
+	public EndEffector(PShape[] modelSet, BoundingBox[] obbs,
 			BoundingBox[] pickupOBBs, int idx, String name) {
 		
 		super(modelSet, obbs);
@@ -67,7 +67,7 @@ public class EndEffector extends RSegment {
 		}
 	}
 	
-	public EndEffector(MyPShape[] modelSet, BoundingBox[] obbs,
+	public EndEffector(PShape[] modelSet, BoundingBox[] obbs,
 			BoundingBox[] pickupOBBs, int idx, String name, RTrace robotTrace) {
 		
 		super(modelSet, obbs);

@@ -2,9 +2,9 @@ package robot;
 
 
 import geom.BoundingBox;
-import geom.MyPShape;
 import global.RMath;
 import processing.core.PConstants;
+import processing.core.PShape;
 import processing.core.PVector;
 
 /**
@@ -59,7 +59,7 @@ public class RSegWithJoint extends RSegment {
 	 * @param axis			The orientation of the segment's joint axis with
 	 * 						respect to its local orientation
 	 */
-	public RSegWithJoint(MyPShape model, BoundingBox[] obbs, float lb,
+	public RSegWithJoint(PShape model, BoundingBox[] obbs, float lb,
 			float ub, PVector translation, PVector axis) {
 		
 		super(model, obbs);
@@ -83,7 +83,7 @@ public class RSegWithJoint extends RSegment {
 	 * @param axis			The orientation of the segment's joint axis with
 	 * 						respect to its local orientation
 	 */
-	public RSegWithJoint(MyPShape model, BoundingBox[] obbs,
+	public RSegWithJoint(PShape model, BoundingBox[] obbs,
 			PVector translation, PVector axis) {
 		
 		this(model, obbs, 0f, PConstants.TWO_PI, translation, axis);

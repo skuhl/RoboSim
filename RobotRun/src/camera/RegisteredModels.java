@@ -26,19 +26,17 @@ public class RegisteredModels {
 		for(int i = 0; i < objList.size(); i += 1) {
 			JSONObject obj = objList.getJSONObject(i);
 			String fileName = obj.getString("modelFileName");
-			int mdlID = obj.getInt("modelID");
+			int mdlID = obj.getInt("modelID", -1);
 			modelIDList.put(fileName, mdlID);
 			
-			int familyID = obj.getInt("modelFamilyID");
+			int familyID = obj.getInt("modelFamilyID", -1);
 			modelFamilyList.put(mdlID, familyID);
 			
 			float reflectivity = obj.getFloat("reflectiveIndex", 1f);
 			modelReflectivity.put(mdlID,  reflectivity);
-			System.out.println(reflectivity);
 			
 			JSONArray selectList = obj.getJSONArray("selectAreas");
 			CamSelectArea[] selectAreas = new CamSelectArea[selectList.size()];
-			System.out.println(selectList.size());
 						
 			for(int j = 0; j < selectList.size(); j += 1) {
 				JSONObject area = selectList.getJSONObject(j);

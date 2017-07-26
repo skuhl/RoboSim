@@ -2417,9 +2417,9 @@ public class RobotRun extends PApplet {
 	public MyPShape loadSTLModel(String filename, int fill) throws NullPointerException, ClassCastException {
 		ArrayList<Triangle> triangles = new ArrayList<>();
 		byte[] data = loadBytes(filename);
-
+	
 		int n = 84; // skip header and number of triangles
-
+	
 		while (n < data.length) {
 			Triangle t = new Triangle();
 			for (int m = 0; m < 4; m++) {
@@ -2449,7 +2449,7 @@ public class RobotRun extends PApplet {
 		}
 		
 		MyPShape mesh = new MyPShape((PGraphicsOpenGL)getGraphics(), PShape.GEOMETRY);
-		mesh.beginShape(TRIANGLES);
+		mesh.beginShape(RobotRun.TRIANGLES);
 		mesh.noStroke();
 		mesh.fill(fill);
 		
@@ -2461,7 +2461,7 @@ public class RobotRun extends PApplet {
 		}
 		
 		mesh.endShape();
-
+	
 		return mesh;
 	}
 	
@@ -2610,7 +2610,7 @@ public class RobotRun extends PApplet {
 		mouseOverWO = null;
 		mouseDragWO = false;
 	}
-	
+
 	@Override
 	public void mouseWheel(MouseEvent event) {
 		if (UI != null && UI.isMouseOverUIElement()) {
@@ -2651,7 +2651,7 @@ public class RobotRun extends PApplet {
 			r.addInstAtEnd(p, f, false);
 		}
 	}
-
+	
 	public void newIfExpression() {
 		RoboticArm r = getActiveRobot();
 		Program p = getActiveProg();
@@ -2663,7 +2663,7 @@ public class RobotRun extends PApplet {
 			r.addInstAtEnd(p, stmt, false);
 		}
 	}
-	
+
 	public void newIfStatement() {
 		RoboticArm r = getActiveRobot();
 		Program p = getActiveProg();
@@ -2809,7 +2809,7 @@ public class RobotRun extends PApplet {
 			r.addInstAtEnd(p, stmt, false);
 		}
 	}
-
+	
 	public void newRobotCallInstruction() {
 		RoboticArm r = getActiveRobot();
 		Program p = getActiveProg();
@@ -2821,7 +2821,7 @@ public class RobotRun extends PApplet {
 			r.addInstAtEnd(p, rcall, false);
 		}
 	}
-	
+
 	public void newSelectStatement() {
 		RoboticArm r = getActiveRobot();
 		Program p = getActiveProg();
@@ -2833,7 +2833,7 @@ public class RobotRun extends PApplet {
 			r.addInstAtEnd(p, stmt, false);
 		}
 	}
-
+	
 	/**
 	 * Updates the save state of the active screen and loads the given screen
 	 * mode afterwards.
@@ -3011,7 +3011,7 @@ public class RobotRun extends PApplet {
 	public void setActiveProg(Program p) {
 		progExecState.setProg(p);
 	}
-	
+
 	/**
 	 * Sets the active program of this Robot corresponding to the index value
 	 * given.
@@ -3029,7 +3029,7 @@ public class RobotRun extends PApplet {
 		
 		return p != null;
 	}
-
+	
 	/**
 	 * Sets the scenario with the given name as the active scenario in the
 	 * application, if a scenario with the given name exists.
@@ -3055,11 +3055,11 @@ public class RobotRun extends PApplet {
 		return false;
 
 	}
-	
+
 	public void setRCamEnable(boolean enable) {
 		rCamEnable = enable;
 	}
-
+	
 	public void setRecord(boolean state) {
 		record.setRecording(state);
 	}
@@ -3087,7 +3087,7 @@ public class RobotRun extends PApplet {
 			}
 		}
 	}
-	
+
 	/**
 	 * Update the state of the shift and robot motion based on the new state of
 	 * shift.
@@ -3105,7 +3105,7 @@ public class RobotRun extends PApplet {
 		UI.updateShiftButton(shift);
 		updatePendantScreen();
 	}
-
+	
 	public void setStep(boolean step) {
 		this.step = step;
 		UI.updateStepButton(this.step);
@@ -3115,7 +3115,7 @@ public class RobotRun extends PApplet {
 	public void settings() {
 		size(1080, 720, P3D);
 	}
-	
+
 	@Override
 	public void setup() {
 		super.setup();
@@ -3212,7 +3212,7 @@ public class RobotRun extends PApplet {
 				
 		Fields.debug("\n%s => %s\n", prevScreen.mode, nextScreen);
 	}
-
+	
 	/**
 	 * Toggle the given robot's state between ON and OFF. Pickup collisions
 	 * between this robot and the active scenario are checked based off the
@@ -3232,7 +3232,7 @@ public class RobotRun extends PApplet {
 		// Check pickup collisions in active scenario
 		robot.checkPickupCollision(getActiveScenario());
 	}
-	
+
 	/**
 	 * Is the trace function enabled. The user can enable/disable this function
 	 * with a button in the miscellaneous window. In addition, the active
@@ -3277,7 +3277,7 @@ public class RobotRun extends PApplet {
 			getActiveRobot().releaseHeldObject();
 		}
 	}
-
+	
 	/**
 	 * Deals with updating the UI after confirming/canceling a deletion
 	 */
@@ -3295,7 +3295,7 @@ public class RobotRun extends PApplet {
 		screens.getActiveScreen().updateScreen();
 		UI.renderPendantScreen(screens.getActiveScreen());
 	}
-	
+
 	/**
 	 * Updates the end effector state of the active robot's end effector
 	 * associated with the given index and checks for pickup collisions
@@ -3308,7 +3308,7 @@ public class RobotRun extends PApplet {
 	public void updateRobotEEState(int edx, boolean newState) {
 		updateRobotEEState(getActiveRobot(), edx, newState);
 	}
-
+	
 	/**
 	 * Updates the end effector state of the given robot's end effector
 	 * associated with the given index and checks for pickup collisions
@@ -3417,7 +3417,7 @@ public class RobotRun extends PApplet {
 					PVector.dist(ray.getOrigin(), closestCollPt))) {
 				
 				if (wo instanceof Fixture) {
-					RShape form = wo.getForm();
+					RShape form = wo.getModel();
 					
 					if (form instanceof ComplexShape) {
 						/* Check if the color at the mouse position matches
@@ -3446,6 +3446,7 @@ public class RobotRun extends PApplet {
 		
 		return collidedWith;
 	}
+	
 	/**
 	 * Creates a robot with the given id and base position and initializes all
 	 * its segment and end effector data.
@@ -3456,8 +3457,8 @@ public class RobotRun extends PApplet {
 	 * @return				The initialized robot
 	 */
 	private RoboticArm createRobot(int rid, PVector basePosition) {
-		MyPShape[] segModels = new MyPShape[6];
-		MyPShape[] eeModels = new MyPShape[7];
+		PShape[] segModels = new PShape[6];
+		PShape[] eeModels = new PShape[7];
 		
 		segModels[0] = loadSTLModel("robot/ROBOT_BASE.STL", color(200, 200, 0));
 		segModels[1] = loadSTLModel("robot/ROBOT_SEGMENT_1.STL", color(40, 40, 40));
