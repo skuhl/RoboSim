@@ -166,7 +166,7 @@ public abstract class Fields {
 	 * A color defining either the fill or outline color of a world object.
 	 */
 	public static final int BLACK, WHITE, RED, GREEN, BLUE, ORANGE, YELLOW,
-			PINK, PURPLE, LT_BLUE, DK_GREEN;
+			PINK, PURPLE, LT_BLUE, DK_GREEN, ROBOT_YELLOW, ROBOT_GREY, EE_DEFAULT;
 	
 	/**
 	 * A color used to render the bounding box of a part that indicates the
@@ -227,6 +227,10 @@ public abstract class Fields {
 		PURPLE = color(90, 0, 255);
 		LT_BLUE = color(0, 255, 255);
 		DK_GREEN = color(0, 100, 15);
+		
+		ROBOT_YELLOW = color(200, 200, 0);
+		ROBOT_GREY = color(40, 40, 40);
+		EE_DEFAULT = color(108, 206, 214);
 		
 		OBB_DEFAULT = GREEN;
 		OBB_COLLISION = RED;

@@ -1,7 +1,6 @@
 package core;
 
 import java.awt.event.KeyEvent;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Stack;
@@ -21,24 +20,20 @@ import geom.BoundingBox;
 import geom.ComplexShape;
 import geom.CoordinateSystem;
 import geom.Fixture;
-import geom.MyPShape;
 import geom.Part;
 import geom.Point;
 import geom.RMatrix;
 import geom.RRay;
 import geom.RShape;
 import geom.Scenario;
-import geom.Triangle;
 import geom.WorldObject;
 import global.DataManagement;
 import global.Fields;
 import global.RMath;
 import processing.core.PApplet;
 import processing.core.PImage;
-import processing.core.PShape;
 import processing.core.PVector;
 import processing.event.MouseEvent;
-import processing.opengl.PGraphicsOpenGL;
 import programming.CallInstruction;
 import programming.FrameInstruction;
 import programming.IOInstruction;
@@ -2505,68 +2500,6 @@ public class RobotRun extends PApplet {
 		}		
 	}
 	
-	/**
-	 * Build a PShape object from the contents of the given .stl source file
-	 * stored in /RobotRun/data/.
-	 * 
-	 * @throws NullPointerException
-	 *             if the given filename does not pertain to a valid .stl file
-	 *             located in RobotRun/data/
-	 * @throws ClassCastException
-	 * 				if the application does not use processing's opengl
-	 * 				graphics library
-	 */
-	public MyPShape loadSTLModel(String filename, int fill) throws NullPointerException, ClassCastException {
-		ArrayList<Triangle> triangles = new ArrayList<>();
-		byte[] data = loadBytes(filename);
-	
-		int n = 84; // skip header and number of triangles
-	
-		while (n < data.length) {
-			Triangle t = new Triangle();
-			for (int m = 0; m < 4; m++) {
-				byte[] bytesX = new byte[4];
-				bytesX[0] = data[n + 3];
-				bytesX[1] = data[n + 2];
-				bytesX[2] = data[n + 1];
-				bytesX[3] = data[n];
-				n += 4;
-				byte[] bytesY = new byte[4];
-				bytesY[0] = data[n + 3];
-				bytesY[1] = data[n + 2];
-				bytesY[2] = data[n + 1];
-				bytesY[3] = data[n];
-				n += 4;
-				byte[] bytesZ = new byte[4];
-				bytesZ[0] = data[n + 3];
-				bytesZ[1] = data[n + 2];
-				bytesZ[2] = data[n + 1];
-				bytesZ[3] = data[n];
-				n += 4;
-				t.components[m] = new PVector(ByteBuffer.wrap(bytesX).getFloat(), ByteBuffer.wrap(bytesY).getFloat(),
-						ByteBuffer.wrap(bytesZ).getFloat());
-			}
-			triangles.add(t);
-			n += 2; // skip meaningless "attribute byte count"
-		}
-		
-		MyPShape mesh = new MyPShape((PGraphicsOpenGL)getGraphics(), PShape.GEOMETRY);
-		mesh.beginShape(RobotRun.TRIANGLES);
-		mesh.noStroke();
-		mesh.fill(fill);
-		
-		for (Triangle t : triangles) {
-			mesh.normal(t.components[0].x, t.components[0].y, t.components[0].z);
-			mesh.vertex(t.components[1].x, t.components[1].y, t.components[1].z);
-			mesh.vertex(t.components[2].x, t.components[2].y, t.components[2].z);
-			mesh.vertex(t.components[3].x, t.components[3].y, t.components[3].z);
-		}
-		
-		mesh.endShape();
-	
-		return mesh;
-	}
-	
 	public void mouseDragged(MouseEvent e) {
 		WorldObject selectedWO = UI.getSelectedWO();
 		
@@ -3264,12 +3197,10 @@ public class RobotRun extends PApplet {
 			
 			robotTrace = new RTrace();
 			
-			RoboticArm r = createRobot(0, new PVector(200, Fields.FLOOR_Y, 200),
-					robotTrace);
+			RoboticArm r = new RoboticArm(0, new PVector(200, Fields.FLOOR_Y, 200),	robotTrace);
 			ROBOTS.put(r.RID, r);
 			
-			r = createRobot(1, new PVector(200, Fields.FLOOR_Y, -750),
-					robotTrace);
+			r = new RoboticArm(1, new PVector(200, Fields.FLOOR_Y, -750), robotTrace);
 			ROBOTS.put(r.RID, r);
 
 			activeRobot = ROBOTS.get(0);
@@ -3559,39 +3490,6 @@ public class RobotRun extends PApplet {
 		}
 		
 		return collidedWith;
-	}
-	
-	/**
-	 * Creates a robot with the given id and base position and initializes all
-	 * its segment and end effector data.
-	 * 
-	 * @param rid			The id of the robot, which must be unique amongst
-	 * 						all other robots
-	 * @param basePosition	The position of the robot's base segment
-	 * @param robotTrace	A reference to this.robotTrace
-	 * @return				The initialized robot
-	 */
-	private RoboticArm createRobot(int rid, PVector basePosition, RTrace robotTrace) {
-		PShape[] segModels = new PShape[6];
-		PShape[] eeModels = new PShape[7];
-		
-		segModels[0] = loadSTLModel("robot/ROBOT_BASE.STL", color(200, 200, 0));
-		segModels[1] = loadSTLModel("robot/ROBOT_SEGMENT_1.STL", color(40, 40, 40));
-		segModels[2] = loadSTLModel("robot/ROBOT_SEGMENT_2.STL", color(200, 200, 0));;
-		segModels[3] = loadSTLModel("robot/ROBOT_SEGMENT_3.STL", color(40, 40, 40));
-		segModels[4] = loadSTLModel("robot/ROBOT_SEGMENT_4.STL", color(40, 40, 40));
-		segModels[5] = loadSTLModel("robot/ROBOT_SEGMENT_5.STL", color(200, 200, 0));
-		
-		// Load end effector models
-		eeModels[0] = loadSTLModel("robot/EE/FACEPLATE.STL", color(40, 40, 40));
-		eeModels[1] = loadSTLModel("robot/EE/SUCTION.stl", color(108, 206, 214));
-		eeModels[2] = loadSTLModel("robot/EE/GRIPPER.stl", color(108, 206, 214));;
-		eeModels[3] = loadSTLModel("robot/EE/PINCER.stl", color(200, 200, 0));
-		eeModels[4] = loadSTLModel("robot/EE/POINTER.stl", color(108, 206, 214));
-		eeModels[5] = loadSTLModel("robot/EE/GLUE_GUN.stl", color(108, 206, 214));
-		eeModels[6] = loadSTLModel("robot/EE/WIELDER.stl", color(108, 206, 214));
-		
-		return new RoboticArm(rid, basePosition, segModels, eeModels, robotTrace);
 	}
 	
 	/**

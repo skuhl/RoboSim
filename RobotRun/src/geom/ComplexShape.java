@@ -1,6 +1,5 @@
 package geom;
 
-import core.RobotRun;
 import global.RMath;
 import processing.core.PGraphics;
 import processing.core.PShape;
@@ -46,7 +45,7 @@ public class ComplexShape extends RShape {
 		super(fill, null);
 		
 		srcFilePath = filename;
-		mesh = RobotRun.getInstance().loadSTLModel(filename, fill);
+		mesh = MyPShape.loadSTLModel(filename, fill);
 		
 		iniDimensions();
 		MIN_SCALE = 10f / RMath.min(baseDims.x, baseDims.y, baseDims.z);
@@ -207,6 +206,4 @@ public class ComplexShape extends RShape {
 		baseDims = PVector.sub(maximums, minimums);
 		centerOffset = PVector.add(minimums, PVector.mult(baseDims, 0.5f)).mult(-1);
 	}
-	
-	
 }
