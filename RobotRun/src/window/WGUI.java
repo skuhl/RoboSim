@@ -526,7 +526,7 @@ public class WGUI implements ControlListener {
 		String[] togLbls = new String[] { "Part", "Fixture" };
 		
 		addRadioButton("WOType", createWO, radioDim, radioDim, Fields.medium,
-				togValues, togNames, togLbls, Fields.ITYPE_TRANSIENT);
+				togValues, togNames, togLbls, false, Fields.ITYPE_TRANSIENT);
 		
 		addTextarea("WOShapeLbl", "Shape:", createWO, mLblWidth, sButtonHeight, Fields.medium);
 		
@@ -535,7 +535,7 @@ public class WGUI implements ControlListener {
 		togLbls = new String[] { "Box", "Cylinder", "Import" };
 		
 		addRadioButton("Shape", createWO, radioDim, radioDim, Fields.medium,
-				togValues, togNames, togLbls, Fields.ITYPE_TRANSIENT);
+				togValues, togNames, togLbls, false, Fields.ITYPE_TRANSIENT);
 		
 		addTextarea("WOFillSmp", "\0", createWO, sButtonHeight, sButtonHeight, Fields.medium);
 		addTextarea("WOOutlineSmp", "\0", createWO, sButtonHeight, sButtonHeight, Fields.medium);
@@ -551,7 +551,7 @@ public class WGUI implements ControlListener {
 		addTextarea("EditTabLbl", "Options:", editWO, mLblWidth, fieldHeight,
 				Fields.medium);
 		MyRadioButton rb = addRadioButton("EditTab", editWO, radioDim, radioDim,
-				Fields.medium, togValues, togNames, togLbls,
+				Fields.medium, togValues, togNames, togLbls, false,
 				Fields.ITYPE_PERMENANT);
 		rb.setItemsPerRow(2);
 		rb.setSpacingColumnOffset(distFieldToFieldX);
@@ -604,7 +604,7 @@ public class WGUI implements ControlListener {
 
 		rb = addRadioButton("ScenarioOpt", scenario, radioDim,
 				radioDim, Fields.medium, togValues, togNames, togLbls,
-				Fields.ITYPE_PERMENANT);
+				false, Fields.ITYPE_PERMENANT);
 		rb.setItemsPerRow(3);
 		rb.setSpacingColumnOffset(distFieldToFieldX);
 
@@ -669,6 +669,14 @@ public class WGUI implements ControlListener {
 		addButton(WGUI_Buttons.CamToggleActive, "Enable RCam", miscellaneous, mdropItemWidth, sButtonHeight, Fields.small);
 		addButton(WGUI_Buttons.RobotToggleTrace, "Enable Trace", miscellaneous, mdropItemWidth, sButtonHeight, Fields.small);
 		addButton(WGUI_Buttons.RobotClearTrace, "Clear Trace", miscellaneous, mdropItemWidth, sButtonHeight, Fields.small);
+		
+		togValues = new float[] { 0f, 1f };
+		togNames = new String[] { "RenderMouseRayOpt", "RenderPointOpt" };
+		togLbls = new String[] { "Render Mouse Ray", "Render Point" };
+		rb = addRadioButton("DebugOptions", miscellaneous, radioDim,
+				radioDim, Fields.medium, togValues, togNames, togLbls,
+				true, Fields.ITYPE_PERMENANT);
+		rb.setItemsPerRow(1);
 		
 		if(app.isRCamEnable()) {
 			getButton(WGUI_Buttons.CamToggleActive).setSwitch(true);
@@ -954,14 +962,15 @@ public class WGUI implements ControlListener {
 	 * @param togNames	The names associated with each toggle (must be unique
 	 * 					amongst all UI elements)
 	 * @param togLbls	The labels associated with each toggle
+	 * @param multi		Is this radio button set mutliple choice?
 	 * @param inputType	How should this field by treated for input clear events
 	 * @return			A reference to the new radio button
 	 */
 	private MyRadioButton addRadioButton(String name, Group parent, int togWdh,
 			int togHgt, PFont lblFont, float[] togValues, String[] togNames,
-			String[] togLbls, int inputType) {
+			String[] togLbls, boolean multi, int inputType) {
 
-		MyRadioButton rb = new MyRadioButton(manager, name, inputType);
+		MyRadioButton rb = new MyRadioButton(manager, name, multi, inputType);
 		rb.setColorValue(Fields.B_DEFAULT_C)
 		.setColorLabel(Fields.F_TEXT_C)
 		.setColorActive(Fields.B_ACTIVE_C)
@@ -2316,14 +2325,34 @@ public class WGUI implements ControlListener {
 		
 		return false;
 	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @return
+	 */
+	public boolean renderMouseRay() {
+		MyRadioButton rb = getRadioButton("DebugOptions");
+		return rb.getState(0);
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @return
+	 */
+	public boolean renderPoint() {
+		MyRadioButton rb = getRadioButton("DebugOptions");
+		return rb.getState(1);
+	}
 
 	/**
 	 * Resets the background color of all the jog buttons.
 	 */
 	public void resetJogButtons() {
 		for (int idx = 1; idx <= 6; idx += 1) {
-			updateButtonBgColor( String.format(WGUI_Buttons.JointPos[idx-1], idx) , false);
-			updateButtonBgColor( String.format(WGUI_Buttons.JointNeg[idx-1], idx) , false);
+			updateButtonBgColor(String.format(WGUI_Buttons.JointPos[idx-1], idx), false);
+			updateButtonBgColor(String.format(WGUI_Buttons.JointNeg[idx-1], idx), false);
 		}
 	}
 
@@ -3466,10 +3495,13 @@ public class WGUI implements ControlListener {
 		
 		// Clear trace button
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		b = getButton(WGUI_Buttons.RobotClearTrace).setPosition(relPos[0], relPos[1]);
+		c = b = getButton(WGUI_Buttons.RobotClearTrace).setPosition(relPos[0], relPos[1]);
+		
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		c = this.getRadioButton("DebugOptions").setPosition(relPos[0], relPos[1]);
 		
 		// Update window background display
-		relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY + 60);
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY + 60);
 		background.setPosition(miscellaneous.getPosition())
 		.setBackgroundHeight(relPos[1])
 		.setHeight(relPos[1])
@@ -3629,6 +3661,7 @@ public class WGUI implements ControlListener {
 		if (menu == null) {
 			// Window is hidden
 			background.hide();
+			getButton(WGUI_Buttons.CamViewDef).hide();
 			getButton(WGUI_Buttons.CamViewFr).hide();
 			getButton(WGUI_Buttons.CamViewBk).hide();
 			getButton(WGUI_Buttons.CamViewLt).hide();

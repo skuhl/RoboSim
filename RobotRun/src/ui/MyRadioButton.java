@@ -16,9 +16,12 @@ public class MyRadioButton extends RadioButton implements UIInputElement {
 	
 	private int inputType;
 	
-	public MyRadioButton(ControlP5 controller, String name, int inputType) {
+	public MyRadioButton(ControlP5 controller, String name,
+			boolean isMultipleChoice, int inputType) {
+		
 		super(controller, name);
 		
+		this.isMultipleChoice = isMultipleChoice;
 		this.inputType = inputType;
 	}
 	
