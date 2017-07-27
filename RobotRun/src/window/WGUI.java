@@ -175,6 +175,7 @@ public class WGUI implements ControlListener {
 		sharedElements = addGroup("SHARED", relPos[0], relPos[1], windowTabs.getWidth(), 0);
 
 		// Initialize camera view buttons
+		addButton(WGUI_Buttons.CamViewDef, "D", sButtonWidth, sButtonHeight, Fields.small).hide();
 		addButton(WGUI_Buttons.CamViewFr, "F", sButtonWidth, sButtonHeight, Fields.small).hide();
 		addButton(WGUI_Buttons.CamViewBk, "Bk", sButtonWidth, sButtonHeight, Fields.small).hide();
 		addButton(WGUI_Buttons.CamViewLt, "L", sButtonWidth, sButtonHeight, Fields.small).hide();
@@ -3661,7 +3662,9 @@ public class WGUI implements ControlListener {
 			// Update the camera view buttons
 			int[] relPos = getAbsPosFrom(windowTabs, Alignment.BOTTOM_RIGHT, winMargin, 0);
 	
-			Button b = getButton(WGUI_Buttons.CamViewFr).setPosition(relPos[0], relPos[1]).show();
+			Button b = getButton(WGUI_Buttons.CamViewDef).setPosition(relPos[0], relPos[1]).show();
+			relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+			b = getButton(WGUI_Buttons.CamViewFr).setPosition(relPos[0], relPos[1]).show();
 			relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 			b = getButton(WGUI_Buttons.CamViewBk).setPosition(relPos[0], relPos[1]).show();
 			relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);

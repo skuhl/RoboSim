@@ -432,6 +432,23 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
+	 * Camera D button
+	 * 
+	 * Resets the position of the camera to (0, 0, 0).
+	 */
+	public void button_camViewDefault() {
+		try {
+			// Bottom view
+			camera.setPosition(0f, 0f, 0f);
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
+	}
+	
+	/**
 	 * Camera F button
 	 * 
 	 * Sets the camera to the default position, facing down the negative y-axis
