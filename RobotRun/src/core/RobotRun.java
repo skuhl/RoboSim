@@ -3045,6 +3045,16 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
+	 * Sets the position, which is render in the world frame, when the render
+	 * point option is set.
+	 * 
+	 * @param pt	The point to render
+	 */
+	public void setRenderPoint(Point pt) {
+		position = pt;
+	}
+	
+	/**
 	 * Update the active Robot to the Robot at the given index in the list of
 	 * Robots.
 	 * 
@@ -3754,7 +3764,9 @@ public class RobotRun extends PApplet {
 		}
 		
 		// Render a stored point
-		if (UI.renderPoint() && position != null) {
+		if (UI.renderPoint() && position != null && position.position != null
+				&& position.orientation != null) {
+			
 			Fields.drawAxes(getGraphics(), position.position,
 					position.orientation.toMatrix(), 100f, 0);
 		}

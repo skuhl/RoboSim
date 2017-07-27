@@ -676,7 +676,6 @@ public class WGUI implements ControlListener {
 		rb = addRadioButton("DebugOptions", miscellaneous, radioDim,
 				radioDim, Fields.medium, togValues, togNames, togLbls,
 				true, Fields.ITYPE_PERMENANT);
-		rb.setItemsPerRow(1);
 		
 		if(app.isRCamEnable()) {
 			getButton(WGUI_Buttons.CamToggleActive).setSwitch(true);

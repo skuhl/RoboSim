@@ -169,7 +169,21 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 				if (prevLine == 1) {
 					contents.setColumnIdx(contents.getColumnIdx() + 3);
 				}
-			} 
+			}
+			
+			int curItem = contents.getCurrentItemIdx();
+			Program p = robotRun.getActiveProg();
+			Instruction curInst = p.getInstAt(curItem);
+			
+			if (curInst instanceof PosMotionInst) {
+				// Update the render point for a point motion instruction
+				RoboticArm r = robotRun.getActiveRobot();
+				PosMotionInst pMInst = (PosMotionInst)curInst;
+				int lineIdx = contents.getItemLineIdx();
+				
+				Point pt = r.getVector(pMInst, p, lineIdx != 0);
+				robotRun.setRenderPoint(pt);
+			}
 
 			Fields.debug("line=%d col=%d inst=%d TRS=%d\n",
 				contents.getLineIdx(), contents.getColumnIdx(),
@@ -194,6 +208,20 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 				} else {
 					contents.setColumnIdx(0);
 				}
+			}
+			
+			int curItem = contents.getCurrentItemIdx();
+			Program p = robotRun.getActiveProg();
+			Instruction curInst = p.getInstAt(curItem);
+			
+			if (curInst instanceof PosMotionInst) {
+				// Update the render point for a point motion instruction
+				RoboticArm r = robotRun.getActiveRobot();
+				PosMotionInst pMInst = (PosMotionInst)curInst;
+				int lineIdx = contents.getItemLineIdx();
+				
+				Point pt = r.getVector(pMInst, p, lineIdx != 0);
+				robotRun.setRenderPoint(pt);
 			}
 
 			Fields.debug("line=%d col=%d inst=%d TRS=%d\n",

@@ -178,8 +178,10 @@ public class RoboticArm {
 	 * 							amongst all robots
 	 * @param basePos			The position of the robot's base segment
 	 * @param segmentModels		The list of models for the robot's segment
-	 * @param endEffectorModels	The list of models for the robot's end effectors
-	 * @param robotTrace		A reference to the trace in the robotRun application
+	 * @param endEffectorModels	The list of models for the robot's end
+	 * 							effectors
+	 * @param robotTrace		A reference to the trace in the robotRun
+	 * 							application
 	 */
 	public RoboticArm(int rid, PVector basePos, RTrace robotTrace) {
 		RID = rid;
@@ -1112,6 +1114,109 @@ public class RoboticArm {
 	}
 	
 	/**
+	 * Returns the error messages that would describe the issue with forming
+	 * the vector defined by the given motion instruction. If no issue is
+	 * found, then null is returned.
+	 * 
+	 * @param mInst			The motion instruction, which defines the vector
+	 * @param parent		The program, to which the given instruction belongs
+	 * @param getCircPos	Whether to get the circular position or primary
+	 * 						position of the given motion instruction
+	 * @return				The error message describing the issue with forming
+	 * 						the vector, or null if no issue is found
+	 */
+	public String getErrorMessage(PosMotionInst mInst, Program parent,
+			boolean getCircPos) {
+		
+		Point pt;
+		
+		if (getCircPos) {
+			pt = getCPosition(mInst, parent);
+			
+		} else {
+			pt = getPosition(mInst, parent);
+		}
+		
+		if (pt == null) {
+			return String.format("Null position for %s\n", mInst);
+		}
+		
+		UserFrame instUFrame = getUserFrame(mInst.getUFrameIdx());
+		PositionRegister offReg = getPReg(mInst.getOffsetIdx());
+		
+		// Check if offset can be applied
+		if (mInst.getOffsetType() != Fields.OFFSET_NONE) {
+			
+			if (offReg == null || offReg.point == null) {
+				// Invalid offset
+				return String.format("Null offset PR[%d] for %s\n",
+						mInst.getOffsetIdx(), mInst);
+			}
+			
+			Point offset = offReg.point;
+			boolean offIsCart = offReg.isCartesian;
+			boolean posIsCart = mInst.getMotionType() != Fields.MTYPE_JOINT;
+			
+			if (posIsCart && offIsCart) {
+				// Add a Cartesian offset to a linear motion instruction
+				pt = pt.add(offset.position, offset.orientation);
+				
+				if (instUFrame != null) {
+					// Remove the associated user frame
+					pt = removeFrame(pt, instUFrame.getOrigin(),
+							instUFrame.getOrientation());
+				}
+				
+				// Find the resulting joint angles
+				float[] jointAngles = RMath.inverseKinematics(this, pt.angles,
+						pt.position, pt.orientation);
+				
+				if (jointAngles == null) {
+					// Inverse kinematics failure
+					return String.format("IK failure for %s\n", mInst);
+				}
+				
+			} else if (posIsCart) {
+				// Add a joint offset to a linear motion instruction
+				if (instUFrame != null) {
+					// Remove the associated user frame
+					pt = removeFrame(pt, instUFrame.getOrigin(),
+							instUFrame.getOrientation());
+				}
+				
+				float[] jointAngles = RMath.inverseKinematics(this, pt.angles,
+						pt.position, pt.orientation);
+				
+				if (jointAngles == null) {
+					// Inverse kinematics failure
+					return String.format("IK failure for %s\n", mInst);
+				}
+				
+			} else if (offIsCart) {
+				// Add a Cartesian offset to a joint motion instruction
+				if (instUFrame != null) {
+					offset = removeFrame(offset, new PVector(), instUFrame.getOrientation());
+				}
+				
+				pt = getToolTipNative(pt.angles);
+				// Apply offset
+				pt = pt.add(offset.position, offset.orientation);
+				
+				// Find the resulting joint angles
+				float[] jointAngles = RMath.inverseKinematics(this, pt.angles,
+						pt.position, pt.orientation);
+				
+				if (jointAngles == null) {
+					// Inverse kinematics failure
+					return String.format("IK failure for %s\n", mInst);
+				}	
+			}
+		}
+		
+		return null;
+	}
+	
+	/**
 	 * @return	A point representing the robot's current face plate position
 	 * 			and orientation
 	 */
@@ -1547,7 +1652,6 @@ public class RoboticArm {
 		}
 		
 		if (pt == null) {
-			Fields.debug("Null position for %s\n", mInst);
 			return null;
 		}
 		
@@ -1559,9 +1663,6 @@ public class RoboticArm {
 			
 			if (offReg == null || offReg.point == null) {
 				// Invalid offset
-				Fields.setMessage("Null offset PR[%d] for %s\n",
-						mInst.getOffsetIdx(), mInst);
-				
 				return null;
 			}
 			
@@ -1584,7 +1685,6 @@ public class RoboticArm {
 				
 				if (jointAngles == null) {
 					// Inverse kinematics failure
-					Fields.debug("IK failure for %s\n", mInst);
 					return null;
 					
 				} else {
@@ -1604,7 +1704,6 @@ public class RoboticArm {
 				
 				if (jointAngles == null) {
 					// Inverse kinematics failure
-					Fields.setMessage("IK failure for %s\n", mInst);
 					return null;
 				}
 				// Apply the offset
@@ -1632,7 +1731,6 @@ public class RoboticArm {
 				
 				if (jointAngles == null) {
 					// Inverse kinematics failure
-					Fields.setMessage("IK failure for %s\n", mInst);
 					return null;
 					
 				} else {
@@ -2180,10 +2278,13 @@ public class RoboticArm {
 				LinearInterpolation liMotion = new LinearInterpolation();
 				liMotion.setFault(true);
 				motion = liMotion;
+				Fields.setMessage("Invalid active frames for %s", mInst);
 				return 1;
 				
 			} else if (instPt == null) {
 				// No point defined for given motion instruction
+				String error = getErrorMessage(pMInst, prog, false);
+				Fields.setMessage(error);
 				LinearInterpolation liMotion = new LinearInterpolation();
 				liMotion.setFault(true);
 				motion = liMotion;
