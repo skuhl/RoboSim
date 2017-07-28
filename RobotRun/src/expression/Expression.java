@@ -35,11 +35,84 @@ public class Expression extends Operand<Object> {
 	}
 	
 	public Operand<?> evaluate() {
-		if(elementList.isEmpty()) {
+		if (elementList.isEmpty()) {
 			Fields.setMessage("Empty expression error!");
 			return null;
 		}
-
+		
+		Operand<?> result = null;
+		
+		if (elementList.size() == 1) {
+			ExpressionElement e = elementList.get(0);
+			
+			if (e instanceof Expression) {
+				result = ((Expression) e).evaluate();
+				
+			} else if (e instanceof Operand<?>) {
+				result = (Operand<?>) e;
+				
+			} else {
+				// Invalid single element expression
+				return null;
+			}
+			
+		} else {
+			int idx = 0;
+			ExpressionElement current = elementList.get(idx++);
+			
+			while (true) {
+				// Evaluation starts with an operand
+				if (current instanceof Operand<?>) {
+					// A binary operation requires two operands
+					if ((idx + 1) >= elementList.size()) {
+						return null;
+					}
+					
+					ExpressionElement nextOp = elementList.get(idx++);
+					ExpressionElement nextArg = elementList.get(idx++);
+					
+					try {
+						current = evaluate(nextOp, current, nextArg);
+						
+					} catch (ExpressionEvaluationException EEEx) {
+						Fields.setMessage(EEEx.getMessage());
+						return null;
+					}
+					
+				// Evaluation starts with an operator
+				} else if (current instanceof Operator) {
+					// A binary operator should be found between two operands
+					if (idx >= elementList.size()) {
+						return null;
+					}
+					
+					ExpressionElement next = elementList.get(idx++);
+					
+					try {
+						current = evaluate(current, next);
+						
+					} catch (ExpressionEvaluationException EEEx) {
+						Fields.setMessage(EEEx.getMessage());
+						return null;
+					}
+					
+				} else {
+					// Evaluation failure
+					return null;
+				}
+				
+				if (current != null && idx == elementList.size()) {
+					// Successfully evaluated the expression
+					break;	
+				}
+			}
+			
+			if (current instanceof Operand<?>) {
+				result = (Operand<?>) current;
+			}
+		}
+		
+		/**
 		Stack<Operator> operators = new Stack<Operator>();
 		Stack<Operand<?>> operands = new Stack<Operand<?>>();
 		
@@ -66,10 +139,10 @@ public class Expression extends Operand<Object> {
 			}
 		}
 		
-		Operand<?> result = null;
 		if(operands.size() == 1) {
 			result = operands.pop();
 		}
+		/**/
 		
 		// Map register operands to their respective values
 		if (result instanceof OperandIOReg) {
@@ -95,6 +168,65 @@ public class Expression extends Operand<Object> {
 		}
 		
 		return result;
+	}
+	
+	private Operand<?> evaluate(ExpressionElement opArg, ExpressionElement...
+			args) throws ExpressionEvaluationException {
+		
+		if (opArg instanceof Operator && args != null) {
+			Operator op = (Operator) opArg;
+			
+			if (op.getArgNo() == args.length) {
+				Operand<?>[] operands = new Operand<?>[args.length];
+				
+				// Validate operand arguments
+				for (int idx = 0; idx < args.length; ++idx) {
+					ExpressionElement arg = args[idx];
+					
+					if (!(arg instanceof Operand<?>)) {
+						// All must be operands
+						throw new ExpressionEvaluationException("All arguments must be operands");
+					}
+					
+					Operand<?> operand = (Operand<?>) arg;
+					
+					if (operand instanceof Expression) {
+						// Evaluate sub expressions
+						operand = ((Expression) operand).evaluate();
+					}
+					
+					if (!op.matchTypeToArg(operand)) {
+						// Invalid operand type for the operator
+						throw new ExpressionEvaluationException("Operator/ operand type mismatch");
+					}
+					
+					operands[idx] = operand;
+				}
+				
+				// Evaluate the operation
+				if(op.getType() == Operator.ARITH_OP || op.getType() == Operator.BOOL_OP) {
+					FloatMath arg1 = (FloatMath)operands[0];
+					FloatMath arg2 = (FloatMath)operands[1];
+					if(arg1.getArithValue().isNaN() || arg2.getArithValue().isNaN()) {
+						throw new ExpressionEvaluationException("Floating point operand value not a number");
+					}
+					return evaluateFloat(arg1, arg2, op);
+				} else if(op.getType() == Operator.LOGIC_OP) {
+					BoolMath arg1 = (BoolMath)operands[0];
+					BoolMath arg2 = operands.length == 2 ? (BoolMath)operands[1] : arg1;
+					return evaluateBoolean(arg1, arg2, op);
+				} else if(op.getType() == Operator.POINT_OP) {
+					PointMath arg1 = (PointMath)operands[0];
+					PointMath arg2 = (PointMath)operands[1];
+					return evaluatePoint(arg1, arg2, op);
+				}
+
+				throw new ExpressionEvaluationException("Invalid operator type");
+			}
+		}
+		
+		// Invalid arguments
+		throw new ExpressionEvaluationException("Operator/ operand type mismatch");
 	}
 
 	private Operand<?> evaluate(Operator op, Stack<Operand<?>> operands) throws ExpressionEvaluationException {

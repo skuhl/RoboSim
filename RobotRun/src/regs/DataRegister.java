@@ -24,7 +24,7 @@ public class DataRegister extends Register {
 	}
 	
 	@Override
-	protected String regPrefix() {
+	public String regPrefix() {
 		return "R";
 	}
 }
