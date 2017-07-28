@@ -51,6 +51,7 @@ public class Expression extends Operand<Object> {
 				} else {
 					operands.push((Operand<?>)e);
 				}
+				
 			} else if(e instanceof Operator) {
 				operators.push((Operator)e);
 			}
