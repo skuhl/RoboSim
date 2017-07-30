@@ -13,11 +13,16 @@ public class CameraObject extends Part {
 	public final int model_ID;
 	public final int group_ID;
 	public final float reflective_IDX;
+	public final float image_quality;
 	
 	private ArrayList<CamSelectArea> selectAreas;
 	private PGraphics preview;
 	
 	public CameraObject(Part p) {
+		this(p, 1f);
+	}
+	
+	public CameraObject(Part p, float q) {
 		super(p.getName(), p.getModel().clone(), p.getOBBDims().copy(), 
 				p.localOrientation.clone(), p.defaultOrientation.clone(), p.getFixtureRef());
 		
@@ -41,12 +46,13 @@ public class CameraObject extends Part {
 			reflective_IDX = 1f;
 		}
 		
+		image_quality = q;
 		selectAreas = loadCamSelectAreas();
 	}
 	
 	@Override
 	public Part clone() {
-		return new CameraObject(this);
+		return new CameraObject(this, image_quality);
 	}
 	
 	private ArrayList<CamSelectArea> loadCamSelectAreas() {

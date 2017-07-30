@@ -36,6 +36,7 @@ import expression.RobotPoint;
 import frame.Frame;
 import frame.ToolFrame;
 import frame.UserFrame;
+import geom.CameraObject;
 import geom.ComplexShape;
 import geom.CoordinateSystem;
 import geom.DimType;
@@ -335,7 +336,7 @@ public abstract class DataManagement {
 			
 			int numObj = dataIn.readInt();
 			for(int i = 0; i < numObj; i += 1) {
-				robotRun.getRobotCamera().addTaughtObject(loadWorldObject(dataIn, robotRun).obj);
+				robotRun.getRobotCamera().addTaughtObject(loadCameraObject(dataIn, robotRun));
 			}
 			
 			dataIn.close();
@@ -347,6 +348,13 @@ public abstract class DataManagement {
 		}
 	}
 	
+	private static CameraObject loadCameraObject(DataInputStream in, RobotRun app) throws IOException, NullPointerException {
+		WorldObject o = loadWorldObject(in, app).obj;
+		float imageQuality = in.readFloat();
+		
+		return new CameraObject((Part)o, imageQuality);
+	}
+
 	private static ExpressionElement loadExpressionElement(RoboticArm robot,
 			DataInputStream in) throws IOException, ClassCastException {
 		ExpressionElement ee = null;
@@ -454,7 +462,7 @@ public abstract class DataManagement {
 
 		return ee;
 	}
-
+	
 	private static float[] loadFloatArray(DataInputStream in) throws IOException {
 		// Read byte flag
 		byte flag = in.readByte();
@@ -473,7 +481,7 @@ public abstract class DataManagement {
 
 		return list;
 	}
-	
+
 	private static void loadFrame(Frame ref, DataInputStream in) throws IOException {
 		byte type = in.readByte();
 
@@ -517,7 +525,7 @@ public abstract class DataManagement {
 			((UserFrame)ref).setOrientOrigin(loadPoint(in));
 		}
 	}
-
+	
 	private static int loadFrameBytes(RoboticArm robot, String srcPath) {
 		int idx = -1;
 		File src = new File(srcPath);
@@ -730,7 +738,7 @@ public abstract class DataManagement {
 		// Read integer value
 		return in.readInt();
 	}
-	
+
 	private static void loadMacros(RoboticArm r, String filePath) {	
 		try {
 			File destDir = new File(filePath);
@@ -890,7 +898,7 @@ public abstract class DataManagement {
 		v.z = in.readFloat();
 		return v;
 	}
-
+	
 	private static int loadRegisterBytes(RoboticArm robot, String srcPath) {
 		File src = new File(srcPath);
 		
@@ -966,7 +974,7 @@ public abstract class DataManagement {
 			return 2;
 		}
 	}
-	
+
 	private static int loadRobotData(RoboticArm robot) {
 		File srcDir = new File( String.format("%srobot%d/", tmpDirPath, robot.RID) );
 		
@@ -1000,7 +1008,7 @@ public abstract class DataManagement {
 
 		return new RQuaternion(w, x, y, z);
 	}
-
+	
 	private static Scenario loadScenario(DataInputStream in, RobotRun app) throws IOException, NullPointerException {
 		// Read flag byte
 		byte flag = in.readByte();
@@ -1119,7 +1127,7 @@ public abstract class DataManagement {
 		
 		return 0;
 	}
-	
+
 	private static RShape loadShape(DataInputStream in, RobotRun app) throws IOException,
 			NullPointerException, RuntimeException {
 		
@@ -1210,7 +1218,7 @@ public abstract class DataManagement {
 
 		return wldObjFields;
 	}
-
+	
 	private static void robotPostProcessing(RoboticArm robot, RobotRun process) {
 		ArrayList<Scenario> scenes = process.getScenarios();
 		
@@ -1343,8 +1351,9 @@ public abstract class DataManagement {
 			dataOut.writeFloat(rCam.getExposure());
 			
 			dataOut.writeInt(rCam.getTaughtObjects().size());
-			for(WorldObject o : rCam.getTaughtObjects()) {
+			for(CameraObject o : rCam.getTaughtObjects()) {
 				DataManagement.saveWorldObject(o, dataOut);
+				dataOut.writeFloat(o.image_quality);
 			}
 			
 			dataOut.close();

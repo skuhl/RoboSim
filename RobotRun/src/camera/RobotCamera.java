@@ -55,10 +55,8 @@ public class RobotCamera {
 		taughtObjects = new ArrayList<CameraObject>();
 	}
 
-	public void addTaughtObject(WorldObject o) {
-		if(o instanceof Part) {
-			taughtObjects.add(new CameraObject((Part)o));
-		}
+	public void addTaughtObject(CameraObject o) {
+		taughtObjects.add(o);
 	}
 	
 	public void camLookAt(PVector p, PVector up) {
@@ -171,14 +169,15 @@ public class RobotCamera {
 	 * 
 	 * @return The list of WorldObjects that fall inside of the camera view frustum.
 	 */
-	public ArrayList<WorldObject> getObjectsInFrame(Scenario scene) {
-		ArrayList<WorldObject> objList = new ArrayList<WorldObject>();
+	public ArrayList<CameraObject> getObjectsInFrame(Scenario scene) {
+		ArrayList<CameraObject> objList = new ArrayList<CameraObject>();
 		if(scene == null) return objList;
 		
 		for(WorldObject o : scene.getObjectList()) {
 			if(o instanceof Part) {
-				if(isPointInFrame(((Part)o).getCenter()) && isObjectVisible(o)) {
-					objList.add(o);
+				float imageQuality = getObjectImageQuality(o);
+				if(isPointInFrame(((Part)o).getCenter()) && imageQuality >= sensitivity) {
+					objList.add(new CameraObject((Part)o, imageQuality));
 				}
 			}
 		}
@@ -307,7 +306,12 @@ public class RobotCamera {
 	 * @return Whether or not the object is recognized.
 	 */
 	public boolean isObjectVisible(WorldObject o) {
-		if(o instanceof Fixture) return false;
+		float imageQuality = getObjectImageQuality(o);
+		return imageQuality >= sensitivity;
+	}
+	
+	public float getObjectImageQuality(WorldObject o) {
+		if(o instanceof Fixture) return 0f;
 		
 		CameraObject camObj = new CameraObject((Part)o);
 		PVector objCenter = ((Part)o).getCenter();
@@ -344,7 +348,9 @@ public class RobotCamera {
 		
 		float reflect = camObj.reflective_IDX;
 		float lightFactor = (float)Math.max(1 - Math.pow(Math.log(brightness * exposure * reflect), 2), 0);
-		return (inView / (float)(RES*RES*RES)) * lightFactor >= sensitivity;
+		float imageQuality = (inView / (float)(RES*RES*RES)) * lightFactor;
+		
+		return imageQuality;
 	}
 	
 	public boolean isPointInFrame(PVector p) {
@@ -373,14 +379,17 @@ public class RobotCamera {
 	
 	public ArrayList<WorldObject> matchTaughtObject(CameraObject objProto, Scenario scene) {
 		RMatrix objProtoOrient = objProto.getLocalOrientation();
+		float protoQuality = objProto.image_quality;
 		
-		ArrayList<WorldObject> inFrame = getObjectsInFrame(scene);
+		ArrayList<CameraObject> inFrame = getObjectsInFrame(scene);
 		ArrayList<WorldObject> objMatches = new ArrayList<WorldObject>();
 		
-		for(WorldObject o: inFrame) {
-			CameraObject co = new CameraObject((Part)o);
+		for(CameraObject o: inFrame) {
+			if(protoQuality < 0.95 && Math.random() >= protoQuality) {
+				continue;
+			}
 			
-			if(co.getModelGroupID() == objProto.getModelGroupID()) {
+			if(o.getModelGroupID() == objProto.getModelGroupID()) {
 				RMatrix objOrient = o.getLocalOrientation();
 				RMatrix viewOrient = objOrient.transpose().multiply(camOrient.toMatrix());
 				RMatrix oDiff = objProtoOrient.transpose().multiply(viewOrient);
@@ -388,16 +397,16 @@ public class RobotCamera {
 				PVector zDiff = new PVector(axes[0][2], axes[1][2], axes[2][2]);
 				
 				if(Math.pow(zDiff.dot(new PVector(0, 0, 1)), 2) > 0.9) {
-					if(co.getModelGroupID() < 0) {
+					if(o.getModelGroupID() < 0) {
 						objMatches.add(o);
 					}
 					else {
 						boolean objMatch = true;
-						for(int i = 0; i < co.getNumSelectAreas(); i += 1) {
-							CamSelectArea protoArea = co.getCamSelectArea(i);
+						for(int i = 0; i < o.getNumSelectAreas(); i += 1) {
+							CamSelectArea protoArea = o.getCamSelectArea(i);
 							if(protoArea.getView(objProtoOrient) != null && !protoArea.isIgnored()) {
 								if(protoArea.isEmphasized()) {
-									if(co.getModelID() != objProto.getModelID() || protoArea.isDefect) {
+									if(o.getModelID() != objProto.getModelID() || protoArea.isDefect) {
 										objMatch = false;
 										break;
 									}
@@ -436,19 +445,15 @@ public class RobotCamera {
 	}
 
 	public ArrayList<CameraObject> teachObjectToCamera(Scenario scene) {
-		//Objects must be taught with a high degree of accuracy
-		sensitivity = 0.95f;
-		
-		ArrayList<WorldObject> objs = getObjectsInFrame(scene);
+		ArrayList<CameraObject> objs = getObjectsInFrame(scene);
 		CameraObject teachObj = null;
 		takeSnapshot();
 		
-		//Return sensitivity to default
-		sensitivity = 0.75f;
 		
 		for(WorldObject o: objs) {
 			if(o instanceof Part) {
-				teachObj = new CameraObject((Part)o);
+				float quality = getObjectImageQuality(o);
+				teachObj = new CameraObject((Part)o, quality);
 			}
 		}
 		
