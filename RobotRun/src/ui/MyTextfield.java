@@ -133,8 +133,15 @@ public class MyTextfield extends Textfield implements UIInputElement {
 		super.mousePressed();
 		
 		if (isActive) {
-			// Update text buffer index
-			_myTextBufferIndex = mouseXToIdx();
+			try {
+				// Update text buffer index
+				_myTextBufferIndex = mouseXToIdx();
+				
+			} catch (NullPointerException NPEx) {
+				/* Cannot use the ControlFont.getWidthFor() for this
+				 * textfield's font */
+				System.err.println(NPEx.getMessage());
+			}
 		}
 	}
 	

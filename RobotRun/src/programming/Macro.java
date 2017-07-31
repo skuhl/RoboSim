@@ -1,48 +1,46 @@
 package programming;
-import core.RobotRun;
+
 import robot.RoboticArm;
 
 public class Macro {
 	boolean manual;
-	private int progIdx;
-	private int robotID;
+	private RoboticArm robot;
+	private Program prog;
 	private int keyNum;
 
-	public Macro(int pidx, int rid) {
-		this(false, pidx, rid, -1);
+	public Macro(RoboticArm r, Program p) {
+		manual = false;
+		robot = r;
+		prog = p;
+		keyNum = -1;
 	}
 	
-	public Macro(boolean mf, int pidx, int rid, int num) {
+	public Macro(boolean mf, RoboticArm r, Program p, int num) {
 		manual = mf;
-		progIdx = pidx;
-		robotID = rid;
+		robot = r;
+		prog = p;
 		keyNum = num;
 	}
 
 	public void clearNum() {
-		RoboticArm r = RobotRun.getInstance().getRobot(robotID);
-		
 		if(keyNum != -1) {
-			r.getMacroKeyBinds()[keyNum] = null;
+			robot.getMacroKeyBinds()[keyNum] = null;
 			keyNum = -1;
 		}
 	}
 	
 	public boolean isManual() { return manual; }
-	public int getRobotID() { return robotID; }
-	public int getProgIdx() { return progIdx; }	
+	public RoboticArm getRobot() { return robot; }
+	public Program getProg() { return prog; }	
 	public int getKeyNum() { return keyNum; }
 	
 	public void setManual(boolean b) { manual = b; }
-	public void setProgram(int idx) { progIdx = idx; }
-	public void setRobotID(int rid) { robotID = rid; }
+	public void setProg(Program p) { prog = p; }
 	
 	public Macro setNum(int n) {
-		RoboticArm r = RobotRun.getInstance().getRobot(robotID);
-		
-		if(n <= 6 && n >= 0 && r.getMacroKeyBinds()[n] == null) {
+		if(n <= 6 && n >= 0 && robot.getMacroKeyBinds()[n] == null) {
 			clearNum();
-			r.getMacroKeyBinds()[n] = this;
+			robot.getMacroKeyBinds()[n] = this;
 			keyNum = n;
 
 			return this;
@@ -59,7 +57,7 @@ public class Macro {
 
 	public String[] toStringArray() {
 		String[] ret = new String[3];
-		String name = RobotRun.getInstance().getRobot(robotID).getProgram(progIdx).getName();
+		String name = (prog == null) ? "_" : prog.getName();
 		int name_pad = Math.max(16 - name.length(), 0);
 
 		ret[0] = String.format("[%-"+name_pad+"s]", name);

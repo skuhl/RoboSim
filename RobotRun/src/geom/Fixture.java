@@ -1,5 +1,4 @@
 package geom;
-import core.RobotRun;
 import global.RMath;
 
 /**
@@ -50,12 +49,11 @@ public class Fixture extends WorldObject {
 	}
 
 	/**
-	 * Applies the inverse of this Fixture's Coordinate System's transformation matrix to the matrix stack.
+	 * Applies the inverse of this Fixture's Coordinate System's transformation
+	 * matrix to the matrix stack.
 	 */
-	public void removeCoordinateSystem() {
+	public RMatrix getInvCoordinateSystem() {
 		RMatrix tMatrix = RMath.formTMat(localOrientation.getOrigin(), localOrientation.getAxes());
-		tMatrix = RMath.invertHCMatrix(tMatrix);
-		
-		RobotRun.getInstance().applyMatrix(tMatrix);
+		return RMath.invertHCMatrix(tMatrix);
 	}
 }

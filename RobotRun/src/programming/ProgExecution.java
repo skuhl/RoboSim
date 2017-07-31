@@ -11,7 +11,7 @@ import enums.ExecType;
 public class ProgExecution implements Cloneable {
 	
 	private int rid;
-	private int progIdx;
+	private Program prog;
 	private ExecType type;
 	private ExecState state;
 	private int curIdx;
@@ -22,15 +22,11 @@ public class ProgExecution implements Cloneable {
 	 */
 	public ProgExecution() {
 		rid = -1;
-		progIdx = -1;
+		prog = null;
 		type = ExecType.EXEC_FULL;
 		state = ExecState.EXEC_DONE;
 		curIdx = 0;
 		nextIdx = -1;
-	}
-	
-	public ProgExecution(int rid, int progIdx, ExecType type, int curIdx) {
-		
 	}
 	
 	/**
@@ -43,10 +39,10 @@ public class ProgExecution implements Cloneable {
 	 * @param curIdx
 	 * @param nextIdx
 	 */
-	private ProgExecution(int rid, int progIdx, ExecType type, ExecState state,
+	private ProgExecution(int rid, Program prog, ExecType type, ExecState state,
 			int curIdx, int nextIdx) {
 		
-		this.progIdx = progIdx;
+		this.prog = prog;
 		this.type = type;
 		this.state = state;
 		this.curIdx = curIdx;
@@ -55,15 +51,15 @@ public class ProgExecution implements Cloneable {
 	
 	@Override
 	public ProgExecution clone() {
-		return new ProgExecution(rid, progIdx, type, state, curIdx, nextIdx);
+		return new ProgExecution(rid, prog, type, state, curIdx, nextIdx);
 	}	
 	
 	public int getCurIdx() {
 		return curIdx;
 	}
 	
-	public int getProgIdx() {
-		return progIdx;
+	public Program getProg() {
+		return prog;
 	}
 	
 	public int getNextIdx() {
@@ -112,11 +108,11 @@ public class ProgExecution implements Cloneable {
 		this.state = ExecState.EXEC_START;
 	}
 	
-	public void setExec(int rid, ExecType type, int progIdx, int curIdx) {
+	public void setExec(int rid, ExecType type, Program prog, int curIdx) {
 		this.rid = rid;
 		this.type = type;
 		this.state = ExecState.EXEC_START;
-		this.progIdx = progIdx;
+		this.prog = prog;
 		this.curIdx = curIdx;
 		
 		if (type == ExecType.EXEC_BWD) {
@@ -131,8 +127,8 @@ public class ProgExecution implements Cloneable {
 		nextIdx = idx;
 	}
 	
-	public void setProgIdx(int idx) {
-		progIdx = idx;
+	public void setProg(Program prog) {
+		this.prog = prog;
 	}
 	
 	public void setState(ExecState newState) {

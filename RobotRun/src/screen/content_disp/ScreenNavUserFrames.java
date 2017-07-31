@@ -40,7 +40,6 @@ public class ScreenNavUserFrames extends ST_ScreenListContents {
 
 	@Override
 	public void actionEntr() {
-		robotRun.curFrameIdx = contents.getCurrentItemIdx();
 		robotRun.nextScreen(ScreenMode.UFRAME_DETAIL);
 	}
 

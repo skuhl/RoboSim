@@ -3,15 +3,27 @@ package screen.teach_frame;
 import core.RobotRun;
 import geom.Point;
 import global.DataManagement;
+import global.Fields;
+import processing.core.PGraphics;
 import robot.RoboticArm;
 import screen.Screen;
 import screen.ScreenMode;
 import screen.ScreenState;
 
 public abstract class ST_ScreenTeachPoints extends Screen {
-
-	public ST_ScreenTeachPoints(ScreenMode m, RobotRun r) {
+	
+	protected int frameIdx;
+	
+	public ST_ScreenTeachPoints(ScreenMode m, RobotRun r, int frameIdx) {
 		super(m, r);
+		this.frameIdx = frameIdx;
+	}
+	
+	public ST_ScreenTeachPoints(ScreenMode m, String header, RobotRun r,
+			int frameIdx) {
+		
+		super(m, header, r);
+		this.frameIdx = frameIdx;
 	}
 	
 	@Override
@@ -64,8 +76,8 @@ public abstract class ST_ScreenTeachPoints extends Screen {
 
 	@Override
 	public void actionF4() {
-		if (robotRun.isShift() && robotRun.teachFrame != null) {
-			Point tgt = robotRun.teachFrame.getPoint(options.getLineIdx());
+		if (robotRun.isShift()) {
+			Point tgt = getTeachPoint(options.getLineIdx());
 
 			if (mode == ScreenMode.TEACH_3PT_USER || mode == ScreenMode.TEACH_4PT) {
 				if (tgt != null && tgt.position != null && tgt.orientation != null) {
@@ -95,34 +107,94 @@ public abstract class ST_ScreenTeachPoints extends Screen {
 				pt = r.getFacePlatePoint();
 			}
 
-			robotRun.teachFrame.setPoint(pt, options.getLineIdx());
+			setTeachPoint(pt, options.getLineIdx());
 			DataManagement.saveRobotData(r, 2);
 			robotRun.updatePendantScreen();
 		}
 	}
 	
 	/**
-	 * @return	If all the points are taught for the teaching method associated
-	 * 			with this screen for the frame currently being taught
+	 * TODO comment this
+	 * 
+	 * @param g
 	 */
-	public boolean readyToTeach() {
-		int teachMethod;
-		// Determine the teach method flag value
-		if (mode == ScreenMode.TEACH_3PT_TOOL ||
-				mode == ScreenMode.TEACH_3PT_USER) {
+	public abstract void drawTeachPts(PGraphics g);
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param idx
+	 * @return
+	 */
+	protected static int getPtColorForTool(int idx) {
+		
+		if (idx < 3) {
+			// TCP teach points
+			return Fields.color(130, 130, 130);
 			
-			teachMethod = 0;
+		} else if (idx == 3) {
+			// Orient origin point
 			
-		} else if (mode == ScreenMode.TEACH_4PT ||
-				mode == ScreenMode.TEACH_6PT) {
+			return Fields.color(255, 130, 0);
+		} else if (idx == 4) {
+			// Axes X-Direction point
+			return Fields.color(255, 0, 0);
 			
-			teachMethod = 1;
-			
-		} else {
-			teachMethod = 2;
+		} else if (idx == 5) {
+			// Axes Y-Diretion point
+			return Fields.color(0, 255, 0);
 		}
-		// Are all the correct points taught for this frame
-		return robotRun.teachFrame != null &&
-				robotRun.teachFrame.isComplete(teachMethod);
+		
+		return Fields.BLACK;
 	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param idx
+	 * @return
+	 */
+	protected static int getPtColorForUser(int idx) {
+		
+		if (idx == 0) {
+			// Orient origin point
+			return Fields.color(255, 130, 0);
+			
+		} else if (idx == 1) {
+			// Axes X-Diretion point
+			return Fields.color(255, 0, 0);
+			
+		} else if (idx == 2) {
+			// Axes Y-Diretion point
+			return Fields.color(0, 255, 0);
+			
+		} else if (idx == 3) {
+			// Axes Origin point
+			return Fields.color(0, 0, 255);
+		}
+		
+		return Fields.BLACK;
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param idx
+	 */
+	protected abstract Point getTeachPoint(int idx);
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @return
+	 */
+	public abstract boolean readyToTeach();
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param pt
+	 * @param idx
+	 */
+	protected abstract void setTeachPoint(Point pt, int idx);
 }

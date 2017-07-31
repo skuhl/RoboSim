@@ -1,12 +1,14 @@
 package expression;
 
 import camera.RobotCamera;
-import core.RobotRun;
+import core.Pointer;
 import geom.CameraObject;
+import geom.Scenario;
 import geom.WorldObject;
 
 public class OperandCamObj extends Operand<CameraObject> implements BoolMath {
-	public static final RobotCamera CAM = RobotRun.getInstance().getRobotCamera();
+	private static RobotCamera camRef;
+	private static Pointer<Scenario> scenarioRef;
 	
 	public OperandCamObj() {
 		super(null, Operand.CAM_MATCH);
@@ -18,8 +20,10 @@ public class OperandCamObj extends Operand<CameraObject> implements BoolMath {
 
 	@Override
 	public Boolean getBoolValue() {
-		if(value != null) {
-			return CAM.isMatchVisible(value, RobotRun.getInstanceScenario());
+		
+		if (value != null) {
+			return camRef.isMatchVisible(value, scenarioRef.get());
+			
 		} else {
 			return false;
 		}
@@ -28,6 +32,24 @@ public class OperandCamObj extends Operand<CameraObject> implements BoolMath {
 	@Override
 	public Operand<CameraObject> clone() {
 		return new OperandCamObj(value);
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param ref
+	 */
+	public static void setCamRef(RobotCamera ref) {
+		camRef = ref;
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param ref
+	 */
+	public static void setScenarioRef(Pointer<Scenario> ref) {
+		scenarioRef = ref;
 	}
 	
 	@Override

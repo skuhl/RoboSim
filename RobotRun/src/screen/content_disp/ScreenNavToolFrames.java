@@ -40,7 +40,6 @@ public class ScreenNavToolFrames extends ST_ScreenListContents {
 
 	@Override
 	public void actionEntr() {
-		robotRun.curFrameIdx = contents.getCurrentItemIdx();
 		robotRun.nextScreen(ScreenMode.TFRAME_DETAIL);
 	}
 

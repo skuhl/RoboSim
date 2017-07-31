@@ -1,7 +1,7 @@
 package screen.num_entry;
 
 import core.RobotRun;
-import global.RMath;
+import global.Fields;
 import programming.Program;
 import screen.ScreenMode;
 
@@ -20,8 +20,16 @@ public class ScreenJumpToLine extends ST_ScreenNumEntry {
 	@Override
 	public void actionEntr() {
 		Program p = robotRun.getActiveProg();
-		int jumpToInst = Integer.parseInt(workingText.toString()) - 1;
-		robotRun.setActiveInstIdx(RMath.clamp(jumpToInst, 0, p.getNumOfInst() - 1));
-		robotRun.lastScreen();
+		int instIdx = Integer.parseInt(workingText.toString()) - 1;
+		
+		if (instIdx < 0 || instIdx > p.getNumOfInst()) {
+			Fields.setMessage("The instruction index must be within the range 1 and %d",
+					p.getNumOfInst());
+			
+		} else {
+			robotRun.lastScreen();
+			robotRun.setActiveInstIdx(instIdx);
+			robotRun.getActiveScreen().getContents().jumpToItem(instIdx);
+		}
 	}
 }

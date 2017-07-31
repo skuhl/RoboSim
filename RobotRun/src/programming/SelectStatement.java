@@ -7,8 +7,6 @@ import expression.OperandFloat;
 import expression.OperandGeneric;
 import expression.Operator;
 
-//TODO fix value comparison, it definitely doesn't work
-
 public class SelectStatement extends Instruction implements ExpressionEvaluation {
 	private Operand<?> arg;
 	private ArrayList<Operand<?>> cases;

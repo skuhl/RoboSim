@@ -1,7 +1,13 @@
 package global;
 
+import org.apache.commons.math3.linear.ArrayRealVector;
+import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.RealVector;
+import org.apache.commons.math3.linear.SingularValueDecomposition;
+
 import geom.CoordinateSystem;
 import geom.RMatrix;
+import processing.core.PApplet;
 import processing.core.PConstants;
 import processing.core.PFont;
 import processing.core.PGraphics;
@@ -308,6 +314,128 @@ public abstract class Fields {
 	}
 	
 	/**
+	 * This method calculates a TCP offset for the Robot given a valid set of position and orientation values, where each pair ( [pos, ori1],
+	 * [pos2, ori2], and [pos3, ori3] ) represent a recorded position and orientation of the Robot. A position contains the X, Y, Z values of
+	 * the Robot at the point, while the orientation matrix is a rotation matrix, which describes the Robot's orientation at a one of the points.
+	 * Do to the nature of this algorithm, an average TCP value is calculated from three separate calculations.
+	 *
+	 * @param pos1  The X, Y, Z position of the Robot's faceplate at first point
+	 * @param ori1  The orientation of the Robot at the first point
+	 * @param pos2  The X, Y, Z position of the Robot's faceplate at the second point
+	 * @param ori2  The orientation of the Robot at the second point
+	 * @param pos3  the X, Y, Z position of the Robot's faceplate at the third point
+	 * @param ori3  The orientation of the Robot at the third point
+	 * @return      The new TCP for the Robot, null is returned if the given points
+	 *              are invalid
+	 */
+	public static double[] calculateTCPFromThreePoints(PVector pos1, RMatrix ori1, 
+			PVector pos2, RMatrix ori2, 
+			PVector pos3, RMatrix ori3) {
+
+		RealVector avg_TCP = new ArrayRealVector(new double[] {0.0f, 0.0f, 0.0f} , false);
+		int counter = 3;
+
+		while (counter-- > 0) {
+
+			RealMatrix Ar = null, Br = null, Cr = null;
+			PVector vt = null;
+
+			if (counter == 2) {
+				/* Case 1: C = point 3 */
+				Ar = ori1;
+				Br = ori2;
+				Cr = ori3;
+				/* 2Ct - At - Bt */
+				vt = PVector.sub(PVector.mult(pos3, 2), PVector.add(pos1, pos2));
+
+			} else if (counter == 1) {
+				/* Case 2: C = point 2 */
+				Ar = ori3;
+				Br = ori1;
+				Cr = ori2;
+				/* 2Ct - At - Bt */
+				vt = PVector.sub(PVector.mult(pos2, 2), PVector.add(pos3, pos1));
+
+			} else if (counter == 0) {
+				/* Case 3: C = point 1 */
+				Ar = ori2;
+				Br = ori3;
+				Cr = ori1;
+				/* 2Ct - At - Bt */
+				vt = PVector.sub(PVector.mult(pos1, 2), PVector.add(pos2, pos3));
+
+			} else {
+				Ar = RMath.formRMat(
+					1.0, 0.0, 0.0,
+					0.0, 1.0, 0.0,
+					0.0, 0.0, 1.0
+				);
+				
+				Br = RMath.formRMat(
+					1.0, 0.0, 0.0,
+					0.0, 1.0, 0.0,
+					0.0, 0.0, 1.0
+				);
+				
+				Cr = RMath.formRMat(
+					1.0, 0.0, 0.0,
+					0.0, 1.0, 0.0,
+					0.0, 0.0, 1.0
+				);
+				
+				vt = new PVector(0, 0, 0);
+			}
+
+			/****************************************************************
+				Three Point Method Calculation
+				
+				------------------------------------------------------------
+				A, B, C      transformation matrices
+				Ar, Br, Cr   rotational portions of A, B, C respectively
+				At, Bt, Ct   translational portions of A, B, C repectively
+				x            TCP point with respect to the EE
+				------------------------------------------------------------
+				
+				Ax = Bx = Cx
+				Ax = (Ar)x + At
+				
+				(A - B)x = 0
+				(Ar - Br)x + At - Bt = 0
+				
+				Ax + Bx - 2Cx = 0
+				(Ar + Br - 2Cr)x + At + Bt - 2Ct = 0
+				(Ar + Br - 2Cr)x = 2Ct - At - Bt
+				x = (Ar + Br - 2Cr) ^ -1 * (2Ct - At - Bt)
+
+			 ****************************************************************/
+
+			RealVector b = new ArrayRealVector(new double[] { vt.x, vt.y, vt.z }, false);
+			/* Ar + Br - 2Cr */
+			RealMatrix R = (Ar.add(Br)).subtract(Cr.scalarMultiply(2));
+
+			/* (R ^ -1) * b */
+			avg_TCP = avg_TCP.add( (new SingularValueDecomposition(R)).getSolver().getInverse().operate(b) );
+			
+			Fields.debug("\n%s\n\n", R.toString());
+		}
+
+		/* Take the average of the three cases: where C = the first point, the second point, and the third point */
+		avg_TCP = avg_TCP.mapMultiply( 1.0f / 3.0f );
+
+		Fields.debug("(Ar + Br - 2Cr) ^ -1 * (2Ct - At - Bt):\n\n[%5.4f]\n[%5.4f]\n[%5.4f]\n\n",
+					avg_TCP.getEntry(0), avg_TCP.getEntry(1), avg_TCP.getEntry(2));
+
+		for(int idx = 0; idx < avg_TCP.getDimension(); ++idx) {
+			// Extremely high values may indicate that the given points are invalid
+			if(PApplet.abs((float)avg_TCP.getEntry(idx)) > 1000.0f) {
+				return null;
+			}
+		}
+
+		return avg_TCP.toArray();
+	}
+	
+	/**
 	 * Returns a 32-bit color from the value, which will be applied to the red,
 	 * green, and blue byte values of the color.
 	 * 
@@ -368,6 +496,57 @@ public abstract class Fields {
 		int[] diffs = rgbaDiffs(c0,  c1);
 		// Compute the square root of the sum of the rgba differences
 		return (float) Math.sqrt(diffs[0] + diffs[1] + diffs[2] + diffs[3]);
+	}
+	
+	/**
+	 * Creates a 3x3 rotation matrix based off of two vectors defined by the
+	 * given set of three points, which are defined by the three given PVectors.
+	 * The three points are used to form two vectors. The first vector is treated
+	 * as the positive x-axis and the second one is the psuedo-positive y-axis.
+	 * These vectors are crossed to form the z-axis. The x-axis is then crossed
+	 * with the positive z-axis to form the true y-axis. Finally, the axes are
+	 * converted from the World frame reference, to Native Coordinates.
+	 *
+	 * @param p1      the origin reference point used to form the positive x-
+	 *                and y-axes
+	 * @param p2      the point used to create the preliminary positive x-axis
+	 * @param p3      the point used to create the preliminary positive y-axis
+	 * @return        a set of three unit vectors that represent an axes (row
+	 *                major order)
+	 */
+	public static RMatrix createAxesFromThreePoints(PVector p1, PVector p2, PVector p3) {
+		double[][] axesRefWorld = new double[3][3];
+		PVector xAxis = PVector.sub(p2, p1);
+		PVector yAxis = PVector.sub(p3, p1);
+		xAxis.normalize();
+		yAxis.normalize();
+		
+		PVector zAxis = PVector.mult(xAxis, -1).cross(yAxis);
+		yAxis = zAxis.cross( PVector.mult(xAxis, -1) );
+		// Create unit vectors
+		yAxis.normalize();
+		zAxis.normalize();
+
+		if ((xAxis.x == 0f && xAxis.y == 0f && xAxis.z == 0f) ||
+				(yAxis.x == 0f && yAxis.y == 0f && yAxis.z == 0f) ||
+				(zAxis.x == 0f && zAxis.y == 0f && zAxis.z == 0f)) {
+			// One of the three axis vectors is the zero vector
+			return null;
+		}
+
+		axesRefWorld[0][0] = xAxis.x;
+		axesRefWorld[1][0] = xAxis.y;
+		axesRefWorld[2][0] = xAxis.z;
+		axesRefWorld[0][1] = yAxis.x;
+		axesRefWorld[1][1] = yAxis.y;
+		axesRefWorld[2][1] = yAxis.z;
+		axesRefWorld[0][2] = zAxis.x;
+		axesRefWorld[1][2] = zAxis.y;
+		axesRefWorld[2][2] = zAxis.z;
+
+		RMatrix axes = new RMatrix(axesRefWorld);
+		// Remove the World frame transformation from the axes vectors
+		return  axes.multiply(Fields.NATIVE_AXES_MAT);
 	}
 	
 	/**

@@ -2,18 +2,27 @@ package screen.edit_point;
 
 import core.RobotRun;
 import frame.UserFrame;
+import global.DataManagement;
+import global.RMath;
+import processing.core.PVector;
+import robot.RoboticArm;
 import screen.ScreenMode;
 import ui.DisplayLine;
 
 public class ScreenDirectEntryUser extends ST_ScreenPointEntry {
-
-	public ScreenDirectEntryUser(RobotRun r) {
-		super(ScreenMode.DIRECT_ENTRY_USER, r);
+	
+	private int frameIdx;
+	
+	public ScreenDirectEntryUser(RobotRun r, int frameIdx) {
+		super(ScreenMode.DIRECT_ENTRY_USER, String.format("USER: %d DIRECT",
+				frameIdx + 1), r);
+		this.frameIdx = frameIdx;
+		loadWorkingText();
 	}
 	
 	@Override
 	protected String loadHeader() {
-		return String.format("USER %d: DIRECT ENTRY", robotRun.curFrameIdx + 1);
+		return "";
 	}
 	
 	@Override
@@ -27,8 +36,9 @@ public class ScreenDirectEntryUser extends ST_ScreenPointEntry {
 	
 	@Override
 	protected void loadWorkingText() {
-		UserFrame user = robotRun.getActiveRobot().getUserFrame(robotRun.curFrameIdx);
-		String[][] entries = user.directEntryStringArray();
+		RoboticArm r = robotRun.getActiveRobot();
+		UserFrame teachFrame = r.getUserFrame(frameIdx);
+		String[][] entries = teachFrame.directEntryStringArray();
 		
 		for(int i = 0; i < entries.length; i += 1) {
 			prefixes[i] = entries[i][0];
@@ -38,6 +48,8 @@ public class ScreenDirectEntryUser extends ST_ScreenPointEntry {
 	
 	@Override
 	public void actionEntr() {
+		RoboticArm r = robotRun.getActiveRobot();
+		UserFrame teachFrame = r.getUserFrame(frameIdx);
 		// User defined x, y, z, w, p, and r values
 		float[] inputs = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
 
@@ -73,8 +85,17 @@ public class ScreenDirectEntryUser extends ST_ScreenPointEntry {
 				inputs[val] = Math.max(-9999f, Math.min(inputs[val], 9999f));
 			}
 
-			robotRun.createFrameDirectEntry(robotRun.teachFrame, inputs);
+			PVector origin = new PVector(inputs[0], inputs[1], inputs[2]);
+			PVector wpr = new PVector(inputs[3], inputs[4], inputs[5]);
+			// Set the direct entry values as the current frame values
+			teachFrame.setOriginDirect( RMath.vFromWorld(origin) );
+			teachFrame.setOrienDirect( RMath.wEulerToNQuat(wpr) );
+			teachFrame.teachDirectEntry();
+			// Set the frame as active and save changes to the tmp directory
+			r.setActiveUserFrame(frameIdx);
+			DataManagement.saveRobotData(r, 2);
 			robotRun.lastScreen();
+			
 		} catch (NumberFormatException NFEx) {
 			// Not a real number
 			errorMessage("Entries must be real numbers!");

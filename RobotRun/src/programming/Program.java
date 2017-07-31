@@ -42,7 +42,6 @@ public class Program implements Iterable<InstElement> {
 		name = s;
 		
 		LPosReg = new HashMap<>();
-		
 		instructions = new ArrayList<>();
 		
 		nextID = 0;
