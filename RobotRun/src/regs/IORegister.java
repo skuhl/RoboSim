@@ -36,7 +36,7 @@ public class IORegister extends Register {
 	}
 	
 	@Override
-	protected String regPrefix() {
+	public String regPrefix() {
 		return "IO";
 	}
 	

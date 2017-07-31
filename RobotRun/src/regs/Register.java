@@ -32,7 +32,7 @@ public abstract class Register {
 	 * 			Position -> 'PR'
 	 * 			IO -> 'IO'
 	 */
-	protected abstract String regPrefix();
+	public abstract String regPrefix();
 	
 	/**
 	 * Allows for the comment that is associated with the register to be
