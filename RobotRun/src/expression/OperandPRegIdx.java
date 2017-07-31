@@ -77,7 +77,8 @@ public class OperandPRegIdx extends OperandRegister<PositionRegister> implements
 	
 	@Override
 	public String[] toStringArray() {
-		String idxStr = value.toString().substring(0, 4);
+		String idxStr = (value == null) ? "...[..." : String.format("%s[%d",
+				value.regPrefix(), value.idx + 1);
 		String subStr = (subIdx >= 0 && subIdx < 6) ? "" + (subIdx + 1) : "..."; 
 		return new String[] { idxStr + ", ", subStr + "]" };
 	}
