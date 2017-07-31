@@ -677,6 +677,9 @@ public class WGUI implements ControlListener {
 				radioDim, Fields.medium, togValues, togNames, togLbls,
 				true, Fields.ITYPE_PERMENANT);
 		
+		addToggle("TestOpt", "Test", miscellaneous, radioDim, radioDim,
+				Fields.medium, false);
+		
 		if(app.isRCamEnable()) {
 			getButton(WGUI_Buttons.CamToggleActive).setSwitch(true);
 			getButton(WGUI_Buttons.CamToggleActive).setOn();
@@ -1124,6 +1127,31 @@ public class WGUI implements ControlListener {
 		
 		return t;
 	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param name
+	 * @param lbl
+	 * @param parent
+	 * @param wdh
+	 * @param hgt
+	 * @param lblFont
+	 * @param iniState
+	 * @return
+	 */
+	private Toggle addToggle(String name, String label, Group parent, int wdh,
+			int hgt, PFont lblFont, boolean iniState) {
+		
+		Toggle t = new Toggle(manager, name);
+		t.setSize(wdh, hgt)
+		.setState(iniState)
+		.moveTo(parent)
+		.getCaptionLabel().setFont(lblFont)
+		.setText(label);
+		
+		return t;
+	}
 
 	/**
 	 * Handles value changes in certain controllers.
@@ -1274,6 +1302,10 @@ public class WGUI implements ControlListener {
 						wo.getModel().setStrokeValue(newStroke);
 					}
 				}
+				
+			} else if (arg0.isFrom("TestOpt")) {
+				System.out.printf("%f\n", arg0.getController().getValue());
+				
 			}
 		}
 	}
@@ -2081,6 +2113,17 @@ public class WGUI implements ControlListener {
 	private MyTextfield getTextField(String name) throws ClassCastException {
 		return (MyTextfield) manager.get(name);
 	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param name
+	 * @return
+	 * @throws ClassCastException
+	 */
+	private Toggle getToggle(String name) throws ClassCastException {
+		return (Toggle) manager.get(name);
+	}
 
 	/*
 	 * Hides all the text areas related to the pendant's main display.
@@ -2386,19 +2429,19 @@ public class WGUI implements ControlListener {
 	/**
 	 * TODO comment this
 	 * 
-	 * @param butName
+	 * @param name
 	 * @param state
 	 */
-	public void setButtonState(String butName, boolean state) {
-		Button b = getButton(butName);
-		
-		if (b != null && b.isSwitch()) {
-			if (state) {
-				b.setOn();
-				
-			} else {
-				b.setOff();
+	public void setToggleState(String name, boolean state) {
+		try {
+			Toggle t = getToggle(name);
+			
+			if (t != null) {
+				t.setState(state);
 			}
+			
+		} catch (ClassCastException CCEx) {
+			// Controller with the give name is not a Toggle
 		}
 	}
 
@@ -3497,7 +3540,10 @@ public class WGUI implements ControlListener {
 		c = b = getButton(WGUI_Buttons.RobotClearTrace).setPosition(relPos[0], relPos[1]);
 		
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		c = this.getRadioButton("DebugOptions").setPosition(relPos[0], relPos[1]);
+		c = getRadioButton("DebugOptions").setPosition(relPos[0], relPos[1]);
+		
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		c = getToggle("TestOpt").setPosition(relPos[0], relPos[1]);
 		
 		// Update window background display
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY + 60);
