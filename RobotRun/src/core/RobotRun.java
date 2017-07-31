@@ -169,7 +169,10 @@ public class RobotRun extends PApplet {
 	private Point position;
 	
 	/**
-	 * Applies the active camera to the matrix stack.
+	 * Applies the given camera to the matrix stack. assuming that the current
+	 * matrix is that of the camera face, the inverse of the camera's
+	 * orientation and position are applied to return to the world coordinate
+	 * frame.
 	 * 
 	 * @param c	The camera to apply
 	 */
@@ -180,12 +183,12 @@ public class RobotRun extends PApplet {
 				verticalMargin = c.getScale() * height / 2f,
 				near = 1f,
 				far = 1.5f * camera.getMaxZOffset();
-
-		translate(width / 2f, height / 2f, -camera.getZOffset());
 		
-		rotateZ(-cOrien.z);
-		rotateY(-cOrien.y);
+		translate(0f, 0f, -camera.getZOffset());
+		
 		rotateX(-cOrien.x);
+		rotateY(-cOrien.y);
+		rotateZ(-cOrien.z);
 		
 		translate(-cPos.x, -cPos.y, -cPos.z);
 		
@@ -1899,6 +1902,7 @@ public class RobotRun extends PApplet {
 			ambientLight(150, 150, 150);
 			
 			pushMatrix();
+			resetMatrix();
 			// Apply the camera for drawing objects
 			applyCamera(camera);
 			renderScene();
@@ -2429,9 +2433,9 @@ public class RobotRun extends PApplet {
 			
 			pushMatrix();
 			resetMatrix();
-			rotateZ(-camOrien.z);
-			rotateY(-camOrien.y);
 			rotateX(-camOrien.x);
+			rotateY(-camOrien.y);
+			rotateZ(-camOrien.z);
 			
 			RMatrix camRMat = getOrientation();
 			
@@ -2500,9 +2504,9 @@ public class RobotRun extends PApplet {
 				
 				pushMatrix();
 				resetMatrix();
-				rotateZ(-camOrien.z);
-				rotateY(-camOrien.y);
 				rotateX(-camOrien.x);
+				rotateY(-camOrien.y);
+				rotateZ(-camOrien.z);
 				
 				RMatrix camRMat = getOrientation();
 				
@@ -2537,9 +2541,9 @@ public class RobotRun extends PApplet {
 			
 			PVector camPos = camera.getBasePosition();
 			PVector camOrien = camera.getOrientation();
-			// Scale the mouse screen position
+			// Apply the camera's scale to the mouse's screen position
 			PVector mScreenPos = new PVector(mouseX - width / 2f, mouseY -
-					height / 2f, camera.getZOffset() + 600f);
+					height / 2f, camera.getZOffset());
 			mScreenPos.x *= camera.getScale();
 			mScreenPos.y *= camera.getScale();
 			
@@ -2550,9 +2554,9 @@ public class RobotRun extends PApplet {
 			// Apply the inverse of the camera's coordinate system
 			translate(camPos.x, camPos.y, camPos.z);
 			
-			rotateX(camOrien.x);
-			rotateY(camOrien.y);
 			rotateZ(camOrien.z);
+			rotateY(camOrien.y);
+			rotateX(camOrien.x);
 			
 			translate(mScreenPos.x, mScreenPos.y, mScreenPos.z);
 			
@@ -2563,7 +2567,7 @@ public class RobotRun extends PApplet {
 			
 			popMatrix();
 			// Set the mouse ray origin and direction
-			RRay mouseRay = new RRay(mWorldPos, ptOnMRay, 10000f, Fields.BLACK);
+			RRay mouseRay = new RRay(mWorldPos, ptOnMRay, 20000f, Fields.BLACK);
 			
 			if (mouseButton == LEFT) {
 				this.mouseRay = mouseRay;
