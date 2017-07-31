@@ -201,11 +201,12 @@ public class Camera {
 	public String[] toStringArray() {
 		String[] fields = new String[7];
 		// Display rotation in degrees
+		PVector worldPos = position;//RMath.vToWorld(position);
 		PVector inDegrees = PVector.mult(rotation, PConstants.RAD_TO_DEG);
 		
-		fields[0] = "X: " + DebugFloatFormat.format(position.x);
-		fields[1] = "Y: " + DebugFloatFormat.format(position.y);
-		fields[2] = "Z: " + DebugFloatFormat.format(position.z);
+		fields[0] = "X: " + DebugFloatFormat.format(worldPos.x);
+		fields[1] = "Y: " + DebugFloatFormat.format(worldPos.y);
+		fields[2] = "Z: " + DebugFloatFormat.format(worldPos.z);
 		fields[3] = "W: " + DebugFloatFormat.format(inDegrees.x);
 		fields[4] = "P: " + DebugFloatFormat.format(inDegrees.y);
 		fields[5] = "R: " + DebugFloatFormat.format(inDegrees.z);

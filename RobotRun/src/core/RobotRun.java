@@ -182,12 +182,12 @@ public class RobotRun extends PApplet {
 				far = 1.5f * camera.getMaxZOffset();
 
 		translate(width / 2f, height / 2f, -camera.getZOffset());
-
-		rotateX(cOrien.x);
-		rotateY(cOrien.y);
-		rotateZ(cOrien.z);
 		
-		translate(cPos.x, cPos.y,  cPos.z);
+		rotateZ(-cOrien.z);
+		rotateY(-cOrien.y);
+		rotateX(-cOrien.x);
+		
+		translate(-cPos.x, -cPos.y, -cPos.z);
 		
 		// Apply orthogonal camera view
 		ortho(-horizontalMargin, horizontalMargin, -verticalMargin,
@@ -2429,9 +2429,9 @@ public class RobotRun extends PApplet {
 			
 			pushMatrix();
 			resetMatrix();
-			rotateX(camOrien.x);
-			rotateY(camOrien.y);
-			rotateZ(camOrien.z);
+			rotateZ(-camOrien.z);
+			rotateY(-camOrien.y);
+			rotateX(-camOrien.x);
 			
 			RMatrix camRMat = getOrientation();
 			
@@ -2461,8 +2461,8 @@ public class RobotRun extends PApplet {
 	
 			if (mouseButton == RIGHT) {
 				// Drag the right mouse button to rotate the object
-				float mouseXDiff = mouseX - pmouseX;
-				float mouseYDiff = mouseY - pmouseY;
+				float mouseXDiff = pmouseX - mouseX;
+				float mouseYDiff = pmouseY - mouseY;
 				float mouseDiff = (float) Math.sqrt(mouseXDiff * mouseXDiff + mouseYDiff * mouseYDiff);
 				float angle = DEG_TO_RAD * mouseDiff / 4f;
 				
@@ -2500,9 +2500,9 @@ public class RobotRun extends PApplet {
 				
 				pushMatrix();
 				resetMatrix();
-				rotateX(camOrien.x);
-				rotateY(camOrien.y);
-				rotateZ(camOrien.z);
+				rotateZ(-camOrien.z);
+				rotateY(-camOrien.y);
+				rotateX(-camOrien.x);
 				
 				RMatrix camRMat = getOrientation();
 				
@@ -2510,8 +2510,8 @@ public class RobotRun extends PApplet {
 				
 				// Drag the center mouse button to move the object
 				PVector translation = new PVector(
-						(mouseX - pmouseX),
-						(mouseY - pmouseY),
+						(pmouseX - mouseX),
+						(pmouseY - mouseY),
 						0f
 				);
 				
@@ -2524,7 +2524,7 @@ public class RobotRun extends PApplet {
 	
 			if (mouseButton == RIGHT) {
 				// Drag right mouse button to rotate the camera
-				camera.rotate(mouseY - pmouseY, mouseX - pmouseX, 0f);
+				camera.rotate(pmouseY - mouseY, pmouseX - mouseX, 0f);
 			}
 		}
 	}
@@ -2548,11 +2548,11 @@ public class RobotRun extends PApplet {
 			pushMatrix();
 			resetMatrix();
 			// Apply the inverse of the camera's coordinate system
-			translate(-camPos.x, -camPos.y, -camPos.z);
+			translate(camPos.x, camPos.y, camPos.z);
 			
-			rotateZ(-camOrien.z);
-			rotateY(-camOrien.y);
-			rotateX(-camOrien.x);
+			rotateX(camOrien.x);
+			rotateY(camOrien.y);
+			rotateZ(camOrien.z);
 			
 			translate(mScreenPos.x, mScreenPos.y, mScreenPos.z);
 			
