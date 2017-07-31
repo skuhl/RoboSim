@@ -61,7 +61,6 @@ public class ScreenSetExpressionOp extends ST_ScreenEditItem {
 				if(r.getReg() instanceof DataRegister) {
 					loadArithOps();
 				} else if(r.getReg() instanceof IORegister) {
-					System.out.println(prev == null);
 					if(prev == null || prev instanceof PointMath || prev instanceof OperandGeneric) {
 						loadArithOps();
 						loadBoolOps();

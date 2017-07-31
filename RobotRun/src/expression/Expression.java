@@ -42,7 +42,7 @@ public class Expression extends Operand<Object> {
 		
 		Stack<Operator> operators = new Stack<Operator>();
 		Stack<Operand<?>> operands = new Stack<Operand<?>>();
-		boolean monoOp = false;
+		boolean notOp = false;
 		
 		for(int i = 0; i < elementList.size(); i += 1) {
 			ExpressionElement e = elementList.get(i);
@@ -52,17 +52,23 @@ public class Expression extends Operand<Object> {
 				} else {
 					operands.push((Operand<?>)e);
 				}
+				
+				if(notOp && operands.peek() instanceof BoolMath) {
+					boolean value = !((BoolMath)operands.pop()).getBoolValue(); 
+					operands.push(new OperandBool(value));
+					notOp = false;
+				}
 			} else if(e instanceof Operator && ((Operator)e).getType() != Operator.NO_OP) {
 				operators.push((Operator)e);
 			}
 			
 			if(!operators.isEmpty()) {
-				if(operators.peek() == Operator.NOT && !monoOp) {
-					monoOp = true;
-				} else if(operands.size() >= 2 || monoOp) {
+				if(operators.peek() == Operator.NOT) {
+					operators.pop();
+					notOp = true;
+				} else if(operands.size() >= 2) {
 					try {
-						operands.push(evaluate(operators.pop(), operands));
-						monoOp = false;
+						operands.push(evaluate(operators.pop(), operands, notOp));
 					} catch(ExpressionEvaluationException evalException) {
 						evalException.printMessage();
 						return null;
@@ -103,7 +109,7 @@ public class Expression extends Operand<Object> {
 		return result;
 	}
 
-	private Operand<?> evaluate(Operator op, Stack<Operand<?>> operands) throws ExpressionEvaluationException {
+	private Operand<?> evaluate(Operator op, Stack<Operand<?>> operands, boolean notOp) throws ExpressionEvaluationException {
 		Operand<?> arg2 = checkAndPop(op, operands);
 		Operand<?> arg1 = op == Operator.NOT ? arg2 : checkAndPop(op, operands);
 		
@@ -305,7 +311,7 @@ public class Expression extends Operand<Object> {
 	}
 
 	public void removeElement(int edit_idx) {
-		if(elementList.size() > 1 && edit_idx >= 0) {
+		if((elementList.size() > 1 && edit_idx >= 0) || (elementList.size() == 1 && edit_idx >= 1)) {
 			int[] elements = mapToEdit();
 			
 			if (edit_idx < elements.length) {
@@ -325,7 +331,7 @@ public class Expression extends Operand<Object> {
 				}
 			}
 		}
-		else {
+		else if(edit_idx == 0) {
 			elementList.set(0, new OperandGeneric());
 		}
 	}
