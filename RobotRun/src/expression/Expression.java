@@ -39,9 +39,10 @@ public class Expression extends Operand<Object> {
 			Fields.setMessage("Empty expression error!");
 			return null;
 		}
-
+		
 		Stack<Operator> operators = new Stack<Operator>();
 		Stack<Operand<?>> operands = new Stack<Operand<?>>();
+		boolean monoOp = false;
 		
 		for(int i = 0; i < elementList.size(); i += 1) {
 			ExpressionElement e = elementList.get(i);
@@ -51,16 +52,21 @@ public class Expression extends Operand<Object> {
 				} else {
 					operands.push((Operand<?>)e);
 				}
-			} else if(e instanceof Operator) {
+			} else if(e instanceof Operator && ((Operator)e).getType() != Operator.NO_OP) {
 				operators.push((Operator)e);
 			}
 			
-			if(!operators.isEmpty() && operands.size() >= operators.peek().getArgNo()) {
-				try {
-					operands.push(evaluate(operators.pop(), operands));
-				} catch(ExpressionEvaluationException evalException) {
-					evalException.printMessage();
-					return null;
+			if(!operators.isEmpty()) {
+				if(operators.peek() == Operator.NOT && !monoOp) {
+					monoOp = true;
+				} else if(operands.size() >= 2 || monoOp) {
+					try {
+						operands.push(evaluate(operators.pop(), operands));
+						monoOp = false;
+					} catch(ExpressionEvaluationException evalException) {
+						evalException.printMessage();
+						return null;
+					}
 				}
 			}
 		}
@@ -68,6 +74,7 @@ public class Expression extends Operand<Object> {
 		Operand<?> result = null;
 		if(operands.size() == 1) {
 			result = operands.pop();
+			System.out.println("result: " + result.getValue());
 		}
 		
 		// Map register operands to their respective values
@@ -97,46 +104,35 @@ public class Expression extends Operand<Object> {
 	}
 
 	private Operand<?> evaluate(Operator op, Stack<Operand<?>> operands) throws ExpressionEvaluationException {
-		ArrayList<Operand<?>> args = new ArrayList<Operand<?>>();
-		for(int i = 0; i < op.getArgNo(); i += 1) {
-			if(op.matchTypeToArg(operands.peek())) {
-				args.add(0, operands.pop());
-			} else {
-				throw new ExpressionEvaluationException("Operator/ operand type mismatch");
-			}
-		}
+		Operand<?> arg2 = checkAndPop(op, operands);
+		Operand<?> arg1 = op == Operator.NOT ? arg2 : checkAndPop(op, operands);
 		
-		if(args.size() >= 2)
-			System.out.println("calculating " + args.get(0).getValue().toString() + " " + op.toString() + " " + args.get(1).getValue().toString());
+		if(op != Operator.NOT)
+			System.out.println("calculating " + arg1.getValue().toString() + " " + op.toString() + " " + arg2.getValue().toString());
 		else
-			System.out.println("calculating " + op.toString() + " " + args.get(0).getValue().toString());
+			System.out.println("calculating " + op.toString() + " " + arg1.getValue().toString());
 		
 		if(op.getType() == Operator.ARITH_OP || op.getType() == Operator.BOOL_OP) {
-			FloatMath arg1 = (FloatMath)args.get(0);
-			FloatMath arg2 = (FloatMath)args.get(1);
-			if(arg1.getArithValue().isNaN() || arg2.getArithValue().isNaN()) {
-				throw new ExpressionEvaluationException("Floating point operand value not a number");
-			}
-			return evaluateFloat(arg1, arg2, op);
+			return evaluateFloat((FloatMath)arg1, (FloatMath)arg2, op);
 		} else if(op.getType() == Operator.LOGIC_OP) {
-			BoolMath arg1 = (BoolMath)args.get(0);
-			BoolMath arg2 = args.size() == 2 ? (BoolMath)args.get(1) : arg1;
-			return evaluateBoolean(arg1, arg2, op);
+			return evaluateBoolean((BoolMath)arg1, (BoolMath)arg2, op);
 		} else if(op.getType() == Operator.POINT_OP) {
-			PointMath arg1 = (PointMath)args.get(0);
-			PointMath arg2 = (PointMath)args.get(1);
-			return evaluatePoint(arg1, arg2, op);
+			return evaluatePoint((PointMath)arg1, (PointMath)arg2, op);
 		}
 
 		throw new ExpressionEvaluationException("Invalid operator type");
 	}
 	
-	private Operand<?> evaluateFloat(FloatMath o1, FloatMath o2, Operator op) {
-		
+	private Operand<?> evaluateFloat(FloatMath o1, FloatMath o2, Operator op) 
+			throws ExpressionEvaluationException {
 		if (op.getType() == Operator.ARITH_OP) {
 			// Arithmetic evaluation
 			Float v1 = o1.getArithValue();
 			Float v2 = o2.getArithValue();
+			
+			if(v1.isNaN() || v2.isNaN()) {
+				throw new ExpressionEvaluationException("Floating point operand value not a number");
+			}
 			
 			switch (op) {
 			case ADD:	return new OperandFloat(v1 + v2);
@@ -218,6 +214,17 @@ public class Expression extends Operand<Object> {
 			return (Operator)elementList.get(idx);
 		else
 			return null;
+	}
+	
+	private Operand<?> checkAndPop(Operator op, Stack<Operand<?>> argStack) 
+			throws ExpressionEvaluationException {
+		if(argStack.isEmpty()) {
+			throw new ExpressionEvaluationException("Insufficient arguments to match operation");
+		} else if(op.matchTypeToArg(argStack.peek())) {
+			return argStack.pop();
+		} else {
+			throw new ExpressionEvaluationException("Operator/ operand type mismatch");
+		}
 	}
 
 	/**
