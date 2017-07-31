@@ -6,6 +6,7 @@ import expression.OperandBool;
 import expression.OperandFloat;
 import expression.OperandPoint;
 import expression.Operator;
+import expression.RobotPoint;
 import geom.Point;
 import global.Fields;
 import global.RMath;
@@ -132,6 +133,16 @@ public class RegisterStatement extends Instruction implements ExpressionEvaluati
 			Point p = ((OperandPoint)result).getPointValue();
 			if(reg instanceof PositionRegister) {
 				((PositionRegister)reg).point = p;
+				return 0;
+			}
+			
+		} else if (result instanceof RobotPoint) {
+			// Update a position register
+			if (reg instanceof PositionRegister) {
+				PositionRegister pReg = (PositionRegister) reg;
+				RobotPoint rp = (RobotPoint) result;
+				pReg.point = rp.getPointValue();
+				pReg.isCartesian = rp.isCartesian();
 				return 0;
 			}
 		}
