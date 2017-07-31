@@ -65,6 +65,9 @@ public class ScreenSetExpressionOp extends ST_ScreenEditItem {
 						loadBoolOps();
 					} else if(prev instanceof BoolMath) {
 						loadLogicOps();
+						
+					} else if (prev instanceof Operator) {
+						loadLogicOps();
 					}
 				} 
 				else if(r.getReg() instanceof PositionRegister) {
@@ -84,6 +87,8 @@ public class ScreenSetExpressionOp extends ST_ScreenEditItem {
 					loadArithOps();
 					loadBoolOps();
 				} else if(prev instanceof BoolMath) {
+					loadLogicOps();
+				} else if (prev instanceof Operator) {
 					loadLogicOps();
 				}
 			}
