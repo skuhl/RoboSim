@@ -3244,6 +3244,12 @@ public class RobotRun extends PApplet {
 		}
 	}
 	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param set
+	 * @param direction
+	 */
 	public void updateRobotJogMotion(int set, int direction) {
 		if (isShift() && !isProgExec()) {
 			boolean robotInMotion = getActiveRobot().inMotion();

@@ -990,7 +990,22 @@ public class WGUI implements ControlListener {
 		
 		return rb;
 	}
-
+	
+	/**
+	 * Adds a new slider with the given name, parent, dimensions, and input
+	 * type to the set of UI elements.
+	 * 
+	 * @param name		The name of the slider, which be unique amongst all
+	 * 					UI elements
+	 * @param parent	The window group, to which this slider belongs
+	 * @param wdh		The width of the slider
+	 * @param hgt		The height of the slider
+	 * @param min		The minimum value of the slider
+	 * @param max		The maximum value of the slider
+	 * @param def		The initial value of the slider
+	 * @param inputType	How should this field by treated for input clear events
+	 * @return			A reference to the new slider
+	 */
 	private MySlider addSlider(String name, Group parent, int wdh, int hgt,
 			float min, float max, float def, int inputType) {
 		
@@ -1006,6 +1021,32 @@ public class WGUI implements ControlListener {
 		return s;
 	}
 	
+	/**
+	 * An alternative way to define a slider with a lot more customizability.
+	 * 
+	 * @param name				The name of the slider, which must be unique
+	 * 							amongst all UI elements
+	 * @param lbl				The text to be rendered on the slider's label
+	 * @param parent			The window group, to which this slider belongs
+	 * @param wdh				The width of the slider
+	 * @param hgt				The height of the slider
+	 * @param min				The minimum value of the slider
+	 * @param max				The maximum value of the slider
+	 * @param percision			The digit precision of the slider's value
+	 * @param scrollSensitivity	A coefficient applied to the amount of change
+	 * 							in the slider's value induced by moving the
+	 * 							slider
+	 * @param def				The initial value of the slider
+	 * @param valColor			The color of the slider's text label
+	 * @param actColor			The color of the slider bar, when the slider is
+	 * 							active
+	 * @param bgColor			The background color of the slider
+	 * @param fgColor			The general color of the slider bar
+	 * @param lblFont			The font of the slider's text label
+	 * @param inputType			How should this field by treated for input
+	 * 							clear events
+	 * @return					A reference to the new slider
+	 */
 	private MySlider addSlider(String name, String lbl, Group parent, int wdh,
 			int hgt, float min, float max, int percision,
 			float scrollSensitivity, float def, int valColor, int actColor,
@@ -1034,7 +1075,7 @@ public class WGUI implements ControlListener {
 	 * 
 	 * @param name
 	 * @param actLblTxt
-	 * @param inActLblTxt
+	 * @param inActLblTxt	
 	 * @param parent
 	 * @param posX
 	 * @param posY

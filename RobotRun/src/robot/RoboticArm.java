@@ -2111,10 +2111,11 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Removes the given program from this robot's list of programs, if it
+	 * exists.
 	 * 
-	 * @param p
-	 * @return
+	 * @param p	The program to remove
+	 * @return	If the program existed in this robot's list of programs
 	 */
 	public boolean rmProg(Program p) {
 		return PROGRAM.remove(p);
