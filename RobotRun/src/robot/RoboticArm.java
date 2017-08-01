@@ -2014,7 +2014,8 @@ public class RoboticArm {
 				Program predecessor = PROGRAM.get(insertIdx);
 				/* Search to new list from back to front to find where to
 				 * insert the program */
-				while (predecessor.getName().compareTo(toInsert.getName()) > 0 ) {
+				while (predecessor.getName().compareTo(toInsert.getName())
+						> 0) {
 					
 					if (--insertIdx < 0) { break; }
 					predecessor = PROGRAM.get(insertIdx);

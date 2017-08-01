@@ -11,16 +11,74 @@ import controlP5.ControllerGroup;
  */
 public class MyButton extends Button {
 	
-	public MyButton(ControlP5 theControlP5, String theName) {
+	/**
+	 * The text to render on the button, if it is inactive.
+	 */
+	private String inActTxtLbl;
+	
+	/**
+	 * The text to render on the button, if it is active.
+	 */
+	private String actTxtLbl;
+	
+	public MyButton(ControlP5 theControlP5, String theName, String inActTxtLbl,
+			String actTxtLbl) {
+		
 		super(theControlP5, theName);
+		this.inActTxtLbl = inActTxtLbl;
+		this.actTxtLbl = actTxtLbl;
+		
+		if (inActTxtLbl != null) {
+			_myCaptionLabel.setText(inActTxtLbl);
+		}
 	}
 
 	protected MyButton(ControlP5 theControlP5, ControllerGroup<?> theParent,
 			String theName, float theDefaultValue, int theX, int theY, int
-			theWidth, int theHeight) {
+			theWidth, int theHeight, String inActTxtLbl, String actTxtLbl) {
 		
 		super(theControlP5, theParent, theName, theDefaultValue, theX, theY, 
 				theWidth, theHeight);
+		
+		this.inActTxtLbl = inActTxtLbl;
+		this.actTxtLbl = actTxtLbl;
+		
+		if (inActTxtLbl != null) {
+			_myCaptionLabel.setText(inActTxtLbl);
+		}
+	}
+	
+	@Override
+	protected void activate() {
+		super.activate();
+		// Update the button's text based on its state
+		if (actTxtLbl != null) {
+			
+			if (isOn) {
+				getCaptionLabel().setText(actTxtLbl);
+				
+			} else if (inActTxtLbl != null) {
+				getCaptionLabel().setText(inActTxtLbl);
+			}
+		}
+	}
+	
+	/**
+	 * The text that is display on the button, when it is active.
+	 * 
+	 * @return	Active button label
+	 */
+	public String getActTxtLbl() {
+		return actTxtLbl;
+	}
+	
+	/**
+	 * The text to display on the button, when it is inactive.
+	 * 
+	 * @return	Inactive button label
+	 */
+	public String getInActTxtLbl() {
+		return inActTxtLbl;
 	}
 	
 	@Override
