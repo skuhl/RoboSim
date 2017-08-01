@@ -40,11 +40,16 @@ public class ScreenSetExpressionOp extends ST_ScreenEditItem {
 			int[] elements = expr.mapToEdit();
 			ExpressionElement prev;
 			
+			System.out.println(idx);
+			
 			if(idx > 0 && idx < elements.length) {
 				prev = expr.get(elements[idx - 1]);
+				System.out.println(elements[idx-1]);
 				
 				if(prev instanceof Expression) {
 					prev = ((Expression)prev).evaluate();
+				} else if(prev instanceof Operator) {
+					prev = null;
 				}
 			} else {
 				prev = null;

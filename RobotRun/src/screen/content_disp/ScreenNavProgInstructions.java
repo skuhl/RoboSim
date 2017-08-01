@@ -593,14 +593,14 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 	
 			if (e instanceof Expression) {
 				// if selecting the open or close paren
-				if (selectIdx == 0 || selectIdx == e.getLength() || elements[selectIdx - 1] != elements[selectIdx]
+				if (selectIdx == 0 || selectIdx == expr.getLength() || elements[selectIdx - 1] != elements[selectIdx]
 						|| elements[selectIdx + 1] != elements[selectIdx]) {
 					robotRun.nextScreen(ScreenMode.SET_EXPR_ARG);
 				} else {
 					int startIdx = expr.getStartingIdx(elements[selectIdx]);
 					editExpression((Expression) e, selectIdx - startIdx - 1);
 				}
-			} else if (e instanceof Operand) {
+			} else if (e instanceof Operand<?>) {
 				editOperand((Operand<?>) e, selectIdx, elements[selectIdx]);
 			} else {
 				robotRun.editIdx = elements[selectIdx];

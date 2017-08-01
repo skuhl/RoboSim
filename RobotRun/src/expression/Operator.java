@@ -1,30 +1,30 @@
 package expression;
 /* These are used to store the operators used in register statement expressions in the ExpressionSet Object */
 public enum Operator implements ExpressionElement {
-	ADD("+", ARITH_OP, 2), 
-	SUB("-", ARITH_OP, 2), 
-	MULT("*", ARITH_OP, 2), 
-	DIV("/", ARITH_OP, 2), 
-	MOD("%", ARITH_OP, 2), 
-	IDIV("|", ARITH_OP, 2),
+	ADD("+", ARITH_OP), 
+	SUB("-", ARITH_OP), 
+	MULT("*", ARITH_OP), 
+	DIV("/", ARITH_OP), 
+	MOD("%", ARITH_OP), 
+	IDIV("|", ARITH_OP),
 	
-	PT_ADD("+", POINT_OP, 2),
-	PT_SUB("-", POINT_OP, 2),
+	PT_ADD("+", POINT_OP),
+	PT_SUB("-", POINT_OP),
 		
-	AND("&&", LOGIC_OP, 2),
-	OR("||", LOGIC_OP, 2),
-	NOT("!", LOGIC_OP, 1),
+	AND("&&", LOGIC_OP),
+	OR("||", LOGIC_OP),
+	NOT("!", LOGIC_OP),
 	
-	GRTR(">", BOOL_OP, 2),
-	LESS("<", BOOL_OP, 2),
-	GREQ(">=", BOOL_OP, 2),
-	LSEQ("<=", BOOL_OP, 2),
-	EQUAL("=", BOOL_OP, 2),
-	NEQUAL("<>", BOOL_OP, 2),
+	GRTR(">", BOOL_OP),
+	LESS("<", BOOL_OP),
+	GREQ(">=", BOOL_OP),
+	LSEQ("<=", BOOL_OP),
+	EQUAL("=", BOOL_OP),
+	NEQUAL("<>", BOOL_OP),
 	
-	PAR_OPEN("(", NO_OP, Integer.MAX_VALUE),
-	PAR_CLOSE(")", NO_OP, Integer.MAX_VALUE),
-	UNINIT("_", NO_OP, Integer.MAX_VALUE);
+	PAR_OPEN("(", NO_OP),
+	PAR_CLOSE(")", NO_OP),
+	UNINIT("_", NO_OP);
 
 	/**
 	 * Returns a specific operator based on the id value given. Integers 0 through
@@ -56,12 +56,10 @@ public enum Operator implements ExpressionElement {
 	
 	private String symbol;
 	private int type;
-	private int argNo;
 
-	private Operator(String s, int t, int n) {
+	private Operator(String s, int t) {
 		symbol = s;
 		type = t;
-		argNo = n;
 	}
 
 	@Override
@@ -113,10 +111,6 @@ public enum Operator implements ExpressionElement {
 		case POINT_OP: return arg instanceof PointMath;
 		default: return false;
 		}
-	}
-	
-	public int getArgNo() {
-		return argNo;
 	}
 	
 	@Override

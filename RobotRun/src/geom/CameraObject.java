@@ -6,6 +6,7 @@ import camera.CamSelectArea;
 import camera.CamSelectView;
 import camera.RegisteredModels;
 import core.RobotRun;
+import processing.core.PApplet;
 import processing.core.PGraphics;
 import processing.core.PVector;
 
@@ -55,28 +56,16 @@ public class CameraObject extends Part {
 		return new CameraObject(this, image_quality);
 	}
 	
-	private ArrayList<CamSelectArea> loadCamSelectAreas() {
-		ArrayList<CamSelectArea> selectAreas = new ArrayList<CamSelectArea>();
-		
-		if(RegisteredModels.modelAreasOfInterest.get(model_ID) != null) {
-			for(CamSelectArea c: RegisteredModels.modelAreasOfInterest.get(model_ID)) {
-				selectAreas.add(c.copy());
-			}
-		}
-		
-		return selectAreas;
-	}
-	
-	public int getModelID() {
-		return model_ID;
+	public CamSelectArea getCamSelectArea(int i) {
+		return selectAreas.get(i);
 	}
 	
 	public int getModelGroupID() {
 		return group_ID;
 	}
 	
-	public CamSelectArea getCamSelectArea(int i) {
-		return selectAreas.get(i);
+	public int getModelID() {
+		return model_ID;
 	}
 	
 	public PGraphics getModelPreview(RMatrix m) {
@@ -96,7 +85,11 @@ public class CameraObject extends Part {
 					0, 0, 0, 1
 			);
 			
-			this.draw(img);
+			//img.scale(0.5f);
+			
+			this.getModel().draw(img);
+			img.filter(PApplet.BLUR, 5*(1 - image_quality*image_quality));
+			System.out.println(image_quality);
 			img.resetMatrix();
 			img.translate(-75, -100);
 						
@@ -138,7 +131,7 @@ public class CameraObject extends Part {
 	public float getReflectiveIndex() {
 		return reflective_IDX;
 	}
-
+	
 	public CamSelectArea getSelectAreaClicked(int x, int y, RMatrix m) {
 		for(CamSelectArea a: selectAreas) {
 			CamSelectView v = a.getView(m);
@@ -159,5 +152,17 @@ public class CameraObject extends Part {
 	public PGraphics updateModelPreview(RMatrix m) {
 		preview = null;
 		return getModelPreview(m);
+	}
+
+	private ArrayList<CamSelectArea> loadCamSelectAreas() {
+		ArrayList<CamSelectArea> selectAreas = new ArrayList<CamSelectArea>();
+		
+		if(RegisteredModels.modelAreasOfInterest.get(model_ID) != null) {
+			for(CamSelectArea c: RegisteredModels.modelAreasOfInterest.get(model_ID)) {
+				selectAreas.add(c.copy());
+			}
+		}
+		
+		return selectAreas;
 	}
 }
