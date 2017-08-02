@@ -1207,7 +1207,7 @@ public class WGUI implements ControlListener {
 					MyDropdownList ddl = (MyDropdownList)arg0.getController();
 					r.setActiveEE( (Integer)ddl.getSelectedItem() );
 				}
-			} else if (arg0.isFrom("CamObjPreview")) {
+			} else if (arg0.isFrom(WGUI_Buttons.CamObjPreview)) {
 				CameraObject o = (CameraObject)getDropdown("CamObjects").getSelectedItem();	
 				RMatrix mdlOrient = o.getLocalOrientation();
 				Pointer p = getButton(WGUI_Buttons.CamObjPreview).getPointer();
