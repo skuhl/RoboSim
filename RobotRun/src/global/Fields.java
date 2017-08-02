@@ -658,13 +658,16 @@ public abstract class Fields {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Renders a regular pyramid with the specified number of sides, radius,
+	 * height and color values at the current position orientation of the given
+	 * graphics object. The pyramid is rendered from its center.
 	 * 
-	 * @param g
-	 * @param sides
-	 * @param length
-	 * @param height
-	 * @param width
+	 * @param g			The graphics object used to render the pyramid
+	 * @param sides		The number of sides on the pyramid's base
+	 * @param radius	The radius of each vertex on the pyramid's base
+	 * @param height	The height of the pyramid
+	 * @param stroke	The color used to render the pyramid's line segments
+	 * @param fill		The color used when rendering the sides of the pyramid
 	 */
 	public static void drawPyramid(PGraphics g, int sides, float radius,
 			float height, int stroke, int fill) {

@@ -13,6 +13,7 @@ import geom.Scenario;
 import geom.WorldObject;
 import global.Fields;
 import global.RMath;
+import processing.core.PApplet;
 import processing.core.PGraphics;
 import processing.core.PImage;
 import processing.core.PVector;
@@ -75,14 +76,38 @@ public class RobotCamera {
 	}
 	
 	/**
-	 * TODO
+	 * Renders the camera at its position and orientation, along with the
+	 * camera's fields of view.
 	 * 
-	 * @param g
+	 * @param g	The graphics object used to render the camera
 	 */
 	public void draw(PGraphics g) {
-		Fields.drawAxes(g, getPosition(), getOrientationMat(), 300, 0);
+		// Defines some fields for the camera
+		int camColor = Fields.color(115, 115, 115);
+		float camBodyWdh = 60f;
+		float camSideLen = 40f;
+		float camEyeRad = camSideLen / (float)Math.sqrt(2.0);
 		
-		// TODO Draw image for the camera
+		g.pushStyle();
+		g.stroke(camColor);
+		g.fill(camColor);
+		
+		g.pushMatrix();
+		// Apply camera position and orientation
+		Fields.transform(g, getPosition(), getOrientationMat());
+		g.pushMatrix();
+		g.translate(0f, 0f, camBodyWdh / 2f);
+		// Draw camera body
+		g.box(camSideLen, camSideLen, camBodyWdh);
+		g.translate(0f, 0f, -(0.75f * camSideLen + camBodyWdh) / 2f);
+		g.rotateX(-PApplet.HALF_PI);
+		g.rotateY(PApplet.PI / 4f);
+		// Draw camera eye
+		Fields.drawPyramid(g, 4, camEyeRad, camSideLen, camColor, camColor);
+		g.popMatrix();
+		// Draw camera axes
+		Fields.drawAxes(g, 300, 0);
+		g.popMatrix();
 		
 		PVector near[] = getPlaneNear();
 		PVector far[] = getPlaneFar();
@@ -106,6 +131,7 @@ public class RobotCamera {
 		g.line(near[3].x, near[3].y, near[3].z, far[3].x, far[3].y, far[3].z);
 										
 		g.popMatrix();
+		g.pushStyle();
 	}
 	
 	public float getAspectRatio() {

@@ -2454,9 +2454,9 @@ public class WGUI implements ControlListener {
 	}
 	
 	/**
-	 * TODO comment this
+	 * The state of the mouse ray render debug option.
 	 * 
-	 * @return
+	 * @return	Whether the mouse ray render option is active or not
 	 */
 	public boolean renderMouseRay() {
 		MyRadioButton rb = getRadioButton("DebugOptions");
@@ -2464,9 +2464,9 @@ public class WGUI implements ControlListener {
 	}
 	
 	/**
-	 * TODO comment this
+	 * The state of the position render debug option.
 	 * 
-	 * @return
+	 * @return	Whether the mouse ray render option is active or not
 	 */
 	public boolean renderPoint() {
 		MyRadioButton rb = getRadioButton("DebugOptions");
@@ -2512,10 +2512,11 @@ public class WGUI implements ControlListener {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Sets the state of the switch with the given name to the given state, if
+	 * a switch with the given name exists in the UI.
 	 * 
-	 * @param name
-	 * @param state
+	 * @param name	The name of the switch, of which to update the state
+	 * @param state	The new state for the switch
 	 */
 	public void setSwitchState(String name, boolean state) {
 		

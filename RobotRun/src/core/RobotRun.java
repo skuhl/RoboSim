@@ -1837,12 +1837,6 @@ public class RobotRun extends PApplet {
 			}
 			/**/
 			
-			pushMatrix();
-			translate(-400f, -500f, 0f);
-			Fields.drawPyramid(getGraphics(), 15, 100f, 200f, Fields.BLACK,
-					Fields.RED);
-			popMatrix();
-			
 			popMatrix();
 			
 			renderUI();
@@ -2979,12 +2973,12 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Updates the state of the step switch on the pendant.
 	 * 
-	 * @param flag
+	 * @param state	The new state of the step switch
 	 */
-	public void setStep(boolean flag) {
-		UI.setSwitchState(WGUI_Buttons.Step, flag);
+	public void setStep(boolean state) {
+		UI.setSwitchState(WGUI_Buttons.Step, state);
 	}
 	
 	@Override
@@ -3074,7 +3068,8 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Updates the robot motion and program execution states as well as the
+	 * pendant display based on the state of the shift switch on the pendant.
 	 */
 	public void shiftUpkeep() {
 		if (isShift()) {
@@ -3083,7 +3078,6 @@ public class RobotRun extends PApplet {
 			progExecState.halt();
 		}
 		
-		//UI.updateShiftButton(shift);
 		updatePendantScreen();
 	}
 
@@ -3217,16 +3211,30 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Updates the active robot's motion as well as the jog button pair state
+	 * associated with the given motion index based on the given direction
+	 * value. The motion index corresponds to either translation or rotational
+	 * motion around one of the three axes.
 	 * 
-	 * @param set
-	 * @param direction
+	 * 0	->	x translation
+	 * 1	->	y translation
+	 * 2	->	z translation
+	 * 3	->	x rotation
+	 * 4	->	y rotation
+	 * 5	->	z rotation
+	 * 
+	 * The direction value will update the robot's current jog motion, only if
+	 * the state of the shift switch is on and there is no program currently
+	 * being executed.
+	 * 
+	 * @param motion		The motion index for the axis motion to update
+	 * @param direction		The new direction for the axis motion (-1, 0, or 1)
 	 */
-	public void updateRobotJogMotion(int set, int direction) {
+	public void updateRobotJogMotion(int motion, int direction) {
 		if (isShift() && !isProgExec()) {
 			boolean robotInMotion = getActiveRobot().inMotion();
 			
-			getActiveRobot().updateJogMotion(set, direction);
+			getActiveRobot().updateJogMotion(motion, direction);
 			
 			if (robotInMotion && !getActiveRobot().inMotion()) {
 				// Robot has stopped moving
