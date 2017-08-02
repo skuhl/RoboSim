@@ -11,6 +11,7 @@ import geom.RMatrix;
 import geom.RQuaternion;
 import geom.Scenario;
 import geom.WorldObject;
+import global.Fields;
 import global.RMath;
 import processing.core.PGraphics;
 import processing.core.PImage;
@@ -71,6 +72,40 @@ public class RobotCamera {
 		});
 		
 		camOrient = RMath.matrixToQuat(coord);
+	}
+	
+	/**
+	 * TODO
+	 * 
+	 * @param g
+	 */
+	public void draw(PGraphics g) {
+		Fields.drawAxes(g, getPosition(), getOrientationMat(), 300, 0);
+		
+		// TODO Draw image for the camera
+		
+		PVector near[] = getPlaneNear();
+		PVector far[] = getPlaneFar();
+		g.pushMatrix();
+		g.stroke(255, 126, 0, 255);
+		
+		//Near plane
+		g.line(near[0].x, near[0].y, near[0].z, near[1].x, near[1].y, near[1].z);
+		g.line(near[1].x, near[1].y, near[1].z, near[3].x, near[3].y, near[3].z);
+		g.line(near[3].x, near[3].y, near[3].z, near[2].x, near[2].y, near[2].z);
+		g.line(near[2].x, near[2].y, near[2].z, near[0].x, near[0].y, near[0].z);
+		//Far plane
+		g.line(far[0].x, far[0].y, far[0].z, far[1].x, far[1].y, far[1].z);
+		g.line(far[1].x, far[1].y, far[1].z, far[3].x, far[3].y, far[3].z);
+		g.line(far[3].x, far[3].y, far[3].z, far[2].x, far[2].y, far[2].z);
+		g.line(far[2].x, far[2].y, far[2].z, far[0].x, far[0].y, far[0].z);
+		//Connecting lines
+		g.line(near[0].x, near[0].y, near[0].z, far[0].x, far[0].y, far[0].z);
+		g.line(near[1].x, near[1].y, near[1].z, far[1].x, far[1].y, far[1].z);
+		g.line(near[2].x, near[2].y, near[2].z, far[2].x, far[2].y, far[2].z);
+		g.line(near[3].x, near[3].y, near[3].z, far[3].x, far[3].y, far[3].z);
+										
+		g.popMatrix();
 	}
 	
 	public float getAspectRatio() {
@@ -349,6 +384,9 @@ public class RobotCamera {
 		float reflect = camObj.reflective_IDX;
 		float lightFactor = (float)Math.max(1 - Math.pow(Math.log(brightness * exposure * reflect), 2), 0);
 		float imageQuality = (inView / (float)(RES*RES*RES)) * lightFactor;
+		
+		Fields.debug("inView=%d\nreflect=%f\nlight=%f\nquality=%f\n\n", inView,
+				reflect, lightFactor, imageQuality);
 		
 		return imageQuality;
 	}
