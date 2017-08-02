@@ -1837,6 +1837,12 @@ public class RobotRun extends PApplet {
 			}
 			/**/
 			
+			pushMatrix();
+			translate(-400f, -500f, 0f);
+			Fields.drawPyramid(getGraphics(), 15, 100f, 200f, Fields.BLACK,
+					Fields.RED);
+			popMatrix();
+			
 			popMatrix();
 			
 			renderUI();

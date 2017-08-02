@@ -49,15 +49,9 @@ public class RCylinder extends RShape {
 		 */
 		float halfHeight = height / 2,
 				diameter = 2 * radius;
-
-		g.translate(0f, 0f, halfHeight);
-		// Draw top of the cylinder
-		g.ellipse(0f, 0f, diameter, diameter);
-		g.translate(0f, 0f, -height);
-		// Draw bottom of the cylinder
-		g.ellipse(0f, 0f, diameter, diameter);
-		g.translate(0f, 0f, halfHeight);
-
+		
+		g.pushStyle();
+		g.noStroke();
 		g.beginShape(PConstants.TRIANGLE_STRIP);
 		/* Draw a string of triangles around the circumference of the Cylinders
 		 * top and bottom. */
@@ -68,8 +62,17 @@ public class RCylinder extends RShape {
 			g.vertex(pos_x, pos_y, halfHeight);
 			g.vertex(pos_x, pos_y, -halfHeight);
 		}
-
+		
 		g.endShape();
+		g.popStyle();
+		
+		g.translate(0f, 0f, halfHeight);
+		// Draw top of the cylinder
+		g.ellipse(0f, 0f, diameter, diameter);
+		g.translate(0f, 0f, -height);
+		// Draw bottom of the cylinder
+		g.ellipse(0f, 0f, diameter, diameter);
+		g.translate(0f, 0f, halfHeight);
 		
 		g.popStyle();
 	}
