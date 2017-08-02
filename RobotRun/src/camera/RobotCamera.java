@@ -131,7 +131,7 @@ public class RobotCamera {
 		g.line(near[3].x, near[3].y, near[3].z, far[3].x, far[3].y, far[3].z);
 										
 		g.popMatrix();
-		g.pushStyle();
+		g.popStyle();
 	}
 	
 	public float getAspectRatio() {
