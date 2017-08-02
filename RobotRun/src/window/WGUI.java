@@ -236,8 +236,9 @@ public class WGUI implements ControlListener {
 
 		// Step button
 		relPos = getAbsPosFrom(c1, Alignment.BOTTOM_LEFT, 0, 11);
-		c1 = addButton(WGUI_Buttons.Step, "STEP", pendant, relPos[0], relPos[1],
-				Fields.LARGE_BUTTON, Fields.LARGE_BUTTON, Fields.bond);
+		c1 = addSwitch(WGUI_Buttons.Step, "STEP", "STEP", pendant, relPos[0],
+				relPos[1], Fields.LARGE_BUTTON, Fields.LARGE_BUTTON,
+				Fields.bond);
 
 		// Menu button
 		relPos = getAbsPosFrom(c1, Alignment.TOP_RIGHT, 19, 0);
@@ -279,8 +280,9 @@ public class WGUI implements ControlListener {
 
 		// Shift button
 		relPos = getAbsPosFrom(c2, Alignment.TOP_RIGHT, 19, 0);
-		addButton(WGUI_Buttons.Shift, "SHIFT", pendant, relPos[0], relPos[1],
-				Fields.LARGE_BUTTON, Fields.LARGE_BUTTON, Fields.bond);
+		addSwitch(WGUI_Buttons.Shift, "SHIFT", "SHIFT", pendant, relPos[0],
+				relPos[1], Fields.LARGE_BUTTON, Fields.LARGE_BUTTON,
+				Fields.bond);
 
 		// Arrow buttons
 
@@ -664,11 +666,16 @@ public class WGUI implements ControlListener {
 		addTextarea("ActiveRobotEE", "EE:", miscellaneous, lLblWidth, sButtonHeight, Fields.medium);
 		addTextarea("ActiveAxesDisplay", "Axes Display:", miscellaneous, lLblWidth, sButtonHeight, Fields.medium);
 
-		addButton(WGUI_Buttons.ObjToggleBounds, "Hide OBBs", miscellaneous, mdropItemWidth, sButtonHeight, Fields.small);
-		addButton(WGUI_Buttons.RobotToggleActive, "Add Robot", miscellaneous, mdropItemWidth, sButtonHeight, Fields.small);
-		addButton(WGUI_Buttons.CamToggleActive, "Enable RCam", miscellaneous, mdropItemWidth, sButtonHeight, Fields.small);
-		addButton(WGUI_Buttons.RobotToggleTrace, "Enable Trace", miscellaneous, mdropItemWidth, sButtonHeight, Fields.small);
-		addButton(WGUI_Buttons.RobotClearTrace, "Clear Trace", miscellaneous, mdropItemWidth, sButtonHeight, Fields.small);
+		addSwitch(WGUI_Buttons.ObjToggleBounds, "Show OBBs", "Hide OBBs",
+				miscellaneous, mdropItemWidth, sButtonHeight, Fields.small);
+		addSwitch(WGUI_Buttons.RobotToggleActive, "Remove Robot", "Add Robot",
+				miscellaneous, mdropItemWidth, sButtonHeight, Fields.small);
+		addSwitch(WGUI_Buttons.CamToggleActive, "Disable RCam", "Enable RCam",
+				miscellaneous, mdropItemWidth, sButtonHeight, Fields.small);
+		addSwitch(WGUI_Buttons.RobotToggleTrace, "Disable Trace", "Enable Trace",
+				miscellaneous, mdropItemWidth, sButtonHeight, Fields.small);
+		addButton(WGUI_Buttons.RobotClearTrace, "Clear Trace", miscellaneous,
+				mdropItemWidth, sButtonHeight, Fields.small);
 		
 		togValues = new float[] { 0f, 1f };
 		togNames = new String[] { "RenderMouseRayOpt", "RenderPointOpt" };
@@ -676,13 +683,6 @@ public class WGUI implements ControlListener {
 		rb = addRadioButton("DebugOptions", miscellaneous, radioDim,
 				radioDim, Fields.medium, togValues, togNames, togLbls,
 				true, Fields.ITYPE_PERMENANT);
-		
-		if(app.isRCamEnable()) {
-			getButton(WGUI_Buttons.CamToggleActive).setSwitch(true);
-			getButton(WGUI_Buttons.CamToggleActive).setOn();
-			getButton(WGUI_Buttons.CamToggleActive).setSwitch(false);
-			System.out.println(getButton(WGUI_Buttons.CamToggleActive).isOn());
-		}
 		
 		/* Initialize dropdown list elements
 		 * 
@@ -739,10 +739,9 @@ public class WGUI implements ControlListener {
 	private MyButton addButton(String name, String lblTxt, Group parent, int wdh,
 			int hgt, PFont lblFont) {
 
-		MyButton b = new MyButton(manager, name);
+		MyButton b = new MyButton(manager, name, lblTxt, null);
 
-		b.setCaptionLabel(lblTxt)
-		.setColorValue(Fields.B_TEXT_C)
+		b.setColorValue(Fields.B_TEXT_C)
 		.setColorBackground(Fields.B_DEFAULT_C)
 		.setColorActive(Fields.B_ACTIVE_C)
 		.moveTo(parent)
@@ -772,10 +771,9 @@ public class WGUI implements ControlListener {
 	private MyButton addButton(String name, String lblTxt, Group parent,
 			float posX, float posY, int wdh, int hgt, PFont lblFont) {
 
-		MyButton b = new MyButton(manager, name);
+		MyButton b = new MyButton(manager, name, lblTxt, null);
 
-		b.setCaptionLabel(lblTxt)
-		.setColorValue(Fields.B_TEXT_C)
+		b.setColorValue(Fields.B_TEXT_C)
 		.setColorBackground(Fields.B_DEFAULT_C)
 		.setColorActive(Fields.B_ACTIVE_C)
 		.setPosition(posX, posY)
@@ -801,10 +799,9 @@ public class WGUI implements ControlListener {
 	private MyButton addButton(String name, String lblTxt, int wdh, int hgt,
 			PFont lblFont) {
 
-		MyButton b = new MyButton(manager, name);
+		MyButton b = new MyButton(manager, name, lblTxt, null);
 
-		b.setCaptionLabel(lblTxt)
-		.setColorValue(Fields.B_TEXT_C)
+		b.setColorValue(Fields.B_TEXT_C)
 		.setColorBackground(Fields.B_DEFAULT_C)
 		.setColorActive(Fields.B_ACTIVE_C)
 		.setSize(wdh, hgt)
@@ -832,7 +829,7 @@ public class WGUI implements ControlListener {
 	private MyButton addButton(String name, Group parent, PImage[] imgLbls,
 			float posX, float posY, int wdh, int hgt) {
 
-		MyButton b = new MyButton(manager, name);
+		MyButton b = new MyButton(manager, name, null, null);
 
 		b.setImages(imgLbls)
 		.moveTo(parent)
@@ -993,7 +990,22 @@ public class WGUI implements ControlListener {
 		
 		return rb;
 	}
-
+	
+	/**
+	 * Adds a new slider with the given name, parent, dimensions, and input
+	 * type to the set of UI elements.
+	 * 
+	 * @param name		The name of the slider, which be unique amongst all
+	 * 					UI elements
+	 * @param parent	The window group, to which this slider belongs
+	 * @param wdh		The width of the slider
+	 * @param hgt		The height of the slider
+	 * @param min		The minimum value of the slider
+	 * @param max		The maximum value of the slider
+	 * @param def		The initial value of the slider
+	 * @param inputType	How should this field by treated for input clear events
+	 * @return			A reference to the new slider
+	 */
 	private MySlider addSlider(String name, Group parent, int wdh, int hgt,
 			float min, float max, float def, int inputType) {
 		
@@ -1009,6 +1021,32 @@ public class WGUI implements ControlListener {
 		return s;
 	}
 	
+	/**
+	 * An alternative way to define a slider with a lot more customizability.
+	 * 
+	 * @param name				The name of the slider, which must be unique
+	 * 							amongst all UI elements
+	 * @param lbl				The text to be rendered on the slider's label
+	 * @param parent			The window group, to which this slider belongs
+	 * @param wdh				The width of the slider
+	 * @param hgt				The height of the slider
+	 * @param min				The minimum value of the slider
+	 * @param max				The maximum value of the slider
+	 * @param percision			The digit precision of the slider's value
+	 * @param scrollSensitivity	A coefficient applied to the amount of change
+	 * 							in the slider's value induced by moving the
+	 * 							slider
+	 * @param def				The initial value of the slider
+	 * @param valColor			The color of the slider's text label
+	 * @param actColor			The color of the slider bar, when the slider is
+	 * 							active
+	 * @param bgColor			The background color of the slider
+	 * @param fgColor			The general color of the slider bar
+	 * @param lblFont			The font of the slider's text label
+	 * @param inputType			How should this field by treated for input
+	 * 							clear events
+	 * @return					A reference to the new slider
+	 */
 	private MySlider addSlider(String name, String lbl, Group parent, int wdh,
 			int hgt, float min, float max, int percision,
 			float scrollSensitivity, float def, int valColor, int actColor,
@@ -1030,6 +1068,66 @@ public class WGUI implements ControlListener {
 		.moveTo(parent);
 		
 		return s;
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param name
+	 * @param actLblTxt
+	 * @param inActLblTxt	
+	 * @param parent
+	 * @param posX
+	 * @param posY
+	 * @param wdh
+	 * @param hgt
+	 * @param lblFont
+	 * @return
+	 */
+	private MyButton addSwitch(String name, String actLblTxt, String inActLblTxt,
+			Group parent, float posX, float posY, int wdh, int hgt,
+			PFont lblFont) {
+
+		MyButton b = new MyButton(manager, name, inActLblTxt, actLblTxt);
+
+		b.setSwitch(true)
+		.setColorValue(Fields.B_TEXT_C)
+		.setColorBackground(Fields.B_DEFAULT_C)
+		.setColorActive(Fields.B_ACTIVE_C)
+		.setPosition(posX, posY)
+		.moveTo(parent)
+		.setSize(wdh, hgt)
+		.getCaptionLabel().setFont(lblFont);
+
+		return b;
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param name
+	 * @param actLblTxt
+	 * @param inActLblTxt
+	 * @param parent
+	 * @param wdh
+	 * @param hgt
+	 * @param lblFont
+	 * @return
+	 */
+	private MyButton addSwitch(String name, String actLblTxt, String inActLblTxt,
+			Group parent,int wdh, int hgt, PFont lblFont) {
+
+		MyButton b = new MyButton(manager, name, inActLblTxt, actLblTxt);
+
+		b.setSwitch(true)
+		.setColorValue(Fields.B_TEXT_C)
+		.setColorBackground(Fields.B_DEFAULT_C)
+		.setColorActive(Fields.B_ACTIVE_C)
+		.moveTo(parent)
+		.setSize(wdh, hgt)
+		.getCaptionLabel().setFont(lblFont);
+
+		return b;
 	}
 	
 	/**
@@ -1274,6 +1372,29 @@ public class WGUI implements ControlListener {
 						wo.getModel().setStrokeValue(newStroke);
 					}
 				}
+				
+			} else if (arg0.isFrom(WGUI_Buttons.Shift)) {
+				app.shiftUpkeep();
+				
+			} else if (arg0.isFrom(WGUI_Buttons.RobotToggleTrace)) {
+				if (!app.traceEnabled()) {
+					// Add a breakpoint to the trace when it is disabled
+					app.getRobotTrace().addPt(null);
+				}
+				
+			} else if (arg0.isFrom(WGUI_Buttons.RobotToggleActive)) {
+				updateWindowTabs();
+				updateUIContentPositions();
+				
+				/* Reset the active robot to the first if the second robot is
+				 * removed */
+				if (app.getActiveRobot() != app.getRobot(0)) {
+					app.setRobot(0);
+				}
+				
+			} else if (arg0.isFrom(WGUI_Buttons.CamToggleActive)) {
+				updateWindowTabs();
+				updateUIContentPositions();
 			}
 		}
 	}
@@ -1669,6 +1790,7 @@ public class WGUI implements ControlListener {
 		if (controller instanceof MyButton) {
 			return ((MyButton) controller).isOn();
 		}
+		
 		// No button exists with the given name
 		return false;
 	}
@@ -2386,63 +2508,27 @@ public class WGUI implements ControlListener {
 	/**
 	 * TODO comment this
 	 * 
-	 * @param butName
+	 * @param name
 	 * @param state
 	 */
-	public void setButtonState(String butName, boolean state) {
-		Button b = getButton(butName);
+	public void setSwitchState(String name, boolean state) {
 		
-		if (b != null && b.isSwitch()) {
-			if (state) {
-				b.setOn();
-				
-			} else {
-				b.setOff();
+		try {
+			Button b = getButton(name);
+			// Verify the button is a switch
+			if (b != null & b.isSwitch()) {
+				// Set the switch state to the given state value
+				if (b.isOn() && !state) {
+					b.setOff();
+					
+				} else if (!b.isOn() && state) {
+					b.setOn();
+				}
 			}
+			
+		} catch (ClassCastException CCEx) {
+			// Controller with the given name is not a Button
 		}
-	}
-
-	/**
-	 * Updates the tabs that are available in the applications main window.
-	 * 
-	 * @return	Whether the second Robot is hidden
-	 */
-	public boolean toggleSecondRobot() {
-		if (menu == WindowTab.ROBOT2) {
-			windowTabs.setLabel("Hide");
-		}
-
-		// Remove or add the robot2 tab based on the robot toggle button
-		Button tr = getButton(WGUI_Buttons.RobotToggleActive);
-		
-		if(tr.isOn()) {
-			tr.setLabel("Remove Robot");
-		}
-		else {
-			tr.setLabel("Add Robot");
-		}
-
-		updateWindowTabs();
-		return tr.isOn();
-	}
-	
-	public boolean toggleCamera() {
-		if (menu == WindowTab.CAMERA) {
-			windowTabs.setLabel("Hide");
-		}
-
-		// Remove or add the camera tab based on the camera toggle button
-		Button tc = getButton(WGUI_Buttons.CamToggleActive);
-		
-		if(tc.isOn()) {
-			tc.setLabel("Disable RCam");
-		}
-		else {
-			tc.setLabel("Enable RCam");
-		}
-
-		updateWindowTabs();
-		return tc.isOn();
 	}
 	
 	private void updateWindowTabs() {
@@ -3413,28 +3499,6 @@ public class WGUI implements ControlListener {
 	}
 
 	/**
-	 * Update the color of the shift button based off the given state value
-	 * (i.e. true is active, false is inactive).
-	 * 
-	 * @param state	The state of the shift button
-	 */
-	public void updateShiftButton(boolean state) {
-		updateButtonBgColor(WGUI_Buttons.Shift, state);
-		updateAndDrawUI();
-	}
-
-	/**
-	 * Update the color of the set button based off the given state value (i.e.
-	 * true is active, false is inactive).
-	 * 
-	 * @param state	The state of the step button
-	 */
-	public void updateStepButton(boolean state) {
-		updateButtonBgColor(WGUI_Buttons.Step, state);
-		updateAndDrawUI();
-	}
-
-	/**
 	 * Updates the positions of all the contents of the miscellaneous window.
 	 */
 	private void updateMiscWindowContentPositions() {
@@ -3456,48 +3520,27 @@ public class WGUI implements ControlListener {
 		// Robot Camera toggle button
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		Button b = getButton(WGUI_Buttons.CamToggleActive).setPosition(relPos[0], relPos[1]);
-		updateButtonBgColor(b.getName(), b.isOn());
 		c = b;
 		
 		// Bounding box display toggle button
 		relPos = getAbsPosFrom(b, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
 		b = getButton(WGUI_Buttons.ObjToggleBounds).setPosition(relPos[0], relPos[1]);
-				
-		// Update button color based on the state of the button
-		if (b.isOn()) {
-			b.setLabel("Show OBBs");
-
-		} else {
-			b.setLabel("Hide OBBs");
-		}
-		
-		updateButtonBgColor(b.getName(), b.isOn());
 		
 		// Trace Robot Tool Tip button
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		b = getButton(WGUI_Buttons.RobotToggleTrace).setPosition(relPos[0], relPos[1]);
 		c = b;
 		
-		if (b.isOn()) {
-			b.setLabel("Disable Trace");
-			
-		} else {
-			b.setLabel("Enable Trace");
-		}
-		
-		updateButtonBgColor(b.getName(), b.isOn());
-		
 		// Second robot toggle button
 		relPos = getAbsPosFrom(b, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
 		b = getButton(WGUI_Buttons.RobotToggleActive).setPosition(relPos[0], relPos[1]);
-		updateButtonBgColor(b.getName(), b.isOn());
 		
 		// Clear trace button
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		c = b = getButton(WGUI_Buttons.RobotClearTrace).setPosition(relPos[0], relPos[1]);
 		
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		c = this.getRadioButton("DebugOptions").setPosition(relPos[0], relPos[1]);
+		c = getRadioButton("DebugOptions").setPosition(relPos[0], relPos[1]);
 		
 		// Update window background display
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY + 60);

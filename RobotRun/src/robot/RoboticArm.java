@@ -2014,7 +2014,8 @@ public class RoboticArm {
 				Program predecessor = PROGRAM.get(insertIdx);
 				/* Search to new list from back to front to find where to
 				 * insert the program */
-				while (predecessor.getName().compareTo(toInsert.getName()) > 0 ) {
+				while (predecessor.getName().compareTo(toInsert.getName())
+						> 0) {
 					
 					if (--insertIdx < 0) { break; }
 					predecessor = PROGRAM.get(insertIdx);
@@ -2110,10 +2111,11 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Removes the given program from this robot's list of programs, if it
+	 * exists.
 	 * 
-	 * @param p
-	 * @return
+	 * @param p	The program to remove
+	 * @return	If the program existed in this robot's list of programs
 	 */
 	public boolean rmProg(Program p) {
 		return PROGRAM.remove(p);

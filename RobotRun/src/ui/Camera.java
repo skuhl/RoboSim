@@ -154,7 +154,7 @@ public class Camera {
 	 * @param z	The z-axis position
 	 */
 	public void setPosition(float x, float y, float z) {
-		float limit = zOffset * 9999f / 2f;
+		final float limit = 9999f;
 		
 		position.x = RMath.clamp(x, -limit, limit);
 		position.y = RMath.clamp(y, -limit, limit);
@@ -201,7 +201,7 @@ public class Camera {
 	public String[] toStringArray() {
 		String[] fields = new String[7];
 		// Display rotation in degrees
-		PVector worldPos = position;//RMath.vToWorld(position);
+		PVector worldPos = RMath.vToWorld(position);
 		PVector inDegrees = PVector.mult(rotation, PConstants.RAD_TO_DEG);
 		
 		fields[0] = "X: " + DebugFloatFormat.format(worldPos.x);
@@ -230,6 +230,6 @@ public class Camera {
 		// Apply translation with position restrictions
 		position.x = RMath.clamp(position.x + delta.x, -limit, limit);
 		position.y = RMath.clamp(position.y + delta.y, -limit, limit);
-		position.z += delta.z;
+		position.z = RMath.clamp(position.z + delta.z, -limit, limit);
 	}
 }
