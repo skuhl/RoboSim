@@ -658,6 +658,63 @@ public abstract class Fields {
 	}
 	
 	/**
+	 * Renders a regular pyramid with the specified number of sides, radius,
+	 * height and color values at the current position orientation of the given
+	 * graphics object. The pyramid is rendered from its center.
+	 * 
+	 * @param g			The graphics object used to render the pyramid
+	 * @param sides		The number of sides on the pyramid's base
+	 * @param radius	The radius of each vertex on the pyramid's base
+	 * @param height	The height of the pyramid
+	 * @param stroke	The color used to render the pyramid's line segments
+	 * @param fill		The color used when rendering the sides of the pyramid
+	 */
+	public static void drawPyramid(PGraphics g, int sides, float radius,
+			float height, int stroke, int fill) {
+		
+		// Set the color for the shape
+		g.pushStyle();
+		g.stroke(stroke);
+		g.fill(fill);
+		
+		g.pushMatrix();
+		
+		float[] bottomVertOffsets = new float[2 * (sides + 1)];
+		float halfHeight = height / 2f;
+		
+		g.beginShape(PApplet.TRIANGLE_STRIP);
+		// Draw the triangular sides of the pyramid
+		for (int side = 0; side <= sides; ++side) {
+			float theta = (side % sides) * PApplet.TWO_PI / sides;
+			
+			int idx = 2 * side;
+			bottomVertOffsets[idx] = PApplet.cos(theta) * radius;
+			bottomVertOffsets[idx + 1] =  PApplet.sin(theta) * radius;
+			
+			g.vertex(bottomVertOffsets[idx], halfHeight,
+					bottomVertOffsets[idx + 1]);
+			g.vertex(0f, -halfHeight, 0f);
+		}
+		
+		g.endShape();
+		
+		// Draw the bottom of the pyramid
+		g.beginShape();
+		
+		for (int side = 0; side <= sides; ++side) {
+			int idx = 2 * side;
+			g.vertex(bottomVertOffsets[idx], halfHeight,
+					bottomVertOffsets[idx + 1]);
+		}
+		
+		g.endShape(PApplet.CLOSE);
+		
+		g.popMatrix();
+		
+		g.popStyle();
+	}
+	
+	/**
 	 * Calculates the minimum edit distance (inserts, deletions, replacements)
 	 * to convert s1 into s2. This method is based off the one described on
 	 * this webiste:

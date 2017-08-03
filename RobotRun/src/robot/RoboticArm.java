@@ -2143,7 +2143,7 @@ public class RoboticArm {
 	
 	/**
 	 * Set the index of the robot's active end effector to the given index. The
-	 * given index must be within the range [0, EE_LIST.length). -1 implies
+	 * given index must be within the range [0, EE_LIST.length). 0 implies
 	 * that no end effector is active. 
 	 * 
 	 * @param ee	The index of the end effector to set as active
@@ -2175,6 +2175,7 @@ public class RoboticArm {
 
 	/**
 	 * Update the Robot's current coordinate frame.
+	 * 
 	 * @param newFrame	The new coordinate frame
 	 */
 	public void setCoordFrame(CoordFrame newFrame) {

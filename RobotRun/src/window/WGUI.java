@@ -1071,18 +1071,22 @@ public class WGUI implements ControlListener {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Adds a new switch with the given name, labels, parent, position,
+	 * dimensions, and font to the set of UI elements.
 	 * 
-	 * @param name
-	 * @param actLblTxt
-	 * @param inActLblTxt	
-	 * @param parent
-	 * @param posX
-	 * @param posY
-	 * @param wdh
-	 * @param hgt
-	 * @param lblFont
-	 * @return
+	 * @param name			The name of the switch, which must be unique
+	 * 						amongst all UI elements
+	 * @param actLblTxt		The switch's label, when it is active
+	 * @param inActLblTxt	The switch's label, when it is active
+	 * @param parent		The window group, to which the switch belong
+	 * @param posX			The x position of the switch with respect to its
+	 * 						parent
+	 * @param posY			The y position of the switch with respect to its
+	 * 						parent
+	 * @param wdh			The width of the switch
+	 * @param hgt			The height of the switch
+	 * @param lblFont		The font of the switch's text label
+	 * @return				A reference to the new switch
 	 */
 	private MyButton addSwitch(String name, String actLblTxt, String inActLblTxt,
 			Group parent, float posX, float posY, int wdh, int hgt,
@@ -1103,19 +1107,21 @@ public class WGUI implements ControlListener {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Adds a new switch with the given name, labels, parent, dimensions, and
+	 * font to the set of UI elements.
 	 * 
-	 * @param name
-	 * @param actLblTxt
-	 * @param inActLblTxt
-	 * @param parent
-	 * @param wdh
-	 * @param hgt
-	 * @param lblFont
-	 * @return
+	 * @param name			The name of the switch, which must be unique
+	 * 						amongst all UI elements
+	 * @param actLblTxt		The switch's label, when it is active
+	 * @param inActLblTxt	The switch's label, when it is active
+	 * @param parent		The window group, to which the switch belong
+	 * @param wdh			The width of the switch
+	 * @param hgt			The height of the switch
+	 * @param lblFont		The font of the switch's text label
+	 * @return				A reference to the new switch
 	 */
 	private MyButton addSwitch(String name, String actLblTxt, String inActLblTxt,
-			Group parent,int wdh, int hgt, PFont lblFont) {
+			Group parent, int wdh, int hgt, PFont lblFont) {
 
 		MyButton b = new MyButton(manager, name, inActLblTxt, actLblTxt);
 
@@ -2448,9 +2454,9 @@ public class WGUI implements ControlListener {
 	}
 	
 	/**
-	 * TODO comment this
+	 * The state of the mouse ray render debug option.
 	 * 
-	 * @return
+	 * @return	Whether the mouse ray render option is active or not
 	 */
 	public boolean renderMouseRay() {
 		MyRadioButton rb = getRadioButton("DebugOptions");
@@ -2458,9 +2464,9 @@ public class WGUI implements ControlListener {
 	}
 	
 	/**
-	 * TODO comment this
+	 * The state of the position render debug option.
 	 * 
-	 * @return
+	 * @return	Whether the mouse ray render option is active or not
 	 */
 	public boolean renderPoint() {
 		MyRadioButton rb = getRadioButton("DebugOptions");
@@ -2506,10 +2512,11 @@ public class WGUI implements ControlListener {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Sets the state of the switch with the given name to the given state, if
+	 * a switch with the given name exists in the UI.
 	 * 
-	 * @param name
-	 * @param state
+	 * @param name	The name of the switch, of which to update the state
+	 * @param state	The new state for the switch
 	 */
 	public void setSwitchState(String name, boolean state) {
 		
