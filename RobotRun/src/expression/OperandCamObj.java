@@ -2,11 +2,11 @@ package expression;
 
 import camera.RobotCamera;
 import core.Pointer;
+import geom.CameraObject;
 import geom.Scenario;
 import geom.WorldObject;
 
-public class OperandCamObj extends Operand<WorldObject> implements BoolMath {
-	
+public class OperandCamObj extends Operand<CameraObject> implements BoolMath {
 	private static RobotCamera camRef;
 	private static Pointer<Scenario> scenarioRef;
 	
@@ -14,7 +14,7 @@ public class OperandCamObj extends Operand<WorldObject> implements BoolMath {
 		super(null, Operand.CAM_MATCH);
 	}
 	
-	public OperandCamObj(WorldObject v) {
+	public OperandCamObj(CameraObject v) {
 		super(v, Operand.CAM_MATCH);
 	}
 
@@ -30,7 +30,7 @@ public class OperandCamObj extends Operand<WorldObject> implements BoolMath {
 	}
 
 	@Override
-	public Operand<WorldObject> clone() {
+	public Operand<CameraObject> clone() {
 		return new OperandCamObj(value);
 	}
 	

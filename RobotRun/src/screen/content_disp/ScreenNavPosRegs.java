@@ -60,6 +60,24 @@ public class ScreenNavPosRegs extends ST_ScreenListContents {
 			}
 		}
 	}
+	
+	@Override
+	public void actionUp() {
+		super.actionUp();
+		
+		RoboticArm r = robotRun.getActiveRobot();
+		PositionRegister pReg = r.getPReg( contents.getCurrentItemIdx() );
+		robotRun.setRenderPoint(pReg.point);
+	}
+
+	@Override
+	public void actionDn() {
+		super.actionDn();
+		
+		RoboticArm r = robotRun.getActiveRobot();
+		PositionRegister pReg = r.getPReg( contents.getCurrentItemIdx() );
+		robotRun.setRenderPoint(pReg.point);
+	}
 
 	@Override
 	public void actionEntr() {

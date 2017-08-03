@@ -21,6 +21,7 @@ import global.Fields;
 import global.RMath;
 import processing.core.PConstants;
 import processing.core.PGraphics;
+import processing.core.PShape;
 import processing.core.PVector;
 import programming.CamMoveToObject;
 import programming.InstElement;
@@ -177,12 +178,12 @@ public class RoboticArm {
 	 * 							amongst all robots
 	 * @param basePos			The position of the robot's base segment
 	 * @param segmentModels		The list of models for the robot's segment
-	 * @param endEffectorModels	The list of models for the robot's end effectors
-	 * @param robotTrace		A reference to the trace in the robotRun application
+	 * @param endEffectorModels	The list of models for the robot's end
+	 * 							effectors
+	 * @param robotTrace		A reference to the trace in the robotRun
+	 * 							application
 	 */
-	public RoboticArm(int rid, PVector basePos, MyPShape[] segmentModels,
-			MyPShape[] endEffectorModels, RTrace robotTrace) {
-		
+	public RoboticArm(int rid, PVector basePos, RTrace robotTrace) {
 		RID = rid;
 		liveSpeed = 10;
 		BASE_POSITION = basePos;
@@ -205,6 +206,7 @@ public class RoboticArm {
 		
 		// Define the robot's segments
 		SEGMENT = new RSegWithJoint[6];
+		PShape[] segmentModels = loadJointModels();
 		
 		SEGMENT[0] = new RSegWithJoint(
 			segmentModels[0],
@@ -269,6 +271,7 @@ public class RoboticArm {
 		
 		//Define the robot's end effectors
 		EE_LIST = new EndEffector[6];
+		PShape[] endEffectorModels = loadEEModels();
 		
 		EE_LIST[0] = new EndEffector(endEffectorModels[0], new BoundingBox[0],
 				new BoundingBox[0], 0, "FACEPLATE");
@@ -288,7 +291,7 @@ public class RoboticArm {
 		);
 		
 		EE_LIST[2] = new EndEffector(
-				new MyPShape[] {
+				new PShape[] {
 						endEffectorModels[2],
 						endEffectorModels[3],
 				},
@@ -1111,6 +1114,109 @@ public class RoboticArm {
 	}
 	
 	/**
+	 * Returns the error messages that would describe the issue with forming
+	 * the vector defined by the given motion instruction. If no issue is
+	 * found, then null is returned.
+	 * 
+	 * @param mInst			The motion instruction, which defines the vector
+	 * @param parent		The program, to which the given instruction belongs
+	 * @param getCircPos	Whether to get the circular position or primary
+	 * 						position of the given motion instruction
+	 * @return				The error message describing the issue with forming
+	 * 						the vector, or null if no issue is found
+	 */
+	public String getErrorMessage(PosMotionInst mInst, Program parent,
+			boolean getCircPos) {
+		
+		Point pt;
+		
+		if (getCircPos) {
+			pt = getCPosition(mInst, parent);
+			
+		} else {
+			pt = getPosition(mInst, parent);
+		}
+		
+		if (pt == null) {
+			return String.format("Null position for %s\n", mInst);
+		}
+		
+		UserFrame instUFrame = getUserFrame(mInst.getUFrameIdx());
+		PositionRegister offReg = getPReg(mInst.getOffsetIdx());
+		
+		// Check if offset can be applied
+		if (mInst.getOffsetType() != Fields.OFFSET_NONE) {
+			
+			if (offReg == null || offReg.point == null) {
+				// Invalid offset
+				return String.format("Null offset PR[%d] for %s\n",
+						mInst.getOffsetIdx(), mInst);
+			}
+			
+			Point offset = offReg.point;
+			boolean offIsCart = offReg.isCartesian;
+			boolean posIsCart = mInst.getMotionType() != Fields.MTYPE_JOINT;
+			
+			if (posIsCart && offIsCart) {
+				// Add a Cartesian offset to a linear motion instruction
+				pt = pt.add(offset.position, offset.orientation);
+				
+				if (instUFrame != null) {
+					// Remove the associated user frame
+					pt = removeFrame(pt, instUFrame.getOrigin(),
+							instUFrame.getOrientation());
+				}
+				
+				// Find the resulting joint angles
+				float[] jointAngles = RMath.inverseKinematics(this, pt.angles,
+						pt.position, pt.orientation);
+				
+				if (jointAngles == null) {
+					// Inverse kinematics failure
+					return String.format("IK failure for %s\n", mInst);
+				}
+				
+			} else if (posIsCart) {
+				// Add a joint offset to a linear motion instruction
+				if (instUFrame != null) {
+					// Remove the associated user frame
+					pt = removeFrame(pt, instUFrame.getOrigin(),
+							instUFrame.getOrientation());
+				}
+				
+				float[] jointAngles = RMath.inverseKinematics(this, pt.angles,
+						pt.position, pt.orientation);
+				
+				if (jointAngles == null) {
+					// Inverse kinematics failure
+					return String.format("IK failure for %s\n", mInst);
+				}
+				
+			} else if (offIsCart) {
+				// Add a Cartesian offset to a joint motion instruction
+				if (instUFrame != null) {
+					offset = removeFrame(offset, new PVector(), instUFrame.getOrientation());
+				}
+				
+				pt = getToolTipNative(pt.angles);
+				// Apply offset
+				pt = pt.add(offset.position, offset.orientation);
+				
+				// Find the resulting joint angles
+				float[] jointAngles = RMath.inverseKinematics(this, pt.angles,
+						pt.position, pt.orientation);
+				
+				if (jointAngles == null) {
+					// Inverse kinematics failure
+					return String.format("IK failure for %s\n", mInst);
+				}	
+			}
+		}
+		
+		return null;
+	}
+	
+	/**
 	 * @return	A point representing the robot's current face plate position
 	 * 			and orientation
 	 */
@@ -1546,7 +1652,6 @@ public class RoboticArm {
 		}
 		
 		if (pt == null) {
-			Fields.debug("Null position for %s\n", mInst);
 			return null;
 		}
 		
@@ -1558,9 +1663,6 @@ public class RoboticArm {
 			
 			if (offReg == null || offReg.point == null) {
 				// Invalid offset
-				Fields.setMessage("Null offset PR[%d] for %s\n",
-						mInst.getOffsetIdx(), mInst);
-				
 				return null;
 			}
 			
@@ -1583,7 +1685,6 @@ public class RoboticArm {
 				
 				if (jointAngles == null) {
 					// Inverse kinematics failure
-					Fields.debug("IK failure for %s\n", mInst);
 					return null;
 					
 				} else {
@@ -1603,7 +1704,6 @@ public class RoboticArm {
 				
 				if (jointAngles == null) {
 					// Inverse kinematics failure
-					Fields.setMessage("IK failure for %s\n", mInst);
 					return null;
 				}
 				// Apply the offset
@@ -1631,7 +1731,6 @@ public class RoboticArm {
 				
 				if (jointAngles == null) {
 					// Inverse kinematics failure
-					Fields.setMessage("IK failure for %s\n", mInst);
 					return null;
 					
 				} else {
@@ -1915,7 +2014,8 @@ public class RoboticArm {
 				Program predecessor = PROGRAM.get(insertIdx);
 				/* Search to new list from back to front to find where to
 				 * insert the program */
-				while (predecessor.getName().compareTo(toInsert.getName()) > 0 ) {
+				while (predecessor.getName().compareTo(toInsert.getName())
+						> 0) {
 					
 					if (--insertIdx < 0) { break; }
 					predecessor = PROGRAM.get(insertIdx);
@@ -2011,10 +2111,11 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Removes the given program from this robot's list of programs, if it
+	 * exists.
 	 * 
-	 * @param p
-	 * @return
+	 * @param p	The program to remove
+	 * @return	If the program existed in this robot's list of programs
 	 */
 	public boolean rmProg(Program p) {
 		return PROGRAM.remove(p);
@@ -2179,10 +2280,13 @@ public class RoboticArm {
 				LinearInterpolation liMotion = new LinearInterpolation();
 				liMotion.setFault(true);
 				motion = liMotion;
+				Fields.setMessage("Invalid active frames for %s", mInst);
 				return 1;
 				
 			} else if (instPt == null) {
 				// No point defined for given motion instruction
+				String error = getErrorMessage(pMInst, prog, false);
+				Fields.setMessage(error);
 				LinearInterpolation liMotion = new LinearInterpolation();
 				liMotion.setFault(true);
 				motion = liMotion;
@@ -2509,6 +2613,39 @@ public class RoboticArm {
 		}
 		
 		updateOBBs();
+	}
+	
+	/**
+	 * Loads 3D meshes for the individual robot joints from model files.
+	 * 
+	 * @return An array containing the joint model meshes
+	 */
+	private PShape[] loadJointModels() {
+		PShape[] segModels = new PShape[6];
+		
+		segModels[0] = MyPShape.loadSTLModel("robot/ROBOT_BASE.STL", Fields.ROBOT_YELLOW);
+		segModels[1] = MyPShape.loadSTLModel("robot/ROBOT_SEGMENT_1.STL", Fields.ROBOT_GREY);
+		segModels[2] = MyPShape.loadSTLModel("robot/ROBOT_SEGMENT_2.STL", Fields.ROBOT_YELLOW);
+		segModels[3] = MyPShape.loadSTLModel("robot/ROBOT_SEGMENT_3.STL", Fields.ROBOT_GREY);
+		segModels[4] = MyPShape.loadSTLModel("robot/ROBOT_SEGMENT_4.STL", Fields.ROBOT_GREY);
+		segModels[5] = MyPShape.loadSTLModel("robot/ROBOT_SEGMENT_5.STL", Fields.ROBOT_YELLOW);
+		
+		return segModels;
+	}
+	
+	private PShape[] loadEEModels() {
+		PShape[] eeModels = new PShape[7];
+		
+		// Load end effector models
+		eeModels[0] = MyPShape.loadSTLModel("robot/EE/FACEPLATE.STL", Fields.ROBOT_GREY);
+		eeModels[1] = MyPShape.loadSTLModel("robot/EE/SUCTION.stl", Fields.EE_DEFAULT);
+		eeModels[2] = MyPShape.loadSTLModel("robot/EE/GRIPPER.stl", Fields.EE_DEFAULT);
+		eeModels[3] = MyPShape.loadSTLModel("robot/EE/PINCER.stl", Fields.ROBOT_YELLOW);
+		eeModels[4] = MyPShape.loadSTLModel("robot/EE/POINTER.stl", Fields.EE_DEFAULT);
+		eeModels[5] = MyPShape.loadSTLModel("robot/EE/GLUE_GUN.stl", Fields.EE_DEFAULT);
+		eeModels[6] = MyPShape.loadSTLModel("robot/EE/WIELDER.stl", Fields.EE_DEFAULT);
+		
+		return eeModels;
 	}
 	
 	/**

@@ -1,11 +1,5 @@
 package geom;
 
-import java.util.ArrayList;
-
-import camera.CamSelectArea;
-import camera.CamSelectView;
-import camera.RegisteredModels;
-import core.RobotRun;
 import global.RMath;
 import processing.core.PGraphics;
 import processing.core.PShape;
@@ -15,19 +9,13 @@ import processing.core.PVector;
  * A complex shape formed from a .stl source file.
  */
 public class ComplexShape extends RShape {
-	
 	public final float MIN_SCALE;
 	public final float MAX_SCALE;
 	
 	private String srcFilePath;
-	
-	private MyPShape model;
-	private PVector centerOffset, baseDims;
-	
+	private PShape mesh;
+	private PVector centerOffset, baseDims;	
 	private float mdlScale = 1f;
-	private final int model_id;
-	private final int model_family_id;
-	private ArrayList<CamSelectArea> selectAreas;
 
 	/**
 	 * Create a complex model from the soruce .stl file of the
@@ -38,8 +26,8 @@ public class ComplexShape extends RShape {
 	 * 									are outside the range of a world
 	 * 									object's dimensions
 	 */
-	public ComplexShape(String filename, MyPShape mdl, int fill) {
-		this(filename, mdl, fill, 1f);
+	public ComplexShape(String filename, int fill) {
+		this(filename, fill, 1f);
 	}
 
 	/**
@@ -51,20 +39,13 @@ public class ComplexShape extends RShape {
 	 * 									are outside the range of a world
 	 * 									object's dimensions
 	 */
-	public ComplexShape(String filename, MyPShape mdl, int fill, float scale)
+	public ComplexShape(String filename, int fill, float scale)
 			throws IllegalArgumentException {
 		
 		super(fill, null);
-		if(RegisteredModels.modelIDList.get(filename) == null) {
-			model_id = RegisteredModels.ID_GENERIC;
-			model_family_id = RegisteredModels.ID_GENERIC;
-		} else {
-			model_id = RegisteredModels.modelIDList.get(filename);
-			model_family_id = RegisteredModels.modelFamilyList.get(model_id);
-		}
 		
 		srcFilePath = filename;
-		model = mdl;
+		mesh = MyPShape.loadSTLModel(filename, fill);
 		
 		iniDimensions();
 		MIN_SCALE = 10f / RMath.min(baseDims.x, baseDims.y, baseDims.z);
@@ -86,57 +67,18 @@ public class ComplexShape extends RShape {
 		} else {
 			setDim(scale, DimType.SCALE);
 		}
-		
-		selectAreas = new ArrayList<CamSelectArea>();
-		loadCamSelectAreas();
 	}
 	
-	private void loadCamSelectAreas() {
-		if(RegisteredModels.modelAreasOfInterest.get(model_id) != null) {
-			for(CamSelectArea c: RegisteredModels.modelAreasOfInterest.get(model_id)) {
-				selectAreas.add(c.copy());
-			}
-		}
-	}
-	
-	public CamSelectArea getCamSelectArea(int i) {
-		return selectAreas.get(i);
-	}
-	
-	public int getNumSelectAreas() {
-		return selectAreas.size();
-	}
-	
-	public CamSelectArea getSelectAreaClicked(int x, int y, RMatrix m) {
-		for(CamSelectArea a: selectAreas) {
-			CamSelectView v = a.getView(m);
-			
-			if(v != null) {
-				PVector tl = v.getTopLeftBound();
-				PVector br = v.getBottomRightBound();
-				
-				if(x >= tl.x && x <= br.x && y >= tl.y && y <= br.y) {
-					return a;
-				}
-			}
-		}
-		
-		return null;
-	}
-
 	@Override
 	public ComplexShape clone() {
-		return new ComplexShape(srcFilePath, model.clone(), getFillValue(),
-				mdlScale);
+		return new ComplexShape(srcFilePath, getFillValue(), mdlScale);
 	}
 	
 	@Override
 	public void draw(PGraphics g) {
 		g.pushMatrix();
 		g.translate(centerOffset.x, centerOffset.y, centerOffset.z);
-		
-		g.shape(model);
-		
+		g.shape(mesh);
 		g.popMatrix();
 	}
 	
@@ -148,7 +90,7 @@ public class ComplexShape extends RShape {
 				centerOffset.x, centerOffset.y, centerOffset.z
 		};
 	}
-	
+
 	@Override
 	public float getDim(DimType dim) {
 		switch(dim) {
@@ -160,7 +102,7 @@ public class ComplexShape extends RShape {
 		default:     return -1f;
 		}
 	}
-
+	
 	@Override
 	public float[] getDimArray() {
 		float[] dims = new float[3];
@@ -192,22 +134,34 @@ public class ComplexShape extends RShape {
 		}
 	}
 	
-	@Override
-	public int getModelID() {
-		return model_id;
-	}
-	
-	@Override
-	public int getFamilyID() {
-		return model_family_id;
-	}
-	
-	public PShape getForm() {
-		return model;
+	public PShape getMesh() {
+		return mesh;
 	}
 
 	public String getSourcePath() { return srcFilePath; }
+	
+	@Override
+	public void setDim(Float newVal, DimType dim) {
+		switch(dim) {
+		case SCALE:
+			// Update the model's scale
+			centerOffset.mult(newVal / mdlScale);
+			mesh.scale(newVal / mdlScale);
+			mdlScale = newVal;
+			break;
 
+		default:
+		}
+	}
+
+	@Override
+	public void setFillValue(Integer newVal) {
+		if (newVal != null) {
+			super.setFillValue(newVal);
+			mesh.setFill((int)newVal);
+		}
+	}
+	
 	/**
 	 * Calculates the maximum length, height, and width of this shape as well as the center
 	 * offset of the shape. The length, height, and width are based off of the maximum and
@@ -218,11 +172,11 @@ public class ComplexShape extends RShape {
 		PVector maximums = new PVector(Float.MIN_VALUE, Float.MIN_VALUE, Float.MIN_VALUE),
 				minimums = new PVector(Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE);
 
-		int vertexCount = model.getVertexCount();
+		int vertexCount = mesh.getVertexCount();
 
 		// Calculate the maximum and minimum values for each dimension
 		for (int idx = 0; idx < vertexCount; ++idx) {
-			PVector v = model.getVertex(idx);
+			PVector v = mesh.getVertex(idx);
 
 			if (v.x > maximums.x) {
 				maximums.x = v.x;
@@ -251,79 +205,5 @@ public class ComplexShape extends RShape {
 		 * first vertex in the shape */
 		baseDims = PVector.sub(maximums, minimums);
 		centerOffset = PVector.add(minimums, PVector.mult(baseDims, 0.5f)).mult(-1);
-	}
-	
-	public PGraphics getModelPreview(RMatrix m) {
-		if(preview == null) {
-			PGraphics img = RobotRun.getInstance().createGraphics(150, 200, RobotRun.P3D);
-			float[][] rMat = m.getDataF();
-			img.beginDraw();
-			img.ortho();
-			img.lights();
-			img.background(255);
-			img.stroke(0);
-			img.translate(75, 100, 0);
-			img.applyMatrix(
-					rMat[0][0], rMat[1][0], rMat[2][0], 0,
-					rMat[0][1], rMat[1][1], rMat[2][1], 0,
-					rMat[0][2], rMat[1][2], rMat[2][2], 0,
-					0, 0, 0, 1
-			);
-			img.scale(2/mdlScale);
-			img.shape(model);
-			img.resetMatrix();
-			img.translate(-75, -100);
-						
-			for(CamSelectArea a: selectAreas) {
-				CamSelectView v = a.getView(m);
-				if(a.isEmphasized()) {
-					img.stroke(0, 255, 0);
-					img.fill(0, 255, 0, 126);
-				}
-				else if(a.isIgnored()) {
-					img.stroke(255, 0, 0);
-					img.fill(255, 0, 0, 126);
-				}
-				else {
-					img.stroke(0);
-					img.fill(0, 0, 0, 126);
-				}
-				
-				if(v != null) {
-					PVector c = v.getTopLeftBound();
-					float w = v.getWidth();
-					float h = v.getHeight();
-					img.rect(c.x, c.y, w, h);
-				}
-			}
-			
-			img.endDraw();
-			
-			preview = img;
-		}
-		
-		return preview;
-	}
-
-	@Override
-	public void setDim(Float newVal, DimType dim) {
-		switch(dim) {
-		case SCALE:
-			// Update the model's scale
-			centerOffset.mult(newVal / mdlScale);
-			model.scale(newVal / mdlScale);
-			mdlScale = newVal;
-			break;
-
-		default:
-		}
-	}
-	
-	@Override
-	public void setFillValue(Integer newVal) {
-		if (newVal != null) {
-			super.setFillValue(newVal);
-			model.setFill((int)newVal);
-		}
 	}
 }

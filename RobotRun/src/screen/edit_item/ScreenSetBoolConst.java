@@ -13,8 +13,8 @@ public class ScreenSetBoolConst extends ST_ScreenEditItem {
 	
 	@Override
 	protected void loadOptions() {
-		options.addLine("False");
 		options.addLine("True");
+		options.addLine("False");
 	}
 
 	@Override
@@ -23,9 +23,9 @@ public class ScreenSetBoolConst extends ST_ScreenEditItem {
 		r.getInstToEdit(robotRun.getActiveProg(), robotRun.getActiveInstIdx());
 		
 		if (options.getLineIdx() == 0) {
-			((OperandBool)robotRun.opEdit).setValue(false);
-		} else {
 			((OperandBool)robotRun.opEdit).setValue(true);
+		} else if(options.getLineIdx() == 1) {
+			((OperandBool)robotRun.opEdit).setValue(false);
 		}
 
 		robotRun.lastScreen();

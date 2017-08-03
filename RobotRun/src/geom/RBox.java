@@ -1,7 +1,5 @@
 package geom;
 
-import camera.RegisteredModels;
-import core.RobotRun;
 import processing.core.PGraphics;
 import processing.core.PVector;
 
@@ -91,7 +89,7 @@ public class RBox extends RShape {
 		dims[2] = getDim(DimType.WIDTH);
 		return dims;
 	}
-
+	
 	@Override
 	public void setDim(Float newVal, DimType dim) {
 
@@ -112,42 +110,5 @@ public class RBox extends RShape {
 			// Invalid dimension
 		default:
 		}
-	}
-
-	@Override
-	public int getModelID() {
-		return RegisteredModels.ID_CUBE;
-	}
-	
-	public int getFamilyID() {
-		return RegisteredModels.ID_CUBE;
-	}
-
-	@Override
-	public PGraphics getModelPreview(RMatrix m) {
-		if(preview == null) {
-			PGraphics img = RobotRun.getInstance().createGraphics(150, 200, RobotRun.P3D);
-			float[][] rMat = m.getDataF();
-			img.beginDraw();
-			img.ortho();
-			img.lights();
-			img.background(255);
-			img.stroke(0);
-			img.translate(75, 100, 0);
-			img.applyMatrix(
-					rMat[0][0], rMat[1][0], rMat[2][0], 0,
-					rMat[0][1], rMat[1][1], rMat[2][1], 0,
-					rMat[0][2], rMat[1][2], rMat[2][2], 0,
-					0, 0, 0, 1
-			);
-			draw(img);
-			img.resetMatrix();
-			img.translate(-75, -100);
-			img.endDraw();
-			
-			preview = img;
-		}
-		
-		return preview;
 	}
 }

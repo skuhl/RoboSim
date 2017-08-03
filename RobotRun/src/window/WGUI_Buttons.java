@@ -6,6 +6,7 @@ public interface WGUI_Buttons {
 	public static final String ArrowLt = "button_arrowLt";
 	public static final String ArrowRt = "button_arrowRt";
 	
+	public static final String CamViewDef = "button_camViewDefault";
 	public static final String CamViewFr = "button_camViewFront";
 	public static final String CamViewBk = "button_camViewBack";
 	public static final String CamViewLt = "button_camViewLeft";
