@@ -9,6 +9,7 @@ import geom.Fixture;
 import geom.Part;
 import geom.RMatrix;
 import geom.RQuaternion;
+import geom.RRay;
 import geom.Scenario;
 import geom.WorldObject;
 import global.Fields;
@@ -59,6 +60,18 @@ public class RobotCamera {
 		exposure = exp;
 		
 		taughtObjects = new ArrayList<CameraObject>();
+	}
+	
+	private void applyCamera(PGraphics g) {
+		PVector cPos = camPos;
+		PVector cOrien = RMath.quatToEuler(camOrient);
+		g.perspective((camFOV/camAspectRatio)*RobotRun.DEG_TO_RAD, camAspectRatio, camClipNear, camClipFar);
+		
+		g.rotateX(cOrien.x);
+		g.rotateY(cOrien.y);
+		g.rotateZ(cOrien.z);
+		
+		g.translate(-cPos.x + g.width / 2f, -cPos.y + g.height / 2f,  -cPos.z);
 	}
 
 	public void addTaughtObject(CameraObject o) {
@@ -544,6 +557,40 @@ public class RobotCamera {
 		return taughtObjects;
 	}
 	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param posX
+	 * @param posY
+	 * @return
+	 */
+	public RRay camPosToWldRay(int posX, int posY) {
+		
+		if (snapshot != null) {
+			snapshot.pushMatrix();
+			snapshot.resetMatrix();
+			applyCamera(snapshot);
+			
+			RMatrix invCam = RMath.getTMat(snapshot).getInverse();
+			
+			snapshot.popMatrix();
+			
+			// TODO scale the position values based on the far plane
+			
+			PVector rayOrigin = new PVector(posX, posY, 0f);
+			PVector pointOnRay = new PVector(posX, posY, -1f);
+			
+			rayOrigin = invCam.multiply(rayOrigin);
+			pointOnRay = invCam.multiply(pointOnRay);
+			
+			RRay ray = new RRay(rayOrigin, pointOnRay, 1000f, Fields.BLACK);
+			
+			return ray;
+		}
+		
+		return null;
+	}
+	
 	public RobotCamera update(PVector pos, PVector rot,	float fov, float ar, 
 			float near, float far, float br, float exp) {
 		camPos = RMath.vFromWorld(pos);
@@ -610,15 +657,7 @@ public class RobotCamera {
 		PGraphics img = appRef.createGraphics(width, height, RobotRun.P3D);
 		
 		img.beginDraw();
-		PVector cPos = camPos;
-		PVector cOrien = RMath.quatToEuler(camOrient);
-		img.perspective((camFOV/camAspectRatio)*RobotRun.DEG_TO_RAD, camAspectRatio, camClipNear, camClipFar);
-		
-		img.rotateX(cOrien.x);
-		img.rotateY(cOrien.y);
-		img.rotateZ(cOrien.z);
-		
-		img.translate(-cPos.x + width / 2f, -cPos.y + height / 2f,  -cPos.z);
+		applyCamera(img);
 				
 		//img.printMatrix();
 		

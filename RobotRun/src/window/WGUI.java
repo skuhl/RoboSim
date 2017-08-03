@@ -29,6 +29,7 @@ import geom.Part;
 import geom.RBox;
 import geom.RCylinder;
 import geom.RMatrix;
+import geom.RRay;
 import geom.RShape;
 import geom.Scenario;
 import geom.WorldObject;
@@ -1411,6 +1412,26 @@ public class WGUI implements ControlListener {
 				updateUIContentPositions();
 			}
 		}
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param mx
+	 * @param my
+	 */
+	public RRay checkMouseCollisionInRCamSnap(int mx, int my) {
+		Button b = getButton(WGUI_Buttons.CamSnapPreview);
+		
+		if (b != null && b.isMouseOver()) {
+			float[] butPos = b.getPosition();
+			int mCamX = mx - (int)butPos[0];
+			int mCamY = my - (int)butPos[1];
+			
+			return app.getRobotCamera().camPosToWldRay(mCamX, mCamY);
+		}
+		
+		return null;
 	}
 
 	/**

@@ -1,13 +1,23 @@
 package screen.edit_item;
 
+import java.util.ArrayList;
+
 import core.RobotRun;
 import global.Fields;
+import programming.Instruction;
+import programming.Program;
+import robot.RoboticArm;
 import screen.ScreenMode;
 
 public class ScreenSelectPasteOpt extends ST_ScreenEditItem {
-
-	public ScreenSelectPasteOpt(RobotRun r) {
+	
+	private ArrayList<Instruction> instToPaste;
+	
+	public ScreenSelectPasteOpt(RobotRun r,
+			ArrayList<Instruction> instToPaste) {
+		
 		super(ScreenMode.SELECT_PASTE_OPT, r);
+		this.instToPaste = instToPaste;
 	}
 
 	@Override
@@ -23,24 +33,32 @@ public class ScreenSelectPasteOpt extends ST_ScreenEditItem {
 
 	@Override
 	public void actionEntr() {
+		RoboticArm r = robotRun.getActiveRobot();
+		Program p = robotRun.getActiveProg();
+		int activeInstIdx = robotRun.getActiveInstIdx();
+		int optVal = 0;
+		
 		switch(options.getLineIdx()) {
-		case 0: robotRun.pasteInstructions(Fields.CLEAR_POSITION);
+		case 0: optVal = Fields.CLEAR_POSITION;
 				break;
-		case 1: robotRun.pasteInstructions(Fields.PASTE_DEFAULT);
+		case 1: optVal = Fields.PASTE_DEFAULT;
 				break;
-		case 2: robotRun.pasteInstructions(Fields.NEW_POSITION);
+		case 2: optVal = Fields.NEW_POSITION;
 				break;
-		case 3: robotRun.pasteInstructions(Fields.PASTE_REVERSE | Fields.CLEAR_POSITION);
+		case 3: optVal = Fields.PASTE_REVERSE | Fields.CLEAR_POSITION;
 				break;
-		case 4: robotRun.pasteInstructions(Fields.PASTE_REVERSE);
+		case 4: optVal = Fields.PASTE_REVERSE;
 				break;
-		case 5: robotRun.pasteInstructions(Fields.PASTE_REVERSE | Fields.NEW_POSITION);
+		case 5: optVal = Fields.PASTE_REVERSE | Fields.NEW_POSITION;
 				break;
-		case 6: robotRun.pasteInstructions(Fields.PASTE_REVERSE | Fields.REVERSE_MOTION);
+		case 6: optVal = Fields.PASTE_REVERSE | Fields.REVERSE_MOTION;
 				break;
-		case 7: robotRun.pasteInstructions(Fields.PASTE_REVERSE | Fields.NEW_POSITION | Fields.REVERSE_MOTION);
+		case 7: optVal = Fields.PASTE_REVERSE | Fields.NEW_POSITION |
+				Fields.REVERSE_MOTION;
 				break;
 		}
+		
+		r.pasteInstructions(p, activeInstIdx, instToPaste, optVal);
 				
 		robotRun.lastScreen();
 		robotRun.lastScreen();

@@ -1923,6 +1923,88 @@ public class RoboticArm {
 	}
 	
 	/**
+	 * TODO comment this
+	 * 
+	 * @param p
+	 * @param insertIdx
+	 * @param toInsert
+	 */
+	public void pasteInstructions(Program p, int insertIdx,
+			ArrayList<Instruction> toInsert) {
+		
+		pasteInstructions(p, insertIdx, toInsert, 0);
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param p
+	 * @param insertIdx
+	 * @param toInsert
+	 * @param options
+	 */
+	public void pasteInstructions(Program p, int insertIdx,
+			ArrayList<Instruction> toInsert, int options) {
+		
+		ArrayList<Instruction> pasteList = new ArrayList<>();
+
+		/* Pre-process instructions for insertion into program. */
+		for (int i = 0; i < toInsert.size(); i += 1) {
+			Instruction instr = toInsert.get(i).clone();
+
+			if (instr instanceof PosMotionInst) {
+				PosMotionInst m = (PosMotionInst) instr;
+
+				if ((options & Fields.CLEAR_POSITION) == Fields.CLEAR_POSITION) {
+					m.setPosIdx(-1);
+				} else if ((options & Fields.NEW_POSITION) == Fields.NEW_POSITION) {
+					/*
+					 * Copy the current instruction's position to a new local
+					 * position index and update the instruction to use this new
+					 * position
+					 */
+					int instrPos = m.getPosIdx();
+					int nextPos = p.getNextPosition();
+
+					p.addPosition(p.getPosition(instrPos).clone());
+					m.setPosIdx(nextPos);
+				}
+
+				if ((options & Fields.REVERSE_MOTION) == Fields.REVERSE_MOTION) {
+					MotionInstruction next = null;
+
+					for (int j = i + 1; j < toInsert.size(); j += 1) {
+						if (toInsert.get(j) instanceof MotionInstruction) {
+							next = (MotionInstruction) toInsert.get(j).clone();
+							break;
+						}
+					}
+
+					if (next != null) {
+						Fields.debug("asdf");
+						m.setMotionType(next.getMotionType());
+						m.setSpdMod(next.getSpdMod());
+					}
+				}
+			}
+
+			pasteList.add(instr);
+		}
+
+		/* Perform forward/ reverse insertion. */
+		for (int i = 0; i < toInsert.size(); i += 1) {
+			Instruction instr;
+			if ((options & Fields.PASTE_REVERSE) == Fields.PASTE_REVERSE) {
+				instr = pasteList.get(pasteList.size() - 1 - i);
+			} else {
+				instr = pasteList.get(i);
+			}
+			
+			addAt(p, insertIdx + i, instr, i != 0);
+		}
+	}
+	
+	/**
 	 * Returns a list of display lines, which contain the program instruction
 	 * list output for the pendant display.
 	 * 

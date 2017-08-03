@@ -1,14 +1,20 @@
 package screen.select_lines;
 
+import java.util.ArrayList;
+
 import core.RobotRun;
+import programming.Instruction;
 import programming.Program;
 import robot.RoboticArm;
 import screen.ScreenMode;
 
 public class ScreenSelectCutCopy extends ST_ScreenLineSelect {
-
-	public ScreenSelectCutCopy(RobotRun r) {
+	
+	private ArrayList<Instruction> clipBoard;
+	
+	public ScreenSelectCutCopy(RobotRun r, ArrayList<Instruction> clipBoard) {
 		super(ScreenMode.SELECT_CUT_COPY, r);
+		this.clipBoard = clipBoard;
 	}
 
 	@Override
@@ -19,7 +25,7 @@ public class ScreenSelectCutCopy extends ST_ScreenLineSelect {
 	@Override
 	protected void loadLabels() {
 		labels[0] = "";
-		labels[1] = robotRun.clipBoard.isEmpty() ? "" : "[Paste]";
+		labels[1] = clipBoard.isEmpty() ? "" : "[Paste]";
 		labels[2] = "[Cut]";
 		labels[3] = "[Copy]";
 		labels[4] = "[Cancel]";
@@ -35,13 +41,13 @@ public class ScreenSelectCutCopy extends ST_ScreenLineSelect {
 		RoboticArm r = robotRun.getActiveRobot();
 		Program p = robotRun.getActiveProg();
 		int size = p.getNumOfInst();
-		robotRun.clipBoard.clear();
+		clipBoard.clear();
 
 		int remIdx = 0;
 		for (int i = 0; i < size; i += 1) {
 			
 			if (lineSelectState[i]) {
-				robotRun.clipBoard.add(p.getInstAt(remIdx));
+				clipBoard.add(p.getInstAt(remIdx));
 				r.rmInstAt(p, remIdx, true);
 				
 			} else {
@@ -55,11 +61,11 @@ public class ScreenSelectCutCopy extends ST_ScreenLineSelect {
 	@Override
 	public void actionF4() {
 		Program p = robotRun.getActiveProg();
-		robotRun.clipBoard.clear();
+		clipBoard.clear();
 
 		for (int i = 0; i < p.getNumOfInst(); i += 1) {
 			if (lineSelectState[i])
-				robotRun.clipBoard.add(p.getInstAt(i).clone());
+				clipBoard.add(p.getInstAt(i).clone());
 		}
 		
 		clearSelection();

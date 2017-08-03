@@ -7,6 +7,7 @@ import java.util.Stack;
 
 import camera.RegisteredModels;
 import camera.RobotCamera;
+import controlP5.Button;
 import enums.AxesDisplay;
 import enums.CoordFrame;
 import enums.ExecState;
@@ -15,9 +16,7 @@ import expression.Operand;
 import expression.OperandCamObj;
 import expression.Operator;
 import frame.UserFrame;
-import geom.BoundingBox;
 import geom.ComplexShape;
-import geom.CoordinateSystem;
 import geom.Fixture;
 import geom.MyPShape;
 import geom.Part;
@@ -109,9 +108,6 @@ public class RobotRun extends PApplet {
 			PApplet.main(appletArgs);
 		}
 	}
-
-	// container for instructions being copied/ cut and pasted
-	public ArrayList<Instruction> clipBoard = new ArrayList<>();
 	
 	public int editIdx = -1;
 
@@ -1918,54 +1914,15 @@ public class RobotRun extends PApplet {
 	public Camera getCamera() {
 		return camera;
 	}
-
-	/**
-	 * Pulls the origin and orientation from the top of the matrix stack and
-	 * creates a coordinate system from them.
-	 * 
-	 * @return	A coordinate system system representing the top of matrix
-	 */
-	public CoordinateSystem getCoordFromMatrix() {
-		PVector origin = getPosFromMatrix(0f, 0f, 0f);
-		RMatrix axes = getOrientation();
-		
-		return new CoordinateSystem(origin, axes);
-	}
-	
-	/**
-	 * Sets the coordinate system of the given bounding box to match the top
-	 * of the matrix stack.
-	 * 
-	 * @param obb	The bounding box, of which to set the coordinate system to 
-	 * 				the top of the matrix stack
-	 */
-	public void getCoordFromMatrix(BoundingBox obb) {
-		PVector center = getPosFromMatrix(0f, 0f, 0f);
-		RMatrix orientation = getOrientation();
-		
-		obb.setCenter(center);
-		obb.setOrientation(orientation);
-	}
-
-	/**
-	 * Sets the given coordinate system to match the top of the matrix stack.
-	 * 
-	 * @param cs	The coordinate system to set as the top of the matrix stack
-	 */
-	public void getCoordFromMatrix(CoordinateSystem cs) {
-		PVector origin = getPosFromMatrix(0f, 0f, 0f);
-		RMatrix axes = getOrientation();
-		
-		cs.setOrigin(origin);
-		cs.setAxes(axes);
-	}
 	
 	public RoboticArm getInactiveRobot() {
-		try {
-			return ROBOTS.get((getActiveRobot().RID + 1) % 2);
-
-		} catch (Exception Ex) {
-			return null;
+		int activeRID = getActiveRobot().RID;
+		
+		if (activeRID == 0) {
+			return ROBOTS.get(new Integer(1));
+			
+		} else {
+			return ROBOTS.get(new Integer(0));
 		}
 	}
 
@@ -2029,7 +1986,7 @@ public class RobotRun extends PApplet {
 		return progCallStack;
 	}
 
-	public boolean getRecord() {
+	public boolean isRecording() {
 		return record.isRecording();
 	}
 
@@ -2060,26 +2017,6 @@ public class RobotRun extends PApplet {
 
 	public ArrayList<Scenario> getScenarios() {
 		return SCENARIOS;
-	}
-
-	/**
-	 * Copies the current rotation and translations of the top matrix on
-	 * Processing's matrix stack to a 4x4 floating-point array. Any scaling
-	 * is ignored. 
-	 * 
-	 * @return	A 4x4 row major transformation matrix
-	 */
-	public RMatrix getTransformationMatrix() {
-		PVector origin = getPosFromMatrix(0, 0, 0);
-		PVector xAxis = getPosFromMatrix(1, 0, 0).sub(origin);
-		PVector yAxis = getPosFromMatrix(0, 1, 0).sub(origin);
-		PVector zAxis = getPosFromMatrix(0, 0, 1).sub(origin);
-
-		return RMath.formTMat(
-				xAxis.x, yAxis.x, zAxis.x, origin.x,
-				xAxis.y, yAxis.y, zAxis.y, origin.y,
-				xAxis.z, yAxis.z, zAxis.z, origin.z
-		);
 	}
 
 	public WGUI getUI() {
@@ -2198,7 +2135,7 @@ public class RobotRun extends PApplet {
 					
 				} else if (keyCode == KeyEvent.VK_R) {
 					// Toggle record state
-					setRecord( !getRecord() );
+					setRecord( !isRecording() );
 					
 				} else if (keyCode == KeyEvent.VK_S) {
 					// Save EVERYTHING!
@@ -2422,51 +2359,58 @@ public class RobotRun extends PApplet {
 	@Override
 	public void mousePressed() {
 		/* Check if the mouse position is colliding with a world object */
-		if (!isProgExec() && !UI.isFocus() && getActiveRobot() != null &&
+		if (!isProgExec() && getActiveRobot() != null &&
 				getActiveScenario() != null) {
 			
-			PVector camPos = camera.getBasePosition();
-			PVector camOrien = camera.getOrientation();
-			// Apply the camera's scale to the mouse's screen position
-			PVector mScreenPos = new PVector(mouseX - width / 2f, mouseY -
-					height / 2f, camera.getZOffset());
-			mScreenPos.x *= camera.getScale();
-			mScreenPos.y *= camera.getScale();
-			
-			PVector mWorldPos, ptOnMRay;
-			
-			pushMatrix();
-			resetMatrix();
-			// Apply the inverse of the camera's coordinate system
-			translate(camPos.x, camPos.y, camPos.z);
-			
-			rotateZ(camOrien.z);
-			rotateY(camOrien.y);
-			rotateX(camOrien.x);
-			
-			translate(mScreenPos.x, mScreenPos.y, mScreenPos.z);
-			
-			/* Form a ray pointing out of the screen's z-axis, in the
-			 * native coordinate system */
-			mWorldPos = getPosFromMatrix(0f, 0f, 0f);
-			ptOnMRay = getPosFromMatrix(0f, 0f, -1f);
-			
-			popMatrix();
-			// Set the mouse ray origin and direction
-			RRay mouseRay = new RRay(mWorldPos, ptOnMRay, 20000f, Fields.BLACK);
-			
-			if (mouseButton == LEFT) {
-				this.mouseRay = mouseRay;
+			if (UI.isFocus()) {
+				// Mouse click on the UI
+				mouseRay = UI.checkMouseCollisionInRCamSnap(mouseX, mouseY);
+				
+			} else {
+				// Mouse click not on the UI
+				PVector camPos = camera.getBasePosition();
+				PVector camOrien = camera.getOrientation();
+				// Apply the camera's scale to the mouse's screen position
+				PVector mScreenPos = new PVector(mouseX - width / 2f, mouseY -
+						height / 2f, camera.getZOffset());
+				mScreenPos.x *= camera.getScale();
+				mScreenPos.y *= camera.getScale();
+				
+				PVector mWorldPos, ptOnMRay;
+				
+				pushMatrix();
+				resetMatrix();
+				// Apply the inverse of the camera's coordinate system
+				translate(camPos.x, camPos.y, camPos.z);
+				
+				rotateZ(camOrien.z);
+				rotateY(camOrien.y);
+				rotateX(camOrien.x);
+				
+				translate(mScreenPos.x, mScreenPos.y, mScreenPos.z);
+				
+				/* Form a ray pointing out of the screen's z-axis, in the
+				 * native coordinate system */
+				mWorldPos = getPosFromMatrix(0f, 0f, 0f);
+				ptOnMRay = getPosFromMatrix(0f, 0f, -1f);
+				
+				popMatrix();
+				// Set the mouse ray origin and direction
+				RRay mouseRay = new RRay(mWorldPos, ptOnMRay, 20000f, Fields.BLACK);
+				
+				if (mouseButton == LEFT) {
+					this.mouseRay = mouseRay;
+				}
+				
+				// Check for collisions with objects in the scene
+				WorldObject collision = checkForCollisionsInScene(mouseRay);
+				
+				if (mouseButton == LEFT && collision != null) {
+					UI.setSelectedWO(collision);
+				}
+				
+				mouseOverWO = collision;
 			}
-			
-			// Check for collisions with objects in the scene
-			WorldObject collision = checkForCollisionsInScene(mouseRay);
-			
-			if (mouseButton == LEFT && collision != null) {
-				UI.setSelectedWO(collision);
-			}
-			
-			mouseOverWO = collision;
 			
 		} else {
 			mouseOverWO = null;
@@ -2719,71 +2663,6 @@ public class RobotRun extends PApplet {
 		Fields.debug("\n%s => %s\n", prevScreen.mode, nextScreen);
 	}
 	
-	public void pasteInstructions() {
-		pasteInstructions(0);
-	}
-	
-	public void pasteInstructions(int options) {
-		RoboticArm r = getActiveRobot();
-		ArrayList<Instruction> pasteList = new ArrayList<>();
-		Program p = getActiveProg();
-
-		/* Pre-process instructions for insertion into program. */
-		for (int i = 0; i < clipBoard.size(); i += 1) {
-			Instruction instr = clipBoard.get(i).clone();
-
-			if (instr instanceof PosMotionInst) {
-				PosMotionInst m = (PosMotionInst) instr;
-
-				if ((options & Fields.CLEAR_POSITION) == Fields.CLEAR_POSITION) {
-					m.setPosIdx(-1);
-				} else if ((options & Fields.NEW_POSITION) == Fields.NEW_POSITION) {
-					/*
-					 * Copy the current instruction's position to a new local
-					 * position index and update the instruction to use this new
-					 * position
-					 */
-					int instrPos = m.getPosIdx();
-					int nextPos = p.getNextPosition();
-
-					p.addPosition(p.getPosition(instrPos).clone());
-					m.setPosIdx(nextPos);
-				}
-
-				if ((options & Fields.REVERSE_MOTION) == Fields.REVERSE_MOTION) {
-					MotionInstruction next = null;
-
-					for (int j = i + 1; j < clipBoard.size(); j += 1) {
-						if (clipBoard.get(j) instanceof MotionInstruction) {
-							next = (MotionInstruction) clipBoard.get(j).clone();
-							break;
-						}
-					}
-
-					if (next != null) {
-						Fields.debug("asdf");
-						m.setMotionType(next.getMotionType());
-						m.setSpdMod(next.getSpdMod());
-					}
-				}
-			}
-
-			pasteList.add(instr);
-		}
-
-		/* Perform forward/ reverse insertion. */
-		for (int i = 0; i < clipBoard.size(); i += 1) {
-			Instruction instr;
-			if ((options & Fields.PASTE_REVERSE) == Fields.PASTE_REVERSE) {
-				instr = pasteList.get(pasteList.size() - 1 - i);
-			} else {
-				instr = pasteList.get(i);
-			}
-			
-			r.addAt(p, getActiveInstIdx() + i, instr, i != 0);
-		}
-	}
-	
 	/**
 	 * Wrapper method for the ScreenManager.popScreenStack() of screens.
 	 */
@@ -2924,6 +2803,15 @@ public class RobotRun extends PApplet {
 
 		return false;
 
+	}
+	
+	/**
+	 * Sets the mouse ray debug field to the given ray.
+	 * 
+	 * @param ray	The new mouse ray
+	 */
+	public void setMouseRay(RRay ray) {
+		mouseRay = ray;
 	}
 
 	public void setRCamEnable(boolean enable) {
@@ -3072,6 +2960,34 @@ public class RobotRun extends PApplet {
 		RMatrix rz = RMath.formRMat(new PVector(0f, 0f, 1f), 135f * DEG_TO_RAD);
 		
 		Fields.debug("%s\n%s\n%s\n", rx, ry, rz);
+		
+		/**
+		pushMatrix();
+		resetMatrix();
+		
+		translate(-15f, 5f, 13f);
+		rotateX(0.125f);
+		
+		PVector pos = new PVector(
+			screenX(1f, 1f, 1f),
+			screenY(1f, 1f, 1f),
+			screenZ(1f, 1f, 1f)
+		);
+		
+		System.out.printf("%s\n", pos);
+		
+		ortho();
+		
+		pos = new PVector(
+			screenX(1f, 1f, 1f),
+			screenY(1f, 1f, 1f),
+			screenZ(1f, 1f, 1f)
+		);
+		
+		System.out.printf("%s\n", pos);
+		
+		popMatrix();
+		
 		/**/
 	}
 	
