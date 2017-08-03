@@ -19,6 +19,8 @@ import processing.core.PImage;
 import processing.core.PVector;
 
 public class RobotCamera {
+	
+	private RobotRun appRef;
 	private float brightness;
 	private float camAspectRatio; // Ratio of horizontal : vertical camera frustum size 
 	private float camClipFar; // The distance from the camera to the far clipping plane
@@ -32,17 +34,19 @@ public class RobotCamera {
 	private float sensitivity;
 	private ArrayList<CameraObject> taughtObjects;
 	
-	public RobotCamera() {
-		this(-500, 0, 500, new RQuaternion(), 75, 1.5f, 0.5f, 1000);
+	public RobotCamera(RobotRun appRef) {
+		this(appRef, -500, 0, 500, new RQuaternion(), 75, 1.5f, 0.5f, 1000);
 	}
 	
-	public RobotCamera(float posX, float posY, float posZ, RQuaternion orient, 
+	public RobotCamera(RobotRun appRef, float posX, float posY, float posZ, RQuaternion orient, 
 			float fov, float ar, float near, float far) {
-		this(new PVector(posX, posY, posZ), orient, fov, ar, near, far, 10.0f, 0.1f);
+		this(appRef, new PVector(posX, posY, posZ), orient, fov, ar, near, far, 10.0f, 0.1f);
 	}
 	
-	public RobotCamera(PVector pos, RQuaternion orient, float fov, float ar, float near, float far,
+	public RobotCamera(RobotRun appRef, PVector pos, RQuaternion orient, float fov, float ar, float near, float far,
 			float br, float exp) {
+		
+		this.appRef = appRef;
 		camPos = pos;
 		camOrient = orient;
 		camFOV = fov;
@@ -238,7 +242,7 @@ public class RobotCamera {
 			if(o instanceof Part) {
 				float imageQuality = getObjectImageQuality(o);
 				if(isPointInFrame(((Part)o).getCenter()) && imageQuality >= sensitivity) {
-					objList.add(new CameraObject((Part)o, imageQuality));
+					objList.add(new CameraObject(appRef, (Part)o, imageQuality));
 				}
 			}
 		}
@@ -374,7 +378,7 @@ public class RobotCamera {
 	public float getObjectImageQuality(WorldObject o) {
 		if(o instanceof Fixture) return 0f;
 		
-		CameraObject camObj = new CameraObject((Part)o);
+		CameraObject camObj = new CameraObject(appRef, (Part)o);
 		PVector objCenter = ((Part)o).getCenter();
 		float[] dims = o.getModel().getDimArray();
 		float len = dims[0];
@@ -517,7 +521,7 @@ public class RobotCamera {
 		for(WorldObject o: objs) {
 			if(o instanceof Part) {
 				float quality = getObjectImageQuality(o);
-				teachObj = new CameraObject((Part)o, quality);
+				teachObj = new CameraObject(appRef, (Part)o, quality);
 			}
 		}
 		
@@ -603,7 +607,7 @@ public class RobotCamera {
 
 	private void takeSnapshot() {
 		int height = 200, width = 250;
-		PGraphics img = RobotRun.getInstance().createGraphics(width, height, RobotRun.P3D);
+		PGraphics img = appRef.createGraphics(width, height, RobotRun.P3D);
 		
 		img.beginDraw();
 		PVector cPos = camPos;
@@ -626,8 +630,9 @@ public class RobotCamera {
 		img.background(light);
 		img.stroke(0);
 		
-		if(RobotRun.getInstanceScenario() != null) {
-			for(WorldObject o : RobotRun.getInstanceScenario().getObjectList()) {
+		Scenario active = appRef.getActiveScenario();
+		if(active != null) {
+			for (WorldObject o : active) {
 				if(o instanceof Part) 
 					((Part)o).draw(img, false);
 				else
@@ -635,7 +640,7 @@ public class RobotCamera {
 			}
 		}
 		
-		RobotRun.getInstanceRobot().draw(img, false, AxesDisplay.NONE);
+		appRef.getActiveRobot().draw(img, false, AxesDisplay.NONE);
 		
 		img.endDraw();
 		

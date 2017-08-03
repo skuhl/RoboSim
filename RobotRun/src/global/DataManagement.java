@@ -351,7 +351,7 @@ public abstract class DataManagement {
 		WorldObject o = loadWorldObject(in, app).obj;
 		float imageQuality = in.readFloat();
 		
-		return new CameraObject((Part)o, imageQuality);
+		return new CameraObject(app, (Part)o, imageQuality);
 	}
 
 	private static ExpressionElement loadExpressionElement(RoboticArm robot,

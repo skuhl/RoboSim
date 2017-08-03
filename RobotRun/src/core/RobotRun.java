@@ -19,6 +19,7 @@ import geom.BoundingBox;
 import geom.ComplexShape;
 import geom.CoordinateSystem;
 import geom.Fixture;
+import geom.MyPShape;
 import geom.Part;
 import geom.Point;
 import geom.RMatrix;
@@ -80,16 +81,21 @@ import window.WGUI_Buttons;
  * @author Vincent Druckte, Joshua Hooker, and James Walker
  */
 public class RobotRun extends PApplet {
+	
+	@Deprecated
 	private static RobotRun instance;
 	
+	@Deprecated
 	public static RobotRun getInstance() {
 		return instance;
 	}
 	
+	@Deprecated
 	public static RoboticArm getInstanceRobot() {
 		return instance.getActiveRobot();
 	}
 	
+	@Deprecated
 	public static Scenario getInstanceScenario() {
 		return instance.getActiveScenario();
 	}
@@ -3013,7 +3019,7 @@ public class RobotRun extends PApplet {
 		Fields.bond = createFont("fonts/ConsolasBold.ttf", 12);
 		
 		camera = new Camera(1000f, 100f, 8000f);
-		rCamera = new RobotCamera();
+		rCamera = new RobotCamera(this);
 		robotTrace = new RTrace();
 		activeRobot = new Pointer<>(null);
 		activeScenario = new Pointer<>(null);
@@ -3021,6 +3027,7 @@ public class RobotRun extends PApplet {
 		CallInstruction.setRobotRef(activeRobot);
 		OperandCamObj.setCamRef(rCamera);
 		OperandCamObj.setScenarioRef(activeScenario);
+		MyPShape.setAppRef(this);
 		
 		keyCodeMap = new KeyCodeMap();
 		progExecState = new ProgExecution();
