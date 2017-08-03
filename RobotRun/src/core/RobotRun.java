@@ -99,7 +99,6 @@ public class RobotRun extends PApplet {
 
 		if (args != null) {
 			PApplet.main(concat(appletArgs, args));
-
 		} else {
 			PApplet.main(appletArgs);
 		}

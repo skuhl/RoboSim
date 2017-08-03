@@ -85,13 +85,10 @@ public class Expression extends Operand<Object> {
 		// Map register operands to their respective values
 		if (result instanceof OperandIOReg) {
 			result = new OperandBool(((OperandIOReg) result).getBoolValue());
-			
 		} else if (result instanceof OperandDReg) {
 			result = new OperandFloat(((OperandDReg) result).getArithValue());
-			
 		} else if (result instanceof OperandPReg) {
 			result = new OperandPoint(((OperandPReg) result).getPointValue());
-			
 		} else if (result instanceof OperandPRegIdx) {
 			result = new OperandFloat(((OperandPRegIdx) result).getArithValue());	
 		}
