@@ -211,8 +211,7 @@ public class RoboticArm {
 		SEGMENT[0] = new RSegWithJoint(
 			segmentModels[0],
 			new BoundingBox[] { new BoundingBox(405, 105, 405) },
-			/*0.0436f,*/ new PVector(-200f, -163f, -200f),
-			new PVector(0f, 1f, 0f)
+			new PVector(-200f, -163f, -200f), new PVector(0f, 1f, 0f)
 		);
 		
 		SEGMENT[1] = new RSegWithJoint(
@@ -221,7 +220,7 @@ public class RoboticArm {
 					new BoundingBox(305, 80, 305),
 					new BoundingBox(114, 98, 160)
 			},
-			/*0.0436f,*/ 4.34f, 2.01f, new PVector(-37f, -137f, 30f),
+			4.34f, 2.01f, new PVector(-37f, -137f, 30f),
 			new PVector(0f, 0f, -1f)
 		);
 		
@@ -232,7 +231,7 @@ public class RoboticArm {
 					new BoundingBox(130, 316, 64),
 					new BoundingBox(110, 163, 48)
 			},
-			/*0.0582f,*/ 1.955f, 1.134f, new PVector(-3f, -498f, -200f),
+			1.955f, 1.134f, new PVector(-3f, -498f, -200f),
 			new PVector(0f, 0f, -1f)
 		);
 		
@@ -243,8 +242,7 @@ public class RoboticArm {
 					new BoundingBox(420, 126, 126),
 					new BoundingBox(148, 154, 154),
 			},
-			/*0.0727f,*/ new PVector(-650f, 30f, 75f),
-			new PVector(1f, 0f, 0f)
+			new PVector(-650f, 30f, 75f), new PVector(1f, 0f, 0f)
 		);
 		
 		SEGMENT[4] = new RSegWithJoint(
@@ -257,8 +255,7 @@ public class RoboticArm {
 		SEGMENT[5] = new RSegWithJoint(
 			segmentModels[5],
 			new BoundingBox[0],
-			/*0.1222f,*/ new PVector(-95f, 0f, 0f),
-			new PVector(-1f, 0f, 0f)
+			new PVector(-95f, 0f, 0f), new PVector(-1f, 0f, 0f)
 		);
 		
 		// Set default speed modifiers

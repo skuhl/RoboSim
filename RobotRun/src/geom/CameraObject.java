@@ -29,6 +29,7 @@ public class CameraObject extends Part {
 		super(p.getName(), p.getModel().clone(), p.getOBBDims().copy(), 
 				p.localOrientation.clone(), p.defaultOrientation.clone(), p.getFixtureRef());
 		
+		this.appRef = appRef;
 		RShape mdl = p.getModel();
 		if(mdl instanceof ComplexShape) {
 			String fileName = ((ComplexShape)mdl).getSourcePath();

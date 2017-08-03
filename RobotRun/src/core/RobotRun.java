@@ -1879,7 +1879,9 @@ public class RobotRun extends PApplet {
 	public Instruction getActiveInstruction() {
 		Program prog = getActiveProg();
 		
-		if (prog == null || getActiveInstIdx() < 0 || getActiveInstIdx() >= prog.getNumOfInst()) {
+		if (prog == null || getActiveInstIdx() < 0 || getActiveInstIdx()
+				>= prog.getNumOfInst()) {
+			
 			// Invalid instruction or program index
 			return null;
 		}
@@ -2110,7 +2112,7 @@ public class RobotRun extends PApplet {
 	 * @return Whether or not the second robot is used in the application
 	 */
 	public boolean isSecondRobotUsed() {
-		return UI.getRobotButtonState();
+		return UI.getButtonState(WGUI_Buttons.RobotToggleActive);
 	}
 
 	public boolean isShift() {
@@ -3276,7 +3278,7 @@ public class RobotRun extends PApplet {
 	 * @return		The closest object, with which the ray collided
 	 */
 	private WorldObject checkForCollisionsInScene(RRay ray) {
-		if (UI.getRobotButtonState()) {
+		if (isSecondRobotUsed()) {
 			return checkForRayCollisions(ray, getActiveScenario(), ROBOTS.get(0));
 			
 		}
@@ -3614,7 +3616,7 @@ public class RobotRun extends PApplet {
 		}
 		
 
-		if (UI.getRobotButtonState()) {
+		if (isSecondRobotUsed()) {
 			// Draw all robots
 			for (RoboticArm r : ROBOTS.values()) {
 				

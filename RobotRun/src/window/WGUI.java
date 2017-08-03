@@ -182,7 +182,7 @@ public class WGUI implements ControlListener {
 		addButton(WGUI_Buttons.CamViewRt, "R", sButtonWidth, sButtonHeight, Fields.small).hide();
 		addButton(WGUI_Buttons.CamViewTp, "T", sButtonWidth, sButtonHeight, Fields.small).hide();
 		addButton(WGUI_Buttons.CamViewBt, "Bt", sButtonWidth, sButtonHeight, Fields.small).hide();
-
+		
 		// Pendant screen background
 		c1 = addTextarea("pendantScreen", "", pendant, winMargin, 0,
 				Fields.PENDANT_SCREEN_WIDTH, Fields.PENDANT_SCREEN_HEIGHT,
@@ -647,10 +647,10 @@ public class WGUI implements ControlListener {
 		addTextarea("CCFarLbl", "Far Clip:", camera, lLblWidth, fieldHeight, Fields.medium);
 		addTextfield("CCFarCur", camera, fieldWidthSm, fieldHeight, Fields.medium, app.getKeyCodeMap());
 		
-		addSlider("CBright", camera, fieldWidthMed, fieldHeight, 0f, 10f, 1f,
-				Fields.ITYPE_TRANSIENT);
-		addSlider("CExp", camera, fieldWidthMed, fieldHeight, 0.01f, 1f, 0.1f,
-				Fields.ITYPE_TRANSIENT);
+		addSlider("CBright", "Brightness", camera, fieldWidthMed, fieldHeight,
+				0f, 10f, 1f, Fields.ITYPE_TRANSIENT, Fields.medium);
+		addSlider("CExp", "Exposure", camera, fieldWidthMed, fieldHeight,
+				0.01f, 1f, 0.1f, Fields.ITYPE_TRANSIENT, Fields.medium);
 		
 		addButton(WGUI_Buttons.CamUpdate, "Update Camera", camera, fieldWidthMed, sButtonHeight, Fields.small);
 		addDropdown("CamObjects", camera, ldropItemWidth, dropItemHeight, 0,
@@ -997,6 +997,7 @@ public class WGUI implements ControlListener {
 	 * 
 	 * @param name		The name of the slider, which be unique amongst all
 	 * 					UI elements
+	 * @param lbl		The text to render for the slider's caption label
 	 * @param parent	The window group, to which this slider belongs
 	 * @param wdh		The width of the slider
 	 * @param hgt		The height of the slider
@@ -1004,14 +1005,20 @@ public class WGUI implements ControlListener {
 	 * @param max		The maximum value of the slider
 	 * @param def		The initial value of the slider
 	 * @param inputType	How should this field by treated for input clear events
+	 * @param lblFont	The font for the slider's label
 	 * @return			A reference to the new slider
 	 */
-	private MySlider addSlider(String name, Group parent, int wdh, int hgt,
-			float min, float max, float def, int inputType) {
+	private MySlider addSlider(String name, String lbl, Group parent, int wdh,
+			int hgt, float min, float max, float def, int inputType,
+			PFont lblFont) {
 		
 		MySlider s = new MySlider(manager, name, inputType);
-		s.setColorValue(Fields.B_DEFAULT_C)
+		s.getCaptionLabel().set(lbl).setFont(lblFont);
+		
+		s.setColorValue(Fields.B_TEXT_C)
 		.setColorLabel(Fields.F_TEXT_C)
+		.setColorBackground(Fields.B_DEFAULT_C)
+		.setColorForeground(Fields.B_FG_C)
 		.setColorActive(Fields.B_ACTIVE_C)
 		.setRange(min, max)
 		.setDefaultValue(def)
@@ -1054,6 +1061,7 @@ public class WGUI implements ControlListener {
 		
 		MySlider s = new MySlider(manager, name, inputType);
 		s.getCaptionLabel().set(lbl).setFont(lblFont);
+		s.getValueLabel().setFont(lblFont);
 		
 		s.setColorValue(valColor)
 		.setColorLabel(Fields.F_TEXT_C)
@@ -2083,13 +2091,6 @@ public class WGUI implements ControlListener {
 	private MyRadioButton getRadioButton(String name) throws ClassCastException {
 		return (MyRadioButton) manager.get(name);
 	}
-
-	/**
-	 * @return	Whether or not the robot display button is on
-	 */
-	public boolean getRobotButtonState() {
-		return getButton(WGUI_Buttons.RobotToggleActive).isOn();
-	}
 	
 	/**
 	 * Returns the scenario associated with the label that is active
@@ -2098,21 +2099,14 @@ public class WGUI implements ControlListener {
 	 * @return  The index value or null if no such index exists
 	 */
 	public Scenario getSelectedScenario() {
+		Object val = getDropdown("Scenario").getSelectedItem();
 
-		if (menu == WindowTab.SCENARIO) {
-			Object val = getDropdown("Scenario").getSelectedItem();
+		if (val instanceof Scenario) {
+			return (Scenario)val;
 
-			if (val instanceof Scenario) {
-				// Set the active scenario index
-				return (Scenario)val;
-
-			} else if (val != null) {
-				// Invalid entry in the dropdown list
-				Fields.setMessage("Invalid class type: %d!\n", val.getClass());
-			}
+		} else {
+			return null;
 		}
-
-		return null;
 	}
 
 
@@ -2124,6 +2118,7 @@ public class WGUI implements ControlListener {
 
 		if (wldObj instanceof WorldObject) {
 			return (WorldObject)wldObj;
+			
 		} else {
 			return null;
 		}
@@ -2134,6 +2129,7 @@ public class WGUI implements ControlListener {
 		
 		if (wldObj instanceof WorldObject) {
 			return (WorldObject)wldObj;
+			
 		} else {
 			return null;
 		}
@@ -2844,28 +2840,26 @@ public class WGUI implements ControlListener {
 	}
 	
 	public void updateCameraWindowFields() {
-		if(app.getCamera() != null) {
-			RobotCamera c = app.getRobotCamera();
-			PVector pos = RMath.vToWorld(c.getPosition());
-			PVector ori = RMath.nQuatToWEuler(c.getOrientation());
-			
-			getTextField("CXCur").setText(String.format("%4.3f", pos.x));
-			getTextField("CYCur").setText(String.format("%4.3f", pos.y));
-			getTextField("CZCur").setText(String.format("%4.3f", pos.z));
-			
-			getTextField("CWCur").setText(String.format("%4.3f", ori.x));
-			getTextField("CPCur").setText(String.format("%4.3f", ori.y));
-			getTextField("CRCur").setText(String.format("%4.3f", ori.z));
-			
-			getTextField("CCNearCur").setText(String.format("%4.3f", c.getNearClipDist()));
-			getTextField("CCFarCur").setText(String.format("%4.3f", c.getFarClipDist()));
-			
-			getTextField("CFOVCur").setText(String.format("%4.3f", c.getFOV()));
-			getTextField("CAspectCur").setText(String.format("%4.3f", c.getAspectRatio()));
-			
-			getSlider("CBright").setValue(c.getBrightness());
-			getSlider("CExp").setValue(c.getExposure());
-		}
+		RobotCamera rCam = app.getRobotCamera();
+		PVector pos = RMath.vToWorld(rCam.getPosition());
+		PVector ori = RMath.nQuatToWEuler(rCam.getOrientation());
+		
+		getTextField("CXCur").setText(String.format("%4.3f", pos.x));
+		getTextField("CYCur").setText(String.format("%4.3f", pos.y));
+		getTextField("CZCur").setText(String.format("%4.3f", pos.z));
+		
+		getTextField("CWCur").setText(String.format("%4.3f", ori.x));
+		getTextField("CPCur").setText(String.format("%4.3f", ori.y));
+		getTextField("CRCur").setText(String.format("%4.3f", ori.z));
+		
+		getTextField("CCNearCur").setText(String.format("%4.3f", rCam.getNearClipDist()));
+		getTextField("CCFarCur").setText(String.format("%4.3f", rCam.getFarClipDist()));
+		
+		getTextField("CFOVCur").setText(String.format("%4.3f", rCam.getFOV()));
+		getTextField("CAspectCur").setText(String.format("%4.3f", rCam.getAspectRatio()));
+		
+		getSlider("CBright").setValue(rCam.getBrightness());
+		getSlider("CExp").setValue(rCam.getExposure());
 	}
 
 	/**

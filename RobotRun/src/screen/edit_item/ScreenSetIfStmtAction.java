@@ -18,7 +18,7 @@ public class ScreenSetIfStmtAction extends ST_ScreenEditItem {
 		options.addLine("JMP LBL[x]");
 		options.addLine("CALL");
 		
-		if (robotRun.getUI().getRobotButtonState()) {
+		if (robotRun.isSecondRobotUsed()) {
 			options.addLine("RCALL");
 		}
 	}

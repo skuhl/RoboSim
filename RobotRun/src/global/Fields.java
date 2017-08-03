@@ -184,7 +184,8 @@ public abstract class Fields {
 	 * A color used in the UI's color scheme.
 	 */
 	public static final int BG_C, F_TEXT_C, F_CURSOR_C, F_ACTIVE_C, F_BG_C,
-			F_FG_C, B_TEXT_C, B_DEFAULT_C, B_ACTIVE_C, UI_LIGHT_C, UI_DARK_C;
+			F_FG_C, B_TEXT_C, B_DEFAULT_C, B_FG_C, B_ACTIVE_C, UI_LIGHT_C,
+			UI_DARK_C;
 	
 	/**
 	 * A font used for rendering text in the UI.
@@ -252,6 +253,7 @@ public abstract class Fields {
 		B_TEXT_C = WHITE;
 		B_DEFAULT_C = 0xff464646;
 		B_ACTIVE_C = 0xffdc2828;
+		B_FG_C = 0xff0074d9;
 		UI_LIGHT_C = 0xfff0f0f0;
 		UI_DARK_C = 0xff282828;
 		
