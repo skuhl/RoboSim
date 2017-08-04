@@ -492,29 +492,29 @@ public class WGUI implements ControlListener {
 		addSlider("WOFillR", "Red", sharedElements, fieldWidthMed, fieldHeight, 0f,
 				255f, 0, 10f / 255f, 0f, Fields.BLACK, Fields.color(255, 0, 0),
 				Fields.B_DEFAULT_C, Fields.color(200, 0, 0), Fields.medium,
-				Fields.ITYPE_TRANSIENT);
+				Fields.ITYPE_PERMENANT);
 		addSlider("WOFillG", "Green", sharedElements, fieldWidthMed, fieldHeight, 0f,
 				255f, 0, 10f / 255f, 0f, Fields.BLACK, Fields.color(0, 255, 0),
 				Fields.B_DEFAULT_C, Fields.color(0, 200, 0), Fields.medium,
-				Fields.ITYPE_TRANSIENT);
+				Fields.ITYPE_PERMENANT);
 		addSlider("WOFillB", "Blue", sharedElements, fieldWidthMed, fieldHeight, 0f,
 				255f, 0, 10f / 255f, 0f, Fields.BLACK, Fields.color(0, 0, 255),
 				Fields.B_DEFAULT_C, Fields.color(0, 0, 200), Fields.medium,
-				Fields.ITYPE_TRANSIENT);
+				Fields.ITYPE_PERMENANT);
 		addTextarea("WOFillLbl", "Fill:", sharedElements, mLblWidth, sButtonHeight, Fields.medium);
 		
 		addSlider("WOOutlineR", "Red", sharedElements, fieldWidthMed, fieldHeight,
 				0f, 255f, 0, 10f / 255f, 0f, Fields.BLACK, Fields.color(255, 0, 0),
 				Fields.B_DEFAULT_C, Fields.color(200, 0, 0), Fields.medium,
-				Fields.ITYPE_TRANSIENT);
+				Fields.ITYPE_PERMENANT);
 		addSlider("WOOutlineG", "Green", sharedElements, fieldWidthMed, fieldHeight,
 				0f, 255f, 0, 10f / 256f, 0f, Fields.BLACK, Fields.color(0, 255, 0),
 				Fields.B_DEFAULT_C, Fields.color(0, 200, 0), Fields.medium,
-				Fields.ITYPE_TRANSIENT);
+				Fields.ITYPE_PERMENANT);
 		addSlider("WOOutlineB", "Blue", sharedElements, fieldWidthMed, fieldHeight,
 				0f, 255f, 0, 10f / 256f, 0f, Fields.BLACK, Fields.color(0, 0, 255),
 				Fields.B_DEFAULT_C, Fields.color(0, 0, 200), Fields.medium,
-				Fields.ITYPE_TRANSIENT);
+				Fields.ITYPE_PERMENANT);
 		addTextarea("WOOutlineLbl", "Outline:", sharedElements, mLblWidth, sButtonHeight, Fields.medium);
 
 		addButton(WGUI_Buttons.ObjClearFields, "Clear", sharedElements, mButtonWidth, sButtonHeight, Fields.small);
