@@ -347,7 +347,10 @@ public class RobotCamera {
 		}
 		
 		float reflect = camObj.reflective_IDX;
-		float lightFactor = (float)Math.max(1 - Math.pow(Math.log10(exposure * brightness * reflect), 2), 0);
+		float lightIntensity = exposure*brightness;
+		float lightFactor = RMath.clamp((float)Math.min(
+				1 - Math.pow(Math.log10(lightIntensity), 2), 
+				1 - Math.pow(Math.log10(Math.pow(lightIntensity, reflect)), 2)), 0, 1);
 		float imageQuality = (inView / (float)(RES*RES*RES)) * lightFactor;
 		System.out.println(imageQuality);
 		return imageQuality;
