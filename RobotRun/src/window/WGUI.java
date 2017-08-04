@@ -719,7 +719,7 @@ public class WGUI implements ControlListener {
 		}
 
 		addDropdown("WO", editWO, ldropItemWidth, dropItemHeight, 4,
-				Fields.small, Fields.ITYPE_TRANSIENT);
+				Fields.small, Fields.ITYPE_PERMENANT);
 	}
 
 	/**
@@ -2527,7 +2527,6 @@ public class WGUI implements ControlListener {
 		} else if ((menu == null || menu == WindowTab.EDIT ||
 				menu == WindowTab.CAMERA)) {
 			
-			setView(WindowTab.EDIT);
 			getDropdown("WO").setItem(wo);
 		}
 	}
@@ -3792,9 +3791,9 @@ public class WGUI implements ControlListener {
 			b = getButton(WGUI_Buttons.CamViewTp).setPosition(relPos[0], relPos[1]).show();
 			relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 			b = getButton(WGUI_Buttons.CamViewBt).setPosition(relPos[0], relPos[1]).show();
-	
-			updateListContents();
 		}
+		
+		updateListContents();
 	}
 
 	/**

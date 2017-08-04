@@ -2418,7 +2418,16 @@ public class RobotRun extends PApplet {
 				WorldObject collision = checkForCollisionsInScene(mouseRay);
 				
 				if (mouseButton == LEFT && collision != null) {
-					UI.setSelectedWO(collision);
+					
+					WorldObject curSelectedWO = UI.getSelectedWO();
+					
+					if (curSelectedWO == collision) {
+						// Deselected the currently selected world object
+						UI.setSelectedWO(null);
+						
+					} else {
+						UI.setSelectedWO(collision);
+					}
 				}
 				
 				mouseOverWO = collision;
