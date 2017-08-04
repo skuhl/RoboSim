@@ -7,7 +7,6 @@ import java.util.Stack;
 
 import camera.RegisteredModels;
 import camera.RobotCamera;
-import controlP5.Button;
 import enums.AxesDisplay;
 import enums.CoordFrame;
 import enums.ExecState;
@@ -2364,7 +2363,20 @@ public class RobotRun extends PApplet {
 			
 			if (UI.isFocus()) {
 				// Mouse click on the UI
-				mouseRay = UI.checkMouseCollisionInRCamSnap(mouseX, mouseY);
+				if (mouseButton == LEFT) {
+					mouseRay = UI.getMouseRayFromRCam(mouseX, mouseY);
+					
+					if (mouseRay != null) {
+						// Check for collisions with objects in the scene
+						WorldObject collision = checkForCollisionsInScene(mouseRay);
+						
+						if (mouseButton == LEFT && collision != null) {
+							UI.setSelectedWO(collision);
+						}
+						
+						mouseOverWO = collision;
+					}
+				}
 				
 			} else {
 				// Mouse click not on the UI

@@ -1420,14 +1420,16 @@ public class WGUI implements ControlListener {
 	 * @param mx
 	 * @param my
 	 */
-	public RRay checkMouseCollisionInRCamSnap(int mx, int my) {
+	public RRay getMouseRayFromRCam(int mx, int my) {
 		Button b = getButton(WGUI_Buttons.CamSnapPreview);
 		
 		if (b != null && b.isMouseOver()) {
 			float[] butPos = b.getPosition();
-			int mCamX = mx - (int)butPos[0];
-			int mCamY = my - (int)butPos[1];
+			float[] absButPos = b.getAbsolutePosition();
+			int mCamX = mx - (int)(butPos[0] + absButPos[0]);
+			int mCamY = my - (int)(butPos[1] + absButPos[1]);
 			
+			b.setMouseOver(false);
 			return app.getRobotCamera().camPosToWldRay(mCamX, mCamY);
 		}
 		
@@ -2522,7 +2524,9 @@ public class WGUI implements ControlListener {
 			MyDropdownList objList = getDropdown("WO");
 			objList.setValue(-1f);
 			
-		} else if ((menu == null || menu == WindowTab.EDIT)) {
+		} else if ((menu == null || menu == WindowTab.EDIT ||
+				menu == WindowTab.CAMERA)) {
+			
 			updateView(WindowTab.EDIT);
 			getDropdown("WO").setItem(wo);
 		}
