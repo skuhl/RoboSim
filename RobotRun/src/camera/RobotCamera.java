@@ -111,7 +111,7 @@ public class RobotCamera {
 		Fields.drawPyramid(g, 4, camEyeRad, camSideLen, camColor, camColor);
 		g.popMatrix();
 		// Draw camera axes
-		Fields.drawAxes(g, 300, 0);
+		Fields.drawAxes(g, 300);
 		g.popMatrix();
 		
 		PVector near[] = getPlaneNear();

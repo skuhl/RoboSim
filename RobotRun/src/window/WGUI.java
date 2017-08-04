@@ -1435,6 +1435,46 @@ public class WGUI implements ControlListener {
 		
 		return null;
 	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param shape
+	 */
+	private void clampDims(RShape shape) {
+		
+		if (shape instanceof RBox) {
+			// Clamp the dimensions of a box
+			DimType dim = DimType.LENGTH;
+			shape.setDim(RMath.clamp(shape.getDim(dim), shape.getDimLBound(dim),
+					shape.getDimUBound(dim)), dim);
+			
+			dim = DimType.HEIGHT;
+			shape.setDim(RMath.clamp(shape.getDim(dim), shape.getDimLBound(dim),
+					shape.getDimUBound(dim)), dim);
+			
+			dim = DimType.WIDTH;
+			shape.setDim(RMath.clamp(shape.getDim(dim), shape.getDimLBound(dim),
+					shape.getDimUBound(dim)), dim);
+			
+		} else if (shape instanceof RCylinder) {
+			// Clamp the dimensions of a cylinder
+			DimType dim = DimType.RADIUS;
+			shape.setDim(RMath.clamp(shape.getDim(dim), shape.getDimLBound(dim),
+					shape.getDimUBound(dim)), dim);
+			
+			dim = DimType.HEIGHT;
+			shape.setDim(RMath.clamp(shape.getDim(dim), shape.getDimLBound(dim),
+					shape.getDimUBound(dim)), dim);
+			
+		} else if (shape instanceof ComplexShape) {
+			// Clamp the dimensions of a complex shape
+			DimType dim = DimType.SCALE;
+			shape.setDim(RMath.clamp(shape.getDim(dim), shape.getDimLBound(dim),
+					shape.getDimUBound(dim)), dim);
+		}
+		
+	}
 
 	/**
 	 * Reinitializes all input fields (textfields, dropdown lists, etc.).
@@ -1592,11 +1632,15 @@ public class WGUI implements ControlListener {
 			wldObj = null;
 			
 		} catch (IllegalArgumentException IAEx) {
-			Fields.setMessage("Missing field");
+			Fields.setMessage(IAEx.getMessage());
 			wldObj = null;
 		}
 
 		app.popMatrix();
+		
+		if (wldObj != null) {
+			clampDims(wldObj.getModel());
+		}
 
 		return wldObj;
 	}

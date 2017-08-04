@@ -583,15 +583,14 @@ public abstract class Fields {
 	 * @param axesVectors	The rotation matrix which defines the coordinate
 	 * 						system axes
 	 * @param axesLength	The render length of the axes
-	 * @param originColor	The color of the origin point
 	 */
 	public static void drawAxes(PGraphics g, PVector origin,
-			RMatrix axesVectors, float axesLength, int originColor) {
+			RMatrix axesVectors, float axesLength) {
 		
 		g.pushMatrix();
 		// Transform to the reference frame defined by the axes vectors		
 		Fields.transform(g, origin, axesVectors);
-		drawAxes(g, axesLength, originColor);
+		drawAxes(g, axesLength);
 		g.popMatrix();
 	}
 	
@@ -600,10 +599,8 @@ public abstract class Fields {
 	 * coordinate system with the specified axis length and origin color.
 	 * 
 	 * @param axesLength	The render length of the axes
-	 * @param originColor	The color of the origin point
 	 */
-	public static void drawAxes(PGraphics g, float axesLength,
-			int originColor) {
+	public static void drawAxes(PGraphics g, float axesLength) {
 		
 		g.pushStyle();
 		
@@ -620,13 +617,11 @@ public abstract class Fields {
 		// Draw a sphere on the positive direction for each axis
 		float dotPos = RMath.clamp(axesLength, 100f, 500f);
 		g.textFont(Fields.bond, 18);
-
-		g.stroke(originColor);
+		
 		g.fill(Fields.BLACK);
 		
 		g.pushMatrix();
 		
-		g.sphere(4);
 		g.stroke(0);
 		g.translate(dotPos, 0, 0);
 		g.sphere(4);

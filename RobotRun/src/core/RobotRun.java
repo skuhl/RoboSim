@@ -3539,7 +3539,7 @@ public class RobotRun extends PApplet {
 			
 			if (axesType == AxesDisplay.AXES) {
 				Fields.drawAxes(getGraphics(), origin, Fields.WORLD_AXES_MAT,
-						10000f, Fields.BLACK);
+						10000f);
 				
 			} else if (axesType == AxesDisplay.GRID) {
 				g.pushMatrix();
@@ -3609,7 +3609,7 @@ public class RobotRun extends PApplet {
 			}
 
 			Fields.drawAxes(getGraphics(), origin, RMath.rMatToWorld(orientation),
-					500f, Fields.BLACK);
+					500f);
 		}
 		
 		Screen activeScreen = getActiveScreen();
@@ -3634,7 +3634,7 @@ public class RobotRun extends PApplet {
 				&& position.orientation != null) {
 			
 			Fields.drawAxes(getGraphics(), position.position,
-					position.orientation.toMatrix(), 100f, 0);
+					position.orientation.toMatrix(), 100f);
 		}
 	}
 	
@@ -3649,7 +3649,7 @@ public class RobotRun extends PApplet {
 		ortho();
 		
 		pushStyle();
-		textFont(Fields.medium, 14);
+		textFont(Fields.small, 12);
 		fill(0);
 		textAlign(RIGHT, TOP);
 		

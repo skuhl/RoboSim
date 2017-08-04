@@ -650,7 +650,7 @@ public class RoboticArm {
 				RMatrix userAxes = RMath.rMatToWorld(activeUser.getNativeAxisVectors());
 				
 				if (axesType == AxesDisplay.AXES) {
-					Fields.drawAxes(g, activeUser.getOrigin(), userAxes, 10000f, Fields.ORANGE);
+					Fields.drawAxes(g, activeUser.getOrigin(), userAxes, 10000f);
 					
 				} else if (axesType == AxesDisplay.GRID) {
 					g.pushMatrix();
@@ -885,27 +885,27 @@ public class RoboticArm {
 			
 			// Render the active tool frame at the position of the tooltip
 			RMatrix toolAxes = RMath.rMatToWorld(activeTool.getOrientationOffset().toMatrix());
-			Fields.drawAxes(g, activeTool.getTCPOffset(), toolAxes, 500f, Fields.PINK);
+			Fields.drawAxes(g, activeTool.getTCPOffset(), toolAxes, 500f);
 			
-		} else {
-			// Render a point at the position of the tooltip
-			g.pushStyle();
-			g.stroke(Fields.PINK);
-			g.noFill();
-			
-			g.pushMatrix();
-			
-			if (activeTool != null) {
-				// Apply active tool frame offset
-				PVector tipPos = activeTool.getTCPOffset();
-				g.translate(tipPos.x, tipPos.y, tipPos.z);
-			}
-			
-			g.sphere(4);
-			
-			g.popMatrix();
-			g.popStyle();
 		}
+		
+		// Render a point at the position of the tooltip
+		g.pushStyle();
+		g.stroke(Fields.PINK);
+		g.noFill();
+		
+		g.pushMatrix();
+		
+		if (activeTool != null) {
+			// Apply active tool frame offset
+			PVector tipPos = activeTool.getTCPOffset();
+			g.translate(tipPos.x, tipPos.y, tipPos.z);
+		}
+		
+		g.sphere(4);
+		
+		g.popMatrix();
+		g.popStyle();
 	}
 	
 	/**
