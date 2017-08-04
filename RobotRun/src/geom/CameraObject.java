@@ -85,11 +85,11 @@ public class CameraObject extends Part {
 					0, 0, 0, 1
 			);
 			
+			//TODO object scaling
 			//img.scale(0.5f);
 			
 			this.getModel().draw(img);
 			img.filter(PApplet.BLUR, 5*(1 - image_quality*image_quality));
-			System.out.println(image_quality);
 			img.resetMatrix();
 			img.translate(-75, -100);
 						

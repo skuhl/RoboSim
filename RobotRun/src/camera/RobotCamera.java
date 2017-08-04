@@ -347,9 +347,9 @@ public class RobotCamera {
 		}
 		
 		float reflect = camObj.reflective_IDX;
-		float lightFactor = (float)Math.max(1 - Math.pow(Math.log(brightness * exposure * reflect), 2), 0);
+		float lightFactor = (float)Math.max(1 - Math.pow(Math.log10(exposure * brightness * reflect), 2), 0);
 		float imageQuality = (inView / (float)(RES*RES*RES)) * lightFactor;
-		
+		System.out.println(imageQuality);
 		return imageQuality;
 	}
 	
@@ -545,22 +545,20 @@ public class RobotCamera {
 		PVector cPos = camPos;
 		PVector cOrien = RMath.quatToEuler(camOrient);
 		img.perspective((camFOV/camAspectRatio)*RobotRun.DEG_TO_RAD, camAspectRatio, camClipNear, camClipFar);
+				
+		//img.printMatrix();
+		
+		float light = 20 + 235 * brightness * exposure;
+		//img.noLights();
+		img.directionalLight(light, light, light, 0, 0, -1);
+		img.ambientLight(light, light, light);
+		img.background(light);
 		
 		img.rotateX(cOrien.x);
 		img.rotateY(cOrien.y);
 		img.rotateZ(cOrien.z);
 		
 		img.translate(-cPos.x + width / 2f, -cPos.y + height / 2f,  -cPos.z);
-				
-		//img.printMatrix();
-		
-		float light = 20 + 235 * brightness * exposure;
-		
-		img.noLights();
-		img.directionalLight(light, light, light, 0, 0, -1);
-		img.ambientLight(light, light, light);
-		img.background(light);
-		img.stroke(0);
 		
 		if(RobotRun.getInstanceScenario() != null) {
 			for(WorldObject o : RobotRun.getInstanceScenario().getObjectList()) {
@@ -572,6 +570,14 @@ public class RobotCamera {
 		}
 		
 		RobotRun.getInstanceRobot().draw(img, false, AxesDisplay.NONE);
+		
+		img.translate(cPos.x - width / 2f, cPos.y - height / 2f,  cPos.z);
+		
+		img.noStroke();
+		img.fill(img.color(255, 255, 255, (int)(200f*Math.max(0, Math.log10(brightness*exposure)))));
+		img.translate(width/2, height/2);
+		img.sphere(300);
+		img.translate(-width/2, -height/2);
 		
 		img.endDraw();
 		
