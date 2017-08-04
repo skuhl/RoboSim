@@ -91,8 +91,8 @@ public class WGUI implements ControlListener {
 			DIM_TXT = 3,
 			DIM_DDL = 1;
 	
-	private static final String[] tabs = { "Hide", "Robot1", "Robot2", "Create", 
-										  "Edit", "Scenario", "Camera", "Misc" };
+	private static final String[] tabs = { "HIDE", "ROBOT1", "ROBOT2", "CREATE", 
+										  "EDIT", "SCENARIO", "CAMERA", "MISC" };
 	
 	/** The manager object, which contains all the UI elements. */
 	private final ControlP5 manager;
@@ -142,7 +142,7 @@ public class WGUI implements ControlListener {
 		ControllerInterface<?> c1 = null, c2 = null;
 
 		// The default set of labels for window tabs
-		String[] windowList = new String[] { "Hide", "Robot1", "Create", "Edit", "Scenario", "Misc" };
+		String[] windowList = new String[] { "HIDE", "ROBOT1", "CREATE", "EDIT", "SCENARIO", "MISC" };
 		
 		// Initialize the window tab selection bar
 		windowTabs = (MyButtonBar)(new MyButtonBar(manager, "Tabs")
@@ -1253,25 +1253,25 @@ public class WGUI implements ControlListener {
 			if (actLbl == null) {
 				updateView( null );
 				
-			} else if (actLbl.equals("Robot1")) {
+			} else if (actLbl.equals("ROBOT1")) {
 				updateView( WindowTab.ROBOT1 );
 
-			} else if (actLbl.equals("Robot2")) {
+			} else if (actLbl.equals("ROBOT2")) {
 				updateView( WindowTab.ROBOT2 );
 
-			} else if (actLbl.equals("Create")) {
+			} else if (actLbl.equals("CREATE")) {
 				updateView( WindowTab.CREATE );
 
-			} else if (actLbl.equals("Edit")) {
+			} else if (actLbl.equals("EDIT")) {
 				updateView( WindowTab.EDIT );
 
-			} else if (actLbl.equals("Scenario")) {
+			} else if (actLbl.equals("SCENARIO")) {
 				updateView( WindowTab.SCENARIO );
 				
-			} else if (actLbl.equals("Camera")) {
+			} else if (actLbl.equals("CAMERA")) {
 				updateView( WindowTab.CAMERA );
 				
-			} else if (actLbl.equals("Misc")) {
+			} else if (actLbl.equals("MISC")) {
 				updateView( WindowTab.MISC );
 				
 			} else {
@@ -2527,9 +2527,25 @@ public class WGUI implements ControlListener {
 		} else if ((menu == null || menu == WindowTab.EDIT ||
 				menu == WindowTab.CAMERA)) {
 			
-			updateView(WindowTab.EDIT);
+			setView(WindowTab.EDIT);
 			getDropdown("WO").setItem(wo);
 		}
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param newView
+	 */
+	private void setView(WindowTab newView) {
+		if (newView == null) {
+			windowTabs.setActiveButton("Hide");
+			
+		} else {
+			windowTabs.setActiveButton(newView.toString());
+		}
+		
+		updateView(newView);
 	}
 	
 	/**
@@ -2564,11 +2580,11 @@ public class WGUI implements ControlListener {
 		windowTabs.setItems(WGUI.tabs);
 		
 		if(!getButton(WGUI_Buttons.RobotToggleActive).isOn()) {
-			windowTabs.removeItem("Robot2");
+			windowTabs.removeItem("ROBOT2");
 		}
 		
 		if(!getButton(WGUI_Buttons.CamToggleActive).isOn()) {
-			windowTabs.removeItem("Camera");
+			windowTabs.removeItem("CAMERA");
 		}
 	}
 
