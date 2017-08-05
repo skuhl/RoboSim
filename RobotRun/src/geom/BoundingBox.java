@@ -178,33 +178,6 @@ public class BoundingBox {
 	}
 
 	/**
-	 * Testing of orientation conversion formulas.
-	 * 
-	 * @param args	Unused
-	 */
-	public static void main(String[] args) {
-		
-		RMatrix m0 = RMath.formRMat(
-			 0, 0, 1,
-			 -1, 0, 0,
-			 0, 1, 0	
-		);
-		
-		PVector e0 = RMath.matrixToEuler(m0);
-		RMatrix m1 = RMath.eulerToMatrix(e0);
-		
-		System.out.printf("%s\n%s\n%s\n\n", m0, e0, m1);
-		
-		PVector e1 = new PVector(RMath.PI / 3f, - 2 * RMath.PI/ 3f, RMath.PI);
-		RMatrix m2 = RMath.eulerToMatrix(e1);
-		PVector e2 = RMath.matrixToEuler(m2);
-		RMatrix m3 = RMath.eulerToMatrix(e2);
-		PVector e3 = RMath.matrixToEuler(m3);
-		
-		System.out.printf("%s\n%s\n%s\n%s\n%s\n\n", e1, m2, e2, m3, e3);
-	}
-
-	/**
 	 * Return a replicate of this world object's Bounding Box
 	 */
 	@Override

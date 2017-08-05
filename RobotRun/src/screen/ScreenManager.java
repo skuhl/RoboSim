@@ -1,8 +1,10 @@
 package screen;
 
+import java.util.ArrayList;
 import java.util.Stack;
 
 import core.RobotRun;
+import programming.Instruction;
 import screen.cnfrm_cncl.ScreenConfirmProgramDelete;
 import screen.cnfrm_cncl.ScreenConfirmRenumber;
 import screen.content_disp.ScreenCreateMacro;
@@ -118,6 +120,8 @@ public class ScreenManager {
 	 */
 	private Screen activeScreen;
 	
+	private ArrayList<Instruction> clipBoard;
+	
 	/**
 	 * Initializes the screen stack and the active screen as the default screen.
 	 * 
@@ -127,6 +131,7 @@ public class ScreenManager {
 		robotRun = app;
 		screenStack = new Stack<>();
 		activeScreen = loadScreen(ScreenMode.DEFAULT);
+		clipBoard = new ArrayList<>();
 	}
 	
 	/**
@@ -260,7 +265,7 @@ public class ScreenManager {
 		 * elements displayed on a screen of type 'TYPE_LIST_CONTENTS'
 		 */
 		case SELECT_COMMENT: nextScreen = new ScreenSelectComment(robotRun); break;
-		case SELECT_CUT_COPY: nextScreen = new ScreenSelectCutCopy(robotRun); break;
+		case SELECT_CUT_COPY: nextScreen = new ScreenSelectCutCopy(robotRun, clipBoard); break;
 		case SELECT_INSTR_DELETE: nextScreen = new ScreenSelectInstrDelete(robotRun); break;
 
 		/*
@@ -279,7 +284,10 @@ public class ScreenManager {
 		case SELECT_INSTR_INSERT: nextScreen = new ScreenSelectInstrInsert(robotRun); break;
 		case SELECT_IO_INSTR_REG: nextScreen = new ScreenSelectIOInstrReg(robotRun); break;
 		case SELECT_JMP_LBL: nextScreen = new ScreenSelectJumpLabel(robotRun); break;
-		case SELECT_PASTE_OPT: nextScreen = new ScreenSelectPasteOpt(robotRun); break;
+		case SELECT_PASTE_OPT:
+			nextScreen = new ScreenSelectPasteOpt(robotRun, clipBoard);
+			break;
+			
 		case SELECT_REG_STMT: nextScreen = new ScreenSelectRegStmt(robotRun); break;
 		case SET_CALL_PROG: nextScreen = new ScreenSetCallProg(robotRun); break;
 		case SET_DEF_TOOLTIP:

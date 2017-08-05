@@ -29,6 +29,7 @@ import geom.Part;
 import geom.RBox;
 import geom.RCylinder;
 import geom.RMatrix;
+import geom.RRay;
 import geom.RShape;
 import geom.Scenario;
 import geom.WorldObject;
@@ -90,8 +91,8 @@ public class WGUI implements ControlListener {
 			DIM_TXT = 3,
 			DIM_DDL = 1;
 	
-	private static final String[] tabs = { "Hide", "Robot1", "Robot2", "Create", 
-										  "Edit", "Scenario", "Camera", "Misc" };
+	private static final String[] tabs = { "HIDE", "ROBOT1", "ROBOT2", "CREATE", 
+										  "EDIT", "SCENARIO", "CAMERA", "MISC" };
 	
 	/** The manager object, which contains all the UI elements. */
 	private final ControlP5 manager;
@@ -141,7 +142,7 @@ public class WGUI implements ControlListener {
 		ControllerInterface<?> c1 = null, c2 = null;
 
 		// The default set of labels for window tabs
-		String[] windowList = new String[] { "Hide", "Robot1", "Create", "Edit", "Scenario", "Misc" };
+		String[] windowList = new String[] { "HIDE", "ROBOT1", "CREATE", "EDIT", "SCENARIO", "MISC" };
 		
 		// Initialize the window tab selection bar
 		windowTabs = (MyButtonBar)(new MyButtonBar(manager, "Tabs")
@@ -182,7 +183,7 @@ public class WGUI implements ControlListener {
 		addButton(WGUI_Buttons.CamViewRt, "R", sButtonWidth, sButtonHeight, Fields.small).hide();
 		addButton(WGUI_Buttons.CamViewTp, "T", sButtonWidth, sButtonHeight, Fields.small).hide();
 		addButton(WGUI_Buttons.CamViewBt, "Bt", sButtonWidth, sButtonHeight, Fields.small).hide();
-
+		
 		// Pendant screen background
 		c1 = addTextarea("pendantScreen", "", pendant, winMargin, 0,
 				Fields.PENDANT_SCREEN_WIDTH, Fields.PENDANT_SCREEN_HEIGHT,
@@ -491,29 +492,29 @@ public class WGUI implements ControlListener {
 		addSlider("WOFillR", "Red", sharedElements, fieldWidthMed, fieldHeight, 0f,
 				255f, 0, 10f / 255f, 0f, Fields.BLACK, Fields.color(255, 0, 0),
 				Fields.B_DEFAULT_C, Fields.color(200, 0, 0), Fields.medium,
-				Fields.ITYPE_TRANSIENT);
+				Fields.ITYPE_PERMENANT);
 		addSlider("WOFillG", "Green", sharedElements, fieldWidthMed, fieldHeight, 0f,
 				255f, 0, 10f / 255f, 0f, Fields.BLACK, Fields.color(0, 255, 0),
 				Fields.B_DEFAULT_C, Fields.color(0, 200, 0), Fields.medium,
-				Fields.ITYPE_TRANSIENT);
+				Fields.ITYPE_PERMENANT);
 		addSlider("WOFillB", "Blue", sharedElements, fieldWidthMed, fieldHeight, 0f,
 				255f, 0, 10f / 255f, 0f, Fields.BLACK, Fields.color(0, 0, 255),
 				Fields.B_DEFAULT_C, Fields.color(0, 0, 200), Fields.medium,
-				Fields.ITYPE_TRANSIENT);
+				Fields.ITYPE_PERMENANT);
 		addTextarea("WOFillLbl", "Fill:", sharedElements, mLblWidth, sButtonHeight, Fields.medium);
 		
 		addSlider("WOOutlineR", "Red", sharedElements, fieldWidthMed, fieldHeight,
 				0f, 255f, 0, 10f / 255f, 0f, Fields.BLACK, Fields.color(255, 0, 0),
 				Fields.B_DEFAULT_C, Fields.color(200, 0, 0), Fields.medium,
-				Fields.ITYPE_TRANSIENT);
+				Fields.ITYPE_PERMENANT);
 		addSlider("WOOutlineG", "Green", sharedElements, fieldWidthMed, fieldHeight,
 				0f, 255f, 0, 10f / 256f, 0f, Fields.BLACK, Fields.color(0, 255, 0),
 				Fields.B_DEFAULT_C, Fields.color(0, 200, 0), Fields.medium,
-				Fields.ITYPE_TRANSIENT);
+				Fields.ITYPE_PERMENANT);
 		addSlider("WOOutlineB", "Blue", sharedElements, fieldWidthMed, fieldHeight,
 				0f, 255f, 0, 10f / 256f, 0f, Fields.BLACK, Fields.color(0, 0, 255),
 				Fields.B_DEFAULT_C, Fields.color(0, 0, 200), Fields.medium,
-				Fields.ITYPE_TRANSIENT);
+				Fields.ITYPE_PERMENANT);
 		addTextarea("WOOutlineLbl", "Outline:", sharedElements, mLblWidth, sButtonHeight, Fields.medium);
 
 		addButton(WGUI_Buttons.ObjClearFields, "Clear", sharedElements, mButtonWidth, sButtonHeight, Fields.small);
@@ -647,10 +648,10 @@ public class WGUI implements ControlListener {
 		addTextarea("CCFarLbl", "Far Clip:", camera, lLblWidth, fieldHeight, Fields.medium);
 		addTextfield("CCFarCur", camera, fieldWidthSm, fieldHeight, Fields.medium, app.getKeyCodeMap());
 		
-		addSlider("CBright", camera, fieldWidthMed, fieldHeight, 0f, 10f, 1f,
-				Fields.ITYPE_TRANSIENT);
-		addSlider("CExp", camera, fieldWidthMed, fieldHeight, 0.01f, 1f, 0.1f,
-				Fields.ITYPE_TRANSIENT);
+		addSlider("CBright", "Brightness", camera, fieldWidthMed, fieldHeight,
+				0f, 10f, 1f, Fields.ITYPE_TRANSIENT, Fields.medium);
+		addSlider("CExp", "Exposure", camera, fieldWidthMed, fieldHeight,
+				0.01f, 1f, 0.1f, Fields.ITYPE_TRANSIENT, Fields.medium);
 		
 		addButton(WGUI_Buttons.CamUpdate, "Update Camera", camera, fieldWidthMed, sButtonHeight, Fields.small);
 		addDropdown("CamObjects", camera, ldropItemWidth, dropItemHeight, 0,
@@ -718,7 +719,7 @@ public class WGUI implements ControlListener {
 		}
 
 		addDropdown("WO", editWO, ldropItemWidth, dropItemHeight, 4,
-				Fields.small, Fields.ITYPE_TRANSIENT);
+				Fields.small, Fields.ITYPE_PERMENANT);
 	}
 
 	/**
@@ -997,6 +998,7 @@ public class WGUI implements ControlListener {
 	 * 
 	 * @param name		The name of the slider, which be unique amongst all
 	 * 					UI elements
+	 * @param lbl		The text to render for the slider's caption label
 	 * @param parent	The window group, to which this slider belongs
 	 * @param wdh		The width of the slider
 	 * @param hgt		The height of the slider
@@ -1004,14 +1006,20 @@ public class WGUI implements ControlListener {
 	 * @param max		The maximum value of the slider
 	 * @param def		The initial value of the slider
 	 * @param inputType	How should this field by treated for input clear events
+	 * @param lblFont	The font for the slider's label
 	 * @return			A reference to the new slider
 	 */
-	private MySlider addSlider(String name, Group parent, int wdh, int hgt,
-			float min, float max, float def, int inputType) {
+	private MySlider addSlider(String name, String lbl, Group parent, int wdh,
+			int hgt, float min, float max, float def, int inputType,
+			PFont lblFont) {
 		
 		MySlider s = new MySlider(manager, name, inputType);
-		s.setColorValue(Fields.B_DEFAULT_C)
+		s.getCaptionLabel().set(lbl).setFont(lblFont);
+		
+		s.setColorValue(Fields.B_TEXT_C)
 		.setColorLabel(Fields.F_TEXT_C)
+		.setColorBackground(Fields.B_DEFAULT_C)
+		.setColorForeground(Fields.B_FG_C)
 		.setColorActive(Fields.B_ACTIVE_C)
 		.setRange(min, max)
 		.setDefaultValue(def)
@@ -1054,6 +1062,7 @@ public class WGUI implements ControlListener {
 		
 		MySlider s = new MySlider(manager, name, inputType);
 		s.getCaptionLabel().set(lbl).setFont(lblFont);
+		s.getValueLabel().setFont(lblFont);
 		
 		s.setColorValue(valColor)
 		.setColorLabel(Fields.F_TEXT_C)
@@ -1071,18 +1080,22 @@ public class WGUI implements ControlListener {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Adds a new switch with the given name, labels, parent, position,
+	 * dimensions, and font to the set of UI elements.
 	 * 
-	 * @param name
-	 * @param actLblTxt
-	 * @param inActLblTxt	
-	 * @param parent
-	 * @param posX
-	 * @param posY
-	 * @param wdh
-	 * @param hgt
-	 * @param lblFont
-	 * @return
+	 * @param name			The name of the switch, which must be unique
+	 * 						amongst all UI elements
+	 * @param actLblTxt		The switch's label, when it is active
+	 * @param inActLblTxt	The switch's label, when it is active
+	 * @param parent		The window group, to which the switch belong
+	 * @param posX			The x position of the switch with respect to its
+	 * 						parent
+	 * @param posY			The y position of the switch with respect to its
+	 * 						parent
+	 * @param wdh			The width of the switch
+	 * @param hgt			The height of the switch
+	 * @param lblFont		The font of the switch's text label
+	 * @return				A reference to the new switch
 	 */
 	private MyButton addSwitch(String name, String actLblTxt, String inActLblTxt,
 			Group parent, float posX, float posY, int wdh, int hgt,
@@ -1103,19 +1116,21 @@ public class WGUI implements ControlListener {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Adds a new switch with the given name, labels, parent, dimensions, and
+	 * font to the set of UI elements.
 	 * 
-	 * @param name
-	 * @param actLblTxt
-	 * @param inActLblTxt
-	 * @param parent
-	 * @param wdh
-	 * @param hgt
-	 * @param lblFont
-	 * @return
+	 * @param name			The name of the switch, which must be unique
+	 * 						amongst all UI elements
+	 * @param actLblTxt		The switch's label, when it is active
+	 * @param inActLblTxt	The switch's label, when it is active
+	 * @param parent		The window group, to which the switch belong
+	 * @param wdh			The width of the switch
+	 * @param hgt			The height of the switch
+	 * @param lblFont		The font of the switch's text label
+	 * @return				A reference to the new switch
 	 */
 	private MyButton addSwitch(String name, String actLblTxt, String inActLblTxt,
-			Group parent,int wdh, int hgt, PFont lblFont) {
+			Group parent, int wdh, int hgt, PFont lblFont) {
 
 		MyButton b = new MyButton(manager, name, inActLblTxt, actLblTxt);
 
@@ -1238,25 +1253,25 @@ public class WGUI implements ControlListener {
 			if (actLbl == null) {
 				updateView( null );
 				
-			} else if (actLbl.equals("Robot1")) {
+			} else if (actLbl.equals("ROBOT1")) {
 				updateView( WindowTab.ROBOT1 );
 
-			} else if (actLbl.equals("Robot2")) {
+			} else if (actLbl.equals("ROBOT2")) {
 				updateView( WindowTab.ROBOT2 );
 
-			} else if (actLbl.equals("Create")) {
+			} else if (actLbl.equals("CREATE")) {
 				updateView( WindowTab.CREATE );
 
-			} else if (actLbl.equals("Edit")) {
+			} else if (actLbl.equals("EDIT")) {
 				updateView( WindowTab.EDIT );
 
-			} else if (actLbl.equals("Scenario")) {
+			} else if (actLbl.equals("SCENARIO")) {
 				updateView( WindowTab.SCENARIO );
 				
-			} else if (actLbl.equals("Camera")) {
+			} else if (actLbl.equals("CAMERA")) {
 				updateView( WindowTab.CAMERA );
 				
-			} else if (actLbl.equals("Misc")) {
+			} else if (actLbl.equals("MISC")) {
 				updateView( WindowTab.MISC );
 				
 			} else {
@@ -1397,6 +1412,68 @@ public class WGUI implements ControlListener {
 				updateUIContentPositions();
 			}
 		}
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param mx
+	 * @param my
+	 */
+	public RRay getMouseRayFromRCam(int mx, int my) {
+		Button b = getButton(WGUI_Buttons.CamSnapPreview);
+		
+		if (b != null && b.isMouseOver()) {
+			float[] butPos = b.getPosition();
+			float[] absButPos = b.getAbsolutePosition();
+			int mCamX = mx - (int)(butPos[0] + absButPos[0]);
+			int mCamY = my - (int)(butPos[1] + absButPos[1]);
+			
+			b.setMouseOver(false);
+			return app.getRobotCamera().camPosToWldRay(mCamX, mCamY);
+		}
+		
+		return null;
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param shape
+	 */
+	private void clampDims(RShape shape) {
+		
+		if (shape instanceof RBox) {
+			// Clamp the dimensions of a box
+			DimType dim = DimType.LENGTH;
+			shape.setDim(RMath.clamp(shape.getDim(dim), shape.getDimLBound(dim),
+					shape.getDimUBound(dim)), dim);
+			
+			dim = DimType.HEIGHT;
+			shape.setDim(RMath.clamp(shape.getDim(dim), shape.getDimLBound(dim),
+					shape.getDimUBound(dim)), dim);
+			
+			dim = DimType.WIDTH;
+			shape.setDim(RMath.clamp(shape.getDim(dim), shape.getDimLBound(dim),
+					shape.getDimUBound(dim)), dim);
+			
+		} else if (shape instanceof RCylinder) {
+			// Clamp the dimensions of a cylinder
+			DimType dim = DimType.RADIUS;
+			shape.setDim(RMath.clamp(shape.getDim(dim), shape.getDimLBound(dim),
+					shape.getDimUBound(dim)), dim);
+			
+			dim = DimType.HEIGHT;
+			shape.setDim(RMath.clamp(shape.getDim(dim), shape.getDimLBound(dim),
+					shape.getDimUBound(dim)), dim);
+			
+		} else if (shape instanceof ComplexShape) {
+			// Clamp the dimensions of a complex shape
+			DimType dim = DimType.SCALE;
+			shape.setDim(RMath.clamp(shape.getDim(dim), shape.getDimLBound(dim),
+					shape.getDimUBound(dim)), dim);
+		}
+		
 	}
 
 	/**
@@ -1555,11 +1632,15 @@ public class WGUI implements ControlListener {
 			wldObj = null;
 			
 		} catch (IllegalArgumentException IAEx) {
-			Fields.setMessage("Missing field");
+			Fields.setMessage(IAEx.getMessage());
 			wldObj = null;
 		}
 
 		app.popMatrix();
+		
+		if (wldObj != null) {
+			clampDims(wldObj.getModel());
+		}
 
 		return wldObj;
 	}
@@ -2077,13 +2158,6 @@ public class WGUI implements ControlListener {
 	private MyRadioButton getRadioButton(String name) throws ClassCastException {
 		return (MyRadioButton) manager.get(name);
 	}
-
-	/**
-	 * @return	Whether or not the robot display button is on
-	 */
-	public boolean getRobotButtonState() {
-		return getButton(WGUI_Buttons.RobotToggleActive).isOn();
-	}
 	
 	/**
 	 * Returns the scenario associated with the label that is active
@@ -2092,21 +2166,14 @@ public class WGUI implements ControlListener {
 	 * @return  The index value or null if no such index exists
 	 */
 	public Scenario getSelectedScenario() {
+		Object val = getDropdown("Scenario").getSelectedItem();
 
-		if (menu == WindowTab.SCENARIO) {
-			Object val = getDropdown("Scenario").getSelectedItem();
+		if (val instanceof Scenario) {
+			return (Scenario)val;
 
-			if (val instanceof Scenario) {
-				// Set the active scenario index
-				return (Scenario)val;
-
-			} else if (val != null) {
-				// Invalid entry in the dropdown list
-				Fields.setMessage("Invalid class type: %d!\n", val.getClass());
-			}
+		} else {
+			return null;
 		}
-
-		return null;
 	}
 
 
@@ -2118,6 +2185,7 @@ public class WGUI implements ControlListener {
 
 		if (wldObj instanceof WorldObject) {
 			return (WorldObject)wldObj;
+			
 		} else {
 			return null;
 		}
@@ -2128,6 +2196,7 @@ public class WGUI implements ControlListener {
 		
 		if (wldObj instanceof WorldObject) {
 			return (WorldObject)wldObj;
+			
 		} else {
 			return null;
 		}
@@ -2448,9 +2517,9 @@ public class WGUI implements ControlListener {
 	}
 	
 	/**
-	 * TODO comment this
+	 * The state of the mouse ray render debug option.
 	 * 
-	 * @return
+	 * @return	Whether the mouse ray render option is active or not
 	 */
 	public boolean renderMouseRay() {
 		MyRadioButton rb = getRadioButton("DebugOptions");
@@ -2458,9 +2527,9 @@ public class WGUI implements ControlListener {
 	}
 	
 	/**
-	 * TODO comment this
+	 * The state of the position render debug option.
 	 * 
-	 * @return
+	 * @return	Whether the mouse ray render option is active or not
 	 */
 	public boolean renderPoint() {
 		MyRadioButton rb = getRadioButton("DebugOptions");
@@ -2499,8 +2568,9 @@ public class WGUI implements ControlListener {
 			MyDropdownList objList = getDropdown("WO");
 			objList.setValue(-1f);
 			
-		} else if ((menu == null || menu == WindowTab.EDIT)) {
-			updateView(WindowTab.EDIT);
+		} else if ((menu == null || menu == WindowTab.EDIT ||
+				menu == WindowTab.CAMERA)) {
+			
 			getDropdown("WO").setItem(wo);
 		}
 	}
@@ -2508,8 +2578,25 @@ public class WGUI implements ControlListener {
 	/**
 	 * TODO comment this
 	 * 
-	 * @param name
-	 * @param state
+	 * @param newView
+	 */
+	private void setView(WindowTab newView) {
+		if (newView == null) {
+			windowTabs.setActiveButton("Hide");
+			
+		} else {
+			windowTabs.setActiveButton(newView.toString());
+		}
+		
+		updateView(newView);
+	}
+	
+	/**
+	 * Sets the state of the switch with the given name to the given state, if
+	 * a switch with the given name exists in the UI.
+	 * 
+	 * @param name	The name of the switch, of which to update the state
+	 * @param state	The new state for the switch
 	 */
 	public void setSwitchState(String name, boolean state) {
 		
@@ -2536,11 +2623,11 @@ public class WGUI implements ControlListener {
 		windowTabs.setItems(WGUI.tabs);
 		
 		if(!getButton(WGUI_Buttons.RobotToggleActive).isOn()) {
-			windowTabs.removeItem("Robot2");
+			windowTabs.removeItem("ROBOT2");
 		}
 		
 		if(!getButton(WGUI_Buttons.CamToggleActive).isOn()) {
-			windowTabs.removeItem("Camera");
+			windowTabs.removeItem("CAMERA");
 		}
 	}
 
@@ -2837,28 +2924,26 @@ public class WGUI implements ControlListener {
 	}
 	
 	public void updateCameraWindowFields() {
-		if(app.getCamera() != null) {
-			RobotCamera c = app.getRobotCamera();
-			PVector pos = RMath.vToWorld(c.getPosition());
-			PVector ori = RMath.nQuatToWEuler(c.getOrientation());
-			
-			getTextField("CXCur").setText(String.format("%4.3f", pos.x));
-			getTextField("CYCur").setText(String.format("%4.3f", pos.y));
-			getTextField("CZCur").setText(String.format("%4.3f", pos.z));
-			
-			getTextField("CWCur").setText(String.format("%4.3f", ori.x));
-			getTextField("CPCur").setText(String.format("%4.3f", ori.y));
-			getTextField("CRCur").setText(String.format("%4.3f", ori.z));
-			
-			getTextField("CCNearCur").setText(String.format("%4.3f", c.getNearClipDist()));
-			getTextField("CCFarCur").setText(String.format("%4.3f", c.getFarClipDist()));
-			
-			getTextField("CFOVCur").setText(String.format("%4.3f", c.getFOV()));
-			getTextField("CAspectCur").setText(String.format("%4.3f", c.getAspectRatio()));
-			
-			getSlider("CBright").setValue(c.getBrightness());
-			getSlider("CExp").setValue(c.getExposure());
-		}
+		RobotCamera rCam = app.getRobotCamera();
+		PVector pos = RMath.vToWorld(rCam.getPosition());
+		PVector ori = RMath.nQuatToWEuler(rCam.getOrientation());
+		
+		getTextField("CXCur").setText(String.format("%4.3f", pos.x));
+		getTextField("CYCur").setText(String.format("%4.3f", pos.y));
+		getTextField("CZCur").setText(String.format("%4.3f", pos.z));
+		
+		getTextField("CWCur").setText(String.format("%4.3f", ori.x));
+		getTextField("CPCur").setText(String.format("%4.3f", ori.y));
+		getTextField("CRCur").setText(String.format("%4.3f", ori.z));
+		
+		getTextField("CCNearCur").setText(String.format("%4.3f", rCam.getNearClipDist()));
+		getTextField("CCFarCur").setText(String.format("%4.3f", rCam.getFarClipDist()));
+		
+		getTextField("CFOVCur").setText(String.format("%4.3f", rCam.getFOV()));
+		getTextField("CAspectCur").setText(String.format("%4.3f", rCam.getAspectRatio()));
+		
+		getSlider("CBright").setValue(rCam.getBrightness());
+		getSlider("CExp").setValue(rCam.getExposure());
 	}
 
 	/**
@@ -3750,9 +3835,9 @@ public class WGUI implements ControlListener {
 			b = getButton(WGUI_Buttons.CamViewTp).setPosition(relPos[0], relPos[1]).show();
 			relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 			b = getButton(WGUI_Buttons.CamViewBt).setPosition(relPos[0], relPos[1]).show();
-	
-			updateListContents();
 		}
+		
+		updateListContents();
 	}
 
 	/**

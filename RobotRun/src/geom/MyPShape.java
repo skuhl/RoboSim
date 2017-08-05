@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 import core.RobotRun;
+import processing.core.PApplet;
 import processing.core.PShape;
 import processing.core.PVector;
 import processing.opengl.PGraphicsOpenGL;
@@ -15,6 +16,8 @@ import processing.opengl.PShapeOpenGL;
  * @author Joshua Hooker
  */
 public class MyPShape extends PShapeOpenGL {
+	
+	private static PApplet appRef;
 	
 	/**
 	 * Processing, I hate you
@@ -76,7 +79,7 @@ public class MyPShape extends PShapeOpenGL {
 	 */
 	public static MyPShape loadSTLModel(String filename, int fill) throws NullPointerException, ClassCastException {
 		ArrayList<Triangle> triangles = new ArrayList<>();
-		byte[] data = RobotRun.getInstance().loadBytes(filename);
+		byte[] data = appRef.loadBytes(filename);
 	
 		int n = 84; // skip header and number of triangles
 	
@@ -108,7 +111,7 @@ public class MyPShape extends PShapeOpenGL {
 			n += 2; // skip meaningless "attribute byte count"
 		}
 		
-		MyPShape mesh = new MyPShape((PGraphicsOpenGL)RobotRun.getInstance().getGraphics(), PShape.GEOMETRY);
+		MyPShape mesh = new MyPShape((PGraphicsOpenGL)appRef.getGraphics(), PShape.GEOMETRY);
 		mesh.beginShape(RobotRun.TRIANGLES);
 		mesh.noStroke();
 		mesh.fill(fill);
@@ -123,5 +126,14 @@ public class MyPShape extends PShapeOpenGL {
 		mesh.endShape();
 	
 		return mesh;
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param appRef
+	 */
+	public static void setAppRef(PApplet appRef) {
+		MyPShape.appRef = appRef;
 	}
 }

@@ -28,7 +28,7 @@ public class ScreenSelectInstrInsert extends ST_ScreenOptionsMenu {
 		 * Only allow the user to add robot call instructions when the
 		 * second robot is in the application
 		 */
-		if (robotRun.getUI().getRobotButtonState()) {
+		if (robotRun.isSecondRobotUsed()) {
 			options.addLine("7. RCALL");
 		}
 	}

@@ -11,6 +11,7 @@ import processing.core.PGraphics;
 import processing.core.PVector;
 
 public class CameraObject extends Part {
+	
 	public final int model_ID;
 	public final int group_ID;
 	public final float reflective_IDX;
@@ -18,15 +19,17 @@ public class CameraObject extends Part {
 	
 	private ArrayList<CamSelectArea> selectAreas;
 	private PGraphics preview;
+	private RobotRun appRef;
 	
-	public CameraObject(Part p) {
-		this(p, 1f);
+	public CameraObject(RobotRun appRef, Part p) {
+		this(appRef, p, 1f);
 	}
 	
-	public CameraObject(Part p, float q) {
+	public CameraObject(RobotRun appRef, Part p, float q) {
 		super(p.getName(), p.getModel().clone(), p.getOBBDims().copy(), 
 				p.localOrientation.clone(), p.defaultOrientation.clone(), p.getFixtureRef());
 		
+		this.appRef = appRef;
 		RShape mdl = p.getModel();
 		if(mdl instanceof ComplexShape) {
 			String fileName = ((ComplexShape)mdl).getSourcePath();
@@ -53,7 +56,7 @@ public class CameraObject extends Part {
 	
 	@Override
 	public Part clone() {
-		return new CameraObject(this, image_quality);
+		return new CameraObject(appRef, this, image_quality);
 	}
 	
 	public CamSelectArea getCamSelectArea(int i) {
@@ -70,7 +73,7 @@ public class CameraObject extends Part {
 	
 	public PGraphics getModelPreview(RMatrix m) {
 		if(preview == null) {
-			PGraphics img = RobotRun.getInstance().createGraphics(150, 200, RobotRun.P3D);
+			PGraphics img = appRef.createGraphics(150, 200, RobotRun.P3D);
 			float[][] rMat = m.getDataF();
 			img.beginDraw();
 			img.ortho();

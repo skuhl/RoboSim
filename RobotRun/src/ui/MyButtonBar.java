@@ -47,4 +47,27 @@ public class MyButtonBar extends ButtonBar {
 		// Allow drag clicks
 		onClick();
 	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param name
+	 */
+	@SuppressWarnings("unchecked")
+	public void setActiveButton(String label) {
+		List<HashMap<Object, Object>> items = (List<HashMap<Object, Object>>) getItems();
+		
+		for (HashMap<Object, Object> item : items) {
+			String itemName = (String) item.get("name");
+			
+			if (itemName != null && itemName.equals(label)) {
+				// Set the specified button as active
+				item.put("selected", new Boolean(true));
+				
+			} else {
+				// Set all other buttons as inactive
+				item.put("selected", new Boolean(false));
+			}
+		}
+	}
 }

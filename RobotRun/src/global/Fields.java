@@ -184,7 +184,8 @@ public abstract class Fields {
 	 * A color used in the UI's color scheme.
 	 */
 	public static final int BG_C, F_TEXT_C, F_CURSOR_C, F_ACTIVE_C, F_BG_C,
-			F_FG_C, B_TEXT_C, B_DEFAULT_C, B_ACTIVE_C, UI_LIGHT_C, UI_DARK_C;
+			F_FG_C, B_TEXT_C, B_DEFAULT_C, B_FG_C, B_ACTIVE_C, UI_LIGHT_C,
+			UI_DARK_C;
 	
 	/**
 	 * A font used for rendering text in the UI.
@@ -252,6 +253,7 @@ public abstract class Fields {
 		B_TEXT_C = WHITE;
 		B_DEFAULT_C = 0xff464646;
 		B_ACTIVE_C = 0xffdc2828;
+		B_FG_C = 0xff0074d9;
 		UI_LIGHT_C = 0xfff0f0f0;
 		UI_DARK_C = 0xff282828;
 		
@@ -581,15 +583,14 @@ public abstract class Fields {
 	 * @param axesVectors	The rotation matrix which defines the coordinate
 	 * 						system axes
 	 * @param axesLength	The render length of the axes
-	 * @param originColor	The color of the origin point
 	 */
 	public static void drawAxes(PGraphics g, PVector origin,
-			RMatrix axesVectors, float axesLength, int originColor) {
+			RMatrix axesVectors, float axesLength) {
 		
 		g.pushMatrix();
 		// Transform to the reference frame defined by the axes vectors		
 		Fields.transform(g, origin, axesVectors);
-		drawAxes(g, axesLength, originColor);
+		drawAxes(g, axesLength);
 		g.popMatrix();
 	}
 	
@@ -598,10 +599,8 @@ public abstract class Fields {
 	 * coordinate system with the specified axis length and origin color.
 	 * 
 	 * @param axesLength	The render length of the axes
-	 * @param originColor	The color of the origin point
 	 */
-	public static void drawAxes(PGraphics g, float axesLength,
-			int originColor) {
+	public static void drawAxes(PGraphics g, float axesLength) {
 		
 		g.pushStyle();
 		
@@ -618,13 +617,11 @@ public abstract class Fields {
 		// Draw a sphere on the positive direction for each axis
 		float dotPos = RMath.clamp(axesLength, 100f, 500f);
 		g.textFont(Fields.bond, 18);
-
-		g.stroke(originColor);
+		
 		g.fill(Fields.BLACK);
 		
 		g.pushMatrix();
 		
-		g.sphere(4);
 		g.stroke(0);
 		g.translate(dotPos, 0, 0);
 		g.sphere(4);
@@ -654,6 +651,63 @@ public abstract class Fields {
 		g.popMatrix();
 
 		g.popMatrix();
+		g.popStyle();
+	}
+	
+	/**
+	 * Renders a regular pyramid with the specified number of sides, radius,
+	 * height and color values at the current position orientation of the given
+	 * graphics object. The pyramid is rendered from its center.
+	 * 
+	 * @param g			The graphics object used to render the pyramid
+	 * @param sides		The number of sides on the pyramid's base
+	 * @param radius	The radius of each vertex on the pyramid's base
+	 * @param height	The height of the pyramid
+	 * @param stroke	The color used to render the pyramid's line segments
+	 * @param fill		The color used when rendering the sides of the pyramid
+	 */
+	public static void drawPyramid(PGraphics g, int sides, float radius,
+			float height, int stroke, int fill) {
+		
+		// Set the color for the shape
+		g.pushStyle();
+		g.stroke(stroke);
+		g.fill(fill);
+		
+		g.pushMatrix();
+		
+		float[] bottomVertOffsets = new float[2 * (sides + 1)];
+		float halfHeight = height / 2f;
+		
+		g.beginShape(PApplet.TRIANGLE_STRIP);
+		// Draw the triangular sides of the pyramid
+		for (int side = 0; side <= sides; ++side) {
+			float theta = (side % sides) * PApplet.TWO_PI / sides;
+			
+			int idx = 2 * side;
+			bottomVertOffsets[idx] = PApplet.cos(theta) * radius;
+			bottomVertOffsets[idx + 1] =  PApplet.sin(theta) * radius;
+			
+			g.vertex(bottomVertOffsets[idx], halfHeight,
+					bottomVertOffsets[idx + 1]);
+			g.vertex(0f, -halfHeight, 0f);
+		}
+		
+		g.endShape();
+		
+		// Draw the bottom of the pyramid
+		g.beginShape();
+		
+		for (int side = 0; side <= sides; ++side) {
+			int idx = 2 * side;
+			g.vertex(bottomVertOffsets[idx], halfHeight,
+					bottomVertOffsets[idx + 1]);
+		}
+		
+		g.endShape(PApplet.CLOSE);
+		
+		g.popMatrix();
+		
 		g.popStyle();
 	}
 	

@@ -211,8 +211,7 @@ public class RoboticArm {
 		SEGMENT[0] = new RSegWithJoint(
 			segmentModels[0],
 			new BoundingBox[] { new BoundingBox(405, 105, 405) },
-			/*0.0436f,*/ new PVector(-200f, -163f, -200f),
-			new PVector(0f, 1f, 0f)
+			new PVector(-200f, -163f, -200f), new PVector(0f, 1f, 0f)
 		);
 		
 		SEGMENT[1] = new RSegWithJoint(
@@ -221,7 +220,7 @@ public class RoboticArm {
 					new BoundingBox(305, 80, 305),
 					new BoundingBox(114, 98, 160)
 			},
-			/*0.0436f,*/ 4.34f, 2.01f, new PVector(-37f, -137f, 30f),
+			4.34f, 2.01f, new PVector(-37f, -137f, 30f),
 			new PVector(0f, 0f, -1f)
 		);
 		
@@ -232,7 +231,7 @@ public class RoboticArm {
 					new BoundingBox(130, 316, 64),
 					new BoundingBox(110, 163, 48)
 			},
-			/*0.0582f,*/ 1.955f, 1.134f, new PVector(-3f, -498f, -200f),
+			1.955f, 1.134f, new PVector(-3f, -498f, -200f),
 			new PVector(0f, 0f, -1f)
 		);
 		
@@ -243,8 +242,7 @@ public class RoboticArm {
 					new BoundingBox(420, 126, 126),
 					new BoundingBox(148, 154, 154),
 			},
-			/*0.0727f,*/ new PVector(-650f, 30f, 75f),
-			new PVector(1f, 0f, 0f)
+			new PVector(-650f, 30f, 75f), new PVector(1f, 0f, 0f)
 		);
 		
 		SEGMENT[4] = new RSegWithJoint(
@@ -257,8 +255,7 @@ public class RoboticArm {
 		SEGMENT[5] = new RSegWithJoint(
 			segmentModels[5],
 			new BoundingBox[0],
-			/*0.1222f,*/ new PVector(-95f, 0f, 0f),
-			new PVector(-1f, 0f, 0f)
+			new PVector(-95f, 0f, 0f), new PVector(-1f, 0f, 0f)
 		);
 		
 		// Set default speed modifiers
@@ -653,7 +650,7 @@ public class RoboticArm {
 				RMatrix userAxes = RMath.rMatToWorld(activeUser.getNativeAxisVectors());
 				
 				if (axesType == AxesDisplay.AXES) {
-					Fields.drawAxes(g, activeUser.getOrigin(), userAxes, 10000f, Fields.ORANGE);
+					Fields.drawAxes(g, activeUser.getOrigin(), userAxes, 10000f);
 					
 				} else if (axesType == AxesDisplay.GRID) {
 					g.pushMatrix();
@@ -888,27 +885,27 @@ public class RoboticArm {
 			
 			// Render the active tool frame at the position of the tooltip
 			RMatrix toolAxes = RMath.rMatToWorld(activeTool.getOrientationOffset().toMatrix());
-			Fields.drawAxes(g, activeTool.getTCPOffset(), toolAxes, 500f, Fields.PINK);
+			Fields.drawAxes(g, activeTool.getTCPOffset(), toolAxes, 500f);
 			
-		} else {
-			// Render a point at the position of the tooltip
-			g.pushStyle();
-			g.stroke(Fields.PINK);
-			g.noFill();
-			
-			g.pushMatrix();
-			
-			if (activeTool != null) {
-				// Apply active tool frame offset
-				PVector tipPos = activeTool.getTCPOffset();
-				g.translate(tipPos.x, tipPos.y, tipPos.z);
-			}
-			
-			g.sphere(4);
-			
-			g.popMatrix();
-			g.popStyle();
 		}
+		
+		// Render a point at the position of the tooltip
+		g.pushStyle();
+		g.stroke(Fields.PINK);
+		g.noFill();
+		
+		g.pushMatrix();
+		
+		if (activeTool != null) {
+			// Apply active tool frame offset
+			PVector tipPos = activeTool.getTCPOffset();
+			g.translate(tipPos.x, tipPos.y, tipPos.z);
+		}
+		
+		g.sphere(4);
+		
+		g.popMatrix();
+		g.popStyle();
 	}
 	
 	/**
@@ -1926,6 +1923,88 @@ public class RoboticArm {
 	}
 	
 	/**
+	 * TODO comment this
+	 * 
+	 * @param p
+	 * @param insertIdx
+	 * @param toInsert
+	 */
+	public void pasteInstructions(Program p, int insertIdx,
+			ArrayList<Instruction> toInsert) {
+		
+		pasteInstructions(p, insertIdx, toInsert, 0);
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param p
+	 * @param insertIdx
+	 * @param toInsert
+	 * @param options
+	 */
+	public void pasteInstructions(Program p, int insertIdx,
+			ArrayList<Instruction> toInsert, int options) {
+		
+		ArrayList<Instruction> pasteList = new ArrayList<>();
+
+		/* Pre-process instructions for insertion into program. */
+		for (int i = 0; i < toInsert.size(); i += 1) {
+			Instruction instr = toInsert.get(i).clone();
+
+			if (instr instanceof PosMotionInst) {
+				PosMotionInst m = (PosMotionInst) instr;
+
+				if ((options & Fields.CLEAR_POSITION) == Fields.CLEAR_POSITION) {
+					m.setPosIdx(-1);
+				} else if ((options & Fields.NEW_POSITION) == Fields.NEW_POSITION) {
+					/*
+					 * Copy the current instruction's position to a new local
+					 * position index and update the instruction to use this new
+					 * position
+					 */
+					int instrPos = m.getPosIdx();
+					int nextPos = p.getNextPosition();
+
+					p.addPosition(p.getPosition(instrPos).clone());
+					m.setPosIdx(nextPos);
+				}
+
+				if ((options & Fields.REVERSE_MOTION) == Fields.REVERSE_MOTION) {
+					MotionInstruction next = null;
+
+					for (int j = i + 1; j < toInsert.size(); j += 1) {
+						if (toInsert.get(j) instanceof MotionInstruction) {
+							next = (MotionInstruction) toInsert.get(j).clone();
+							break;
+						}
+					}
+
+					if (next != null) {
+						Fields.debug("asdf");
+						m.setMotionType(next.getMotionType());
+						m.setSpdMod(next.getSpdMod());
+					}
+				}
+			}
+
+			pasteList.add(instr);
+		}
+
+		/* Perform forward/ reverse insertion. */
+		for (int i = 0; i < toInsert.size(); i += 1) {
+			Instruction instr;
+			if ((options & Fields.PASTE_REVERSE) == Fields.PASTE_REVERSE) {
+				instr = pasteList.get(pasteList.size() - 1 - i);
+			} else {
+				instr = pasteList.get(i);
+			}
+			
+			addAt(p, insertIdx + i, instr, i != 0);
+		}
+	}
+	
+	/**
 	 * Returns a list of display lines, which contain the program instruction
 	 * list output for the pendant display.
 	 * 
@@ -2143,7 +2222,7 @@ public class RoboticArm {
 	
 	/**
 	 * Set the index of the robot's active end effector to the given index. The
-	 * given index must be within the range [0, EE_LIST.length). -1 implies
+	 * given index must be within the range [0, EE_LIST.length). 0 implies
 	 * that no end effector is active. 
 	 * 
 	 * @param ee	The index of the end effector to set as active
@@ -2175,6 +2254,7 @@ public class RoboticArm {
 
 	/**
 	 * Update the Robot's current coordinate frame.
+	 * 
 	 * @param newFrame	The new coordinate frame
 	 */
 	public void setCoordFrame(CoordFrame newFrame) {

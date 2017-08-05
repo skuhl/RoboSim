@@ -482,6 +482,26 @@ public abstract class RMath {
 			vx.z, vy.z, vz.z	
 		);
 	}
+	
+	/**
+	 * Returns the transformation matrix representing the orientation and
+	 * position associated with the given graphic object's coordinate system.
+	 * 
+	 * @param g	A graphics object
+	 * @return	The current transformation associated with g
+	 */
+	public static RMatrix getTMat(PGraphics g) {
+		PVector origin = getPosition(g, 0, 0, 0);
+		PVector xAxis = getPosition(g, 1, 0, 0).sub(origin);
+		PVector yAxis = getPosition(g, 0, 1, 0).sub(origin);
+		PVector zAxis = getPosition(g, 0, 0, 1).sub(origin);
+
+		return formTMat(
+				xAxis.x, yAxis.x, zAxis.x, origin.x,
+				xAxis.y, yAxis.y, zAxis.y, origin.y,
+				xAxis.z, yAxis.z, zAxis.z, origin.z
+		);
+	}
 
 	/**
 	 * Attempts to calculate the joint angles that would place the Robot in the

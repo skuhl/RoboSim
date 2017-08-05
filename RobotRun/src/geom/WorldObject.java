@@ -156,7 +156,7 @@ public abstract class WorldObject implements Cloneable {
 				fields[0] = "S: " + DebugFloatFormat.format(model.getDim(DimType.SCALE));
 
 			} else {
-				// No dimensios to display
+				// No dimensions to display
 				fields = new String[0];
 			}
 

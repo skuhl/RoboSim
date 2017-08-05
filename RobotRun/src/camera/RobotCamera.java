@@ -9,14 +9,19 @@ import geom.Fixture;
 import geom.Part;
 import geom.RMatrix;
 import geom.RQuaternion;
+import geom.RRay;
 import geom.Scenario;
 import geom.WorldObject;
+import global.Fields;
 import global.RMath;
+import processing.core.PApplet;
 import processing.core.PGraphics;
 import processing.core.PImage;
 import processing.core.PVector;
 
 public class RobotCamera {
+	
+	private RobotRun appRef;
 	private float brightness;
 	private float camAspectRatio; // Ratio of horizontal : vertical camera frustum size 
 	private float camClipFar; // The distance from the camera to the far clipping plane
@@ -30,17 +35,19 @@ public class RobotCamera {
 	private float sensitivity;
 	private ArrayList<CameraObject> taughtObjects;
 	
-	public RobotCamera() {
-		this(-500, 0, 500, new RQuaternion(), 75, 1.5f, 0.5f, 1000);
+	public RobotCamera(RobotRun appRef) {
+		this(appRef, -500, 0, 500, new RQuaternion(), 75, 1.5f, 0.5f, 1000);
 	}
 	
-	public RobotCamera(float posX, float posY, float posZ, RQuaternion orient, 
+	public RobotCamera(RobotRun appRef, float posX, float posY, float posZ, RQuaternion orient, 
 			float fov, float ar, float near, float far) {
-		this(new PVector(posX, posY, posZ), orient, fov, ar, near, far, 10.0f, 0.1f);
+		this(appRef, new PVector(posX, posY, posZ), orient, fov, ar, near, far, 10.0f, 0.1f);
 	}
 	
-	public RobotCamera(PVector pos, RQuaternion orient, float fov, float ar, float near, float far,
+	public RobotCamera(RobotRun appRef, PVector pos, RQuaternion orient, float fov, float ar, float near, float far,
 			float br, float exp) {
+		
+		this.appRef = appRef;
 		camPos = pos;
 		camOrient = orient;
 		camFOV = fov;
@@ -71,6 +78,65 @@ public class RobotCamera {
 		});
 		
 		camOrient = RMath.matrixToQuat(coord);
+	}
+	
+	/**
+	 * Renders the camera at its position and orientation, along with the
+	 * camera's fields of view.
+	 * 
+	 * @param g	The graphics object used to render the camera
+	 */
+	public void draw(PGraphics g) {
+		// Defines some fields for the camera
+		int camColor = Fields.color(115, 115, 115);
+		float camBodyWdh = 60f;
+		float camSideLen = 40f;
+		float camEyeRad = camSideLen / (float)Math.sqrt(2.0);
+		
+		g.pushStyle();
+		g.stroke(camColor);
+		g.fill(camColor);
+		
+		g.pushMatrix();
+		// Apply camera position and orientation
+		Fields.transform(g, getPosition(), getOrientationMat());
+		g.pushMatrix();
+		g.translate(0f, 0f, camBodyWdh / 2f);
+		// Draw camera body
+		g.box(camSideLen, camSideLen, camBodyWdh);
+		g.translate(0f, 0f, -(0.75f * camSideLen + camBodyWdh) / 2f);
+		g.rotateX(-PApplet.HALF_PI);
+		g.rotateY(PApplet.PI / 4f);
+		// Draw camera eye
+		Fields.drawPyramid(g, 4, camEyeRad, camSideLen, camColor, camColor);
+		g.popMatrix();
+		// Draw camera axes
+		Fields.drawAxes(g, 300);
+		g.popMatrix();
+		
+		PVector near[] = getPlaneNear();
+		PVector far[] = getPlaneFar();
+		g.pushMatrix();
+		g.stroke(255, 126, 0, 255);
+		
+		//Near plane
+		g.line(near[0].x, near[0].y, near[0].z, near[1].x, near[1].y, near[1].z);
+		g.line(near[1].x, near[1].y, near[1].z, near[3].x, near[3].y, near[3].z);
+		g.line(near[3].x, near[3].y, near[3].z, near[2].x, near[2].y, near[2].z);
+		g.line(near[2].x, near[2].y, near[2].z, near[0].x, near[0].y, near[0].z);
+		//Far plane
+		g.line(far[0].x, far[0].y, far[0].z, far[1].x, far[1].y, far[1].z);
+		g.line(far[1].x, far[1].y, far[1].z, far[3].x, far[3].y, far[3].z);
+		g.line(far[3].x, far[3].y, far[3].z, far[2].x, far[2].y, far[2].z);
+		g.line(far[2].x, far[2].y, far[2].z, far[0].x, far[0].y, far[0].z);
+		//Connecting lines
+		g.line(near[0].x, near[0].y, near[0].z, far[0].x, far[0].y, far[0].z);
+		g.line(near[1].x, near[1].y, near[1].z, far[1].x, far[1].y, far[1].z);
+		g.line(near[2].x, near[2].y, near[2].z, far[2].x, far[2].y, far[2].z);
+		g.line(near[3].x, near[3].y, near[3].z, far[3].x, far[3].y, far[3].z);
+										
+		g.popMatrix();
+		g.popStyle();
 	}
 	
 	public float getAspectRatio() {
@@ -177,7 +243,7 @@ public class RobotCamera {
 			if(o instanceof Part) {
 				float imageQuality = getObjectImageQuality(o);
 				if(isPointInFrame(((Part)o).getCenter()) && imageQuality >= sensitivity) {
-					objList.add(new CameraObject((Part)o, imageQuality));
+					objList.add(new CameraObject(appRef, (Part)o, imageQuality));
 				}
 			}
 		}
@@ -313,7 +379,7 @@ public class RobotCamera {
 	public float getObjectImageQuality(WorldObject o) {
 		if(o instanceof Fixture) return 0f;
 		
-		CameraObject camObj = new CameraObject((Part)o);
+		CameraObject camObj = new CameraObject(appRef, (Part)o);
 		PVector objCenter = ((Part)o).getCenter();
 		float[] dims = o.getModel().getDimArray();
 		float len = dims[0];
@@ -352,7 +418,10 @@ public class RobotCamera {
 				1 - Math.pow(Math.log10(lightIntensity), 2), 
 				1 - Math.pow(Math.log10(Math.pow(lightIntensity, reflect)), 2)), 0, 1);
 		float imageQuality = (inView / (float)(RES*RES*RES)) * lightFactor;
-		System.out.println(imageQuality);
+		
+		Fields.debug("inView=%d\nreflect=%f\nlight=%f\nquality=%f\n\n", inView,
+				reflect, lightFactor, imageQuality);
+		
 		return imageQuality;
 	}
 	
@@ -456,7 +525,7 @@ public class RobotCamera {
 		for(WorldObject o: objs) {
 			if(o instanceof Part) {
 				float quality = getObjectImageQuality(o);
-				teachObj = new CameraObject((Part)o, quality);
+				teachObj = new CameraObject(appRef, (Part)o, quality);
 			}
 		}
 		
@@ -477,6 +546,63 @@ public class RobotCamera {
 		}
 		
 		return taughtObjects;
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param posX
+	 * @param posY
+	 * @return
+	 */
+	public RRay camPosToWldRay(int posX, int posY) {
+		
+		if (snapshot != null) {
+			PVector cPos = camPos;
+			PVector cOrien = RMath.quatToEuler(camOrient);
+			// Get the dimensions of the near and far plane
+			float nearWidth = getPlaneWidth(camClipNear);
+			float nearHeight = getPlaneHeight(camClipNear);
+			float farWidth = getPlaneWidth(camClipFar);
+			float farHeight = getPlaneHeight(camClipFar);
+			
+			/* Scale the mouse position on the image to match the range of the
+			 * near and far plane dimensions */
+			
+			PVector nearPos = new PVector(posX - snapshot.width / 2f,
+					posY - snapshot.height / 2f, -camClipNear);
+			
+			nearPos.x *= nearWidth / snapshot.width;
+			nearPos.y *= nearHeight / snapshot.height;
+			
+			PVector farPos = new PVector(posX - snapshot.width / 2f,
+					posY - snapshot.height / 2f, -camClipFar);
+			
+			farPos.x *= farWidth / snapshot.width;
+			farPos.y *= farHeight / snapshot.height;
+			
+			snapshot.pushMatrix();
+			snapshot.resetMatrix();
+			// Apply the inverse of the camera orientation and position
+			snapshot.translate(cPos.x, cPos.y, cPos.z);
+			
+			snapshot.rotateZ(-cOrien.z);
+			snapshot.rotateY(-cOrien.y);
+			snapshot.rotateX(-cOrien.x);
+			
+			// Begin the ray on the near plane
+			PVector rayOrigin = RMath.getPosition(snapshot, nearPos.x, nearPos.y, nearPos.z);
+			// End the ray on the far plane
+			PVector pointOnRay = RMath.getPosition(snapshot, farPos.x, farPos.y, farPos.z);
+			
+			snapshot.popMatrix();
+			
+			RRay ray = new RRay(rayOrigin, pointOnRay, camClipFar - camClipNear, Fields.BLACK);
+			
+			return ray;
+		}
+		
+		return null;
 	}
 	
 	public RobotCamera update(PVector pos, PVector rot,	float fov, float ar, 
@@ -542,13 +668,13 @@ public class RobotCamera {
 
 	private void takeSnapshot() {
 		int height = 200, width = 250;
-		PGraphics img = RobotRun.getInstance().createGraphics(width, height, RobotRun.P3D);
-		
-		img.beginDraw();
 		PVector cPos = camPos;
 		PVector cOrien = RMath.quatToEuler(camOrient);
+		PGraphics img = appRef.createGraphics(width, height, RobotRun.P3D);
+		
 		img.perspective((camFOV/camAspectRatio)*RobotRun.DEG_TO_RAD, camAspectRatio, camClipNear, camClipFar);
-				
+		img.beginDraw();
+		
 		//img.printMatrix();
 		
 		float light = 20 + 235 * brightness * exposure;
@@ -563,8 +689,9 @@ public class RobotCamera {
 		
 		img.translate(-cPos.x + width / 2f, -cPos.y + height / 2f,  -cPos.z);
 		
-		if(RobotRun.getInstanceScenario() != null) {
-			for(WorldObject o : RobotRun.getInstanceScenario().getObjectList()) {
+		Scenario active = appRef.getActiveScenario();
+		if(active != null) {
+			for (WorldObject o : active) {
 				if(o instanceof Part) 
 					((Part)o).draw(img, false);
 				else
@@ -572,7 +699,7 @@ public class RobotCamera {
 			}
 		}
 		
-		RobotRun.getInstanceRobot().draw(img, false, AxesDisplay.NONE);
+		appRef.getActiveRobot().draw(img, false, AxesDisplay.NONE);
 		
 		img.translate(cPos.x - width / 2f, cPos.y - height / 2f,  cPos.z);
 		
