@@ -122,6 +122,27 @@ public abstract class RMath {
 			return new Point(position, orientation, pt.angles);
 		}
 	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param x
+	 * @param y
+	 * @return
+	 */
+	public static double atan2Rounded(double x, double y) {
+		
+		/**
+		if (x < 0.0 && x >= -0.00001f) {
+			x *= -1;
+		}
+		
+		if (y < 0.0 && y >= -0.00001f) {
+			y *= -1;
+		}
+		/**/
+		return Math.atan2(x, y);
+	}
 
 	/**
 	 * Calculate the Jacobian matrix for the robotic arm for a given set of
@@ -205,6 +226,7 @@ public abstract class RMath {
 		double s2 = Math.sin(yRot);
 		double s3 = Math.sin(zRot);
 		
+		/**/
 		RMatrix rMat = RMath.formRMat(
 			c2 * c3,	c1 * s3 + c3 * s1 * s2,		s1 * s3 - c1 * c3 * s2,
 			-c2 * s3,	c1 * c3 - s1 * s2 * s3,		c3 * s1 + c1 * s2 * s3,
@@ -212,6 +234,15 @@ public abstract class RMath {
 		);
 		
 		return rMat.normalize();
+		/**
+		RMatrix rMat = RMath.formRMat(
+			c2 * c3,	c1 * s3 + c3 * s1 * s2,		s1 * s3 - c1 * c3 * s2,
+			-c2 * s3,	c1 * c3 - s1 * s2 * s3,		c3 * s1 + c1 * s2 * s3,
+			s2,			-c2 * s1,					c1 * c2
+		);
+		
+		return rMat.transpose().normalize();
+		/**/
 	}
 
 	/**
@@ -628,34 +659,49 @@ public abstract class RMath {
 
 	// calculates euler angles from rotation matrix
 	public static PVector matrixToEuler(RMatrix m) {
-		float[][] r = m.getDataF();
 		float x, y, z;
-		PVector wpr;
-
-		/*if (r[2][0] != 1 && r[2][0] != -1) {
-			// rotation about y-axis
-			yRot1 = (float) Math.asin(r[2][0]);
-			// rotation about x-axis
-			xRot1 = (float) Math.atan2(r[2][1] / Math.cos(yRot1), r[2][2] / Math.cos(yRot1));
-			// rotation about z-axis
-			zRot1 = (float) Math.atan2(r[1][0] / Math.cos(yRot1), r[0][0] / Math.cos(yRot1));
-		} else {
-			zRot1 = 0;
-			if (r[2][0] == -1) {
-				yRot1 = -PI / 2;
-				xRot1 = -zRot1 + (float) Math.atan2(r[1][0], r[2][0]);
-			} else {
-				yRot1 = PI / 2;
-				xRot1 = zRot1 + (float) Math.atan2(-r[1][0], -r[2][0]);
-			}
-		}*/
 		
-		x = (float) Math.atan2(-r[2][1], r[2][2]);
-		y = (float) Math.atan2(r[2][0], Math.sqrt(r[2][1]*r[2][1] + r[2][2]*r[2][2]));
-		z = (float) Math.atan2(-r[1][0], r[0][0]);
-
-		wpr = new PVector(x, y, z);
-		return wpr;
+		m.normalize();
+		
+		/**
+		double s2 = m.getEntry(0, 2);
+		
+		if (Math.abs(1 - s2) > 0.00002f) {
+			// No singularity
+			double c2 = Math.sqrt(
+					m.getEntry(2, 1)*m.getEntry(2, 1) +
+					m.getEntry(2, 2)*m.getEntry(2, 2)
+					);
+			
+			x = (float) atan2Rounded(m.getEntry(2, 1) / -c2, m.getEntry(2, 2) / c2);
+			y = (float) atan2Rounded(s2, c2);
+			z = (float) atan2Rounded(m.getEntry(1, 0) / -c2, m.getEntry(0, 0) / c2);
+			
+		} else {
+			// Set z rotation to some value
+			z = 0;
+			
+			if (RMath.sign(s2) == 1) {
+				y = -PConstants.PI / 2;
+				x = (float) atan2Rounded(m.getEntry(1, 2), m.getEntry(1, 1)) + z;
+				
+			} else {
+				y = PConstants.PI / 2;
+				x = (float) atan2Rounded(m.getEntry(1, 2), m.getEntry(1, 1)) - z;
+			}
+		}
+		
+		/**/
+		x = (float) atan2Rounded(-m.getEntry(2, 1), m.getEntry(2, 2));
+		y = (float) atan2Rounded(m.getEntry(2, 0), Math.sqrt(
+				m.getEntry(2, 1)*m.getEntry(2, 1) +
+				m.getEntry(2, 2)*m.getEntry(2, 2)
+				));
+		z = (float) atan2Rounded(-m.getEntry(1, 0), m.getEntry(0, 0));
+		
+		/**/
+		
+		return new PVector(x, y, z);
 	}
 	
 	// calculates quaternion from rotation matrix
