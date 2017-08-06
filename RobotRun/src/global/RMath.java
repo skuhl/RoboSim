@@ -645,7 +645,7 @@ public abstract class RMath {
 	 */
 	public static void main(String[] args) {
 		
-		float[] testVals = new float[] { 0f, 1f / 8f, 1f / 4f,  };
+		//float[] testVals = new float[] { 0f, 1f / 8f, 1f / 4f,  };
 		
 		PVector wpr = new PVector(-170f, 90f, 170f);
 		wpr.mult(PConstants.DEG_TO_RAD);

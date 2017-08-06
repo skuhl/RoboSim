@@ -3297,7 +3297,7 @@ public class WGUI implements ControlListener {
 	 * 
 	 * @param newView
 	 */
-	private void setView(WindowTab newView) {
+	/*private void setView(WindowTab newView) {
 		if (newView == null) {
 			windowTabs.setActiveButton("Hide");
 			
@@ -3306,7 +3306,7 @@ public class WGUI implements ControlListener {
 		}
 		
 		updateView(newView);
-	}
+	}*/
 
 	/**
 	 * Updates the background color of the button with the given name based off
