@@ -2320,7 +2320,7 @@ public class RobotRun extends PApplet {
 		// Manipulate the camera otherwise
 		} else {
 			
-			if (mouseButton == CENTER) {
+			if (mouseButton == CENTER|| mouseButton == LEFT && keyCodeMap.isKeyDown(KeyEvent.VK_CONTROL)) {
 				// Drag the center mouse button to pan the camera
 				PVector camOrien = camera.getOrientation();
 				
