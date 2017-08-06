@@ -13,12 +13,6 @@ public class ScreenSetMotionInstrCircRegType extends ST_ScreenEditItem {
 	}
 
 	@Override
-	protected void loadOptions() {
-		options.addLine("1.LOCAL(P)");
-		options.addLine("2.GLOBAL(PR)");
-	}
-
-	@Override
 	public void actionEntr() {
 		RoboticArm r = robotRun.getActiveRobot();
 		PosMotionInst pMInst = (PosMotionInst) r.getInstToEdit(robotRun.getActiveProg(), 
@@ -32,6 +26,12 @@ public class ScreenSetMotionInstrCircRegType extends ST_ScreenEditItem {
 		}
 
 		robotRun.lastScreen();
+	}
+
+	@Override
+	protected void loadOptions() {
+		options.addLine("1.LOCAL(P)");
+		options.addLine("2.GLOBAL(PR)");
 	}
 
 }

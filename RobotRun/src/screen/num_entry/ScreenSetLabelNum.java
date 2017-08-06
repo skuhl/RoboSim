@@ -12,12 +12,6 @@ public class ScreenSetLabelNum extends ST_ScreenNumEntry {
 	}
 
 	@Override
-	protected void loadOptions() {
-		options.addLine("Set label number:");
-		options.addLine("\0" + workingText);
-	}
-
-	@Override
 	public void actionEntr() {
 		try {
 			RoboticArm r = robotRun.getActiveRobot();
@@ -38,6 +32,12 @@ public class ScreenSetLabelNum extends ST_ScreenNumEntry {
 			errorMessage("The label ID must be an integer");
 		}
 		
+	}
+
+	@Override
+	protected void loadOptions() {
+		options.addLine("Set label number:");
+		options.addLine("\0" + workingText);
 	}
 
 }

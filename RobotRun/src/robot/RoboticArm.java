@@ -68,83 +68,19 @@ public class RoboticArm {
 	public final int RID;
 	
 	/**
-	 * The position of the center of the robot's base segment.
-	 */
-	private final PVector BASE_POSITION;
-	
-	/**
-	 * Defines sets of indices which map to pairs of bounding boxes between
-	 * two of the robot's segments. This is used for checking self-collisions
-	 * of the robot's bounding boxes.
-	 */
-	private final int[] SEG_OBB_CHECKS;
-	
-	/**
-	 * Defines sets of indices, which map to the robot's segment bounding
-	 * boxes. This is used to check for collisions between the robot's end 
-	 * effector and its segments.
-	 */
-	private final int[] EE_SEG_OBB_CHECKS;
-	
-	/**
-	 * A list of the robot's arm segment models.
-	 */
-	private final RSegWithJoint[] SEGMENT;
-	
-	/**
-	 * The list of the robot's end effectors.
-	 */
-	private final EndEffector[] EE_LIST;
-	
-	/**
-	 * The list of programs associated with this robot.
-	 */
-	private final ArrayList<Program> PROGRAM;
-	
-	/**
-	 * A stack of previous states of instructions that the user has since edited.
-	 */
-	private final Stack<InstUndoState> PROG_UNDO;
-	
-	/**
-	 * The data register associated with this robot.
-	 */
-	private final DataRegister[] DREG;
-	
-	/**
-	 * The position registers associated with this robot.
-	 */
-	private final PositionRegister[] PREG;
-	
-	/**
-	 * A set of user-defined frames associated with this robot. 
-	 */
-	private final ToolFrame[] TOOL_FRAME;
-	
-	/**
-	 * A set of user-defined frames associated with this robot.
-	 */
-	private final UserFrame[] USER_FRAME;
-	
-	/**
-	 * The initial position and orientation of the robot.
-	 */
-	private final Point DEFAULT_PT;
-	
-	/**
-	 * Defines the speed multiplier for the robot's jog and move to motion.
-	 */
-	private int liveSpeed;
-	
-	/**
 	 * The index corresponding to the active end effector in EE_LIST.
 	 */
 	private int activeEEIdx;
 	
 	/**
-	 * The rogot's current motion state.
+	 * An index corresponding to the active frame for this robot.
 	 */
-	private RobotMotion motion;
+	private int activeUserIdx, activeToolIdx;
+	
+	/**
+	 * The position of the center of the robot's base segment.
+	 */
+	private final PVector BASE_POSITION;
 	
 	/**
 	 * The current coordinate frame of the robot.
@@ -152,9 +88,26 @@ public class RoboticArm {
 	private CoordFrame curCoordFrame;
 	
 	/**
-	 * An index corresponding to the active frame for this robot.
+	 * The initial position and orientation of the robot.
 	 */
-	private int activeUserIdx, activeToolIdx;
+	private final Point DEFAULT_PT;
+	
+	/**
+	 * The data register associated with this robot.
+	 */
+	private final DataRegister[] DREG;
+	
+	/**
+	 * The list of the robot's end effectors.
+	 */
+	private final EndEffector[] EE_LIST;
+	
+	/**
+	 * Defines sets of indices, which map to the robot's segment bounding
+	 * boxes. This is used to check for collisions between the robot's end 
+	 * effector and its segments.
+	 */
+	private final int[] EE_SEG_OBB_CHECKS;
 	
 	/**
 	 * A reference for the part current held by the robot.
@@ -166,8 +119,55 @@ public class RoboticArm {
 	 */
 	private RMatrix lastTipTMatrix;
 	
-	private ArrayList<Macro> macros = new ArrayList<>();
+	/**
+	 * Defines the speed multiplier for the robot's jog and move to motion.
+	 */
+	private int liveSpeed;
+	
 	private Macro[] macroKeyBinds = new Macro[7];
+	
+	private ArrayList<Macro> macros = new ArrayList<>();
+	
+	/**
+	 * The rogot's current motion state.
+	 */
+	private RobotMotion motion;
+	
+	/**
+	 * The position registers associated with this robot.
+	 */
+	private final PositionRegister[] PREG;
+	
+	/**
+	 * A stack of previous states of instructions that the user has since edited.
+	 */
+	private final Stack<InstUndoState> PROG_UNDO;
+	
+	/**
+	 * The list of programs associated with this robot.
+	 */
+	private final ArrayList<Program> PROGRAM;
+	
+	/**
+	 * Defines sets of indices which map to pairs of bounding boxes between
+	 * two of the robot's segments. This is used for checking self-collisions
+	 * of the robot's bounding boxes.
+	 */
+	private final int[] SEG_OBB_CHECKS;
+	
+	/**
+	 * A list of the robot's arm segment models.
+	 */
+	private final RSegWithJoint[] SEGMENT;
+	
+	/**
+	 * A set of user-defined frames associated with this robot. 
+	 */
+	private final ToolFrame[] TOOL_FRAME;
+	/**
+	 * A set of user-defined frames associated with this robot.
+	 */
+	private final UserFrame[] USER_FRAME;
 	
 	/**
 	 * Creates a robotic arm with the given ID, segment models, and end
@@ -352,22 +352,39 @@ public class RoboticArm {
 		lastTipTMatrix = getFaceplateTMat( getJointAngles() );	
 	}
 	
-	public Macro getMacro(int idx) {
-		return macros.get(idx);
+	/**
+	 * Adds the given instruction to the given program, if the given index is
+	 * within the bounds of the given program's list of instructions. This
+	 * insertion is added to the undo stack.
+	 * 
+	 * @param p		The program, to which to add the given instruction
+	 * @param idx	The index at which to add the given instruction in the
+	 * 				given program's list of instructions
+	 * @param inst	The instruction to add to the given program
+	 * @param group	Whether to group the insertion undo state with previous
+	 * 				undo states
+	 */
+	public void addAt(Program p, int idx, Instruction inst, boolean group) {
+		if (p != null && inst != null && idx >= 0 && idx <= p.getNumOfInst()) {
+			p.addInstAt(idx, inst);
+			pushUndoState(InstUndoType.INSERTED, p, idx, p.get(idx), group);
+		}
 	}
 	
-	public Macro[] getMacroKeyBinds() {
-		return macroKeyBinds;
+	/**
+	 * Adds the given instruction to the end of the given program's list of
+	 * instructions. This insertion is added to the undo stack.
+	 * 
+	 * @param p		The program, to which to add the given instruction
+	 * @param inst	The instruction to add to the given program
+	 * @param group	Whether to group the insertion undo state with previous
+	 * 				undo states
+	 */
+	public void addInstAtEnd(Program p, Instruction inst, boolean group) {
+		int idx = p.getNumOfInst();
+		addAt(p, idx, inst, group);
 	}
 
-	public ArrayList<Macro> getMacroList() {
-		return macros;
-	}
-	
-	public void setMacroBindings(Macro[] usrKeyBinds) {
-		macroKeyBinds = usrKeyBinds;
-	}
-	
 	/**
 	 * Adds the given program to this Robot's list of programs.
 	 * 
@@ -391,40 +408,6 @@ public class RoboticArm {
 			return idx;
 		}
 	}
-	
-	/**
-	 * Adds the given instruction to the end of the given program's list of
-	 * instructions. This insertion is added to the undo stack.
-	 * 
-	 * @param p		The program, to which to add the given instruction
-	 * @param inst	The instruction to add to the given program
-	 * @param group	Whether to group the insertion undo state with previous
-	 * 				undo states
-	 */
-	public void addInstAtEnd(Program p, Instruction inst, boolean group) {
-		int idx = p.getNumOfInst();
-		addAt(p, idx, inst, group);
-	}
-	
-	/**
-	 * Adds the given instruction to the given program, if the given index is
-	 * within the bounds of the given program's list of instructions. This
-	 * insertion is added to the undo stack.
-	 * 
-	 * @param p		The program, to which to add the given instruction
-	 * @param idx	The index at which to add the given instruction in the
-	 * 				given program's list of instructions
-	 * @param inst	The instruction to add to the given program
-	 * @param group	Whether to group the insertion undo state with previous
-	 * 				undo states
-	 */
-	public void addAt(Program p, int idx, Instruction inst, boolean group) {
-		if (p != null && inst != null && idx >= 0 && idx <= p.getNumOfInst()) {
-			p.addInstAt(idx, inst);
-			pushUndoState(InstUndoType.INSERTED, p, idx, p.get(idx), group);
-		}
-	}
-	
 	
 	/**
 	 * Converts the given point, pt, into the Coordinate System defined by the
@@ -526,6 +509,7 @@ public class RoboticArm {
 
 		return 2;
 	}
+	
 	
 	/**
 	 * Checks collisions between the bounding boxes of the robot's segments and
@@ -863,51 +847,6 @@ public class RoboticArm {
 		}
 	}
 	
-	
-	
-	/**
-	 * Draws the position of the robot's tool tip with respect to the
-	 * coordinate system of the given graphics object. If the robot has an
-	 * active tool frame, then its axes will be drawn at the position of the
-	 * tool tip. Otherwise only a pink sphere will be drawn at the tool tip
-	 * position.
-	 * 
-	 * @param g			The graphics object used to render the tool tip position
-	 * @param axesType	What is the current axes render method (none, axes, or
-	 * 					grid)
-	 */
-	private void drawToolTip(PGraphics g, AxesDisplay axesType) {
-		
-		ToolFrame activeTool = getActiveTool();
-		
-		if (axesType != AxesDisplay.NONE && curCoordFrame == CoordFrame.TOOL
-				&& activeTool != null) {
-			
-			// Render the active tool frame at the position of the tooltip
-			RMatrix toolAxes = RMath.rMatToWorld(activeTool.getOrientationOffset().toMatrix());
-			Fields.drawAxes(g, activeTool.getTCPOffset(), toolAxes, 500f);
-			
-		}
-		
-		// Render a point at the position of the tooltip
-		g.pushStyle();
-		g.stroke(Fields.PINK);
-		g.noFill();
-		
-		g.pushMatrix();
-		
-		if (activeTool != null) {
-			// Apply active tool frame offset
-			PVector tipPos = activeTool.getTCPOffset();
-			g.translate(tipPos.x, tipPos.y, tipPos.z);
-		}
-		
-		g.sphere(4);
-		
-		g.popMatrix();
-		g.popStyle();
-	}
-	
 	/**
 	 * Draws gridlines, centered around the coordinate frame defined by the
 	 * given axes and origin position, mapped to the y-axis of the graphics
@@ -983,14 +922,6 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * @return	The active end effector segment, or null if no end effector is
-	 * 			active
-	 */
-	private EndEffector getActiveEE() {
-		return EE_LIST[activeEEIdx];
-	}
-	
-	/**
 	 * @return	The active tool frame or null if no tool frame is active
 	 */
 	public ToolFrame getActiveTool() {
@@ -1008,6 +939,8 @@ public class RoboticArm {
 	public int getActiveToolIdx() {
 		return activeToolIdx;
 	}
+	
+	
 	
 	/**
 	 * @return	The active tool frame or null if no tool frame is active
@@ -1027,7 +960,7 @@ public class RoboticArm {
 	public int getActiveUserIdx() {
 		return activeUserIdx;
 	}
-
+	
 	/**
 	 * @return	A copy of the position of the center of the Robot's base
 	 * 			segment
@@ -1109,7 +1042,7 @@ public class RoboticArm {
 	public boolean getEEState() {
 		return this.getActiveEE().getState();
 	}
-	
+
 	/**
 	 * Returns the error messages that would describe the issue with forming
 	 * the vector defined by the given motion instruction. If no issue is
@@ -1301,7 +1234,7 @@ public class RoboticArm {
 		
 		return null;
 	}
-
+	
 	/**
 	 * Returns the end effector's I/O register associated with the given index.
 	 * 
@@ -1315,20 +1248,6 @@ public class RoboticArm {
 		}
 		
 		return null;
-	}
-
-	/**
-	 * @return	A 6-element array containing the robot's current joint angles
-	 */
-	public float[] getJointAngles() {
-		return new float[] {
-			SEGMENT[0].getJointRotation(),
-			SEGMENT[1].getJointRotation(),
-			SEGMENT[2].getJointRotation(),
-			SEGMENT[3].getJointRotation(),
-			SEGMENT[4].getJointRotation(),
-			SEGMENT[5].getJointRotation()
-		};
 	}
 	
 	/**
@@ -1352,13 +1271,39 @@ public class RoboticArm {
 		// No jog motion
 		return null;
 	}
-
+	
+	/**
+	 * @return	A 6-element array containing the robot's current joint angles
+	 */
+	public float[] getJointAngles() {
+		return new float[] {
+			SEGMENT[0].getJointRotation(),
+			SEGMENT[1].getJointRotation(),
+			SEGMENT[2].getJointRotation(),
+			SEGMENT[3].getJointRotation(),
+			SEGMENT[4].getJointRotation(),
+			SEGMENT[5].getJointRotation()
+		};
+	}
+	
 	public RMatrix getLastTipTMatrix() {
 		return lastTipTMatrix;
 	}
-
+	
 	public int getLiveSpeed() {
 		return liveSpeed;
+	}
+	
+	public Macro getMacro(int idx) {
+		return macros.get(idx);
+	}
+
+	public Macro[] getMacroKeyBinds() {
+		return macroKeyBinds;
+	}
+
+	public ArrayList<Macro> getMacroList() {
+		return macros;
 	}
 	
 	/**
@@ -1394,7 +1339,7 @@ public class RoboticArm {
 		// Uninitialized position or invalid position index
 		return null;
 	}
-	
+
 	/**
 	 * Returns the position register, associated with the given index, of the
 	 * Robot, or null if the given index is invalid. A Robot has a total of 100
@@ -1413,7 +1358,7 @@ public class RoboticArm {
 			return null;
 		}
 	}
-	
+
 	/**
 	 * Attempts to find the index of the program with the given name amongst
 	 * this Robot's programs. If no program with the given name exists, then
@@ -1453,7 +1398,7 @@ public class RoboticArm {
 			return null;
 		}
 	}
-
+	
 	/**
 	 * Searches for the program with the given name, in this robot's list of
 	 * programs. If no program with the given name exists, null is returned.
@@ -1464,22 +1409,6 @@ public class RoboticArm {
 	 */
 	public Program getProgram(String name) {
 		return getProgram( getProgIdx(name) );
-	}
-	
-	/**
-	 * Returns the robot segment with the specified index, in the robot's set
-	 * of segments.
-	 * 
-	 * @param sdx	The index of a segment [0, 6)
-	 * @return		The segment associated with the given index, or null, if no
-	 * 				such segment exists
-	 */
-	protected RSegWithJoint getSegment(int sdx) {
-		if (sdx >= 0 && sdx < SEGMENT.length) {
-			return SEGMENT[sdx];
-		}
-		// Invalid segment index
-		return null;
 	}
 	
 	/**
@@ -1514,7 +1443,7 @@ public class RoboticArm {
 			return null;
 		}
 	}
-	
+
 	/**
 	 * Returns the default tool tip offset for the end effector with the given
 	 * index.
@@ -1529,15 +1458,6 @@ public class RoboticArm {
 		}
 		// invalid index
 		return null;
-	}
-	
-	/**
-	 * @return	The robot's tool tip position and orientation with respect to the
-	 * 			active user frame
-	 */
-	public Point getToolTipUser() {
-		return getToolTipPoint(getJointAngles(), getActiveTool(),
-				getActiveUser());
 	}
 	
 	/**
@@ -1560,48 +1480,16 @@ public class RoboticArm {
 	public Point getToolTipNative(float[] jointAngles) {
 		return getToolTipPoint(jointAngles, getActiveTool(), null);
 	}
-		
+	
 	/**
-	 * Computes the position and orientation of the robot's tool tip based on
-	 * the given joint angles, tool and user frame. The position offset of the
-	 * tool frame defines the robot's tool tip offset, while the user frame
-	 * defines the coordinate frame, for which the tool tip's position and
-	 * orientation are defined. If the tool frame is null, then the tool tip
-	 * offset will be (0, 0, 0) or the position of the face plate. If the user
-	 * frame is null, then the position and orientation of the tool tip will be
-	 * with respect to the world frame. 
-	 * 
-	 * @param jointAngles	The joint angles used to compute the robot's face
-	 * 						plate position and orientatton
-	 * @param tFrame		The frame, which defines the tool tip offset
-	 * @param uFrame		The coordinate frame, with which the robot's tool
-	 * 						tip position and orientation are defined 
-	 * @return
+	 * @return	The robot's tool tip position and orientation with respect to the
+	 * 			active user frame
 	 */
-	private Point getToolTipPoint(float[] jointAngles, ToolFrame tFrame,
-			UserFrame uFrame) {
-		
-		Point toolTip = getFacePlatePoint(jointAngles);
-		
-		if (tFrame != null) {
-			// Apply the tooltip offset of the given tool frame
-			PVector toolOrigin = tFrame.getTCPOffset();
-			RQuaternion invOrien = toolTip.orientation.conjugate();
-			toolTip.position.add( invOrien.rotateVector(toolOrigin) );
-		}
-		
-		if (uFrame != null) {
-			// Apply the given user frame to the robot's tooltip position
-			RQuaternion uOrien = uFrame.getOrientation();
-			toolTip.position = RMath.vToFrame(toolTip.position,
-					uFrame.getOrigin(), uOrien);
-			
-			toolTip.orientation = uOrien.transformQuaternion(toolTip.orientation);
-		}
-		
-		return toolTip;
+	public Point getToolTipUser() {
+		return getToolTipPoint(getJointAngles(), getActiveTool(),
+				getActiveUser());
 	}
-
+	
 	/**
 	 * Returns the user frame, associated with the given index, of the Robot,
 	 * or null if the given index is invalid. A Robot has a total of 10 user
@@ -1753,7 +1641,7 @@ public class RoboticArm {
 		
 		return pt;
 	}
-
+	
 	/**
 	 * Stops all movement of this robot.
 	 */
@@ -1762,7 +1650,7 @@ public class RoboticArm {
 			motion.halt();
 		}
 	}
-
+	
 	/**
 	 * Indicates whether an issue occurred with inverse kinematics, when the
 	 * robot is moving in a Cartesian reference frame.
@@ -1776,7 +1664,16 @@ public class RoboticArm {
 		
 		return false;
 	}
-	
+		
+	/**
+	 * Indicates that the Robot Arm is in motion.
+	 * 
+	 * @return	Whether the robot is moving in some way
+	 */
+	public boolean inMotion() {
+		return motion != null && motion.hasMotion();
+	}
+
 	/**
 	 * Certain end effectors have a trace functionality associated with certain
 	 * states of the end effector. This method evaluates the state of and the
@@ -1806,7 +1703,7 @@ public class RoboticArm {
 	public boolean isHeld(Part p) {
 		return p == heldPart;
 	}
-	
+
 	/**
 	 * Checks if the macro key binding associated with the given index is set
 	 * to a macro.
@@ -1817,7 +1714,7 @@ public class RoboticArm {
 	public boolean isMarcoSet(int idx) {
 		return macroKeyBinds[idx] != null;
 	}
-	
+
 	/**
 	 * Attempts to move the Robot to the given position and orientation from its current
 	 * position using Inverse Kinematics.
@@ -1865,15 +1762,6 @@ public class RoboticArm {
 		setJointAngles(destAngles);
 		return 0;
 	}
-
-	/**
-	 * Indicates that the Robot Arm is in motion.
-	 * 
-	 * @return	Whether the robot is moving in some way
-	 */
-	public boolean inMotion() {
-		return motion != null && motion.hasMotion();
-	}
 	
 	/**
 	 * @return	The number of end effectors associated with this robot
@@ -1882,44 +1770,12 @@ public class RoboticArm {
 		// Exclude Faceplate IO Register
 		return EE_LIST.length - 1;
 	}
-
+	
 	/**
 	 * Returns the number of programs associated with the Robot.
 	 */
 	public int numOfPrograms() {
 		return PROGRAM.size();
-	}
-	
-	/**
-	 * Reverts the active program's undo states that have the same group ID as
-	 * the undo state on the top of the program undo stack.
-	 */
-	public void undoProgramEdit() {
-		
-		if (!PROG_UNDO.isEmpty()) {
-			InstUndoState undoState = PROG_UNDO.pop();
-			undoState.undo();
-			
-			// Chain undo states with the same group
-			int gid = undoState.getGID();
-			
-			while (!PROG_UNDO.isEmpty()) {
-				undoState = PROG_UNDO.peek();
-				
-				if (undoState.getGID() != gid) {
-					break;
-				}
-				
-				/* TEST CODE *
-				Fields.debug("UNDO %s\n", undoState);
-				/**/
-				undoState.undo();
-				PROG_UNDO.pop();
-			}
-			
-		} else {
-			Fields.debug("Empty program undo stack!");
-		}
 	}
 	
 	/**
@@ -2003,7 +1859,7 @@ public class RoboticArm {
 			addAt(p, insertIdx + i, instr, i != 0);
 		}
 	}
-	
+
 	/**
 	 * Returns a list of display lines, which contain the program instruction
 	 * list output for the pendant display.
@@ -2026,48 +1882,6 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * Adds the undo state defined the given parameters to the program undo
-	 * stack.
-	 * 
-	 * @param type	The undo state type (i.e. edit, remove, etc.)
-	 * @param idx	The index in the program of the modified instruction
-	 * @param prog	The program referenced by the undo state
-	 * @param inst	The instruction related to the undo state
-	 * @param group	Whether to group this undo state with previous undo states
-	 */
-	private void pushUndoState(InstUndoType type, Program prog, int idx,
-			InstElement inst, boolean group) {
-		
-		if (PROG_UNDO.size() >= Program.MAX_UNDO_SIZE) {
-			// Remove old unused undo states to make room for new undo states
-			PROG_UNDO.remove(0);
-		}
-		
-		// Determine the group ID of the undo state
-		int gid;
-		
-		if (PROG_UNDO.isEmpty()) {
-			gid = 0;
-			
-		} else {
-			InstUndoState top = PROG_UNDO.peek();
-			
-			if ((top.getGID() == 1 && group) || (top.getGID() == 0 && !group)) {
-				gid = 1;
-				
-			} else {
-				gid = 0;
-			}
-		}
-		
-		InstUndoState undoState = new InstUndoState(type, gid, prog, idx, inst);
-		PROG_UNDO.push(undoState);
-		/* TEST CODE *
-		Fields.debug("%s\n", undoState);
-		/**/
-	}
-	
-	/**
 	 * If an object is currently being held by the Robot arm, then release it.
 	 * Then, update the Robot's End Effector status and IO Registers.
 	 */
@@ -2075,6 +1889,26 @@ public class RoboticArm {
 		heldPart = null;
 	}
 
+	/**
+	 * Converts the given point, pt, from the Coordinate System defined by the
+	 * given origin vector and rotation quaternion axes.
+	 * 
+	 * @param pt
+	 *            A point with initialized position and orientation
+	 * @param origin
+	 *            The origin of the Coordinate System
+	 * @param axes
+	 *            The axes of the Coordinate System representing as a rotation
+	 *            quanternion
+	 * @returning The point, pt, interms of the given coordinate system
+	 */
+	public Point removeFrame(Point pt, PVector origin, RQuaternion axes) {
+		PVector position = RMath.vFromFrame(pt.position, origin, axes);
+		RQuaternion orientation = RQuaternion.mult(pt.orientation, axes);
+		
+		return new Point(position, orientation, pt.angles);
+	}
+	
 	/**
 	 * Reorders the program list of the robot, so that the programs are in
 	 * alphabetical order.
@@ -2105,7 +1939,7 @@ public class RoboticArm {
 		}
 		
 	}
-
+	
 	/**
 	 * A wrapper method for replacing an instruction in the active program of
 	 * this robot. The replacement is added onto the program undo stack for the
@@ -2143,26 +1977,6 @@ public class RoboticArm {
 		}
 		
 		getActiveEE().resetOBBColors();
-	}
-	
-	/**
-	 * Converts the given point, pt, from the Coordinate System defined by the
-	 * given origin vector and rotation quaternion axes.
-	 * 
-	 * @param pt
-	 *            A point with initialized position and orientation
-	 * @param origin
-	 *            The origin of the Coordinate System
-	 * @param axes
-	 *            The axes of the Coordinate System representing as a rotation
-	 *            quanternion
-	 * @returning The point, pt, interms of the given coordinate system
-	 */
-	public Point removeFrame(Point pt, PVector origin, RQuaternion axes) {
-		PVector position = RMath.vFromFrame(pt.position, origin, axes);
-		RQuaternion orientation = RQuaternion.mult(pt.orientation, axes);
-		
-		return new Point(position, orientation, pt.angles);
 	}
 	
 	/**
@@ -2219,7 +2033,7 @@ public class RoboticArm {
 			return null;
 		}
 	}
-	
+
 	/**
 	 * Set the index of the robot's active end effector to the given index. The
 	 * given index must be within the range [0, EE_LIST.length). 0 implies
@@ -2233,7 +2047,7 @@ public class RoboticArm {
 			releaseHeldObject();
 		}
 	}
-	
+
 	/**
 	 * Sets this robot's active tool frame index to the given value.
 	 * 
@@ -2251,7 +2065,7 @@ public class RoboticArm {
 	public void setActiveUserFrame(int activeUserFrame) {
 		this.activeUserIdx = activeUserFrame;
 	}
-
+	
 	/**
 	 * Update the Robot's current coordinate frame.
 	 * 
@@ -2305,7 +2119,7 @@ public class RoboticArm {
 			SEGMENT[jdx].setJointRotation(newJointAngles[jdx]);
 		}
 	}
-
+	
 	/**
 	 * Sets the robot's jog speed field to the given value.
 	 * 
@@ -2313,6 +2127,10 @@ public class RoboticArm {
 	 */
 	public void setLiveSpeed(int liveSpeed) {
 		this.liveSpeed = liveSpeed;
+	}
+	
+	public void setMacroBindings(Macro[] usrKeyBinds) {
+		macroKeyBinds = usrKeyBinds;
 	}
 	
 	/**
@@ -2325,7 +2143,7 @@ public class RoboticArm {
 			((LinearMotion) motion).setFault(flag);
 		}
 	}
-	
+
 	/**
 	 * Initializes the motion defined by the given motion instruction and
 	 * program execution state.
@@ -2474,6 +2292,38 @@ public class RoboticArm {
 	}
 	
 	/**
+	 * Reverts the active program's undo states that have the same group ID as
+	 * the undo state on the top of the program undo stack.
+	 */
+	public void undoProgramEdit() {
+		
+		if (!PROG_UNDO.isEmpty()) {
+			InstUndoState undoState = PROG_UNDO.pop();
+			undoState.undo();
+			
+			// Chain undo states with the same group
+			int gid = undoState.getGID();
+			
+			while (!PROG_UNDO.isEmpty()) {
+				undoState = PROG_UNDO.peek();
+				
+				if (undoState.getGID() != gid) {
+					break;
+				}
+				
+				/* TEST CODE *
+				Fields.debug("UNDO %s\n", undoState);
+				/**/
+				undoState.undo();
+				PROG_UNDO.pop();
+			}
+			
+		} else {
+			Fields.debug("Empty program undo stack!");
+		}
+	}
+	
+	/**
 	 * Updates the direction of the jog axis for the robot's current motion. If
 	 * the robot's current motion is not jog motion, then the motion of the
 	 * robot is set to jog motion.
@@ -2524,7 +2374,7 @@ public class RoboticArm {
 		
 		return oldDir;
 	}
-	
+
 	/**
 	 * Updates the reference to the Robot's last tool tip position and
 	 * orientation, which is used to move the object held by the Robot.
@@ -2635,10 +2485,6 @@ public class RoboticArm {
 	public void updateMotion(float[] jointAngles) {
 		updateMotion(jointAngles, liveSpeed / 100f);
 	}
-
-	public void updateMotion(Point tgt) {
-		updateMotion(tgt, liveSpeed / 100f);
-	}
 	
 	public void updateMotion(float[] jointAngles, float speed) {
 		if (motion instanceof JointInterpolation) {
@@ -2649,7 +2495,11 @@ public class RoboticArm {
 			motion = new JointInterpolation(this, jointAngles, speed);
 		}
 	}
-
+	
+	public void updateMotion(Point tgt) {
+		updateMotion(tgt, liveSpeed / 100f);
+	}
+	
 	public void updateMotion(Point tgt, float speed) {
 		Point start = getToolTipNative();
 		
@@ -2658,17 +2508,6 @@ public class RoboticArm {
 		}
 		
 		((LinearInterpolation) motion).beginNewLinearMotion(start, tgt,
-				speed * motorSpeed);
-	}
-	
-	public void updateMotion(Point tgt, Point next, float speed, float p) {
-		Point start = getToolTipNative();
-		
-		if (!(motion instanceof LinearInterpolation)) {
-			motion = new LinearInterpolation();
-		}
-		
-		((LinearInterpolation) motion).beginNewContinuousMotion(start, tgt, next, p,
 				speed * motorSpeed);
 	}
 	
@@ -2683,6 +2522,17 @@ public class RoboticArm {
 				speed * motorSpeed);
 	}
 	
+	public void updateMotion(Point tgt, Point next, float speed, float p) {
+		Point start = getToolTipNative();
+		
+		if (!(motion instanceof LinearInterpolation)) {
+			motion = new LinearInterpolation();
+		}
+		
+		((LinearInterpolation) motion).beginNewContinuousMotion(start, tgt, next, p,
+				speed * motorSpeed);
+	}
+
 	/**
 	 * Updates the program execution for this robot and the position of the
 	 * robot for linear or rotation interpolation.
@@ -2693,6 +2543,129 @@ public class RoboticArm {
 		}
 		
 		updateOBBs();
+	}
+	
+	/**
+	 * Returns the robot segment with the specified index, in the robot's set
+	 * of segments.
+	 * 
+	 * @param sdx	The index of a segment [0, 6)
+	 * @return		The segment associated with the given index, or null, if no
+	 * 				such segment exists
+	 */
+	protected RSegWithJoint getSegment(int sdx) {
+		if (sdx >= 0 && sdx < SEGMENT.length) {
+			return SEGMENT[sdx];
+		}
+		// Invalid segment index
+		return null;
+	}
+
+	/**
+	 * Draws the position of the robot's tool tip with respect to the
+	 * coordinate system of the given graphics object. If the robot has an
+	 * active tool frame, then its axes will be drawn at the position of the
+	 * tool tip. Otherwise only a pink sphere will be drawn at the tool tip
+	 * position.
+	 * 
+	 * @param g			The graphics object used to render the tool tip position
+	 * @param axesType	What is the current axes render method (none, axes, or
+	 * 					grid)
+	 */
+	private void drawToolTip(PGraphics g, AxesDisplay axesType) {
+		
+		ToolFrame activeTool = getActiveTool();
+		
+		if (axesType != AxesDisplay.NONE && curCoordFrame == CoordFrame.TOOL
+				&& activeTool != null) {
+			
+			// Render the active tool frame at the position of the tooltip
+			RMatrix toolAxes = RMath.rMatToWorld(activeTool.getOrientationOffset().toMatrix());
+			Fields.drawAxes(g, activeTool.getTCPOffset(), toolAxes, 500f);
+			
+		}
+		
+		// Render a point at the position of the tooltip
+		g.pushStyle();
+		g.stroke(Fields.PINK);
+		g.noFill();
+		
+		g.pushMatrix();
+		
+		if (activeTool != null) {
+			// Apply active tool frame offset
+			PVector tipPos = activeTool.getTCPOffset();
+			g.translate(tipPos.x, tipPos.y, tipPos.z);
+		}
+		
+		g.sphere(4);
+		
+		g.popMatrix();
+		g.popStyle();
+	}
+	
+	/**
+	 * @return	The active end effector segment, or null if no end effector is
+	 * 			active
+	 */
+	private EndEffector getActiveEE() {
+		return EE_LIST[activeEEIdx];
+	}
+	
+	/**
+	 * Computes the position and orientation of the robot's tool tip based on
+	 * the given joint angles, tool and user frame. The position offset of the
+	 * tool frame defines the robot's tool tip offset, while the user frame
+	 * defines the coordinate frame, for which the tool tip's position and
+	 * orientation are defined. If the tool frame is null, then the tool tip
+	 * offset will be (0, 0, 0) or the position of the face plate. If the user
+	 * frame is null, then the position and orientation of the tool tip will be
+	 * with respect to the world frame. 
+	 * 
+	 * @param jointAngles	The joint angles used to compute the robot's face
+	 * 						plate position and orientatton
+	 * @param tFrame		The frame, which defines the tool tip offset
+	 * @param uFrame		The coordinate frame, with which the robot's tool
+	 * 						tip position and orientation are defined 
+	 * @return
+	 */
+	private Point getToolTipPoint(float[] jointAngles, ToolFrame tFrame,
+			UserFrame uFrame) {
+		
+		Point toolTip = getFacePlatePoint(jointAngles);
+		
+		if (tFrame != null) {
+			// Apply the tooltip offset of the given tool frame
+			PVector toolOrigin = tFrame.getTCPOffset();
+			RQuaternion invOrien = toolTip.orientation.conjugate();
+			toolTip.position.add( invOrien.rotateVector(toolOrigin) );
+		}
+		
+		if (uFrame != null) {
+			// Apply the given user frame to the robot's tooltip position
+			RQuaternion uOrien = uFrame.getOrientation();
+			toolTip.position = RMath.vToFrame(toolTip.position,
+					uFrame.getOrigin(), uOrien);
+			
+			toolTip.orientation = uOrien.transformQuaternion(toolTip.orientation);
+		}
+		
+		return toolTip;
+	}
+	
+	private PShape[] loadEEModels() {
+		PShape[] eeModels = new PShape[7];
+		
+		// Load end effector models
+		eeModels[0] = MyPShape.loadSTLModel("robot/EE/FACEPLATE.STL", Fields.ROBOT_GREY);
+		eeModels[1] = MyPShape.loadSTLModel("robot/EE/SUCTION.stl", Fields.EE_DEFAULT);
+		eeModels[2] = MyPShape.loadSTLModel("robot/EE/GRIPPER.stl", Fields.EE_DEFAULT);
+		eeModels[3] = MyPShape.loadSTLModel("robot/EE/PINCER.stl", Fields.ROBOT_YELLOW);
+		eeModels[4] = MyPShape.loadSTLModel("robot/EE/POINTER.stl", Fields.EE_DEFAULT);
+		eeModels[5] = MyPShape.loadSTLModel("robot/EE/GLUE_GUN.stl", Fields.EE_DEFAULT);
+		eeModels[6] = MyPShape.loadSTLModel("robot/EE/WIELDER.stl", Fields.EE_DEFAULT);
+		
+		return eeModels;
 	}
 	
 	/**
@@ -2713,19 +2686,46 @@ public class RoboticArm {
 		return segModels;
 	}
 	
-	private PShape[] loadEEModels() {
-		PShape[] eeModels = new PShape[7];
+	/**
+	 * Adds the undo state defined the given parameters to the program undo
+	 * stack.
+	 * 
+	 * @param type	The undo state type (i.e. edit, remove, etc.)
+	 * @param idx	The index in the program of the modified instruction
+	 * @param prog	The program referenced by the undo state
+	 * @param inst	The instruction related to the undo state
+	 * @param group	Whether to group this undo state with previous undo states
+	 */
+	private void pushUndoState(InstUndoType type, Program prog, int idx,
+			InstElement inst, boolean group) {
 		
-		// Load end effector models
-		eeModels[0] = MyPShape.loadSTLModel("robot/EE/FACEPLATE.STL", Fields.ROBOT_GREY);
-		eeModels[1] = MyPShape.loadSTLModel("robot/EE/SUCTION.stl", Fields.EE_DEFAULT);
-		eeModels[2] = MyPShape.loadSTLModel("robot/EE/GRIPPER.stl", Fields.EE_DEFAULT);
-		eeModels[3] = MyPShape.loadSTLModel("robot/EE/PINCER.stl", Fields.ROBOT_YELLOW);
-		eeModels[4] = MyPShape.loadSTLModel("robot/EE/POINTER.stl", Fields.EE_DEFAULT);
-		eeModels[5] = MyPShape.loadSTLModel("robot/EE/GLUE_GUN.stl", Fields.EE_DEFAULT);
-		eeModels[6] = MyPShape.loadSTLModel("robot/EE/WIELDER.stl", Fields.EE_DEFAULT);
+		if (PROG_UNDO.size() >= Program.MAX_UNDO_SIZE) {
+			// Remove old unused undo states to make room for new undo states
+			PROG_UNDO.remove(0);
+		}
 		
-		return eeModels;
+		// Determine the group ID of the undo state
+		int gid;
+		
+		if (PROG_UNDO.isEmpty()) {
+			gid = 0;
+			
+		} else {
+			InstUndoState top = PROG_UNDO.peek();
+			
+			if ((top.getGID() == 1 && group) || (top.getGID() == 0 && !group)) {
+				gid = 1;
+				
+			} else {
+				gid = 0;
+			}
+		}
+		
+		InstUndoState undoState = new InstUndoState(type, gid, prog, idx, inst);
+		PROG_UNDO.push(undoState);
+		/* TEST CODE *
+		Fields.debug("%s\n", undoState);
+		/**/
 	}
 	
 	/**

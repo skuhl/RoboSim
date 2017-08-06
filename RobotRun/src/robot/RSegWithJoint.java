@@ -16,14 +16,19 @@ import processing.core.PVector;
 public class RSegWithJoint extends RSegment {
 	
 	/**
+	 * The lower bound of this segment joint's range of motion.
+	 */
+	public final float LOW_BOUND;
+	
+	/**
 	 * The bounds placed on this segment's joint rotation.
 	 */
 	public final float UP_BOUND;
 	
 	/**
-	 * The lower bound of this segment joint's range of motion.
+	 * The axis of rotation for this segment's joint
 	 */
-	public final float LOW_BOUND;
+	protected final PVector AXIS;
 	
 	/**
 	 * The translation applied to move from the previous segment to this
@@ -32,19 +37,14 @@ public class RSegWithJoint extends RSegment {
 	protected final PVector TRANSLATION;
 	
 	/**
-	 * The axis of rotation for this segment's joint
+	 * The rotation of this segment's joint.
 	 */
-	protected final PVector AXIS;
+	private float jointRotation;
 	
 	/**
 	 * The speed modifier for this segment's joint.
 	 */
 	private float speedModifier;
-	
-	/**
-	 * The rotation of this segment's joint.
-	 */
-	private float jointRotation;
 	
 	/**
 	 * Creates a joint segment with the given mode, bounding boxes, joint
@@ -113,10 +113,6 @@ public class RSegWithJoint extends RSegment {
 		return speedModifier;
 	}
 	
-	public void setSpdMod(float speedMod) {
-		speedModifier = speedMod;
-	}
-	
 	/**
 	 * Updates the joint angle of this segment to the given value, if its is
 	 * within the bounds of the segment's joint range.
@@ -133,5 +129,9 @@ public class RSegWithJoint extends RSegment {
 		}
 		
 		return false;
+	}
+	
+	public void setSpdMod(float speedMod) {
+		speedModifier = speedMod;
 	}
 }

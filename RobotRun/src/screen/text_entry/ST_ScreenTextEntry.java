@@ -8,7 +8,6 @@ import screen.ScreenType;
 import ui.DisplayLine;
 
 public abstract class ST_ScreenTextEntry extends Screen {
-	static final int TEXT_ENTRY_LEN = 16;
 	static final char[][] LETTERS = new char[][] {
 		{ 'a', 'b', 'c', 'd', 'e', 'f' }, 
 		{ 'g', 'h', 'i', 'j', 'k', 'l' },
@@ -16,6 +15,7 @@ public abstract class ST_ScreenTextEntry extends Screen {
 		{ 's', 't', 'u', 'v', 'w', 'x' }, 
 		{ 'y', 'z', '_', '@', '*', '.' }
 	};
+	static final int TEXT_ENTRY_LEN = 16;
 	
 	/**
 	 * Used for comment name input. The user can cycle through the six states
@@ -39,92 +39,14 @@ public abstract class ST_ScreenTextEntry extends Screen {
 		workingText = new StringBuilder("\0");
 	}
 	
-	public String getWorkingText() {
-		return workingText.toString();
-	}
-	
 	@Override
-	protected void loadContents() {
-		contents.addLine("\0");
-		DisplayLine line = new DisplayLine();
-		
-		// Give each letter in the name a separate column
-		for (int idx = 0; idx < workingText.length() && idx < TEXT_ENTRY_LEN; idx += 1) {
-			line.add(Character.toString(workingText.charAt(idx)));
-		}
-
-		contents.addLine(line);
-	}
-		
-	@Override
-	protected void loadOptions() {
-		options.addLine("1. Uppercase");
-		options.addLine("2. Lowercase");
-	}
-	
-	@Override
-	protected void loadLabels() {
-		if (options.getLineIdx() == 0) {
-			// F1 - F5
-			labels[0] = "[ABCDEF]";
-			labels[1] = "[GHIJKL]";
-			labels[2] = "[MNOPQR]";
-			labels[3] = "[STUVWX]";
-			labels[4] = "[YZ_@*.]";
-		} else {
-			labels[0] = "[abcdef]";
-			labels[1] = "[ghijkl]";
-			labels[2] = "[mnopqr]";
-			labels[3] = "[stuvwx]";
-			labels[4] = "[yz_@*.]";
-		}
-	}
-
-	@Override
-	protected void loadVars(ScreenState s) {
-		setScreenIndices(1, 0, 0, 0, 0);
-	}
-	
-	@Override
-	public void actionKeyPress(char key) {
-		if (((key >= 'a' && key <= 'z') || (key >= 'A' && key <= 'Z') || (key >= '0' && key <= '9')
-				|| key == '-' || key == '.' || key == '@' || key == '*' || key == '_')) {
-			
-			int columnIdx = contents.getColumnIdx();
-
-			if (workingText.length() == 0 || columnIdx >= workingText.length()) {
-				workingText.append(key);
-				columnIdx++;
-
-			} else if (workingText.length() < TEXT_ENTRY_LEN) {
-				workingText.insert(columnIdx, key);
-				++columnIdx;
-			}
-			// Edge case of adding a character to an empty text entry
-			if (workingText.length() == 1 && workingText.charAt(0) != '\0') {
-				workingText.append('\0');
-				columnIdx += 2;
-			}
-
-			contents.setColumnIdx(Math.min(columnIdx, workingText.length() - 1));
-			robotRun.updatePendantScreen();
-		}
-	}
-
-	@Override
-	public void actionUp() {
-		options.moveUp(false);
-		resetStates();
-	}
-
-	@Override
-	public void actionDn() {
+	public void actionArrowDn() {
 		options.moveDown(false);
 		resetStates();
 	}
-
+	
 	@Override
-	public void actionLt() {
+	public void actionArrowLt() {
 		if (mode.getType() == ScreenType.TYPE_TEXT_ENTRY) {
 			contents.setColumnIdx(Math.max(0, contents.getColumnIdx() - 1));
 			// Reset function key states
@@ -140,9 +62,9 @@ public abstract class ST_ScreenTextEntry extends Screen {
 					contents.getColumnIdx() - ((contents.getColumnIdx() - 4 >= options.size()) ? 4 : 0));
 		}
 	}
-
+		
 	@Override
-	public void actionRt() {
+	public void actionArrowRt() {
 		if (robotRun.isShift()) {
 			// Delete key function
 			if (workingText.length() >= 1) {
@@ -174,6 +96,12 @@ public abstract class ST_ScreenTextEntry extends Screen {
 	}
 	
 	@Override
+	public void actionArrowUp() {
+		options.moveUp(false);
+		resetStates();
+	}
+
+	@Override
 	public void actionBkspc() { 
 		// Delete/Backspace function
 		if (workingText.length() >= 1) {
@@ -195,7 +123,7 @@ public abstract class ST_ScreenTextEntry extends Screen {
 			letterStates[idx] = 0;
 		}
 	}
-
+	
 	@Override
 	public void actionF1() {
 		editTextEntry(0);
@@ -219,6 +147,78 @@ public abstract class ST_ScreenTextEntry extends Screen {
 	@Override
 	public void actionF5() {
 		editTextEntry(4);
+	}
+	
+	@Override
+	public void actionKeyPress(char key) {
+		if (((key >= 'a' && key <= 'z') || (key >= 'A' && key <= 'Z') || (key >= '0' && key <= '9')
+				|| key == '-' || key == '.' || key == '@' || key == '*' || key == '_')) {
+			
+			int columnIdx = contents.getColumnIdx();
+
+			if (workingText.length() == 0 || columnIdx >= workingText.length()) {
+				workingText.append(key);
+				columnIdx++;
+
+			} else if (workingText.length() < TEXT_ENTRY_LEN) {
+				workingText.insert(columnIdx, key);
+				++columnIdx;
+			}
+			// Edge case of adding a character to an empty text entry
+			if (workingText.length() == 1 && workingText.charAt(0) != '\0') {
+				workingText.append('\0');
+				columnIdx += 2;
+			}
+
+			contents.setColumnIdx(Math.min(columnIdx, workingText.length() - 1));
+			robotRun.updatePendantScreen();
+		}
+	}
+
+	public String getWorkingText() {
+		return workingText.toString();
+	}
+
+	@Override
+	protected void loadContents() {
+		contents.addLine("\0");
+		DisplayLine line = new DisplayLine();
+		
+		// Give each letter in the name a separate column
+		for (int idx = 0; idx < workingText.length() && idx < TEXT_ENTRY_LEN; idx += 1) {
+			line.add(Character.toString(workingText.charAt(idx)));
+		}
+
+		contents.addLine(line);
+	}
+
+	@Override
+	protected void loadLabels() {
+		if (options.getLineIdx() == 0) {
+			// F1 - F5
+			labels[0] = "[ABCDEF]";
+			labels[1] = "[GHIJKL]";
+			labels[2] = "[MNOPQR]";
+			labels[3] = "[STUVWX]";
+			labels[4] = "[YZ_@*.]";
+		} else {
+			labels[0] = "[abcdef]";
+			labels[1] = "[ghijkl]";
+			labels[2] = "[mnopqr]";
+			labels[3] = "[stuvwx]";
+			labels[4] = "[yz_@*.]";
+		}
+	}
+
+	@Override
+	protected void loadOptions() {
+		options.addLine("1. Uppercase");
+		options.addLine("2. Lowercase");
+	}
+
+	@Override
+	protected void loadVars(ScreenState s) {
+		setScreenIndices(1, 0, 0, 0, 0);
 	}
 
 	private void editTextEntry(int fIdx) {

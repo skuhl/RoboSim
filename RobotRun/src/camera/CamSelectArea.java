@@ -24,6 +24,20 @@ public class CamSelectArea {
 		}
 	}
 	
+	public CamSelectArea clearArea() {
+		state = 0;
+		return this;
+	}
+	
+	public CamSelectArea copy() {
+		return new CamSelectArea(area_id, isDefect, selectViews);
+	}
+	
+	public CamSelectArea emphasizeArea() {
+		state = 1;
+		return this;
+	}
+	
 	@SuppressWarnings("unused")
 	public CamSelectView getView(RMatrix m) {
 		float[][] data = m.getDataF();
@@ -54,18 +68,8 @@ public class CamSelectArea {
 		
 	}
 	
-	public CamSelectArea emphasizeArea() {
-		state = 1;
-		return this;
-	}
-	
 	public CamSelectArea ignoreArea() {
 		state = -1;
-		return this;
-	}
-	
-	public CamSelectArea clearArea() {
-		state = 0;
 		return this;
 	}
 	
@@ -75,9 +79,5 @@ public class CamSelectArea {
 	
 	public boolean isIgnored() {
 		return (state == -1);
-	}
-	
-	public CamSelectArea copy() {
-		return new CamSelectArea(area_id, isDefect, selectViews);
 	}
 }

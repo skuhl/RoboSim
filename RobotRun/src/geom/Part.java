@@ -21,9 +21,21 @@ public class Part extends WorldObject {
 		OBB_RAD_SCALE = 0.07f;
 	}
 	
-	private BoundingBox absOBB;
 	protected CoordinateSystem defaultOrientation;
+	private BoundingBox absOBB;
 	private Fixture reference;
+
+	/**
+	 * Define a complex object as a part.
+	 */
+	public Part(String n, ComplexShape model) {
+		super(n, model);
+		absOBB = new BoundingBox(model.getDim(DimType.LENGTH),
+								 model.getDim(DimType.HEIGHT),
+								 model.getDim(DimType.WIDTH));
+		defaultOrientation = localOrientation.clone();
+		updateOBBDims();
+	}
 
 	/**
 	 * Create a cube object with the given colors and dimension
@@ -51,18 +63,6 @@ public class Part extends WorldObject {
 	public Part(String n, int fill, int strokeVal, float len, float hgt, float wdh) {
 		super(n, new RBox(fill, strokeVal, len, hgt, wdh));
 		absOBB = new BoundingBox(len, hgt, wdh);
-		defaultOrientation = localOrientation.clone();
-		updateOBBDims();
-	}
-
-	/**
-	 * Define a complex object as a part.
-	 */
-	public Part(String n, ComplexShape model) {
-		super(n, model);
-		absOBB = new BoundingBox(model.getDim(DimType.LENGTH),
-								 model.getDim(DimType.HEIGHT),
-								 model.getDim(DimType.WIDTH));
 		defaultOrientation = localOrientation.clone();
 		updateOBBDims();
 	}
@@ -143,14 +143,15 @@ public class Part extends WorldObject {
 		return absOBB.getCenter();
 	}
 
-	public Fixture getFixtureRef() { return reference; }
-	
-	/**
-	 * @return	The bounding box of the part
-	 */
-	public RBox getOBBFrame() {
-		return absOBB.getFrame();
+	public PVector getDefaultCenter() {
+		return defaultOrientation.getOrigin();
 	}
+	
+	public RMatrix getDefaultOrientation() {
+		return defaultOrientation.getAxes();
+	}
+	
+	public Fixture getFixtureRef() { return reference; }
 	
 	/**
 	 * Get the dimensions of the part's bounding-box
@@ -160,19 +161,18 @@ public class Part extends WorldObject {
 	}
 	
 	/**
+	 * @return	The bounding box of the part
+	 */
+	public RBox getOBBFrame() {
+		return absOBB.getFrame();
+	}
+
+	/**
 	 * @return	The absolute orientation of the part (without respect to its
 	 * 			fixture reference)
 	 */
 	public RMatrix getOrientation() {
 		return absOBB.getOrientationAxes();
-	}
-	
-	public PVector getDefaultCenter() {
-		return defaultOrientation.getOrigin();
-	}
-
-	public RMatrix getDefaultOrientation() {
-		return defaultOrientation.getAxes();
 	}
 	
 	@Override
@@ -199,6 +199,14 @@ public class Part extends WorldObject {
 		absOBB.setColor(newColor);
 	}
 
+	public void setDefaultCenter(PVector newCenter) {
+		defaultOrientation.setOrigin(newCenter);
+	}
+
+	public void setDefaultOrientation(RMatrix newAxes) {
+		defaultOrientation.setAxes(newAxes);
+	}
+	
 	/**
 	 * Set the fixture reference of this part and
 	 * update its absolute orientation.
@@ -207,19 +215,11 @@ public class Part extends WorldObject {
 		reference = refFixture;
 		updateAbsoluteOrientation();
 	}
-
+	
 	@Override
 	public void setLocalCenter(PVector newCenter) {
 		super.setLocalCenter(newCenter);
 		updateAbsoluteOrientation();
-	}
-	
-	public void setDefaultCenter(PVector newCenter) {
-		defaultOrientation.setOrigin(newCenter);
-	}
-	
-	public void setDefaultOrientation(RMatrix newAxes) {
-		defaultOrientation.setAxes(newAxes);
 	}
 
 	@Override

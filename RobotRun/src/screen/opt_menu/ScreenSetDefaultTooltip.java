@@ -18,22 +18,6 @@ public class ScreenSetDefaultTooltip extends ST_ScreenOptionsMenu {
 	}
 
 	@Override
-	protected String loadHeader() {
-		return "";
-	}
-	
-	@Override
-	protected void loadContents() {
-		RoboticArm r = robotRun.getActiveRobot();
-		contents.setLines(loadFrameDetail(r.getToolFrame(frameIdx)));
-	}
-
-	@Override
-	protected void loadOptions() {
-		options.setLines(loadEEToolTipDefaults(robotRun.getActiveRobot()));
-	}
-
-	@Override
 	public void actionEntr() {
 		RoboticArm r = robotRun.getActiveRobot();
 		ToolFrame selectedFrame = r.getToolFrame(frameIdx);
@@ -44,5 +28,21 @@ public class ScreenSetDefaultTooltip extends ST_ScreenOptionsMenu {
 		DataManagement.saveRobotData(robotRun.getActiveRobot(), 2);
 		
 		robotRun.lastScreen();
+	}
+	
+	@Override
+	protected void loadContents() {
+		RoboticArm r = robotRun.getActiveRobot();
+		contents.setLines(loadFrameDetail(r.getToolFrame(frameIdx)));
+	}
+
+	@Override
+	protected String loadHeader() {
+		return "";
+	}
+
+	@Override
+	protected void loadOptions() {
+		options.setLines(loadEEToolTipDefaults(robotRun.getActiveRobot()));
 	}
 }

@@ -25,58 +25,6 @@ public class RQuaternion implements Cloneable {
 	}
 	
 	/**
-	 * Returns the product q1 * q2 * q3 * ... * qn, where n is
-	 * number of quaternions given. No quaternion is modified in
-	 * the process.
-	 */
-	public static RQuaternion mult(RQuaternion... quatChain) {
-		RQuaternion product = quatChain[0].clone();
-		// Multiply quaternions in the order they are given
-		for (int idx = 1; idx < quatChain.length; ++idx) {
-			product.mult(quatChain[idx]);
-		}
-		
-		return product;
-	}
-	
-	/**
-	 * Returns the unit quaternion form of q, without
-	 * changing q.
-	 */
-	public static RQuaternion normalize(RQuaternion q) {
-		RQuaternion copy = q.clone();
-		q.normalize();
-		return copy;
-	}
-
-	/**
-	 * Rotates q around u by theta and returns the result, without modifying q. It is
-	 * assumed that axis is a unit vector.
-	 */	
-	public static RQuaternion rotateAroundAxis(RQuaternion q, PVector u, float theta) {
-		RQuaternion rotated = q.clone();
-		rotated.rotateAroundAxis(u, theta);
-		return rotated;
-	}
-
-	/**
-	 * Rotates v around axis by theta and returns the result.
-	 */
-	public static PVector rotateVectorAroundAxis(PVector v, PVector axis, float theta) {
-		RQuaternion q = new RQuaternion(axis, theta);
-		return q.rotateVector(v);
-	}
-	
-	/**
-	 * Returns q, scaled by scalar, without modifying q.
-	 */
-	public static RQuaternion scalarMult(float scalar, RQuaternion q) {
-		RQuaternion copy = q.clone();
-		copy.scalarMult(scalar);
-		return copy;
-	}
-
-	/**
 	 * Given two input quaternions, 'q1' and 'q2', computes the spherical-
 	 * linear interpolation from 'q1' to 'q2' for a given fraction of the
 	 * complete transformation 'q1' to 'q2', denoted by 0 <= 'mu' <= 1. 
@@ -117,6 +65,58 @@ public class RQuaternion implements Cloneable {
 		q4.addValues(q3);
 		q4.normalize();
 		return q4;
+	}
+	
+	/**
+	 * Returns the product q1 * q2 * q3 * ... * qn, where n is
+	 * number of quaternions given. No quaternion is modified in
+	 * the process.
+	 */
+	public static RQuaternion mult(RQuaternion... quatChain) {
+		RQuaternion product = quatChain[0].clone();
+		// Multiply quaternions in the order they are given
+		for (int idx = 1; idx < quatChain.length; ++idx) {
+			product.mult(quatChain[idx]);
+		}
+		
+		return product;
+	}
+
+	/**
+	 * Returns the unit quaternion form of q, without
+	 * changing q.
+	 */
+	public static RQuaternion normalize(RQuaternion q) {
+		RQuaternion copy = q.clone();
+		q.normalize();
+		return copy;
+	}
+
+	/**
+	 * Rotates q around u by theta and returns the result, without modifying q. It is
+	 * assumed that axis is a unit vector.
+	 */	
+	public static RQuaternion rotateAroundAxis(RQuaternion q, PVector u, float theta) {
+		RQuaternion rotated = q.clone();
+		rotated.rotateAroundAxis(u, theta);
+		return rotated;
+	}
+	
+	/**
+	 * Rotates v around axis by theta and returns the result.
+	 */
+	public static PVector rotateVectorAroundAxis(PVector v, PVector axis, float theta) {
+		RQuaternion q = new RQuaternion(axis, theta);
+		return q.rotateVector(v);
+	}
+
+	/**
+	 * Returns q, scaled by scalar, without modifying q.
+	 */
+	public static RQuaternion scalarMult(float scalar, RQuaternion q) {
+		RQuaternion copy = q.clone();
+		copy.scalarMult(scalar);
+		return copy;
 	}
 	
 	/**

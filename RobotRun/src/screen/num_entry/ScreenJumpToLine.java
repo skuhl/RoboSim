@@ -12,12 +12,6 @@ public class ScreenJumpToLine extends ST_ScreenNumEntry {
 	}
 
 	@Override
-	protected void loadOptions() {
-		options.addLine("Use number keys to enter line number to jump to");
-		options.addLine("\0" + workingText);
-	}
-
-	@Override
 	public void actionEntr() {
 		Program p = robotRun.getActiveProg();
 		int instIdx = Integer.parseInt(workingText.toString()) - 1;
@@ -31,5 +25,11 @@ public class ScreenJumpToLine extends ST_ScreenNumEntry {
 			robotRun.setActiveInstIdx(instIdx);
 			robotRun.getActiveScreen().getContents().jumpToItem(instIdx);
 		}
+	}
+
+	@Override
+	protected void loadOptions() {
+		options.addLine("Use number keys to enter line number to jump to");
+		options.addLine("\0" + workingText);
 	}
 }

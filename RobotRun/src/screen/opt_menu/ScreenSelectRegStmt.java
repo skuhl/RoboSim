@@ -13,19 +13,6 @@ public class ScreenSelectRegStmt extends ST_ScreenOptionsMenu {
 	}
 
 	@Override
-	protected String loadHeader() {
-		return "SELECT REG STATEMENT TYPE";
-	}
-
-	@Override
-	protected void loadOptions() {
-		options.addLine("1. R[x] = (...)");
-		options.addLine("2. IO[x] = (...)");
-		options.addLine("3. PR[x] = (...)");
-		options.addLine("4. PR[x, y] = (...)");
-	}
-
-	@Override
 	public void actionEntr() {
 		robotRun.lastScreen();
 		robotRun.lastScreen();
@@ -42,6 +29,19 @@ public class ScreenSelectRegStmt extends ST_ScreenOptionsMenu {
 		}
 
 		robotRun.nextScreen(ScreenMode.SET_REG_EXPR_IDX1);
+	}
+
+	@Override
+	protected String loadHeader() {
+		return "SELECT REG STATEMENT TYPE";
+	}
+
+	@Override
+	protected void loadOptions() {
+		options.addLine("1. R[x] = (...)");
+		options.addLine("2. IO[x] = (...)");
+		options.addLine("3. PR[x] = (...)");
+		options.addLine("4. PR[x, y] = (...)");
 	}
 
 }

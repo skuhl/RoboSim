@@ -133,8 +133,28 @@ public class SelectStatement extends Instruction implements ExpressionEvaluation
 		return cases;
 	}
 
+	@Override
+	public int getHeaderLength() {
+		//Number of elements before expression start
+		return 2;
+	}
+
 	public ArrayList<Instruction> getInstrs() {
 		return instrs;
+	}
+
+	@Override
+	public Operand<?> getOperand(int idx) {
+		if(idx == 0) {
+			return arg;
+		} else {
+			return cases.get(idx - 1);
+		}
+	}
+
+	@Override
+	public Operator getOperator(int idx) {
+		return null;
 	}
 
 	public void setArg(Operand<?> arg) {
@@ -147,29 +167,6 @@ public class SelectStatement extends Instruction implements ExpressionEvaluation
 
 	public void setInstrs(ArrayList<Instruction> instrs) {
 		this.instrs = instrs;
-	}
-
-	@Override
-	public String toString() {
-		return "";
-	}
-
-	@Override
-	public String[] toStringArray() {
-		String[] ret = new String[2 + 4*getCases().size()];
-		ret[0] = "SELECT";
-		ret[1] = getArg().toString();
-
-		for(int i = 0; i < getCases().size(); i += 1) {
-			String[] iString = getInstrs().get(i).toStringArray();
-
-			ret[i*4 + 2] = "= " + getCases().get(i).toString();
-			ret[i*4 + 3] = iString[0];
-			ret[i*4 + 4] = iString.length == 1 ? "..." : iString[1];
-			ret[i*4 + 5] = "\n";
-		}
-
-		return ret;
 	}
 
 	@Override
@@ -187,22 +184,25 @@ public class SelectStatement extends Instruction implements ExpressionEvaluation
 	}
 
 	@Override
-	public Operand<?> getOperand(int idx) {
-		if(idx == 0) {
-			return arg;
-		} else {
-			return cases.get(idx - 1);
-		}
-	}
-
-	@Override
-	public Operator getOperator(int idx) {
-		return null;
+	public String toString() {
+		return "";
 	}
 	
 	@Override
-	public int getHeaderLength() {
-		//Number of elements before expression start
-		return 2;
+	public String[] toStringArray() {
+		String[] ret = new String[2 + 4*getCases().size()];
+		ret[0] = "SELECT";
+		ret[1] = getArg().toString();
+
+		for(int i = 0; i < getCases().size(); i += 1) {
+			String[] iString = getInstrs().get(i).toStringArray();
+
+			ret[i*4 + 2] = "= " + getCases().get(i).toString();
+			ret[i*4 + 3] = iString[0];
+			ret[i*4 + 4] = iString.length == 1 ? "..." : iString[1];
+			ret[i*4 + 5] = "\n";
+		}
+
+		return ret;
 	}
 }

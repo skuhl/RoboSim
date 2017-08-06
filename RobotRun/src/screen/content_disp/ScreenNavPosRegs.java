@@ -18,14 +18,125 @@ public class ScreenNavPosRegs extends ST_ScreenListContents {
 	}
 
 	@Override
-	protected String loadHeader() {
-		return "POSTION REGISTERS";
+	public void actionArrowDn() {
+		super.actionArrowDn();
+		
+		RoboticArm r = robotRun.getActiveRobot();
+		PositionRegister pReg = r.getPReg( contents.getCurrentItemIdx() );
+		robotRun.setRenderPoint(pReg.point);
 	}
 
+	@Override
+	public void actionArrowUp() {
+		super.actionArrowUp();
+		
+		RoboticArm r = robotRun.getActiveRobot();
+		PositionRegister pReg = r.getPReg( contents.getCurrentItemIdx() );
+		robotRun.setRenderPoint(pReg.point);
+	}
+	
+	@Override
+	public void actionEntr() {
+		if (contents.getColumnIdx() == 0) {
+			// Edit register comment
+			robotRun.nextScreen(ScreenMode.EDIT_PREG_COM);
+		} else if (contents.getColumnIdx() >= 1) {
+			// Edit Position Register value
+			robotRun.nextScreen(ScreenMode.EDIT_PREG);
+		}
+	}
+	
+	@Override
+	public void actionF1() {
+		// Clear Position Register entry
+		PositionRegister pReg = robotRun.getActiveRobot().getPReg(contents.getCurrentItemIdx());
+
+		if (pReg != null) {
+			pReg.comment = null;
+			pReg.point = null;
+		}
+	}
+	
+	@Override
+	public void actionF2() {
+		// Position Register copy menus
+		if (contents.getColumnIdx() == 0) {
+			robotRun.nextScreen(ScreenMode.CP_PREG_COM);
+		} else if (contents.getColumnIdx() == 1) {
+			robotRun.nextScreen(ScreenMode.CP_PREG_PT);
+		}
+	}
+
+	@Override
+	public void actionF3() {
+		if (robotRun.isShift()) {
+			robotRun.switchScreen(ScreenMode.NAV_DREGS);
+		} else {
+			// Switch to Data Registers
+			int itemIdx = contents.getCurrentItemIdx();
+			if (itemIdx >= 0 && itemIdx < Fields.DPREG_NUM) {
+				// Set the position type of the selected position register
+				PositionRegister toEdit = robotRun.getActiveRobot().getPReg(itemIdx);
+				toEdit.isCartesian = !toEdit.isCartesian;
+				DataManagement.saveRobotData(robotRun.getActiveRobot(), 3);
+			}
+		}
+	}
+
+	@Override
+	public void actionF4() {
+		if (robotRun.isShift() && !robotRun.isProgExec()) {
+			// Stop any prior jogging motion
+			robotRun.button_hold();
+
+			// Move To function
+			RoboticArm r = robotRun.getActiveRobot();
+			PositionRegister pReg = r.getPReg( contents.getCurrentItemIdx() );
+
+			if (pReg.point != null) {
+				Point pt = pReg.point.clone();
+				// Move the Robot to the select point
+				if (pReg.isCartesian) {
+					if (r.getCurCoordFrame() == CoordFrame.USER) {
+						// Move in terms of the user frame
+						UserFrame uFrame = r.getActiveUser();
+						pt = RMath.removeFrame(r, pt, uFrame.getOrigin(), uFrame.getOrientation());
+
+						Fields.debug("pt: %s\n", pt.position.toString());
+					}
+
+					r.updateMotion(pt);
+				} else {
+					r.updateMotion(pt.angles);
+				}
+			} else {
+				Fields.setMessage("Position register is uninitialized!");
+			}
+		}
+	}
+
+	@Override
+	public void actionF5() {
+		RoboticArm r = robotRun.getActiveRobot();
+		PositionRegister pReg = r.getPReg( contents.getCurrentItemIdx() );
+
+		if (robotRun.isShift() && pReg != null) {
+			// Save the Robot's current position and joint angles
+			pReg.point = robotRun.getActiveRobot().getToolTipNative();
+			pReg.isCartesian = true;
+			DataManagement.saveRobotData(r, 3);
+		}
+	}
+	
 	@Override
 	protected void loadContents() {
 		RoboticArm r = robotRun.getActiveRobot();
 		contents.setLines(loadPositionRegisters(r));
+	}
+	
+	@Override
+	protected String loadHeader() {
+		return "POSTION REGISTERS";
 	}
 	
 	@Override
@@ -58,117 +169,6 @@ public class ScreenNavPosRegs extends ST_ScreenListContents {
 			for (String line : pregEntry) {
 				options.addLine(line);
 			}
-		}
-	}
-	
-	@Override
-	public void actionUp() {
-		super.actionUp();
-		
-		RoboticArm r = robotRun.getActiveRobot();
-		PositionRegister pReg = r.getPReg( contents.getCurrentItemIdx() );
-		robotRun.setRenderPoint(pReg.point);
-	}
-
-	@Override
-	public void actionDn() {
-		super.actionDn();
-		
-		RoboticArm r = robotRun.getActiveRobot();
-		PositionRegister pReg = r.getPReg( contents.getCurrentItemIdx() );
-		robotRun.setRenderPoint(pReg.point);
-	}
-
-	@Override
-	public void actionEntr() {
-		if (contents.getColumnIdx() == 0) {
-			// Edit register comment
-			robotRun.nextScreen(ScreenMode.EDIT_PREG_COM);
-		} else if (contents.getColumnIdx() >= 1) {
-			// Edit Position Register value
-			robotRun.nextScreen(ScreenMode.EDIT_PREG);
-		}
-	}
-
-	@Override
-	public void actionF1() {
-		// Clear Position Register entry
-		PositionRegister pReg = robotRun.getActiveRobot().getPReg(contents.getCurrentItemIdx());
-
-		if (pReg != null) {
-			pReg.comment = null;
-			pReg.point = null;
-		}
-	}
-	
-	@Override
-	public void actionF2() {
-		// Position Register copy menus
-		if (contents.getColumnIdx() == 0) {
-			robotRun.nextScreen(ScreenMode.CP_PREG_COM);
-		} else if (contents.getColumnIdx() == 1) {
-			robotRun.nextScreen(ScreenMode.CP_PREG_PT);
-		}
-	}
-	
-	@Override
-	public void actionF3() {
-		if (robotRun.isShift()) {
-			robotRun.switchScreen(ScreenMode.NAV_DREGS);
-		} else {
-			// Switch to Data Registers
-			int itemIdx = contents.getCurrentItemIdx();
-			if (itemIdx >= 0 && itemIdx < Fields.DPREG_NUM) {
-				// Set the position type of the selected position register
-				PositionRegister toEdit = robotRun.getActiveRobot().getPReg(itemIdx);
-				toEdit.isCartesian = !toEdit.isCartesian;
-				DataManagement.saveRobotData(robotRun.getActiveRobot(), 3);
-			}
-		}
-	}
-	
-	@Override
-	public void actionF4() {
-		if (robotRun.isShift() && !robotRun.isProgExec()) {
-			// Stop any prior jogging motion
-			robotRun.button_hold();
-
-			// Move To function
-			RoboticArm r = robotRun.getActiveRobot();
-			PositionRegister pReg = r.getPReg( contents.getCurrentItemIdx() );
-
-			if (pReg.point != null) {
-				Point pt = pReg.point.clone();
-				// Move the Robot to the select point
-				if (pReg.isCartesian) {
-					if (r.getCurCoordFrame() == CoordFrame.USER) {
-						// Move in terms of the user frame
-						UserFrame uFrame = r.getActiveUser();
-						pt = RMath.removeFrame(r, pt, uFrame.getOrigin(), uFrame.getOrientation());
-
-						Fields.debug("pt: %s\n", pt.position.toString());
-					}
-
-					r.updateMotion(pt);
-				} else {
-					r.updateMotion(pt.angles);
-				}
-			} else {
-				Fields.setMessage("Position register is uninitialized!");
-			}
-		}
-	}
-	
-	@Override
-	public void actionF5() {
-		RoboticArm r = robotRun.getActiveRobot();
-		PositionRegister pReg = r.getPReg( contents.getCurrentItemIdx() );
-
-		if (robotRun.isShift() && pReg != null) {
-			// Save the Robot's current position and joint angles
-			pReg.point = robotRun.getActiveRobot().getToolTipNative();
-			pReg.isCartesian = true;
-			DataManagement.saveRobotData(r, 3);
 		}
 	}
 }

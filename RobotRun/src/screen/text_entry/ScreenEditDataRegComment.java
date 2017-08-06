@@ -12,11 +12,6 @@ public class ScreenEditDataRegComment extends ST_ScreenTextEntry {
 	}
 
 	@Override
-	protected String loadHeader() {
-		return String.format("R[%d]: COMMENT EDIT", robotRun.getLastScreen().getContentIdx() + 1);
-	}
-
-	@Override
 	public void actionEntr() {
 		RoboticArm r = robotRun.getActiveRobot();
 		
@@ -30,6 +25,11 @@ public class ScreenEditDataRegComment extends ST_ScreenTextEntry {
 			workingText = new StringBuilder();
 			robotRun.lastScreen();
 		}
+	}
+
+	@Override
+	protected String loadHeader() {
+		return String.format("R[%d]: COMMENT EDIT", robotRun.getLastScreen().getContentIdx() + 1);
 	}
 
 }

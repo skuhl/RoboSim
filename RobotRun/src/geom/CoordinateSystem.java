@@ -12,15 +12,15 @@ import processing.core.PVector;
 public class CoordinateSystem implements Cloneable {
 	
 	/**
+	 * A 3x3 rotation matrix representing the coordinate system's orientation.
+	 */
+	private RMatrix axesVectors;
+	
+	/**
 	 * The position of the coordinate system, with respect to its part
 	 * coordinate system.
 	 */
 	private PVector origin;
-	
-	/**
-	 * A 3x3 rotation matrix representing the coordinate system's orientation.
-	 */
-	private RMatrix axesVectors;
 	
 	/**
 	 * The standard coordinate system with origin (0, 0, 0) and the identity

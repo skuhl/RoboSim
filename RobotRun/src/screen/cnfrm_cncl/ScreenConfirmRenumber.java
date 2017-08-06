@@ -15,16 +15,6 @@ public class ScreenConfirmRenumber extends ST_ScreenConfirmCancel {
 	}
 
 	@Override
-	protected void loadContents() {
-		contents.setLines(loadInstructions(robotRun.getActiveProg(), false));
-	}
-	
-	@Override
-	protected void loadOptions() {
-		options.addLine("Renumber program positions?");
-	}
-	
-	@Override
 	public void actionF4() {
 		Program p = robotRun.getActiveProg();
 		Point[] pTemp = new Point[1000];
@@ -73,5 +63,15 @@ public class ScreenConfirmRenumber extends ST_ScreenConfirmCancel {
 	@Override
 	public void actionF5() {
 		robotRun.lastScreen();
+	}
+	
+	@Override
+	protected void loadContents() {
+		contents.setLines(loadInstructions(robotRun.getActiveProg(), false));
+	}
+	
+	@Override
+	protected void loadOptions() {
+		options.addLine("Renumber program positions?");
 	}
 }

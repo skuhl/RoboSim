@@ -25,6 +25,47 @@ public class ScreenSetExpressionOp extends ST_ScreenEditItem {
 	}
 
 	@Override
+	public void actionEntr() {
+		if (robotRun.opEdit instanceof BooleanBinaryExpression) {
+			BooleanBinaryExpression atmExpr = (BooleanBinaryExpression)robotRun.opEdit;
+
+			switch (options.getLineIdx()) {
+			case 0: atmExpr.setOperator(Operator.EQUAL); break;
+			case 1: atmExpr.setOperator(Operator.NEQUAL); break;
+			case 2: atmExpr.setOperator(Operator.GRTR); break;
+			case 3:	atmExpr.setOperator(Operator.LESS); break;
+			case 4: atmExpr.setOperator(Operator.GREQ); break;
+			case 5: atmExpr.setOperator(Operator.LSEQ); break;
+			}
+		}
+		else if (robotRun.opEdit instanceof Expression) {
+			Expression expr = (Expression)robotRun.opEdit;
+			
+			switch (options.getCurrentItemIdx()) {
+			case 0: expr.setOperator(robotRun.editIdx, Operator.ADD); break;
+			case 1: expr.setOperator(robotRun.editIdx, Operator.SUB); break;
+			case 2: expr.setOperator(robotRun.editIdx, Operator.MULT); break;
+			case 3: expr.setOperator(robotRun.editIdx, Operator.DIV); break;
+			case 4: expr.setOperator(robotRun.editIdx, Operator.IDIV); break;
+			case 5: expr.setOperator(robotRun.editIdx, Operator.MOD); break;
+			case 6: expr.setOperator(robotRun.editIdx, Operator.EQUAL); break;
+			case 7: expr.setOperator(robotRun.editIdx, Operator.NEQUAL); break;
+			case 8: expr.setOperator(robotRun.editIdx, Operator.GRTR); break;
+			case 9: expr.setOperator(robotRun.editIdx, Operator.LESS); break;
+			case 10: expr.setOperator(robotRun.editIdx, Operator.GREQ); break;
+			case 11: expr.setOperator(robotRun.editIdx, Operator.LSEQ); break;
+			case 12: expr.setOperator(robotRun.editIdx, Operator.AND); break;
+			case 13: expr.setOperator(robotRun.editIdx, Operator.OR); break;
+			case 14: expr.setOperator(robotRun.editIdx, Operator.NOT); break;
+			case 15: expr.setOperator(robotRun.editIdx, Operator.PT_ADD); break;
+			case 16: expr.setOperator(robotRun.editIdx, Operator.PT_SUB); break;
+			}
+		}
+		
+		robotRun.lastScreen();
+	}
+	
+	@Override
 	protected void loadOptions() {
 		if(robotRun.opEdit instanceof BooleanBinaryExpression) {
 			options.addLine("1. ... =  ...");
@@ -121,7 +162,7 @@ public class ScreenSetExpressionOp extends ST_ScreenEditItem {
 		options.addLine(10, idx++ + ". >= ");
 		options.addLine(11, idx++ + ". <= ");
 	}
-	
+		
 	private void loadLogicOps() {
 		int idx = (options.size() + 1);
 		
@@ -129,52 +170,11 @@ public class ScreenSetExpressionOp extends ST_ScreenEditItem {
 		options.addLine(13, idx++ + ". OR ");
 		options.addLine(14, idx++ + ". NOT ");
 	}
-		
+
 	private void loadPointOps() {
 		int idx = (options.size() + 1);
 		
 		options.addLine(15, idx++ + ". + ");
 		options.addLine(16, idx++ + ". - ");
-	}
-
-	@Override
-	public void actionEntr() {
-		if (robotRun.opEdit instanceof BooleanBinaryExpression) {
-			BooleanBinaryExpression atmExpr = (BooleanBinaryExpression)robotRun.opEdit;
-
-			switch (options.getLineIdx()) {
-			case 0: atmExpr.setOperator(Operator.EQUAL); break;
-			case 1: atmExpr.setOperator(Operator.NEQUAL); break;
-			case 2: atmExpr.setOperator(Operator.GRTR); break;
-			case 3:	atmExpr.setOperator(Operator.LESS); break;
-			case 4: atmExpr.setOperator(Operator.GREQ); break;
-			case 5: atmExpr.setOperator(Operator.LSEQ); break;
-			}
-		}
-		else if (robotRun.opEdit instanceof Expression) {
-			Expression expr = (Expression)robotRun.opEdit;
-			
-			switch (options.getCurrentItemIdx()) {
-			case 0: expr.setOperator(robotRun.editIdx, Operator.ADD); break;
-			case 1: expr.setOperator(robotRun.editIdx, Operator.SUB); break;
-			case 2: expr.setOperator(robotRun.editIdx, Operator.MULT); break;
-			case 3: expr.setOperator(robotRun.editIdx, Operator.DIV); break;
-			case 4: expr.setOperator(robotRun.editIdx, Operator.IDIV); break;
-			case 5: expr.setOperator(robotRun.editIdx, Operator.MOD); break;
-			case 6: expr.setOperator(robotRun.editIdx, Operator.EQUAL); break;
-			case 7: expr.setOperator(robotRun.editIdx, Operator.NEQUAL); break;
-			case 8: expr.setOperator(robotRun.editIdx, Operator.GRTR); break;
-			case 9: expr.setOperator(robotRun.editIdx, Operator.LESS); break;
-			case 10: expr.setOperator(robotRun.editIdx, Operator.GREQ); break;
-			case 11: expr.setOperator(robotRun.editIdx, Operator.LSEQ); break;
-			case 12: expr.setOperator(robotRun.editIdx, Operator.AND); break;
-			case 13: expr.setOperator(robotRun.editIdx, Operator.OR); break;
-			case 14: expr.setOperator(robotRun.editIdx, Operator.NOT); break;
-			case 15: expr.setOperator(robotRun.editIdx, Operator.PT_ADD); break;
-			case 16: expr.setOperator(robotRun.editIdx, Operator.PT_SUB); break;
-			}
-		}
-		
-		robotRun.lastScreen();
 	}
 }

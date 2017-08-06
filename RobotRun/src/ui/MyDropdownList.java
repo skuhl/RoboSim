@@ -56,57 +56,6 @@ public class MyDropdownList extends DropdownList implements UIInputElement {
 	}
 	
 	/**
-	 * Returns the label associated with item that is currently selected in the
-	 * dropdown list or null, if not item is currently selected.
-	 * 
-	 * @return	The label associated with the selected item or null
-	 */
-	private String getSelectedLabel() {
-		try {
-			int idx = (int)getValue();
-			Map<String, Object> associatedObjects = getItem(idx);
-
-			if (associatedObjects != null) {
-				return (String) associatedObjects.get("name");
-			}
-			
-		} catch (IndexOutOfBoundsException IOOBEx) {/* No elements */}
-		
-		// No element selected
-		return null;
-	}
-	
-	@Override
-	protected void onDrag() {
-		// Show what element is selected while dragging the mouse
-		onMove();
-	}
-	
-	@Override
-	protected void onEndDrag() {
-		// Allow drag clicks
-		
-		// I hate you, controlP5
-		this.isDragged = false;
-		onRelease();
-		this.isDragged = true;
-	}
-	
-	@Override
-	protected void onRelease() {
-		if(this.getItems().size() != 0) {
-			super.onRelease();
-		}
-	}
-	
-	@Override
-	public DropdownList setValue(float newValue) {
-		super.setValue(newValue);
-		updateLabel();	
-		return this;
-	}
-	
-	/**
 	 * If the given item exists in the list, then it is set as the selected
 	 * item and true is returned. Otherwise, the list remains unchanged and
 	 * null is returned.
@@ -134,6 +83,36 @@ public class MyDropdownList extends DropdownList implements UIInputElement {
 		return false;
 	}
 	
+	@Override
+	public DropdownList setValue(float newValue) {
+		super.setValue(newValue);
+		updateLabel();	
+		return this;
+	}
+	
+	@Override
+	protected void onDrag() {
+		// Show what element is selected while dragging the mouse
+		onMove();
+	}
+	
+	@Override
+	protected void onEndDrag() {
+		// Allow drag clicks
+		
+		// I hate you, controlP5
+		this.isDragged = false;
+		onRelease();
+		this.isDragged = true;
+	}
+	
+	@Override
+	protected void onRelease() {
+		if(this.getItems().size() != 0) {
+			super.onRelease();
+		}
+	}
+	
 	/**
 	 * Updates the label for the dropdown based on the currently selected item
 	 * in the list.
@@ -148,5 +127,26 @@ public class MyDropdownList extends DropdownList implements UIInputElement {
 		} else {
 			getCaptionLabel().setText( label );
 		}
+	}
+	
+	/**
+	 * Returns the label associated with item that is currently selected in the
+	 * dropdown list or null, if not item is currently selected.
+	 * 
+	 * @return	The label associated with the selected item or null
+	 */
+	private String getSelectedLabel() {
+		try {
+			int idx = (int)getValue();
+			Map<String, Object> associatedObjects = getItem(idx);
+
+			if (associatedObjects != null) {
+				return (String) associatedObjects.get("name");
+			}
+			
+		} catch (IndexOutOfBoundsException IOOBEx) {/* No elements */}
+		
+		// No element selected
+		return null;
 	}
 }

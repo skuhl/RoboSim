@@ -18,14 +18,14 @@ public class KeyDownBehavior extends ControlBehavior {
 	private MyTextfield controller;
 	
 	/**
-	 * The map of key codes to key states, which is updated by the PApplet.
-	 */
-	private final KeyCodeMap keyMap;
-	
-	/**
 	 * The length of time between checking for key down events.
 	 */
 	private int interval;
+	
+	/**
+	 * The map of key codes to key states, which is updated by the PApplet.
+	 */
+	private final KeyCodeMap keyMap;
 	
 	/**
 	 * The time of the next key down event.
@@ -43,34 +43,6 @@ public class KeyDownBehavior extends ControlBehavior {
 		resetInterval();
 		
 		controller = (MyTextfield) this.getController();
-	}
-	
-	@Override
-	protected void init(Controller<?> c) {
-		// Set text-field reference when the controller reference is set
-		if (c instanceof MyTextfield) {
-			controller = (MyTextfield)c;
-		}
-	}
-	
-	/**
-	 * Set the time for the next event and update the interval.
-	 */
-	protected void nextInterval() {
-		if (interval > 50) {
-			interval = Math.max(interval / 2, 50);
-		}
-		
-		nextEvent = System.currentTimeMillis() + interval;
-	}
-	
-	/**
-	 * Reset the interval.
-	 */
-	protected void resetInterval() {
-		interval = 750;
-		nextEvent = System.currentTimeMillis() + interval;
-		
 	}
 	
 	@Override
@@ -112,5 +84,33 @@ public class KeyDownBehavior extends ControlBehavior {
 			resetInterval();
 		}
 		/**/
+	}
+	
+	@Override
+	protected void init(Controller<?> c) {
+		// Set text-field reference when the controller reference is set
+		if (c instanceof MyTextfield) {
+			controller = (MyTextfield)c;
+		}
+	}
+	
+	/**
+	 * Set the time for the next event and update the interval.
+	 */
+	protected void nextInterval() {
+		if (interval > 50) {
+			interval = Math.max(interval / 2, 50);
+		}
+		
+		nextEvent = System.currentTimeMillis() + interval;
+	}
+	
+	/**
+	 * Reset the interval.
+	 */
+	protected void resetInterval() {
+		interval = 750;
+		nextEvent = System.currentTimeMillis() + interval;
+		
 	}
 }

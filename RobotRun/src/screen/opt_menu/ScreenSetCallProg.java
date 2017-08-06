@@ -16,32 +16,6 @@ public class ScreenSetCallProg extends ST_ScreenOptionsMenu {
 	}
 
 	@Override
-	protected String loadHeader() {
-		return "SELECT CALL TARGET";
-	}
-
-	@Override
-	protected void loadOptions() {
-		Instruction inst = robotRun.getActiveInstruction();
-		CallInstruction cInst;
-		
-		// Get the call instruction
-		if (inst instanceof IfStatement) {
-			cInst = (CallInstruction) ((IfStatement) inst).getInstr();
-			
-		} else if (inst instanceof SelectStatement) {
-			SelectStatement sStmt = (SelectStatement) inst;
-			cInst = (CallInstruction) sStmt.getInstrs().get(robotRun.editIdx);
-			
-		} else {
-			cInst =  (CallInstruction) inst;
-		}
-					
-		// List the robot's program names
-		options.setLines(loadPrograms(cInst.getTgtDevice()));
-	}
-
-	@Override
 	public void actionEntr() {
 		RoboticArm r = robotRun.getActiveRobot();
 		Instruction inst = r.getInstToEdit(robotRun.getActiveProg(), 
@@ -65,5 +39,31 @@ public class ScreenSetCallProg extends ST_ScreenOptionsMenu {
 		cInst.setProg(tgt);
 
 		robotRun.lastScreen();
+	}
+
+	@Override
+	protected String loadHeader() {
+		return "SELECT CALL TARGET";
+	}
+
+	@Override
+	protected void loadOptions() {
+		Instruction inst = robotRun.getActiveInstruction();
+		CallInstruction cInst;
+		
+		// Get the call instruction
+		if (inst instanceof IfStatement) {
+			cInst = (CallInstruction) ((IfStatement) inst).getInstr();
+			
+		} else if (inst instanceof SelectStatement) {
+			SelectStatement sStmt = (SelectStatement) inst;
+			cInst = (CallInstruction) sStmt.getInstrs().get(robotRun.editIdx);
+			
+		} else {
+			cInst =  (CallInstruction) inst;
+		}
+					
+		// List the robot's program names
+		options.setLines(loadPrograms(cInst.getTgtDevice()));
 	}
 }

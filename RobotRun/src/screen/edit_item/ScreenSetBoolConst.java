@@ -12,12 +12,6 @@ public class ScreenSetBoolConst extends ST_ScreenEditItem {
 	}
 	
 	@Override
-	protected void loadOptions() {
-		options.addLine("True");
-		options.addLine("False");
-	}
-
-	@Override
 	public void actionEntr() {
 		RoboticArm r = robotRun.getActiveRobot();
 		r.getInstToEdit(robotRun.getActiveProg(), robotRun.getActiveInstIdx());
@@ -29,5 +23,11 @@ public class ScreenSetBoolConst extends ST_ScreenEditItem {
 		}
 
 		robotRun.lastScreen();
+	}
+
+	@Override
+	protected void loadOptions() {
+		options.addLine("True");
+		options.addLine("False");
 	}
 }

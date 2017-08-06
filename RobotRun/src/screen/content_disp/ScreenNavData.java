@@ -10,17 +10,6 @@ public class ScreenNavData extends ST_ScreenListContents {
 	}
 
 	@Override
-	protected String loadHeader() {
-		return "VIEW REGISTERS";
-	}
-
-	@Override
-	protected void loadContents() {
-		contents.addLine("1. Data Registers");
-		contents.addLine("2. Position Registers");
-	}
-
-	@Override
 	public void actionEntr() {
 		int select = contents.getLineIdx();
 		
@@ -31,6 +20,17 @@ public class ScreenNavData extends ST_ScreenListContents {
 			// Position Register Menu
 			robotRun.nextScreen(ScreenMode.NAV_PREGS);
 		}
+	}
+
+	@Override
+	protected void loadContents() {
+		contents.addLine("1. Data Registers");
+		contents.addLine("2. Position Registers");
+	}
+
+	@Override
+	protected String loadHeader() {
+		return "VIEW REGISTERS";
 	}
 
 }

@@ -10,17 +10,6 @@ public class ScreenSelectJumpLabel extends ST_ScreenOptionsMenu {
 	}
 
 	@Override
-	protected String loadHeader() {
-		return "INSERT JUMP/ LABEL INSTRUCTION";
-	}
-
-	@Override
-	protected void loadOptions() {
-		options.addLine("1. LBL[...]");
-		options.addLine("2. JMP LBL[...]");
-	}
-
-	@Override
 	public void actionEntr() {
 		robotRun.lastScreen();
 
@@ -31,6 +20,17 @@ public class ScreenSelectJumpLabel extends ST_ScreenOptionsMenu {
 			robotRun.newJumpInstruction();
 			robotRun.switchScreen(ScreenMode.SET_JUMP_TGT);
 		}
+	}
+
+	@Override
+	protected String loadHeader() {
+		return "INSERT JUMP/ LABEL INSTRUCTION";
+	}
+
+	@Override
+	protected void loadOptions() {
+		options.addLine("1. LBL[...]");
+		options.addLine("2. JMP LBL[...]");
 	}
 
 }

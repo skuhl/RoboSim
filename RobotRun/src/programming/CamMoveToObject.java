@@ -16,20 +16,14 @@ import robot.RoboticArm;
  */
 public class CamMoveToObject extends MotionInstruction {
 	
-	private Scenario scene;
-	private WorldObject tgtObj;
-	
 	/**
 	 * The name saved in the program save file, which is used to initialize a
 	 * camera motion instruction loaded from a save file.
 	 */
 	private final String loadedSceneName;
+	private Scenario scene;
 	
-	public CamMoveToObject(int type, int WOdx, float spd, int term,
-			Scenario scene) {
-		
-		this(false, type, WOdx, spd, term, scene);
-	}
+	private WorldObject tgtObj;
 	
 	public CamMoveToObject(boolean isComm, int type, int WOdx, float spd,
 			int term, Scenario scene) {
@@ -71,6 +65,12 @@ public class CamMoveToObject extends MotionInstruction {
 		tgtObj = null;
 		scene = null;
 		loadedSceneName = sceneName;
+	}
+	
+	public CamMoveToObject(int type, int WOdx, float spd, int term,
+			Scenario scene) {
+		
+		this(false, type, WOdx, spd, term, scene);
 	}
 	
 	/**

@@ -10,18 +10,18 @@ import geom.Point;
 public class PositionRegister extends Register {
 	
 	/**
+	 * What part of the point should be used as the current reference of the
+	 * register: the Cartesian values or the angles values.
+	 */
+	public boolean isCartesian;
+	
+	/**
 	 * The robot point associated with this register. The position and
 	 * orientation of the point are frame independent.
 	 * 
 	 * NOTE: this value can be null!
 	 */
 	public Point point;
-	
-	/**
-	 * What part of the point should be used as the current reference of the
-	 * register: the Cartesian values or the angles values.
-	 */
-	public boolean isCartesian;
 	
 	/**
 	 * Initializes the register as empty.

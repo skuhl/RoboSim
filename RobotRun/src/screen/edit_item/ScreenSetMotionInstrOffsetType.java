@@ -13,12 +13,6 @@ public class ScreenSetMotionInstrOffsetType extends ST_ScreenEditItem {
 	}
 
 	@Override
-	protected void loadOptions() {
-		options.addLine("None");
-		options.addLine("PR[...]");
-	}
-
-	@Override
 	public void actionEntr() {
 		RoboticArm r = robotRun.getActiveRobot();
 		PosMotionInst pMInst = (PosMotionInst)r.getInstToEdit(robotRun.getActiveProg(), 
@@ -33,6 +27,12 @@ public class ScreenSetMotionInstrOffsetType extends ST_ScreenEditItem {
 		}
 		
 		robotRun.lastScreen();
+	}
+
+	@Override
+	protected void loadOptions() {
+		options.addLine("None");
+		options.addLine("PR[...]");
 	}
 
 }

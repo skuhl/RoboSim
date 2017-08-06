@@ -15,12 +15,6 @@ public class ScreenSetSelectArgValue extends ST_ScreenNumEntry {
 	}
 
 	@Override
-	protected void loadOptions() {
-		options.addLine("Input value/ register index:");
-		options.addLine("\0" + workingText);
-	}
-
-	@Override
 	public void actionEntr() {
 		try {
 			RoboticArm r = robotRun.getActiveRobot();
@@ -53,5 +47,11 @@ public class ScreenSetSelectArgValue extends ST_ScreenNumEntry {
 			// Not a real number
 			errorMessage("The value must be a real number");
 		}
+	}
+
+	@Override
+	protected void loadOptions() {
+		options.addLine("Input value/ register index:");
+		options.addLine("\0" + workingText);
 	}
 }

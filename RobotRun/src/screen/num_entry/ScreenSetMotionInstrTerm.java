@@ -12,12 +12,6 @@ public class ScreenSetMotionInstrTerm extends ST_ScreenNumEntry {
 	}
 
 	@Override
-	protected void loadOptions() {
-		options.addLine("Enter desired termination %(0-100):");
-		options.addLine("\0" + workingText);
-	}
-
-	@Override
 	public void actionEntr() {
 		try {
 			RoboticArm r = robotRun.getActiveRobot();
@@ -37,5 +31,11 @@ public class ScreenSetMotionInstrTerm extends ST_ScreenNumEntry {
 			// Not an integer
 			errorMessage("The termination must be an integer");
 		}
+	}
+
+	@Override
+	protected void loadOptions() {
+		options.addLine("Enter desired termination %(0-100):");
+		options.addLine("\0" + workingText);
 	}
 }

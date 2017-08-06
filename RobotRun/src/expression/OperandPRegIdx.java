@@ -70,25 +70,25 @@ public class OperandPRegIdx extends OperandRegister<PositionRegister> implements
 		return null;
 	}
 	
+	public int getSubIdx() {
+		return subIdx;
+	}
+	
+	public OperandPRegIdx setSubIdx(int idx) {
+		subIdx = idx;
+		return this;
+	}
+	
 	@Override
 	public String toString() {
 		return value.toString(subIdx);
 	}
-	
+
 	@Override
 	public String[] toStringArray() {
 		String idxStr = (value == null) ? "...[..." : String.format("%s[%d",
 						value.regPrefix(), value.idx + 1);
 		String subStr = (subIdx >= 0 && subIdx < 6) ? "" + (subIdx + 1) : "..."; 
 		return new String[] { idxStr + ", ", subStr + "]" };
-	}
-	
-	public int getSubIdx() {
-		return subIdx;
-	}
-
-	public OperandPRegIdx setSubIdx(int idx) {
-		subIdx = idx;
-		return this;
 	}
 }

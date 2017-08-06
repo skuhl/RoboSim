@@ -14,24 +14,6 @@ public class ScreenEditDataRegValue extends ST_ScreenNumEntry {
 	}
 
 	@Override
-	protected String loadHeader() {
-		Register reg = robotRun.getActiveRobot().getDReg(robotRun.getLastScreen().getContentIdx());
-		return String.format("%s: VALUE EDIT", reg.getLabel());
-	}
-	
-	@Override
-	protected void loadContents() {
-		RoboticArm r = robotRun.getActiveRobot();
-		contents.setLines(loadDataRegisters(r));
-	}
-	
-	@Override
-	protected void loadOptions() {
-		options.addLine(String.format("Input R[%d]'s value:", robotRun.getLastScreen().getContentIdx() + 1));
-		options.addLine("\0" + workingText);
-	}
-	
-	@Override
 	public void actionEntr() {
 		Float f = null;
 		int itemIdx = contents.getCurrentItemIdx();
@@ -57,5 +39,23 @@ public class ScreenEditDataRegValue extends ST_ScreenNumEntry {
 			// Invalid input value
 			errorMessage("Value must be a real number");
 		}
+	}
+	
+	@Override
+	protected void loadContents() {
+		RoboticArm r = robotRun.getActiveRobot();
+		contents.setLines(loadDataRegisters(r));
+	}
+	
+	@Override
+	protected String loadHeader() {
+		Register reg = robotRun.getActiveRobot().getDReg(robotRun.getLastScreen().getContentIdx());
+		return String.format("%s: VALUE EDIT", reg.getLabel());
+	}
+	
+	@Override
+	protected void loadOptions() {
+		options.addLine(String.format("Input R[%d]'s value:", robotRun.getLastScreen().getContentIdx() + 1));
+		options.addLine("\0" + workingText);
 	}
 }

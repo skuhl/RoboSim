@@ -14,22 +14,6 @@ public class ScreenConfirmInsert extends ST_ScreenNumEntry {
 	}
 
 	@Override
-	protected void loadOptions() {
-		options.addLine("Enter number of lines to insert:");
-		options.addLine("\0" + workingText);
-	}
-	
-	@Override
-	protected void loadLabels() {
-		// F4, F5
-		labels[0] = "";
-		labels[1] = "";
-		labels[2] = "";
-		labels[3] = "";
-		labels[4] = "";
-	}
-	
-	@Override
 	public void actionEntr() {
 		RoboticArm r = robotRun.getActiveRobot();
 		Program p = robotRun.getActiveProg();
@@ -55,5 +39,21 @@ public class ScreenConfirmInsert extends ST_ScreenNumEntry {
 			// Not an integer
 			Fields.setMessage("The number of lines must be a real number");
 		}
+	}
+	
+	@Override
+	protected void loadLabels() {
+		// F4, F5
+		labels[0] = "";
+		labels[1] = "";
+		labels[2] = "";
+		labels[3] = "";
+		labels[4] = "";
+	}
+	
+	@Override
+	protected void loadOptions() {
+		options.addLine("Enter number of lines to insert:");
+		options.addLine("\0" + workingText);
 	}
 }

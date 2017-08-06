@@ -13,22 +13,7 @@ public class ScreenSelectIOInstrReg extends ST_ScreenOptionsMenu {
 	}
 
 	@Override
-	protected String loadHeader() {
-		return "SELECT IO REGISTER";
-	}
-
-	@Override
-	protected void loadOptions() {
-		options.setLines(loadIORegInst(robotRun.getActiveRobot()));
-	}
-	
-	@Override
-	protected void loadVars(ScreenState s) {
-		setScreenIndices(0, 1, 0, 0, 0);
-	}
-	
-	@Override
-	public void actionLt() {
+	public void actionArrowLt() {
 		/* Restrict the column index in the I/O instruction creation (first
 		 * column is the I/O register label) */
 		int colIdx = options.getColumnIdx();
@@ -37,12 +22,12 @@ public class ScreenSelectIOInstrReg extends ST_ScreenOptionsMenu {
 			options.moveLeft();
 		}
 	}
-	
+
 	@Override
-	public void actionRt() {
+	public void actionArrowRt() {
 		options.moveRight();
 	}
-
+	
 	@Override
 	public void actionEntr() {
 		// IO registers are 1 indexed!
@@ -50,6 +35,21 @@ public class ScreenSelectIOInstrReg extends ST_ScreenOptionsMenu {
 		robotRun.newIOInstruction(options.getLineIdx() + 1, state);
 		robotRun.lastScreen();
 		robotRun.lastScreen();
+	}
+	
+	@Override
+	protected String loadHeader() {
+		return "SELECT IO REGISTER";
+	}
+	
+	@Override
+	protected void loadOptions() {
+		options.setLines(loadIORegInst(robotRun.getActiveRobot()));
+	}
+
+	@Override
+	protected void loadVars(ScreenState s) {
+		setScreenIndices(0, 1, 0, 0, 0);
 	}
 
 }

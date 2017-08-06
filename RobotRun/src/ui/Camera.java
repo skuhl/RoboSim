@@ -49,6 +49,15 @@ public class Camera {
 	 * 
 	 * @return
 	 */
+	public PVector getBasePosition() {
+		return position.copy();
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @return
+	 */
 	public float getDefZOffset() {
 		return DEF_ZOFFSET;
 	}
@@ -58,17 +67,8 @@ public class Camera {
 	 * 
 	 * @return
 	 */
-	public PVector getOrientation() {
-		return rotation.copy();
-	}
-	
-	/**
-	 * TODO comment this
-	 * 
-	 * @return
-	 */
-	public PVector getBasePosition() {
-		return position.copy();
+	public float getMaxZOffset() {
+		return MAX_ZOFFSET;
 	}
 	
 	/**
@@ -85,8 +85,8 @@ public class Camera {
 	 * 
 	 * @return
 	 */
-	public float getMaxZOffset() {
-		return MAX_ZOFFSET;
+	public PVector getOrientation() {
+		return rotation.copy();
 	}
 	
 	/**

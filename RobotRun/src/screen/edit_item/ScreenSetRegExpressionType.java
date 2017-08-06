@@ -15,14 +15,6 @@ public class ScreenSetRegExpressionType extends ST_ScreenEditItem {
 	}
 
 	@Override
-	protected void loadOptions() {
-		options.addLine("1. R[x] = (...)");
-		options.addLine("2. IO[x] = (...)");
-		options.addLine("3. PR[x] = (...)");
-		options.addLine("4. PR[x, y] = (...)");
-	}
-
-	@Override
 	public void actionEntr() {
 		RoboticArm r = robotRun.getActiveRobot();
 		RegisterStatement regStmt = (RegisterStatement) r.getInstToEdit(robotRun.getActiveProg(), 
@@ -46,5 +38,13 @@ public class ScreenSetRegExpressionType extends ST_ScreenEditItem {
 			
 			robotRun.switchScreen(ScreenMode.SET_REG_EXPR_IDX1);
 		}
+	}
+
+	@Override
+	protected void loadOptions() {
+		options.addLine("1. R[x] = (...)");
+		options.addLine("2. IO[x] = (...)");
+		options.addLine("3. PR[x] = (...)");
+		options.addLine("4. PR[x, y] = (...)");
 	}
 }

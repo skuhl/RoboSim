@@ -16,9 +16,8 @@ public class IORegTrace extends IORegister {
 	 */
 	private RTrace traceRef;
 	
-	public IORegTrace(RTrace robotTrace) {
-		super();
-		state = Fields.OFF;
+	public IORegTrace(int idx, String name, boolean initState, RTrace robotTrace) {
+		super(idx, name, initState);
 		traceRef = robotTrace;
 	}
 	
@@ -27,8 +26,9 @@ public class IORegTrace extends IORegister {
 		traceRef = robotTrace;
 	}
 	
-	public IORegTrace(int idx, String name, boolean initState, RTrace robotTrace) {
-		super(idx, name, initState);
+	public IORegTrace(RTrace robotTrace) {
+		super();
+		state = Fields.OFF;
 		traceRef = robotTrace;
 	}
 	

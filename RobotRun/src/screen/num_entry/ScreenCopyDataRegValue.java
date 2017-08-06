@@ -13,24 +13,6 @@ public class ScreenCopyDataRegValue extends ST_ScreenNumEntry {
 	}
 
 	@Override
-	protected String loadHeader() {
-		Register reg = robotRun.getActiveRobot().getDReg(robotRun.getLastScreen().getContentIdx());
-		return String.format("%s: VALUE COPY", reg.getLabel());
-	}
-	
-	@Override
-	protected void loadContents() {
-		RoboticArm r = robotRun.getActiveRobot();
-		contents.setLines(loadDataRegisters(r));
-	}
-	
-	@Override
-	protected void loadOptions() {
-		options.addLine(String.format("Move R[%d]'s value to:", robotRun.getLastScreen().getContentIdx() + 1));
-		options.addLine(String.format("R[%s]", workingText));
-	}
-
-	@Override
 	public void actionEntr() {
 		int regIdx = -1;
 		int itemIdx = contents.getCurrentItemIdx();
@@ -49,6 +31,24 @@ public class ScreenCopyDataRegValue extends ST_ScreenNumEntry {
 		} catch (IndexOutOfBoundsException IOOBEx) {
 			errorMessage("Only positve integers between 1 and 100 are valid!");
 		}
+	}
+	
+	@Override
+	protected void loadContents() {
+		RoboticArm r = robotRun.getActiveRobot();
+		contents.setLines(loadDataRegisters(r));
+	}
+	
+	@Override
+	protected String loadHeader() {
+		Register reg = robotRun.getActiveRobot().getDReg(robotRun.getLastScreen().getContentIdx());
+		return String.format("%s: VALUE COPY", reg.getLabel());
+	}
+
+	@Override
+	protected void loadOptions() {
+		options.addLine(String.format("Move R[%d]'s value to:", robotRun.getLastScreen().getContentIdx() + 1));
+		options.addLine(String.format("R[%s]", workingText));
 	}
 
 }

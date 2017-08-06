@@ -11,29 +11,6 @@ public class ScreenSelectInstrInsert extends ST_ScreenOptionsMenu {
 	}
 
 	@Override
-	protected String loadHeader() {
-		return robotRun.getActiveProg().getName();
-	}
-
-	@Override
-	protected void loadOptions() {
-		options.addLine("1. I/O");
-		options.addLine("2. Frames");
-		options.addLine("3. Registers");
-		options.addLine("4. IF/SELECT");
-		options.addLine("5. JMP/LBL");
-		options.addLine("6. CALL");
-		
-		/*
-		 * Only allow the user to add robot call instructions when the
-		 * second robot is in the application
-		 */
-		if (robotRun.isSecondRobotUsed()) {
-			options.addLine("7. RCALL");
-		}
-	}
-
-	@Override
 	public void actionEntr() {
 		switch (options.getLineIdx()) {
 		case 0: // I/O
@@ -68,6 +45,29 @@ public class ScreenSelectInstrInsert extends ST_ScreenOptionsMenu {
 				// No programs exist in the inactive robot
 				robotRun.lastScreen();
 			}
+		}
+	}
+
+	@Override
+	protected String loadHeader() {
+		return robotRun.getActiveProg().getName();
+	}
+
+	@Override
+	protected void loadOptions() {
+		options.addLine("1. I/O");
+		options.addLine("2. Frames");
+		options.addLine("3. Registers");
+		options.addLine("4. IF/SELECT");
+		options.addLine("5. JMP/LBL");
+		options.addLine("6. CALL");
+		
+		/*
+		 * Only allow the user to add robot call instructions when the
+		 * second robot is in the application
+		 */
+		if (robotRun.isSecondRobotUsed()) {
+			options.addLine("7. RCALL");
 		}
 	}
 

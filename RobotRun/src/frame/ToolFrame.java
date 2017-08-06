@@ -21,9 +21,10 @@ public class ToolFrame {
 	private String name;
 	
 	/**
-	 * The current TCP offset of this frame.
+	 * The last orientation offset taught with the direct entry method to this
+	 * frame.
 	 */
-	private PVector TCPOffset;
+	private RQuaternion orienDirect;
 	
 	/**
 	 * The current orientation offset of this frame.
@@ -31,22 +32,21 @@ public class ToolFrame {
 	private RQuaternion orienOffset;
 	
 	/**
-	 * The set of taught and untaught points for this frame's point teaching
-	 * methods. A tool frame has a maximum of six points that can be taught
-	 * (three for the TCP and three for the orientation).
-	 */
-	private final Point[] teachPoints;
-	
-	/**
 	 * The last TCP taught with the direct entry method to this frame.
 	 */
 	private PVector TCPDirect;
 	
 	/**
-	 * The last orientation offset taught with the direct entry method to this
-	 * frame.
+	 * The current TCP offset of this frame.
 	 */
-	private RQuaternion orienDirect;
+	private PVector TCPOffset;
+	
+	/**
+	 * The set of taught and untaught points for this frame's point teaching
+	 * methods. A tool frame has a maximum of six points that can be taught
+	 * (three for the TCP and three for the orientation).
+	 */
+	private final Point[] teachPoints;
 	
 	
 	/**
@@ -167,6 +167,25 @@ public class ToolFrame {
 	}
 	
 	/**
+	 * Returns the last TCP offset taught to this frame with the direct entry
+	 * method.
+	 * 
+	 * @return	The last direct entry TCP offset
+	 */
+	public PVector getTCPDirect() {
+		return TCPDirect;
+	}
+	
+	/**
+	 * The current TCP offset of this frame.
+	 * 
+	 * @return	This frame's TCP offset
+	 */
+	public PVector getTCPOffset() {
+		return TCPOffset;
+	}
+	
+	/**
 	 * Returns the teach point of this frame associated with the given index.
 	 * The index-point association is as follows:
 	 * 
@@ -187,25 +206,6 @@ public class ToolFrame {
 		}
 
 		return null;
-	}
-	
-	/**
-	 * Returns the last TCP offset taught to this frame with the direct entry
-	 * method.
-	 * 
-	 * @return	The last direct entry TCP offset
-	 */
-	public PVector getTCPDirect() {
-		return TCPDirect;
-	}
-	
-	/**
-	 * The current TCP offset of this frame.
-	 * 
-	 * @return	This frame's TCP offset
-	 */
-	public PVector getTCPOffset() {
-		return TCPOffset;
 	}
 	
 	/**
@@ -290,18 +290,6 @@ public class ToolFrame {
 	}
 
 	/**
-	 * Updates a point taught to this frame.
-	 * 
-	 * @param pt		The new taught point
-	 * @param idx		The index of the new taught point
-	 */
-	public void setTeachPt(Point pt, int idx) {
-		if (idx >= 0 && idx < teachPoints.length) {
-			teachPoints[idx] = pt;
-		}
-	}
-	
-	/**
 	 * Updates the last TCP taught to this frame with the direct entry method.
 	 * 
 	 * @param newTCP	The latest TCP offset taught via the direct entry
@@ -318,6 +306,18 @@ public class ToolFrame {
 	 */
 	public void setTCPOffset(PVector newTCP) {
 		TCPOffset = newTCP;
+	}
+	
+	/**
+	 * Updates a point taught to this frame.
+	 * 
+	 * @param pt		The new taught point
+	 * @param idx		The index of the new taught point
+	 */
+	public void setTeachPt(Point pt, int idx) {
+		if (idx >= 0 && idx < teachPoints.length) {
+			teachPoints[idx] = pt;
+		}
 	}
 	
 	/**

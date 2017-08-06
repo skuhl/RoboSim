@@ -6,5 +6,5 @@ package enums;
  * @author Joshua Hooker
  */
 public enum ExecType {
-	EXEC_FULL, EXEC_SINGLE, EXEC_BWD;
+	EXEC_BWD, EXEC_FULL, EXEC_SINGLE;
 }

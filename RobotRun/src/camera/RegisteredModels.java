@@ -8,15 +8,15 @@ import processing.data.JSONArray;
 import processing.data.JSONObject;
 
 public class RegisteredModels {
-	public static final HashMap<String, Integer> modelIDList = new HashMap<String, Integer>();
-	public static final HashMap<Integer, Integer> modelFamilyList = new HashMap<Integer, Integer>();
-	public static final HashMap<Integer, Float> modelReflectivity = new HashMap<Integer, Float>();
-	public static final HashMap<Integer, CamSelectArea[]> modelAreasOfInterest = new HashMap<Integer, CamSelectArea[]>();
-	
-	// Reserved IDs for models not defined in models.json
-	public static final int ID_GENERIC 	= -1;
 	public static final int ID_CUBE 	= -2;
 	public static final int ID_CYLINDER	= -3;
+	// Reserved IDs for models not defined in models.json
+	public static final int ID_GENERIC 	= -1;
+	public static final HashMap<Integer, CamSelectArea[]> modelAreasOfInterest = new HashMap<Integer, CamSelectArea[]>();
+	
+	public static final HashMap<Integer, Integer> modelFamilyList = new HashMap<Integer, Integer>();
+	public static final HashMap<String, Integer> modelIDList = new HashMap<String, Integer>();
+	public static final HashMap<Integer, Float> modelReflectivity = new HashMap<Integer, Float>();
 		
 	public static void loadModelDefs(RobotRun robotRun) {
 		String path = robotRun.sketchPath();

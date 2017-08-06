@@ -18,24 +18,10 @@ public class ScreenSelectCutCopy extends ST_ScreenLineSelect {
 	}
 
 	@Override
-	protected void loadOptions() {
-		options.addLine("Select lines to cut/ copy (ENTER).");
-	}
-
-	@Override
-	protected void loadLabels() {
-		labels[0] = "";
-		labels[1] = clipBoard.isEmpty() ? "" : "[Paste]";
-		labels[2] = "[Cut]";
-		labels[3] = "[Copy]";
-		labels[4] = "[Cancel]";
-	}
-	
-	@Override
 	public void actionF2() {
 		robotRun.nextScreen(ScreenMode.SELECT_PASTE_OPT);
 	}
-	
+
 	@Override
 	public void actionF3() {
 		RoboticArm r = robotRun.getActiveRobot();
@@ -75,5 +61,19 @@ public class ScreenSelectCutCopy extends ST_ScreenLineSelect {
 	public void actionF5() {
 		robotRun.lastScreen();
 		robotRun.updateInstructions();
+	}
+	
+	@Override
+	protected void loadLabels() {
+		labels[0] = "";
+		labels[1] = clipBoard.isEmpty() ? "" : "[Paste]";
+		labels[2] = "[Cut]";
+		labels[3] = "[Copy]";
+		labels[4] = "[Cancel]";
+	}
+	
+	@Override
+	protected void loadOptions() {
+		options.addLine("Select lines to cut/ copy (ENTER).");
 	}
 }

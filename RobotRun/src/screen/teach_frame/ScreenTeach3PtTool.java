@@ -21,35 +21,6 @@ public class ScreenTeach3PtTool extends ST_ScreenTeachPoints {
 	}
 
 	@Override
-	protected String loadHeader() {
-		return "";
-	}
-
-	@Override
-	protected void loadContents() {
-		RoboticArm r = robotRun.getActiveRobot();
-		contents.setLines(loadFrameDetail(r.getToolFrame(frameIdx)));
-	}
-
-	@Override
-	protected void loadOptions() {
-		RoboticArm r = robotRun.getActiveRobot();
-		ToolFrame teachFrame = r.getToolFrame(frameIdx);
-		ArrayList<DisplayLine> lines = new ArrayList<>();
-		
-		String out = (teachFrame.getTeactPt(0) == null) ? "UNINIT" : "RECORDED";
-		lines.add(new DisplayLine(0, 0, "First Approach Point: " + out));
-		
-		out = (teachFrame.getTeactPt(1) == null) ? "UNINIT" : "RECORDED";
-		lines.add(new DisplayLine(1, 0, "Second Approach Point: " + out));
-		
-		out = (teachFrame.getTeactPt(2) == null) ? "UNINIT" : "RECORDED";
-		lines.add(new DisplayLine(2, 0, "Third Approach Point: " + out));
-		
-		options.setLines(lines);
-	}
-
-	@Override
 	public void actionEntr() {
 		RoboticArm r = robotRun.getActiveRobot();
 		ToolFrame teachFrame = r.getToolFrame(frameIdx);
@@ -66,7 +37,7 @@ public class ScreenTeach3PtTool extends ST_ScreenTeachPoints {
 			Fields.setMessage("Invalid teach points");
 		}
 	}
-	
+
 	@Override
 	public void drawTeachPts(PGraphics g) {
 		RoboticArm r = robotRun.getActiveRobot();
@@ -106,12 +77,41 @@ public class ScreenTeach3PtTool extends ST_ScreenTeachPoints {
 		
 		return teachFrame.is3PtComplete();
 	}
-
+	
 	@Override
 	public void setTeachPoint(Point pt, int idx) {
 		RoboticArm r = robotRun.getActiveRobot();
 		ToolFrame teachFrame = r.getToolFrame(frameIdx);
 		
 		teachFrame.setTeachPt(pt, idx);
+	}
+
+	@Override
+	protected void loadContents() {
+		RoboticArm r = robotRun.getActiveRobot();
+		contents.setLines(loadFrameDetail(r.getToolFrame(frameIdx)));
+	}
+
+	@Override
+	protected String loadHeader() {
+		return "";
+	}
+
+	@Override
+	protected void loadOptions() {
+		RoboticArm r = robotRun.getActiveRobot();
+		ToolFrame teachFrame = r.getToolFrame(frameIdx);
+		ArrayList<DisplayLine> lines = new ArrayList<>();
+		
+		String out = (teachFrame.getTeactPt(0) == null) ? "UNINIT" : "RECORDED";
+		lines.add(new DisplayLine(0, 0, "First Approach Point: " + out));
+		
+		out = (teachFrame.getTeactPt(1) == null) ? "UNINIT" : "RECORDED";
+		lines.add(new DisplayLine(1, 0, "Second Approach Point: " + out));
+		
+		out = (teachFrame.getTeactPt(2) == null) ? "UNINIT" : "RECORDED";
+		lines.add(new DisplayLine(2, 0, "Third Approach Point: " + out));
+		
+		options.setLines(lines);
 	}
 }

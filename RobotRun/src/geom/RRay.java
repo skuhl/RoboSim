@@ -12,25 +12,25 @@ import processing.core.PVector;
 public class RRay {
 	
 	/**
-	 * The origin of the ray.
-	 */
-	private PVector origin;
-	
-	/**
 	 * The direction vector of the ray.
 	 */
 	private PVector direction;
-	
-	/**
-	 * The color, with which the ray will be drawn.
-	 */
-	private int strokeCVal;
 	
 	/**
 	 * The length, from the origin, of the portion of the ray, which will be
 	 * drawn.
 	 */
 	private float drawLength;
+	
+	/**
+	 * The origin of the ray.
+	 */
+	private PVector origin;
+	
+	/**
+	 * The color, with which the ray will be drawn.
+	 */
+	private int strokeCVal;
 	
 	/**
 	 * Creates a ray pointing in the position xyz direction starting at the

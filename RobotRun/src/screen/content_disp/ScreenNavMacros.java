@@ -12,25 +12,6 @@ public class ScreenNavMacros extends ST_ScreenListContents {
 	}
 
 	@Override
-	protected String loadHeader() {
-		return "VIEW/ EDIT MACROS";
-	}
-
-	@Override
-	protected void loadContents() {
-		contents.setLines(loadMacros());
-	}
-
-	@Override
-	protected void loadLabels() {
-		labels[0] = "[New]";
-		labels[1] = "";
-		labels[2] = "";
-		labels[3] = "[Edit]";
-		labels[4] = robotRun.isShift() ? "[Delete]" : "";
-	}
-	
-	@Override
 	public void actionEntr() {}
 
 	@Override
@@ -62,5 +43,24 @@ public class ScreenNavMacros extends ST_ScreenListContents {
 				r.getMacroKeyBinds()[m.getKeyNum()] = null;
 			}
 		}
+	}
+
+	@Override
+	protected void loadContents() {
+		contents.setLines(loadMacros());
+	}
+
+	@Override
+	protected String loadHeader() {
+		return "VIEW/ EDIT MACROS";
+	}
+	
+	@Override
+	protected void loadLabels() {
+		labels[0] = "[New]";
+		labels[1] = "";
+		labels[2] = "";
+		labels[3] = "[Edit]";
+		labels[4] = robotRun.isShift() ? "[Delete]" : "";
 	}
 }

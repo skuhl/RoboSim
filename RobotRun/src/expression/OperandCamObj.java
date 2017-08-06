@@ -10,30 +10,6 @@ public class OperandCamObj extends Operand<CameraObject> implements BoolMath {
 	private static RobotCamera camRef;
 	private static Pointer<Scenario> scenarioRef;
 	
-	public OperandCamObj() {
-		super(null, Operand.CAM_MATCH);
-	}
-	
-	public OperandCamObj(CameraObject v) {
-		super(v, Operand.CAM_MATCH);
-	}
-
-	@Override
-	public Boolean getBoolValue() {
-		
-		if (value != null) {
-			return camRef.isMatchVisible(value, scenarioRef.get());
-			
-		} else {
-			return false;
-		}
-	}
-
-	@Override
-	public Operand<CameraObject> clone() {
-		return new OperandCamObj(value);
-	}
-	
 	/**
 	 * TODO comment this
 	 * 
@@ -50,6 +26,30 @@ public class OperandCamObj extends Operand<CameraObject> implements BoolMath {
 	 */
 	public static void setScenarioRef(Pointer<Scenario> ref) {
 		scenarioRef = ref;
+	}
+
+	public OperandCamObj() {
+		super(null, Operand.CAM_MATCH);
+	}
+
+	public OperandCamObj(CameraObject v) {
+		super(v, Operand.CAM_MATCH);
+	}
+	
+	@Override
+	public Operand<CameraObject> clone() {
+		return new OperandCamObj(value);
+	}
+	
+	@Override
+	public Boolean getBoolValue() {
+		
+		if (value != null) {
+			return camRef.isMatchVisible(value, scenarioRef.get());
+			
+		} else {
+			return false;
+		}
 	}
 	
 	@Override

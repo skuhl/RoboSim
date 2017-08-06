@@ -13,25 +13,6 @@ public class ScreenCopyDataRegComment extends ST_ScreenNumEntry {
 	}
 	
 	@Override
-	protected String loadHeader() {
-		Register reg = robotRun.getActiveRobot().getDReg(robotRun.getLastScreen().getContentIdx());
-		return String.format("%s: COMMENT COPY", reg.getLabel());
-	}
-	
-	@Override
-	protected void loadContents() {
-		RoboticArm r = robotRun.getActiveRobot();
-		contents.setLines(loadDataRegisters(r));
-	}
-
-	@Override
-	protected void loadOptions() {
-		options.addLine(String.format("Move R[%d]'s comment to:",
-				robotRun.getLastScreen().getContentIdx() + 1));
-		options.addLine(String.format("R[%s]", workingText));
-	}
-
-	@Override
 	public void actionEntr() {
 		int regIdx = -1;
 		int itemIdx = contents.getCurrentItemIdx();
@@ -51,6 +32,25 @@ public class ScreenCopyDataRegComment extends ST_ScreenNumEntry {
 		} catch (IndexOutOfBoundsException IOOBEx) {
 			errorMessage("The index must be within the range 1 and 100");
 		}
+	}
+	
+	@Override
+	protected void loadContents() {
+		RoboticArm r = robotRun.getActiveRobot();
+		contents.setLines(loadDataRegisters(r));
+	}
+
+	@Override
+	protected String loadHeader() {
+		Register reg = robotRun.getActiveRobot().getDReg(robotRun.getLastScreen().getContentIdx());
+		return String.format("%s: COMMENT COPY", reg.getLabel());
+	}
+
+	@Override
+	protected void loadOptions() {
+		options.addLine(String.format("Move R[%d]'s comment to:",
+				robotRun.getLastScreen().getContentIdx() + 1));
+		options.addLine(String.format("R[%s]", workingText));
 	}
 
 }

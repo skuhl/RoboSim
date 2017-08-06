@@ -16,28 +16,39 @@ public abstract class ST_ScreenNumEntry extends Screen {
 	}
 	
 	@Override
-	protected String loadHeader() {
-		return robotRun.getActiveProg().getName();
-	}
+	public void actionArrowDn() {}
 	
 	@Override
-	protected void loadContents() {
-		contents.setLines(loadInstructions(robotRun.getActiveProg(), false));
-	}
+	public void actionArrowLt() {}
 	
 	@Override
-	protected void loadLabels() {
-		labels[0] = "";
-		labels[1] = "";
-		labels[2] = "";
-		labels[3] = "";
-		labels[4] = "";
+	public void actionArrowRt() {}
+
+	@Override
+	public void actionArrowUp() {}
+	
+	@Override
+	public void actionBkspc() {
+		// Functions as a backspace key
+		if (workingText.length() > 0) {
+			workingText.deleteCharAt(workingText.length() - 1);
+		}
 	}
 
 	@Override
-	protected void loadVars(ScreenState s) {
-		setScreenIndices(s.conLnIdx, s.conColIdx, s.conRenIdx, 0, 0);
-	}
+	public void actionF1() {}
+
+	@Override
+	public void actionF2() {}
+
+	@Override
+	public void actionF3() {}
+
+	@Override
+	public void actionF4() {}
+	
+	@Override
+	public void actionF5() {}
 	
 	@Override
 	public void actionKeyPress(char key) {
@@ -55,41 +66,6 @@ public abstract class ST_ScreenNumEntry extends Screen {
 		robotRun.updatePendantScreen();
 	}
 
-	@Override
-	public void actionUp() {}
-
-	@Override
-	public void actionDn() {}
-
-	@Override
-	public void actionLt() {}
-
-	@Override
-	public void actionRt() {}
-	
-	@Override
-	public void actionBkspc() {
-		// Functions as a backspace key
-		if (workingText.length() > 0) {
-			workingText.deleteCharAt(workingText.length() - 1);
-		}
-	}
-	
-	@Override
-	public void actionF1() {}
-
-	@Override
-	public void actionF2() {}
-
-	@Override
-	public void actionF3() {}
-
-	@Override
-	public void actionF4() {}
-
-	@Override
-	public void actionF5() {}
-	
 	/**
 	 * Renders the given message in the application UI and resets the working
 	 * text for this screen.
@@ -101,7 +77,7 @@ public abstract class ST_ScreenNumEntry extends Screen {
 		workingText = new StringBuilder("");
 		robotRun.updatePendantScreen();
 	}
-	
+
 	/**
 	 * Creates an error message from the given format String and arguments.
 	 * 
@@ -110,5 +86,29 @@ public abstract class ST_ScreenNumEntry extends Screen {
 	 */
 	protected void errorMessage(String format, Object... args) {
 		errorMessage( String.format(format, args) );
+	}
+
+	@Override
+	protected void loadContents() {
+		contents.setLines(loadInstructions(robotRun.getActiveProg(), false));
+	}
+
+	@Override
+	protected String loadHeader() {
+		return robotRun.getActiveProg().getName();
+	}
+	
+	@Override
+	protected void loadLabels() {
+		labels[0] = "";
+		labels[1] = "";
+		labels[2] = "";
+		labels[3] = "";
+		labels[4] = "";
+	}
+	
+	@Override
+	protected void loadVars(ScreenState s) {
+		setScreenIndices(s.conLnIdx, s.conColIdx, s.conRenIdx, 0, 0);
 	}
 }

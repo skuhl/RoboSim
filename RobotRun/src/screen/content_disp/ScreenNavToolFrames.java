@@ -11,34 +11,6 @@ public class ScreenNavToolFrames extends ST_ScreenListContents {
 	}
 
 	@Override
-	protected String loadHeader() {
-		return "TOOL FRAMES";
-	}
-
-	@Override
-	protected void loadContents() {
-		contents.setLines(loadFrames(robotRun.getActiveRobot(), CoordFrame.TOOL));
-	}
-
-	@Override
-	protected void loadLabels() {
-		// F1, F2, F3
-		if (robotRun.isShift()) {
-			labels[0] = "[Clear]";
-			labels[1] = "";
-			labels[2] = "[Switch]";
-			labels[3] = "";
-			labels[4] = "";
-		} else {
-			labels[0] = "[Set]";
-			labels[1] = "";
-			labels[2] = "[Switch]";
-			labels[3] = "";
-			labels[4] = "";
-		}
-	}
-
-	@Override
 	public void actionEntr() {
 		robotRun.nextScreen(ScreenMode.TFRAME_DETAIL);
 	}
@@ -56,9 +28,37 @@ public class ScreenNavToolFrames extends ST_ScreenListContents {
 			robotRun.getActiveRobot().setActiveToolFrame(frame);
 		}
 	}
-	
+
 	@Override
 	public void actionF3() {
 		robotRun.switchScreen(ScreenMode.NAV_USER_FRAMES);
+	}
+
+	@Override
+	protected void loadContents() {
+		contents.setLines(loadFrames(robotRun.getActiveRobot(), CoordFrame.TOOL));
+	}
+
+	@Override
+	protected String loadHeader() {
+		return "TOOL FRAMES";
+	}
+	
+	@Override
+	protected void loadLabels() {
+		// F1, F2, F3
+		if (robotRun.isShift()) {
+			labels[0] = "[Clear]";
+			labels[1] = "";
+			labels[2] = "[Switch]";
+			labels[3] = "";
+			labels[4] = "";
+		} else {
+			labels[0] = "[Set]";
+			labels[1] = "";
+			labels[2] = "[Switch]";
+			labels[3] = "";
+			labels[4] = "";
+		}
 	}
 }

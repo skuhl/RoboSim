@@ -21,32 +21,6 @@ public class ScreenDirectEntryUser extends ST_ScreenPointEntry {
 	}
 	
 	@Override
-	protected String loadHeader() {
-		return "";
-	}
-	
-	@Override
-	protected void loadLabels() {
-		labels[0] = "";
-		labels[1] = "[Method]";
-		labels[2] = "";
-		labels[3] = "";
-		labels[4] = "";
-	}
-	
-	@Override
-	protected void loadWorkingText() {
-		RoboticArm r = robotRun.getActiveRobot();
-		UserFrame teachFrame = r.getUserFrame(frameIdx);
-		String[][] entries = teachFrame.directEntryStringArray();
-		
-		for(int i = 0; i < entries.length; i += 1) {
-			prefixes[i] = entries[i][0];
-			workingText[i] = new StringBuilder(entries[i][1]);
-		}
-	}
-	
-	@Override
 	public void actionEntr() {
 		RoboticArm r = robotRun.getActiveRobot();
 		UserFrame teachFrame = r.getUserFrame(frameIdx);
@@ -106,5 +80,31 @@ public class ScreenDirectEntryUser extends ST_ScreenPointEntry {
 	@Override
 	public void actionF2() {
 		robotRun.lastScreen();
+	}
+	
+	@Override
+	protected String loadHeader() {
+		return "";
+	}
+	
+	@Override
+	protected void loadLabels() {
+		labels[0] = "";
+		labels[1] = "[Method]";
+		labels[2] = "";
+		labels[3] = "";
+		labels[4] = "";
+	}
+	
+	@Override
+	protected void loadWorkingText() {
+		RoboticArm r = robotRun.getActiveRobot();
+		UserFrame teachFrame = r.getUserFrame(frameIdx);
+		String[][] entries = teachFrame.directEntryStringArray();
+		
+		for(int i = 0; i < entries.length; i += 1) {
+			prefixes[i] = entries[i][0];
+			workingText[i] = new StringBuilder(entries[i][1]);
+		}
 	}
 }

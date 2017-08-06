@@ -9,8 +9,8 @@ package programming;
 public abstract class MotionInstruction extends Instruction  {
 
 	protected int motionType;
-	protected int posType;
 	protected int posIdx;
+	protected int posType;
 	protected float spdModifier;
 	protected int termination;
 	

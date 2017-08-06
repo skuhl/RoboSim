@@ -21,9 +21,9 @@ public class UserFrame {
 	private String name;
 	
 	/**
-	 * The origin of this frame's coordinate frame.
+	 * The last orientation offset taught as a direct entry for this frame.
 	 */
-	private PVector originOffset;
+	private RQuaternion orienDirect;
 	
 	/**
 	 * The orientation of this frame's coordinate frame.
@@ -31,21 +31,21 @@ public class UserFrame {
 	private RQuaternion orienOffset;
 	
 	/**
-	 * The set of taught and untaught points for this frame's point teaching
-	 * methods. A user frame has a maximum of 4 points that can be taught
-	 * (three for orientation and one for the origin).
-	 */
-	private Point[] teachPoints;
-	
-	/**
 	 * The last origin taught as a direct entry for this frame.
 	 */
 	private PVector originDirect;
 	
 	/**
-	 * The last orientation offset taught as a direct entry for this frame.
+	 * The origin of this frame's coordinate frame.
 	 */
-	private RQuaternion orienDirect;
+	private PVector originOffset;
+	
+	/**
+	 * The set of taught and untaught points for this frame's point teaching
+	 * methods. A user frame has a maximum of 4 points that can be taught
+	 * (three for orientation and one for the origin).
+	 */
+	private Point[] teachPoints;
 
 	/**
 	 * Initialize all fields to their default values.
@@ -166,6 +166,15 @@ public class UserFrame {
 	}
 	
 	/**
+	 * Returns the current origin of this frame.
+	 * 
+	 * @return	This frame's origin
+	 */
+	public PVector getOrigin() {
+		return originOffset;
+	}
+	
+	/**
 	 * Returns the last origin taught to this frame with the direct entry
 	 * method.
 	 * 
@@ -173,15 +182,6 @@ public class UserFrame {
 	 */
 	public PVector getOriginDirect() {
 		return originDirect;
-	}
-	
-	/**
-	 * Returns the current origin of this frame.
-	 * 
-	 * @return	This frame's origin
-	 */
-	public PVector getOrigin() {
-		return originOffset;
 	}
 
 	/**
@@ -285,6 +285,15 @@ public class UserFrame {
 	}
 	
 	/**
+	 * Updates the origin of this frame.
+	 * 
+	 * @param newOrigin	The new origin of this frame
+	 */
+	public void setOrigin(PVector newOrigin) {
+		originOffset = newOrigin;
+	}
+	
+	/**
 	 * Updates the last origin taught to this frame with the direct entry
 	 * method.
 	 * 
@@ -293,15 +302,6 @@ public class UserFrame {
 	 */
 	public void setOriginDirect(PVector newOrigin) {
 		originDirect = newOrigin;
-	}
-	
-	/**
-	 * Updates the origin of this frame.
-	 * 
-	 * @param newOrigin	The new origin of this frame
-	 */
-	public void setOrigin(PVector newOrigin) {
-		originOffset = newOrigin;
 	}
 
 	/**

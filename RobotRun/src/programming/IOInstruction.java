@@ -2,8 +2,8 @@ package programming;
 import global.Fields;
 
 public class IOInstruction extends Instruction {
-	boolean state;
 	int reg;
+	boolean state;
 
 	public IOInstruction(){
 		super();

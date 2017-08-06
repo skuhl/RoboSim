@@ -12,11 +12,6 @@ public class ScreenConfirmProgramDelete extends ST_ScreenConfirmCancel {
 	}
 
 	@Override
-	protected void loadOptions() {
-		options.addLine("Delete selected program?");
-	}
-	
-	@Override
 	public void actionF4() {
 		RoboticArm r = robotRun.getActiveRobot();
 		Program p = robotRun.getActiveProg();
@@ -29,5 +24,10 @@ public class ScreenConfirmProgramDelete extends ST_ScreenConfirmCancel {
 	@Override
 	public void actionF5() {
 		robotRun.lastScreen();
+	}
+	
+	@Override
+	protected void loadOptions() {
+		options.addLine("Delete selected program?");
 	}
 }

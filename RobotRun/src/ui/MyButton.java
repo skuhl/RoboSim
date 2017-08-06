@@ -12,14 +12,14 @@ import controlP5.ControllerGroup;
 public class MyButton extends Button {
 	
 	/**
-	 * The text to render on the button, if it is inactive.
-	 */
-	private String inActTxtLbl;
-	
-	/**
 	 * The text to render on the button, if it is active.
 	 */
 	private String actTxtLbl;
+	
+	/**
+	 * The text to render on the button, if it is inactive.
+	 */
+	private String inActTxtLbl;
 	
 	public MyButton(ControlP5 theControlP5, String theName, String inActTxtLbl,
 			String actTxtLbl) {
@@ -48,21 +48,6 @@ public class MyButton extends Button {
 		}
 	}
 	
-	@Override
-	protected void activate() {
-		super.activate();
-		// Update the button's text based on its state
-		if (actTxtLbl != null) {
-			
-			if (isOn) {
-				getCaptionLabel().setText(actTxtLbl);
-				
-			} else if (inActTxtLbl != null) {
-				getCaptionLabel().setText(inActTxtLbl);
-			}
-		}
-	}
-	
 	/**
 	 * The text that is display on the button, when it is active.
 	 * 
@@ -79,6 +64,21 @@ public class MyButton extends Button {
 	 */
 	public String getInActTxtLbl() {
 		return inActTxtLbl;
+	}
+	
+	@Override
+	protected void activate() {
+		super.activate();
+		// Update the button's text based on its state
+		if (actTxtLbl != null) {
+			
+			if (isOn) {
+				getCaptionLabel().setText(actTxtLbl);
+				
+			} else if (inActTxtLbl != null) {
+				getCaptionLabel().setText(inActTxtLbl);
+			}
+		}
 	}
 	
 	@Override

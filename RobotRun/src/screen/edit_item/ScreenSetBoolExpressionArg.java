@@ -16,13 +16,6 @@ public class ScreenSetBoolExpressionArg extends ST_ScreenEditItem {
 	}
 	
 	@Override
-	protected void loadOptions() {
-		options.addLine("R[x]");
-		//options.addLine("PR[x, y]"); //TODO
-		options.addLine("Const");
-	}
-
-	@Override
 	public void actionEntr() {
 		RoboticArm r = robotRun.getActiveRobot();
 		IfStatement stmt = (IfStatement) r.getInstToEdit(robotRun.getActiveProg(), 
@@ -45,5 +38,12 @@ public class ScreenSetBoolExpressionArg extends ST_ScreenEditItem {
 			stmt.setOperand(robotRun.editIdx, robotRun.opEdit);
 			robotRun.switchScreen(ScreenMode.INPUT_CONST);
 		}
+	}
+
+	@Override
+	protected void loadOptions() {
+		options.addLine("R[x]");
+		//options.addLine("PR[x, y]"); //TODO
+		options.addLine("Const");
 	}
 }

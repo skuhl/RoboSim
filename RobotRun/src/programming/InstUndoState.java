@@ -3,13 +3,13 @@ package programming;
 import enums.InstUndoType;
 
 public class InstUndoState {
-	private InstUndoType type;
+	private InstElement elemRef;
 	private int groupID;
 	
-	private Program parent;
-	
 	private int idx;
-	private InstElement elemRef;
+	
+	private Program parent;
+	private InstUndoType type;
 	
 	public InstUndoState(InstUndoType type, int groupID, Program parent,
 			int idx, InstElement ref) {
@@ -24,6 +24,13 @@ public class InstUndoState {
 	
 	public int getGID() {
 		return groupID;
+	}
+	
+	@Override
+	public String toString() {
+		return String.format("%s %d %s %d %s %d", type.name(), groupID,
+				parent.getName(), idx, elemRef.getInst().getClass(),
+				elemRef.getID());
 	}
 	
 	/**
@@ -43,13 +50,6 @@ public class InstUndoState {
 			// Undo a deletion
 			parent.addAt(idx, elemRef);
 		}
-	}
-	
-	@Override
-	public String toString() {
-		return String.format("%s %d %s %d %s %d", type.name(), groupID,
-				parent.getName(), idx, elemRef.getInst().getClass(),
-				elemRef.getID());
 	}
 	
 }

@@ -13,14 +13,14 @@ import processing.core.PConstants;
 public class JointInterpolation extends JointMotion {
 	
 	/**
-	 * The joint angles, to which to move.
-	 */
-	private final float[] TGT_ANGLES;
-	
-	/**
 	 *  The overall speed modifier for the rotational interpolation.
 	 */
 	private float speed;
+	
+	/**
+	 * The joint angles, to which to move.
+	 */
+	private final float[] TGT_ANGLES;
 	
 	/**
 	 * Sets the target joint angles and joint motion directions for the

@@ -12,30 +12,16 @@ import robot.RoboticArm;
  */
 public class PosMotionInst extends MotionInstruction {
 	
-	private int circPosType;
 	private int circPosIdx;
+	private int circPosType;
+	private int offRegIdx;
+	private int offsetType;
 	private int tFrameIdx;
 	private int uFrameIdx;
-	private int offsetType;
-	private int offRegIdx;
 	
 	public PosMotionInst() {
 		super(false);
 		// Doesn't do much ...
-	}
-	
-	public PosMotionInst(int mType, int posType, int posIdx, float spdMod,
-			int term) {
-		
-		this(false, mType, posType, posIdx, Fields.PTYPE_PROG, -1,
-				spdMod, term, -1, -1, Fields.OFFSET_NONE, -1);
-	}
-	
-	public PosMotionInst(int mType, int posIdx, float spdMod, int term,
-			int toolIdx, int userIdx) {
-		
-		this(false, mType, Fields.PTYPE_PROG, posIdx, Fields.PTYPE_PROG, -1,
-				spdMod, term, toolIdx, userIdx, Fields.OFFSET_NONE, -1);
 	}
 	
 	public PosMotionInst(boolean isComm, int mType, int posType, int posIdx,
@@ -49,6 +35,20 @@ public class PosMotionInst extends MotionInstruction {
 		uFrameIdx = userIdx;
 		offsetType = offType;
 		this.offRegIdx = offRegIdx;
+	}
+	
+	public PosMotionInst(int mType, int posIdx, float spdMod, int term,
+			int toolIdx, int userIdx) {
+		
+		this(false, mType, Fields.PTYPE_PROG, posIdx, Fields.PTYPE_PROG, -1,
+				spdMod, term, toolIdx, userIdx, Fields.OFFSET_NONE, -1);
+	}
+	
+	public PosMotionInst(int mType, int posType, int posIdx, float spdMod,
+			int term) {
+		
+		this(false, mType, posType, posIdx, Fields.PTYPE_PROG, -1,
+				spdMod, term, -1, -1, Fields.OFFSET_NONE, -1);
 	}
 	
 	@Override

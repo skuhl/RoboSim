@@ -18,8 +18,45 @@ public abstract class ST_ScreenOptionsMenu extends Screen {
 	}
 	
 	@Override
-	protected void loadContents() {}
+	public void actionArrowDn() {
+		options.moveDown(false);
+	}
 	
+	@Override
+	public void actionArrowLt() {}
+
+	@Override
+	public void actionArrowRt() {}
+	
+	@Override
+	public void actionArrowUp() {
+		options.moveUp(false);
+	}
+
+	@Override
+	public void actionBkspc() {}
+
+	@Override
+	public void actionF1() {}
+
+	@Override
+	public void actionF2() {}
+
+	@Override
+	public void actionF3() {}
+	
+	@Override
+	public void actionF4() {}
+
+	@Override
+	public void actionF5() {}
+
+	@Override
+	public void actionKeyPress(char key) {}
+
+	@Override
+	protected void loadContents() {}
+
 	@Override
 	protected void loadLabels() {
 		labels[0] = "";
@@ -33,41 +70,4 @@ public abstract class ST_ScreenOptionsMenu extends Screen {
 	protected void loadVars(ScreenState s) {
 		setScreenIndices(0, 0, 0, 0, 0);
 	}
-	
-	@Override
-	public void actionKeyPress(char key) {}
-
-	@Override
-	public void actionUp() {
-		options.moveUp(false);
-	}
-
-	@Override
-	public void actionDn() {
-		options.moveDown(false);
-	}
-
-	@Override
-	public void actionLt() {}
-
-	@Override
-	public void actionRt() {}
-	
-	@Override
-	public void actionBkspc() {}
-
-	@Override
-	public void actionF1() {}
-
-	@Override
-	public void actionF2() {}
-
-	@Override
-	public void actionF3() {}
-
-	@Override
-	public void actionF4() {}
-
-	@Override
-	public void actionF5() {}
 }

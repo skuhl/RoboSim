@@ -15,12 +15,6 @@ public class ScreenSetJumpTgt extends ST_ScreenNumEntry {
 	}
 
 	@Override
-	protected void loadOptions() {
-		options.addLine("Set jump target label:");
-		options.addLine("\0" + workingText);
-	}
-
-	@Override
 	public void actionEntr() {
 		try {
 			RoboticArm r = robotRun.getActiveRobot();
@@ -51,6 +45,12 @@ public class ScreenSetJumpTgt extends ST_ScreenNumEntry {
 			// Not an integer
 			errorMessage("The ID must be an integer");
 		}
+	}
+
+	@Override
+	protected void loadOptions() {
+		options.addLine("Set jump target label:");
+		options.addLine("\0" + workingText);
 	}
 
 }

@@ -25,7 +25,7 @@ public class Program implements Iterable<InstElement> {
 		MAX_UNDO_SIZE = 50;
 	}
 	
-	private String name;
+	private final ArrayList<InstElement> instructions;
 	
 	/**
 	 * The positions associated with this program, which are
@@ -33,7 +33,7 @@ public class Program implements Iterable<InstElement> {
 	 */
 	private final HashMap<Integer, Point> LPosReg;
 	
-	private final ArrayList<InstElement> instructions;
+	private String name;
 	
 	private int nextID;
 	private int nextPosition;
@@ -46,10 +46,6 @@ public class Program implements Iterable<InstElement> {
 		
 		nextID = 0;
 		nextPosition = 0;
-	}
-	
-	public int addInstAtEnd(Instruction inst) {
-		return addInstAt(instructions.size(), inst);
 	}
 	
 	public int addInstAt(int idx, Instruction inst) {
@@ -72,19 +68,10 @@ public class Program implements Iterable<InstElement> {
 		return -1;
 	}
 	
-	/**
-	 * Adds the given instruction element to the program's list of instruction
-	 * elements at the given index.
-	 * 
-	 * @param idx	The index at which to add the given instruction element
-	 * @param e		The element to add to this program
-	 */
-	protected void addAt(int idx, InstElement e) {
-		if (idx >= 0 && idx < instructions.size()) {
-			instructions.add(idx, e);
-		}
+	public int addInstAtEnd(Instruction inst) {
+		return addInstAt(instructions.size(), inst);
 	}
-
+	
 	/**
 	 * Add a new position and the index of the next available position
 	 * 
@@ -145,7 +132,7 @@ public class Program implements Iterable<InstElement> {
 		// A label with the given number does not exist
 		return -1;
 	}
-	
+
 	/**
 	 * Returns the instruction element at the given index in the program's
 	 * list of instructions.
@@ -173,13 +160,6 @@ public class Program implements Iterable<InstElement> {
 	}
 	
 	/**
-	 * @return	The number of instructions in this program
-	 */
-	public int getNumOfInst() {
-		return instructions.size();
-	}
-	
-	/**
 	 * The label instruction with the given label number, if it exists in the
 	 * program.
 	 * 
@@ -199,16 +179,30 @@ public class Program implements Iterable<InstElement> {
 
 		return null;
 	}
-
+	
 	public String getName() {
 		return name;
 	}
-
+	
 	/**
 	 * Get the index of the next position to normally insert a new position.
 	 */
 	public int getNextPosition() {
 		return nextPosition;
+	}
+
+	/**
+	 * @return	The number of instructions in this program
+	 */
+	public int getNumOfInst() {
+		return instructions.size();
+	}
+
+	/**
+	 * @return	The number of positions associated with this program
+	 */
+	public int getNumOfLReg() {
+		return LPosReg.size();
 	}
 
 	/**
@@ -227,11 +221,9 @@ public class Program implements Iterable<InstElement> {
 		return LPosReg.keySet();
 	}
 
-	/**
-	 * @return	The number of positions associated with this program
-	 */
-	public int getNumOfLReg() {
-		return LPosReg.size();
+	@Override
+	public Iterator<InstElement> iterator() {
+		return instructions.iterator();
 	}
 	
 	/**
@@ -257,19 +249,6 @@ public class Program implements Iterable<InstElement> {
 	}
 	
 	/**
-	 * Replaces the instruction element at the given index with the given
-	 * instruction element.
-	 * 
-	 * @param idx	The index at which to put the given instruction element
-	 * @param e		The element to put in this program
-	 */
-	protected void replace(int idx, InstElement e) {
-		if (idx >= 0 && idx < instructions.size()) {
-			instructions.set(idx, e);
-		}
-	}
-	
-	/**
 	 * Removes the instruction with the given ID, if such an instruction exists
 	 * in this program.
 	 * 
@@ -290,7 +269,6 @@ public class Program implements Iterable<InstElement> {
 		return null;
 	}
 	
-	
 	/**
 	 * Removes an instruction based on its order in the program execution.
 	 * 
@@ -302,13 +280,14 @@ public class Program implements Iterable<InstElement> {
 		return removed;
 	}
 	
+	
 	/**
 	 * Sets the name of this program.
 	 * 
 	 * @param n	The new name of this program
 	 */
 	public void setName(String n) { name = n; }
-
+	
 	/**
 	 * Add the given point at the position defined by the given index, overriding
 	 * the previous entry if the position is initialized.
@@ -332,7 +311,33 @@ public class Program implements Iterable<InstElement> {
 		
 		return null;
 	}
+
+	/**
+	 * Adds the given instruction element to the program's list of instruction
+	 * elements at the given index.
+	 * 
+	 * @param idx	The index at which to add the given instruction element
+	 * @param e		The element to add to this program
+	 */
+	protected void addAt(int idx, InstElement e) {
+		if (idx >= 0 && idx < instructions.size()) {
+			instructions.add(idx, e);
+		}
+	}
 	
+	/**
+	 * Replaces the instruction element at the given index with the given
+	 * instruction element.
+	 * 
+	 * @param idx	The index at which to put the given instruction element
+	 * @param e		The element to put in this program
+	 */
+	protected void replace(int idx, InstElement e) {
+		if (idx >= 0 && idx < instructions.size()) {
+			instructions.set(idx, e);
+		}
+	}
+
 	/**
 	 * Returns the next unique ID for an instruction. If the ID is -1, then the
 	 * program has reached its instruction capacity.
@@ -365,10 +370,5 @@ public class Program implements Iterable<InstElement> {
 				nextPosition = (nextPosition + 1) % 1000;
 			}
 		}
-	}
-
-	@Override
-	public Iterator<InstElement> iterator() {
-		return instructions.iterator();
 	}
 }

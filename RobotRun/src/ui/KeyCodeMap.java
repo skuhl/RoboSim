@@ -17,10 +17,21 @@ import java.util.Set;
  */
 public class KeyCodeMap {
 	/**
-	 * Contains data for key codes such as the character representing the key
-	 * code and whether it is held down or not.
+	 * Data class for keeping track of key characters and the state of the
+	 * keys.
+	 * 
+	 * @author Joshua Hooker
 	 */
-	private final HashMap<Integer, KeyData> keyDownMap;
+	private class KeyData {
+		public boolean isDown;
+		public final char key;
+		
+		public KeyData(char k, boolean down) {
+			key = k;
+			isDown = down;
+		}
+		
+	}
 	
 	/**
 	 * The code of the last key pressed and not released.
@@ -28,15 +39,21 @@ public class KeyCodeMap {
 	private int codeOfLast;
 	
 	/**
-	 * When the last key pressed was first pressed.
-	 */
-	private long startTimeOfLast;
-	
-	/**
 	 * How long has the last key pressed been held down.
 	 */
 	private long downTimeOfLast;
 	
+	/**
+	 * Contains data for key codes such as the character representing the key
+	 * code and whether it is held down or not.
+	 */
+	private final HashMap<Integer, KeyData> keyDownMap;
+	
+	
+	/**
+	 * When the last key pressed was first pressed.
+	 */
+	private long startTimeOfLast;
 	
 	/**
 	 * Initializes instance data.
@@ -49,10 +66,32 @@ public class KeyCodeMap {
 	}
 	
 	/**
+	 * @return	The code of the last key to be held down and not released 
+	 */
+	public int getCodeOfLastKeyHeld() {
+		return codeOfLast;
+	}
+	
+	/**
 	 * @return	For how long has the last key pressed been held down
 	 */
 	public long getTimeOfLastKey() {
 		return downTimeOfLast;
+	}
+
+	/**
+	 * @return	The character value of the last key to be held down and not
+	 * 			released
+	 */
+	public Character getValueofLastKeyHeld() {
+		KeyData data = keyDownMap.get(codeOfLast);
+		
+		if (data != null && data.key >= 32 && data.key <= 126) {
+			// only return keys with valid text characters
+			return data.key;
+		}
+		
+		return null;
 	}
 	
 	/**
@@ -91,7 +130,7 @@ public class KeyCodeMap {
 			data.isDown = true;
 		}
 	}
-
+	
 	/**
 	 * Update the state of the key with the given keyCode and character.
 	 * 
@@ -119,16 +158,6 @@ public class KeyCodeMap {
 	}
 	
 	/**
-	 * Returns a set of all key codes of keys, whose state is stored in this
-	 * class (pressed or released).
-	 * 
-	 * @return	A set of all key codes stored in this class
-	 */
-	public Set<Integer> keySet() {
-		return keyDownMap.keySet();
-	}
-	
-	/**
 	 * A list of characters pertaining to all keys, which are currently being
 	 * held down.
 	 * 
@@ -148,25 +177,13 @@ public class KeyCodeMap {
 	}
 	
 	/**
-	 * @return	The character value of the last key to be held down and not
-	 * 			released
+	 * Returns a set of all key codes of keys, whose state is stored in this
+	 * class (pressed or released).
+	 * 
+	 * @return	A set of all key codes stored in this class
 	 */
-	public Character getValueofLastKeyHeld() {
-		KeyData data = keyDownMap.get(codeOfLast);
-		
-		if (data != null && data.key >= 32 && data.key <= 126) {
-			// only return keys with valid text characters
-			return data.key;
-		}
-		
-		return null;
-	}
-	
-	/**
-	 * @return	The code of the last key to be held down and not released 
-	 */
-	public int getCodeOfLastKeyHeld() {
-		return codeOfLast;
+	public Set<Integer> keySet() {
+		return keyDownMap.keySet();
 	}
 	
 	/**
@@ -176,22 +193,5 @@ public class KeyCodeMap {
 		if (startTimeOfLast >= 0) {
 			downTimeOfLast = System.currentTimeMillis() - startTimeOfLast;
 		}
-	}
-	
-	/**
-	 * Data class for keeping track of key characters and the state of the
-	 * keys.
-	 * 
-	 * @author Joshua Hooker
-	 */
-	private class KeyData {
-		public final char key;
-		public boolean isDown;
-		
-		public KeyData(char k, boolean down) {
-			key = k;
-			isDown = down;
-		}
-		
 	}
 }

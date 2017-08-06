@@ -31,6 +31,35 @@ public class MyRadioButton extends RadioButton implements UIInputElement {
 	}
 	
 	/**
+	 * @return	The amount of space between toggle elements in the same row
+	 */
+	public int getColumnSpacing() {
+		return spacingColumn;
+	}
+	
+	@Override
+	public int getInputType() {
+		return inputType;
+	}
+	
+	/* Why don't you have these methods contolP5!?!?!? */
+	
+	/**
+	 * @return	The defined number of toggle elements to render in one row of
+	 * 			the radio button set
+	 */
+	public int getItemsPerRow() {
+		return itemsPerRow;
+	}
+
+	/**
+	 * @return	The amount of space between toggle elements in the same column
+	 */
+	public int getRowSpacing() {
+		return spacingRow;
+	}
+	
+	/**
 	 * Returns the total height of the radio button set based off the number of
 	 * toggles, toggles per row, the height of a toggle and row spacing.
 	 * 
@@ -51,35 +80,6 @@ public class MyRadioButton extends RadioButton implements UIInputElement {
 	 */
 	public int getTotalWidth() {
 		return Math.min(_myRadioToggles.size(), itemsPerRow) * (itemWidth + spacingColumn) - spacingColumn;
-	}
-	
-	/* Why don't you have these methods contolP5!?!?!? */
-	
-	/**
-	 * @return	The amount of space between toggle elements in the same row
-	 */
-	public int getColumnSpacing() {
-		return spacingColumn;
-	}
-
-	@Override
-	public int getInputType() {
-		return inputType;
-	}
-	
-	/**
-	 * @return	The amount of space between toggle elements in the same column
-	 */
-	public int getRowSpacing() {
-		return spacingRow;
-	}
-	
-	/**
-	 * @return	The defined number of toggle elements to render in one row of
-	 * 			the radio button set
-	 */
-	public int getItemsPerRow() {
-		return itemsPerRow;
 	}
 	
 	/* My rant ends here */

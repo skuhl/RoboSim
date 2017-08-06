@@ -7,8 +7,8 @@ package screen;
  */
 public class ScreenState {
 	
-	public ScreenMode mode;
 	public int conLnIdx, conColIdx, conRenIdx, optLnIdx, optRenIdx;
+	public ScreenMode mode;
 	
 	public ScreenState(ScreenMode mode, int conLnIdx, int conColIdx,
 			int conRenIdx, int optLnIdx, int optRenIdx) {

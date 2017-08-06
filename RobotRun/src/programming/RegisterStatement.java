@@ -20,9 +20,9 @@ import regs.Register;
 
 public class RegisterStatement extends Instruction implements ExpressionEvaluation {
 
-	private Register reg;  //the register to be modified by this instruction
-	private int posIdx;  //used if editing a single value in a position register
 	private Expression expr;  //the expression whose value will be stored in 'reg' after evaluation
+	private int posIdx;  //used if editing a single value in a position register
+	private Register reg;  //the register to be modified by this instruction
 
 	/**
 	 * Creates a register statement with a given register and a blank Expression.
@@ -154,6 +154,22 @@ public class RegisterStatement extends Instruction implements ExpressionEvaluati
 		return expr;
 	}
 	
+	@Override
+	public int getHeaderLength() {
+		//Number of elements before expression start
+		return posIdx == -1 ? 4 : 5;
+	}
+
+	@Override
+	public Operand<?> getOperand(int idx) {
+		return expr.getOperand(idx);
+	}
+
+	@Override
+	public Operator getOperator(int idx) {
+		return expr.getOperator(idx);
+	}
+
 	public int getPosIdx() { 
 		return posIdx; 
 	}
@@ -164,6 +180,16 @@ public class RegisterStatement extends Instruction implements ExpressionEvaluati
 
 	public void setExpr(Expression expr) {
 		this.expr = expr;
+	}
+
+	@Override
+	public Operand<?> setOperand(int idx, Operand<?> o) {
+		return expr.setOperand(idx, o);
+	}
+
+	@Override
+	public Operator setOperator(int idx, Operator o) {
+		return expr.setOperator(idx, o);
 	}
 
 	public void setPosIdx(int posIdx) {
@@ -181,7 +207,7 @@ public class RegisterStatement extends Instruction implements ExpressionEvaluati
 		posIdx = idx;
 		return reg;
 	}
-
+	
 	/**
 	 * Convert the entire statement to a set of Strings, where each
 	 * operator and operand is a separate String Object.
@@ -229,31 +255,5 @@ public class RegisterStatement extends Instruction implements ExpressionEvaluati
 		}
 
 		return ret;
-	}
-
-	@Override
-	public Operand<?> setOperand(int idx, Operand<?> o) {
-		return expr.setOperand(idx, o);
-	}
-
-	@Override
-	public Operator setOperator(int idx, Operator o) {
-		return expr.setOperator(idx, o);
-	}
-
-	@Override
-	public Operand<?> getOperand(int idx) {
-		return expr.getOperand(idx);
-	}
-
-	@Override
-	public Operator getOperator(int idx) {
-		return expr.getOperator(idx);
-	}
-	
-	@Override
-	public int getHeaderLength() {
-		//Number of elements before expression start
-		return posIdx == -1 ? 4 : 5;
 	}
 }

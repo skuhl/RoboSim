@@ -12,11 +12,6 @@ public class ScreenProgramCopy extends ST_ScreenTextEntry {
 	}
 
 	@Override
-	protected String loadHeader() {
-		return "COPY PROGRAM";
-	}
-
-	@Override
 	public void actionEntr() {
 		if (workingText.length() > 0 && !workingText.equals("\0")) {
 			if (workingText.charAt(workingText.length() - 1) == '\0') {
@@ -37,6 +32,11 @@ public class ScreenProgramCopy extends ST_ScreenTextEntry {
 
 			robotRun.lastScreen();
 		}
+	}
+
+	@Override
+	protected String loadHeader() {
+		return "COPY PROGRAM";
 	}
 
 }

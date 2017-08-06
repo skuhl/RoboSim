@@ -13,8 +13,8 @@ import ui.DisplayLine;
 
 public abstract class ST_ScreenPointEntry extends Screen {
 	static final int NUM_ENTRY_LEN = 9;
-	protected StringBuilder[] workingText;
 	protected String[] prefixes;
+	protected StringBuilder[] workingText;
 
 	public ST_ScreenPointEntry(ScreenMode m, RobotRun r) {
 		super(m, r);
@@ -26,6 +26,121 @@ public abstract class ST_ScreenPointEntry extends Screen {
 		super(m, header, r);
 		workingText = new StringBuilder[6];
 		prefixes = new String[6];
+	}
+	
+	@Override
+	public void actionArrowDn() {
+		contents.moveDown(false);
+	}
+	
+	@Override
+	public void actionArrowLt() {
+		if(contents.getColumnIdx() > 1) {
+			contents.moveLeft();
+		}
+	}
+	
+	@Override
+	public void actionArrowRt() {
+		StringBuilder entry = workingText[contents.getLineIdx()];
+		int idx = contents.getColumnIdx() - 1;
+		int size = entry.length();
+
+		// Delete a digit from the beginning of the number entry
+		if (robotRun.isShift()) {
+			if (size > 2) {
+				entry.deleteCharAt(idx);
+			} else {
+				// Leave at least one space value entry
+				entry.setCharAt(idx, '\0');
+			}
+			
+		} else {
+			if (idx == (size - 1) && entry.charAt(idx) != '\0' && size < 10) {
+				entry.append("\0");
+				contents.getCurrentItem().add("\0");
+			}
+
+			contents.moveRight();
+		}
+	}
+	
+	@Override
+	public void actionArrowUp() {
+		contents.moveUp(false);
+	}
+	
+	@Override
+	public void actionBkspc() {
+		StringBuilder entry = workingText[contents.getLineIdx()]; 
+		int idx = contents.getColumnIdx() - 1;
+
+		if (entry.length() > 1) {
+			
+			if (idx > 0) {
+				contents.setColumnIdx(idx--);
+			}
+			
+			entry.deleteCharAt(idx);
+			
+		} else {
+			entry.setCharAt(idx, '\0');
+		}
+	}
+	
+	@Override
+	public void actionF1() {}
+	
+	@Override
+	public void actionF2() {}
+	
+	@Override
+	public void actionF3() {}
+
+	@Override
+	public void actionF4() {}
+	
+	@Override
+	public void actionF5() {}
+
+	@Override
+	public void actionKeyPress(char key) {
+		int idx = contents.getColumnIdx() - 1;
+		
+		if (idx >= 0 && ((key >= '0' && key <= '9') || key == '-' || key == '.')) {
+			StringBuilder line = workingText[contents.getLineIdx()];
+			
+			if(line.charAt(idx) == '\0') {
+				line.setCharAt(idx, key);
+				actionArrowRt();
+				
+			} else if (line.length() < 10) {
+				line.insert(idx, key);
+				actionArrowRt();
+			}
+		}
+		
+		robotRun.updatePendantScreen();
+	}
+
+	/**
+	 * Sets the application message to the given String.
+	 * 
+	 * @param msg	The message to render in the applicaiton UI
+	 */
+	protected void errorMessage(String msg) {
+		Fields.setMessage(msg);
+	}
+
+	/**
+	 * Similar to errorMessage(String), except that this accepts a format
+	 * String and its arguments.
+	 * 
+	 * @param format	The format String
+	 * @param args		The arguments for the format String
+	 */
+	protected void errorMessage(String format, Object... args) {
+		errorMessage( String.format(format, args) );
 	}
 	
 	@Override
@@ -43,10 +158,7 @@ public abstract class ST_ScreenPointEntry extends Screen {
 			contents.addLine(line);
 		}
 	}
-	
-	@Override
-	protected void loadOptions() {}
-	
+
 	@Override
 	protected void loadLabels() {
 		labels[0] = "";
@@ -55,34 +167,17 @@ public abstract class ST_ScreenPointEntry extends Screen {
 		labels[3] = "";
 		labels[4] = "";
 	}
-	
+
+	@Override
+	protected void loadOptions() {}
+
 	@Override
 	protected void loadVars(ScreenState s) {
 		setScreenIndices(0, 1, 0, -1, 0);
 	}
-	
-	/**
-	 * Sets the application message to the given String.
-	 * 
-	 * @param msg	The message to render in the applicaiton UI
-	 */
-	protected void errorMessage(String msg) {
-		Fields.setMessage(msg);
-	}
-	
-	/**
-	 * Similar to errorMessage(String), except that this accepts a format
-	 * String and its arguments.
-	 * 
-	 * @param format	The format String
-	 * @param args		The arguments for the format String
-	 */
-	protected void errorMessage(String format, Object... args) {
-		errorMessage( String.format(format, args) );
-	}
-	
+
 	protected abstract void loadWorkingText();
-	
+
 	protected Point parsePosFromContents(boolean isCartesian) {
 		// Obtain point inputs from UI display text
 		float[] inputs = new float[6];
@@ -145,99 +240,4 @@ public abstract class ST_ScreenPointEntry extends Screen {
 			return null;
 		}
 	}
-
-	@Override
-	public void actionKeyPress(char key) {
-		int idx = contents.getColumnIdx() - 1;
-		
-		if (idx >= 0 && ((key >= '0' && key <= '9') || key == '-' || key == '.')) {
-			StringBuilder line = workingText[contents.getLineIdx()];
-			
-			if(line.charAt(idx) == '\0') {
-				line.setCharAt(idx, key);
-				actionRt();
-				
-			} else if (line.length() < 10) {
-				line.insert(idx, key);
-				actionRt();
-			}
-		}
-		
-		robotRun.updatePendantScreen();
-	}
-	
-	@Override
-	public void actionUp() {
-		contents.moveUp(false);
-	}
-
-	@Override
-	public void actionDn() {
-		contents.moveDown(false);
-	}
-
-	@Override
-	public void actionLt() {
-		if(contents.getColumnIdx() > 1) {
-			contents.moveLeft();
-		}
-	}
-
-	@Override
-	public void actionRt() {
-		StringBuilder entry = workingText[contents.getLineIdx()];
-		int idx = contents.getColumnIdx() - 1;
-		int size = entry.length();
-
-		// Delete a digit from the beginning of the number entry
-		if (robotRun.isShift()) {
-			if (size > 2) {
-				entry.deleteCharAt(idx);
-			} else {
-				// Leave at least one space value entry
-				entry.setCharAt(idx, '\0');
-			}
-			
-		} else {
-			if (idx == (size - 1) && entry.charAt(idx) != '\0' && size < 10) {
-				entry.append("\0");
-				contents.getCurrentItem().add("\0");
-			}
-
-			contents.moveRight();
-		}
-	}
-	
-	@Override
-	public void actionBkspc() {
-		StringBuilder entry = workingText[contents.getLineIdx()]; 
-		int idx = contents.getColumnIdx() - 1;
-
-		if (entry.length() > 1) {
-			
-			if (idx > 0) {
-				contents.setColumnIdx(idx--);
-			}
-			
-			entry.deleteCharAt(idx);
-			
-		} else {
-			entry.setCharAt(idx, '\0');
-		}
-	}
-
-	@Override
-	public void actionF1() {}
-
-	@Override
-	public void actionF2() {}
-
-	@Override
-	public void actionF3() {}
-
-	@Override
-	public void actionF4() {}
-
-	@Override
-	public void actionF5() {}
 }

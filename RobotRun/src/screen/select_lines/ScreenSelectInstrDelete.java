@@ -14,21 +14,6 @@ public class ScreenSelectInstrDelete extends ST_ScreenLineSelect {
 	}
 
 	@Override
-	protected void loadOptions() {
-		options.addLine("Select lines to delete (ENTER).");
-	}
-
-	@Override
-	protected void loadLabels() {
-		// F4, F5
-		labels[0] = "";
-		labels[1] = "";
-		labels[2] = "";
-		labels[3] = "[Confirm]";
-		labels[4] = "[Cancel]";
-	}
-
-	@Override
 	public void actionF4() {
 		Program p = robotRun.getActiveProg();
 		RoboticArm r = robotRun.getActiveRobot();
@@ -52,9 +37,24 @@ public class ScreenSelectInstrDelete extends ST_ScreenLineSelect {
 		robotRun.getLastScreen().setContentIdx(contents.getLineIdx());
 		robotRun.lastScreen();
 	}
-	
+
 	@Override
 	public void actionF5() {
 		robotRun.lastScreen();
+	}
+
+	@Override
+	protected void loadLabels() {
+		// F4, F5
+		labels[0] = "";
+		labels[1] = "";
+		labels[2] = "";
+		labels[3] = "[Confirm]";
+		labels[4] = "[Cancel]";
+	}
+	
+	@Override
+	protected void loadOptions() {
+		options.addLine("Select lines to delete (ENTER).");
 	}
 }

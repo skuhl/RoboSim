@@ -27,14 +27,6 @@ public class DropdownSearch extends MyDropdownList {
 	}
 	
 	@Override
-	public DropdownSearch setValue(float newValue) {
-		super.setValue(newValue);
-		// Reset the search buffer
-		searchBuffer = new StringBuilder("");
-		return this;
-	}
-	
-	@Override
 	public DropdownSearch clear() {
 		super.clear();
 		searchBuffer = new StringBuilder("");
@@ -78,6 +70,14 @@ public class DropdownSearch extends MyDropdownList {
 				}
 			}
 		}
+	}
+	
+	@Override
+	public DropdownSearch setValue(float newValue) {
+		super.setValue(newValue);
+		// Reset the search buffer
+		searchBuffer = new StringBuilder("");
+		return this;
 	}
 	
 	/**

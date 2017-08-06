@@ -28,77 +28,6 @@ public class ScreenSetExpressionArg extends ST_ScreenEditItem {
 	}
 
 	@Override
-	protected void loadOptions() {
-		if (robotRun.opEdit instanceof Expression) {
-			Instruction instr = robotRun.getActiveInstruction();
-			Expression expr = (Expression)robotRun.opEdit;
-			int idx = contents.getItemColumnIdx() - ((ExpressionEvaluation)instr).getHeaderLength();
-			int[] elements = expr.mapToEdit();
-			Operator prev;
-			
-			if(idx > 0 && idx < elements.length && expr.get(elements[idx - 1]) instanceof Operator) {
-				prev = (Operator)expr.get(elements[idx - 1]);
-			} else {
-				prev = null;
-			}
-			
-			if(instr instanceof RegisterStatement) {
-				RegisterStatement r = (RegisterStatement)instr;
-				
-				if(r.getReg() instanceof DataRegister) {
-					loadFloatArgs();
-				} else if(r.getReg() instanceof IORegister) {
-					if(prev == null || prev.getType() == Operator.NO_OP) {
-						loadFloatArgs();
-						loadBoolArgs();
-					} else if(prev.getType() == Operator.ARITH_OP || prev.getType() == Operator.BOOL_OP) {
-						loadFloatArgs();
-					} else if(prev.getType() == Operator.LOGIC_OP) {
-						loadBoolArgs();
-					}
-				} 
-				else if(r.getReg() instanceof PositionRegister) {
-					if(r.getPosIdx() == -1) {
-						loadPointArgs();						
-					} else {
-						loadFloatArgs();
-					}
-				}
-			}
-			else if(instr instanceof IfStatement) {
-				if(prev == null || prev.getType() == Operator.NO_OP) {
-					loadFloatArgs();
-					loadBoolArgs();
-				} else if(prev.getType() == Operator.ARITH_OP || prev.getType() == Operator.BOOL_OP) {
-					loadFloatArgs();
-				} else if(prev.getType() == Operator.LOGIC_OP) {
-					loadBoolArgs();
-				}
-			}
-			
-			options.addLine(9, "(...)");
-		}
-	}
-	
-	private void loadFloatArgs() {
-		options.addLine(0, "R[x]");
-		options.addLine(1, "PR[x, y]");
-		options.addLine(2, "FConst");
-	}
-	
-	private void loadBoolArgs() {
-		options.addLine(3, "IO[x]");
-		options.addLine(4, "Obj[x]");
-		options.addLine(5, "BoolConst");
-	}
-	
-	private void loadPointArgs() {
-		options.addLine(6, "PR[x]");
-		options.addLine(7, "JPos");
-		options.addLine(8, "LPos");
-	}
-
-	@Override
 	public void actionEntr() {
 		Expression expr = (Expression)robotRun.opEdit;
 		Operand<?> operand;
@@ -153,5 +82,76 @@ public class ScreenSetExpressionArg extends ST_ScreenEditItem {
 			robotRun.opEdit = expr.setOperand(robotRun.editIdx, operand);
 			robotRun.lastScreen();
 		}
+	}
+	
+	@Override
+	protected void loadOptions() {
+		if (robotRun.opEdit instanceof Expression) {
+			Instruction instr = robotRun.getActiveInstruction();
+			Expression expr = (Expression)robotRun.opEdit;
+			int idx = contents.getItemColumnIdx() - ((ExpressionEvaluation)instr).getHeaderLength();
+			int[] elements = expr.mapToEdit();
+			Operator prev;
+			
+			if(idx > 0 && idx < elements.length && expr.get(elements[idx - 1]) instanceof Operator) {
+				prev = (Operator)expr.get(elements[idx - 1]);
+			} else {
+				prev = null;
+			}
+			
+			if(instr instanceof RegisterStatement) {
+				RegisterStatement r = (RegisterStatement)instr;
+				
+				if(r.getReg() instanceof DataRegister) {
+					loadFloatArgs();
+				} else if(r.getReg() instanceof IORegister) {
+					if(prev == null || prev.getType() == Operator.NO_OP) {
+						loadFloatArgs();
+						loadBoolArgs();
+					} else if(prev.getType() == Operator.ARITH_OP || prev.getType() == Operator.BOOL_OP) {
+						loadFloatArgs();
+					} else if(prev.getType() == Operator.LOGIC_OP) {
+						loadBoolArgs();
+					}
+				} 
+				else if(r.getReg() instanceof PositionRegister) {
+					if(r.getPosIdx() == -1) {
+						loadPointArgs();						
+					} else {
+						loadFloatArgs();
+					}
+				}
+			}
+			else if(instr instanceof IfStatement) {
+				if(prev == null || prev.getType() == Operator.NO_OP) {
+					loadFloatArgs();
+					loadBoolArgs();
+				} else if(prev.getType() == Operator.ARITH_OP || prev.getType() == Operator.BOOL_OP) {
+					loadFloatArgs();
+				} else if(prev.getType() == Operator.LOGIC_OP) {
+					loadBoolArgs();
+				}
+			}
+			
+			options.addLine(9, "(...)");
+		}
+	}
+	
+	private void loadBoolArgs() {
+		options.addLine(3, "IO[x]");
+		options.addLine(4, "Obj[x]");
+		options.addLine(5, "BoolConst");
+	}
+	
+	private void loadFloatArgs() {
+		options.addLine(0, "R[x]");
+		options.addLine(1, "PR[x, y]");
+		options.addLine(2, "FConst");
+	}
+
+	private void loadPointArgs() {
+		options.addLine(6, "PR[x]");
+		options.addLine(7, "JPos");
+		options.addLine(8, "LPos");
 	}
 }

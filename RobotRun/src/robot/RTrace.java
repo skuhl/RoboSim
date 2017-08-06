@@ -14,15 +14,15 @@ import processing.core.PVector;
 public class RTrace {
 	
 	/**
-	 * The points, which makeup the trace segments.
-	 */
-	private LinkedList<PVector> ptBuffer;
-	
-	/**
 	 * The maximum number of points, which will be stored at one time for
 	 * drawing the trace.
 	 */
 	private int maxSize;
+	
+	/**
+	 * The points, which makeup the trace segments.
+	 */
+	private LinkedList<PVector> ptBuffer;
 	
 	/**
 	 * Defines an empty point buffer with a max size of 10000 points.

@@ -19,16 +19,16 @@ import processing.core.PVector;
  */
 public class LinearInterpolation extends LinearMotion {
 	
+	private float distBtwPts;
+	
+	private int interMotionIdx;
 	/**
 	 * Defines the set of points, through which to interpolate.
 	 */
 	private final ArrayList<Point> interpolatePts;
 	
-	private float distBtwPts;
-	private float speed;
-	
 	private int motionFrameCounter;
-	private int interMotionIdx;
+	private float speed;
 	
 	/**
 	 * Initializes intermediate positions.
@@ -57,6 +57,51 @@ public class LinearInterpolation extends LinearMotion {
 		calculateIntermediatePositions(start, end);
 	}
 	
+	@Override
+	public int executeMotion(RoboticArm robot) {
+		motionFrameCounter++;
+		// speed is in pixels per frame, multiply that by the current speed
+		// setting
+		// which is contained in the motion instruction
+		float currentSpeed = RoboticArm.motorSpeed * speed;
+		if (currentSpeed * motionFrameCounter > distBtwPts) {
+			interMotionIdx++;
+			motionFrameCounter = 0;
+			if (interMotionIdx >= interpolatePts.size()) {
+				reset(speed);
+				return 0;
+			}
+
+			int ret = 0;
+			if (interpolatePts.size() > 0) {
+				Point tgtPoint = interpolatePts.get(interMotionIdx);
+				ret = robot.jumpTo(tgtPoint.position, tgtPoint.orientation);
+			}
+
+			if (ret == 1) {
+				// An issue occurred with inverse kinematics
+				setFault(true);
+				return 1;
+			}
+		}
+
+		return 2;
+	}
+
+	@Override
+	public void halt() {
+		interpolatePts.clear();
+		distBtwPts = 5f;
+		speed = 0f;
+		interMotionIdx = 0;
+		motionFrameCounter = 0;
+	}
+
+	@Override
+	public boolean hasMotion() {
+		return !hasFault() && interpolatePts.size() > 0;
+	}
+
 	private void calculateArc(Point start, Point inter, Point end) {
 		PVector va = start.position.copy();
 		PVector vb = inter.position.copy();
@@ -258,7 +303,7 @@ public class LinearInterpolation extends LinearMotion {
 		}
 		interMotionIdx = 0;
 	}
-
+	
 	private float calculateH(float x1, float y1, float x2, float y2, float x3, float y3) {
 		float numerator = (x2 * x2 + y2 * y2) * y3 - (x3 * x3 + y3 * y3) * y2
 				- ((x1 * x1 + y1 * y1) * y3 - (x3 * x3 + y3 * y3) * y1) + (x1 * x1 + y1 * y1) * y2
@@ -273,7 +318,7 @@ public class LinearInterpolation extends LinearMotion {
 		denominator *= 2;
 		return numerator / denominator;
 	}
-
+	
 	private void calculateIntermediatePositions(Point start, Point end) {
 		PVector p1 = start.position;
 		PVector p2 = end.position;
@@ -307,7 +352,7 @@ public class LinearInterpolation extends LinearMotion {
 
 		interMotionIdx = 0;
 	} // end calculate intermediate positions
-
+	
 	private float calculateK(float x1, float y1, float x2, float y2, float x3, float y3) {
 		float numerator = x2 * (x3 * x3 + y3 * y3) - x3 * (x2 * x2 + y2 * y2)
 				- (x1 * (x3 * x3 + y3 * y3) - x3 * (x1 * x1 + y1 * y1)) + x1 * (x2 * x2 + y2 * y2)
@@ -316,7 +361,7 @@ public class LinearInterpolation extends LinearMotion {
 		denominator *= 2;
 		return numerator / denominator;
 	}
-	
+
 	private PVector circleCenter(PVector a, PVector b, PVector c) {
 		float h = calculateH(a.x, a.y, b.x, b.y, c.x, c.y);
 		
@@ -328,7 +373,7 @@ public class LinearInterpolation extends LinearMotion {
 		float k = calculateK(a.x, a.y, b.x, b.y, c.x, c.y);
 		return new PVector(h, k, a.z);
 	}
-	
+
 	private PVector[] createPlaneFrom3Points(PVector a, PVector b, PVector c) {
 		PVector n1 = new PVector(a.x - b.x, a.y - b.y, a.z - b.z);
 		n1.normalize();
@@ -344,51 +389,6 @@ public class LinearInterpolation extends LinearMotion {
 		coordinateSystem[1] = y;
 		coordinateSystem[2] = z;
 		return coordinateSystem;
-	}
-	
-	@Override
-	public int executeMotion(RoboticArm robot) {
-		motionFrameCounter++;
-		// speed is in pixels per frame, multiply that by the current speed
-		// setting
-		// which is contained in the motion instruction
-		float currentSpeed = RoboticArm.motorSpeed * speed;
-		if (currentSpeed * motionFrameCounter > distBtwPts) {
-			interMotionIdx++;
-			motionFrameCounter = 0;
-			if (interMotionIdx >= interpolatePts.size()) {
-				reset(speed);
-				return 0;
-			}
-
-			int ret = 0;
-			if (interpolatePts.size() > 0) {
-				Point tgtPoint = interpolatePts.get(interMotionIdx);
-				ret = robot.jumpTo(tgtPoint.position, tgtPoint.orientation);
-			}
-
-			if (ret == 1) {
-				// An issue occurred with inverse kinematics
-				setFault(true);
-				return 1;
-			}
-		}
-
-		return 2;
-	}
-
-	@Override
-	public void halt() {
-		interpolatePts.clear();
-		distBtwPts = 5f;
-		speed = 0f;
-		interMotionIdx = 0;
-		motionFrameCounter = 0;
-	}
-
-	@Override
-	public boolean hasMotion() {
-		return !hasFault() && interpolatePts.size() > 0;
 	}
 	
 	private void reset(float speed) {

@@ -14,8 +14,14 @@ public class ScreenCreateMacro extends ST_ScreenListContents {
 	}
 
 	@Override
-	protected String loadHeader() {
-		return "SELECT MACRO PROGRAM";
+	public void actionEntr() {
+		RoboticArm r = robotRun.getActiveRobot();
+		Program p = r.getProgram(contents.getLineIdx());
+		r.getMacroList().add(new Macro(r, p));
+		DataManagement.saveRobotData(r, 8);
+		
+		robotRun.getLastScreen().setContentIdx(r.getMacroList().size() - 1);
+		robotRun.switchScreen(ScreenMode.SET_MACRO_TYPE);
 	}
 
 	@Override
@@ -25,13 +31,7 @@ public class ScreenCreateMacro extends ST_ScreenListContents {
 	}
 
 	@Override
-	public void actionEntr() {
-		RoboticArm r = robotRun.getActiveRobot();
-		Program p = r.getProgram(contents.getLineIdx());
-		r.getMacroList().add(new Macro(r, p));
-		DataManagement.saveRobotData(r, 8);
-		
-		robotRun.getLastScreen().setContentIdx(r.getMacroList().size() - 1);
-		robotRun.switchScreen(ScreenMode.SET_MACRO_TYPE);
+	protected String loadHeader() {
+		return "SELECT MACRO PROGRAM";
 	}
 }

@@ -12,8 +12,49 @@ public abstract class ST_ScreenListContents extends Screen {
 	}
 	
 	@Override
-	protected void loadOptions() {}
+	public void actionArrowDn() {
+		contents.moveDown(robotRun.isShift());
+	}
 	
+	@Override
+	public void actionArrowLt() {
+		contents.moveLeft();
+	}
+	
+	@Override
+	public void actionArrowRt() {
+		contents.moveRight();
+	}
+	
+	@Override
+	public void actionArrowUp() {
+		contents.moveUp(robotRun.isShift());
+	}
+
+	@Override
+	public void actionBkspc() {}
+
+	@Override
+	public void actionEntr() {}
+
+	@Override
+	public void actionF1() {}
+
+	@Override
+	public void actionF2() {}
+	
+	@Override
+	public void actionF3() {}
+	
+	@Override
+	public void actionF4() {}
+	
+	@Override
+	public void actionF5() {}
+
+	@Override
+	public void actionKeyPress(char key) {}
+
 	@Override
 	protected void loadLabels() {
 		labels[0] = "";
@@ -22,53 +63,12 @@ public abstract class ST_ScreenListContents extends Screen {
 		labels[3] = "";
 		labels[4] = "";
 	}
-	
+
+	@Override
+	protected void loadOptions() {}
+
 	@Override
 	protected void loadVars(ScreenState s) {
 		setScreenIndices(0, 0, 0, 0, 0);
 	}
-	
-	@Override
-	public void actionKeyPress(char key) {}
-
-	@Override
-	public void actionUp() {
-		contents.moveUp(robotRun.isShift());
-	}
-
-	@Override
-	public void actionDn() {
-		contents.moveDown(robotRun.isShift());
-	}
-
-	@Override
-	public void actionLt() {
-		contents.moveLeft();
-	}
-
-	@Override
-	public void actionRt() {
-		contents.moveRight();
-	}
-	
-	@Override
-	public void actionBkspc() {}
-	
-	@Override
-	public void actionEntr() {}
-	
-	@Override
-	public void actionF1() {}
-
-	@Override
-	public void actionF2() {}
-
-	@Override
-	public void actionF3() {}
-
-	@Override
-	public void actionF4() {}
-
-	@Override
-	public void actionF5() {}
 }

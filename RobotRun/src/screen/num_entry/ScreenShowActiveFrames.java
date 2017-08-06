@@ -18,8 +18,33 @@ public class ScreenShowActiveFrames extends ST_ScreenNumEntry {
 	}
 
 	@Override
-	protected String loadHeader() {
-		return "ACTIVE FRAMES";
+	public void actionArrowDn() {
+		updateActiveFramesDisplay();
+		workingText = new StringBuilder(Integer.toString(robotRun.getActiveRobot().getActiveUserIdx() + 1));
+
+		contents.moveDown(false);
+	}
+	
+	@Override
+	public void actionArrowUp() {
+		updateActiveFramesDisplay();
+		workingText = new StringBuilder(Integer.toString(robotRun.getActiveRobot().getActiveToolIdx() + 1));
+		contents.moveUp(false);
+	}
+	
+	@Override
+	public void actionEntr() {
+		updateActiveFramesDisplay();
+		robotRun.updatePendantScreen();
+	}
+	
+	@Override
+	public void actionF1() {
+		if (contents.getLineIdx() == 0) {
+			robotRun.nextScreen(ScreenMode.NAV_TOOL_FRAMES);
+		} else if (contents.getLineIdx() == 1) {
+			robotRun.nextScreen(ScreenMode.NAV_USER_FRAMES);
+		}
 	}
 	
 	@Override
@@ -37,7 +62,9 @@ public class ScreenShowActiveFrames extends ST_ScreenNumEntry {
 	}
 	
 	@Override
-	protected void loadOptions() {}
+	protected String loadHeader() {
+		return "ACTIVE FRAMES";
+	}
 	
 	@Override
 	protected void loadLabels() {
@@ -48,32 +75,14 @@ public class ScreenShowActiveFrames extends ST_ScreenNumEntry {
 		labels[3] = "";
 		labels[4] = "";
 	}
+
+	@Override
+	protected void loadOptions() {}
 	
 	@Override
 	protected void loadVars(ScreenState s) {
 		setScreenIndices(contents.getCurrentItemIdx(), contents.getItemColumnIdx(),
 				contents.getRenderStart(), 0, 0);
-	}
-	
-	@Override
-	public void actionUp() {
-		updateActiveFramesDisplay();
-		workingText = new StringBuilder(Integer.toString(robotRun.getActiveRobot().getActiveToolIdx() + 1));
-		contents.moveUp(false);
-	}
-	
-	@Override
-	public void actionDn() {
-		updateActiveFramesDisplay();
-		workingText = new StringBuilder(Integer.toString(robotRun.getActiveRobot().getActiveUserIdx() + 1));
-
-		contents.moveDown(false);
-	}
-
-	@Override
-	public void actionEntr() {
-		updateActiveFramesDisplay();
-		robotRun.updatePendantScreen();
 	}
 	
 	/**
@@ -113,15 +122,6 @@ public class ScreenShowActiveFrames extends ST_ScreenNumEntry {
 		
 		if (activeLn != null) {
 			activeLn.set(colIdx, workingText.toString());
-		}
-	}
-	
-	@Override
-	public void actionF1() {
-		if (contents.getLineIdx() == 0) {
-			robotRun.nextScreen(ScreenMode.NAV_TOOL_FRAMES);
-		} else if (contents.getLineIdx() == 1) {
-			robotRun.nextScreen(ScreenMode.NAV_USER_FRAMES);
 		}
 	}
 }

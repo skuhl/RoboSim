@@ -5,16 +5,16 @@ import java.util.ArrayList;
 import global.RMath;
 
 public class MenuScroll {
-	private final String name;
+	private int columnIdx;
+	private int lineIdx;
+	private ArrayList<DisplayLine> lines;
 	private int maxDisp;
+	
+	private final String name;
+	
+	private int renderStart;
 	private int xPos;
 	private int yPos;
-	
-	private ArrayList<DisplayLine> lines;
-	
-	private int lineIdx;
-	private int columnIdx;
-	private int renderStart;
 	
 	public MenuScroll(String n, int max, int x, int y) {
 		name = n;
@@ -239,6 +239,14 @@ public class MenuScroll {
 		return lines.set(i, newLine(i, columns));
 	}
 	
+	public void setColumnIdx(int i) {
+		columnIdx = i;
+	}
+	
+	public void setLineIdx(int i) {
+		lineIdx = i;
+	}
+	
 	public MenuScroll setLines(ArrayList<DisplayLine> l) {
 		lines = l;
 		
@@ -251,7 +259,7 @@ public class MenuScroll {
 		
 		return this;
 	}
-	
+
 	public MenuScroll setMaxDisplay(int max) {
 		maxDisp = max;
 		return this;
@@ -259,14 +267,6 @@ public class MenuScroll {
 	
 	public void setRenderStart(int renStart) {
 		renderStart = renStart;
-	}
-
-	public void setColumnIdx(int i) {
-		columnIdx = i;
-	}
-	
-	public void setLineIdx(int i) {
-		lineIdx = i;
 	}
 	
 	public int size() {

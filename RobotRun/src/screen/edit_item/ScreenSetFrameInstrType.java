@@ -12,12 +12,6 @@ public class ScreenSetFrameInstrType extends ST_ScreenEditItem {
 	}
 	
 	@Override
-	protected void loadOptions() {
-		options.addLine("1. TFRAME_NUM = ...");
-		options.addLine("2. UFRAME_NUM = ...");
-	}
-
-	@Override
 	public void actionEntr() {
 		FrameInstruction fInst = (FrameInstruction) robotRun.getActiveInstruction();
 		
@@ -29,5 +23,11 @@ public class ScreenSetFrameInstrType extends ST_ScreenEditItem {
 		}
 
 		robotRun.switchScreen(ScreenMode.SET_FRAME_INSTR_IDX);
+	}
+
+	@Override
+	protected void loadOptions() {
+		options.addLine("1. TFRAME_NUM = ...");
+		options.addLine("2. UFRAME_NUM = ...");
 	}
 }

@@ -11,8 +11,17 @@ public class ScreenSelectComment extends ST_ScreenLineSelect {
 	}
 
 	@Override
-	protected void loadOptions() {
-		options.addLine("Select lines to comment/uncomment.");
+	public void actionEntr() {
+		RoboticArm r = robotRun.getActiveRobot();
+		r.getInstToEdit(robotRun.getActiveProg(), robotRun.getActiveInstIdx()).toggleCommented();
+		robotRun.updatePendantScreen();
+	}
+	
+	@Override
+	public void actionF4() {
+		robotRun.lastScreen();
+		robotRun.getLastScreen().setContentIdx(contents.getLineIdx());
+		robotRun.lastScreen();
 	}
 	
 	@Override
@@ -25,16 +34,7 @@ public class ScreenSelectComment extends ST_ScreenLineSelect {
 	}
 	
 	@Override
-	public void actionEntr() {
-		RoboticArm r = robotRun.getActiveRobot();
-		r.getInstToEdit(robotRun.getActiveProg(), robotRun.getActiveInstIdx()).toggleCommented();
-		robotRun.updatePendantScreen();
-	}
-	
-	@Override
-	public void actionF4() {
-		robotRun.lastScreen();
-		robotRun.getLastScreen().setContentIdx(contents.getLineIdx());
-		robotRun.lastScreen();
+	protected void loadOptions() {
+		options.addLine("Select lines to comment/uncomment.");
 	}
 }

@@ -27,10 +27,6 @@ public class IORegister extends Register {
 	}
 	
 	
-	public void setState(boolean newState) {
-		state = newState;
-	}
-	
 	public boolean getState() {
 		return state;
 	}
@@ -40,18 +36,22 @@ public class IORegister extends Register {
 		return "IO";
 	}
 	
-	@Override
-	public String toString() {
-		String idxStr = (idx < 0) ? "..." : Integer.toString(idx);
-		// Include the register's prefix and index
-		return String.format("%s[%s]", regPrefix(), idxStr);
+	public void setState(boolean newState) {
+		state = newState;
 	}
-
+	
 	public void toggleState() {
 		if(state == Fields.OFF) {
 			state = Fields.ON;
 		} else {
 			state = Fields.OFF;
 		}
+	}
+
+	@Override
+	public String toString() {
+		String idxStr = (idx < 0) ? "..." : Integer.toString(idx);
+		// Include the register's prefix and index
+		return String.format("%s[%s]", regPrefix(), idxStr);
 	}
 }

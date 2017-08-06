@@ -12,48 +12,22 @@ public abstract class ST_ScreenConfirmCancel extends Screen {
 	}
 	
 	@Override
-	protected String loadHeader() {
-		return robotRun.getActiveProg().getName();
-	}
+	public void actionArrowDn() {}
 	
 	@Override
-	protected void loadContents() {}
+	public void actionArrowLt() {}
 	
 	@Override
-	protected void loadLabels() {
-		// F4, F5
-		labels[0] = "";
-		labels[1] = "";
-		labels[2] = "";
-		labels[3] = "[Confirm]";
-		labels[4] = "[Cancel]";
-	}
+	public void actionArrowRt() {}
 	
 	@Override
-	protected void loadVars(ScreenState s) {
-		setScreenIndices(0, 0, 0, 0, 0);
-	}
-	
-	@Override
-	public void actionKeyPress(char key) {}
-		
-	@Override
-	public void actionUp() {}
-	
-	@Override
-	public void actionDn() {}
-	
-	@Override
-	public void actionLt() {}
-	
-	@Override
-	public void actionRt() {}
-	
-	@Override
-	public void actionEntr() {}
+	public void actionArrowUp() {}
 	
 	@Override
 	public void actionBkspc() {}
+		
+	@Override
+	public void actionEntr() {}
 	
 	@Override
 	public void actionF1() {}
@@ -69,5 +43,31 @@ public abstract class ST_ScreenConfirmCancel extends Screen {
 	
 	@Override
 	public void actionF5() {}
+	
+	@Override
+	public void actionKeyPress(char key) {}
+	
+	@Override
+	protected void loadContents() {}
+	
+	@Override
+	protected String loadHeader() {
+		return robotRun.getActiveProg().getName();
+	}
+	
+	@Override
+	protected void loadLabels() {
+		// F4, F5
+		labels[0] = "";
+		labels[1] = "";
+		labels[2] = "";
+		labels[3] = "[Confirm]";
+		labels[4] = "[Cancel]";
+	}
+	
+	@Override
+	protected void loadVars(ScreenState s) {
+		setScreenIndices(0, 0, 0, 0, 0);
+	}
 
 }

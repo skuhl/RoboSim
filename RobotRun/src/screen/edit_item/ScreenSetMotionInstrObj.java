@@ -14,6 +14,16 @@ public class ScreenSetMotionInstrObj extends ST_ScreenEditItem {
 	}
 
 	@Override
+	public void actionEntr() {
+		RoboticArm r = robotRun.getActiveRobot();
+		CamMoveToObject cMInst = (CamMoveToObject) r.getInstToEdit(robotRun.getActiveProg(), 
+				robotRun.getActiveInstIdx());
+		cMInst.setPosIdx(options.getLineIdx() - 1);
+		
+		robotRun.lastScreen();
+	}
+
+	@Override
 	protected void loadOptions() {
 		CamMoveToObject castIns = (CamMoveToObject)robotRun.getActiveInstruction();
 		Scenario s = castIns.getScene();
@@ -28,16 +38,6 @@ public class ScreenSetMotionInstrObj extends ST_ScreenEditItem {
 		} else {
 			options.addLine("No objects to select");
 		}
-	}
-
-	@Override
-	public void actionEntr() {
-		RoboticArm r = robotRun.getActiveRobot();
-		CamMoveToObject cMInst = (CamMoveToObject) r.getInstToEdit(robotRun.getActiveProg(), 
-				robotRun.getActiveInstIdx());
-		cMInst.setPosIdx(options.getLineIdx() - 1);
-		
-		robotRun.lastScreen();
 	}
 
 }

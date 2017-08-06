@@ -7,9 +7,14 @@ public class CallInstruction extends Instruction {
 	
 	private static Pointer<RoboticArm> robotRef;
 	
-	private RoboticArm tgtDevice;
-	private Program tgt;
-	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param ref
+	 */
+	public static void setRobotRef(Pointer<RoboticArm> ref) {
+		robotRef = ref;
+	}
 	/**
 	 * TODO comment this
 	 */
@@ -22,23 +27,11 @@ public class CallInstruction extends Instruction {
 	 * with the tgt's name, since the user can rename programs.
 	 */
 	private String loadedName;
-
-	public CallInstruction(RoboticArm robot) {
-		tgtDevice = robot;
-		tgt = null;
-		
-		loadedID = -1;
-		loadedName = null;
-	}
-		
-	public CallInstruction(RoboticArm tgtDevice, Program tgt) {
-		this.tgtDevice = tgtDevice;
-		this.tgt = tgt;
-		
-		loadedID = -1;
-		loadedName = null;
-	}
 	
+	private Program tgt;
+
+	private RoboticArm tgtDevice;
+		
 	public CallInstruction(int tgtDID, String tgtName) {
 		tgtDevice = null;
 		tgt = null;
@@ -47,22 +40,25 @@ public class CallInstruction extends Instruction {
 		loadedName = tgtName;
 	}
 	
-	/**
-	 * TODO comment this
-	 * 
-	 * @param ref
-	 */
-	public static void setRobotRef(Pointer<RoboticArm> ref) {
-		robotRef = ref;
+	public CallInstruction(RoboticArm robot) {
+		tgtDevice = robot;
+		tgt = null;
+		
+		loadedID = -1;
+		loadedName = null;
+	}
+	
+	public CallInstruction(RoboticArm tgtDevice, Program tgt) {
+		this.tgtDevice = tgtDevice;
+		this.tgt = tgt;
+		
+		loadedID = -1;
+		loadedName = null;
 	}
 
 	@Override
 	public Instruction clone() {
 		return new CallInstruction(tgtDevice, tgt);
-	}
-	
-	public Program getProg() {
-		return tgt;
 	}
 	
 	public int getLoadedID() {
@@ -71,6 +67,10 @@ public class CallInstruction extends Instruction {
 	
 	public String getLoadedName() {
 		return loadedName;
+	}
+	
+	public Program getProg() {
+		return tgt;
 	}
 	
 	public RoboticArm getTgtDevice() {
@@ -85,10 +85,6 @@ public class CallInstruction extends Instruction {
 		tgtDevice = tgt;
 	}
 	
-	private String getProgName() {
-		return (tgt == null) ? "..." : tgt.getName();
-	}
-
 	@Override
 	public String toString() {
 		if(tgtDevice == robotRef.get()) {
@@ -106,5 +102,9 @@ public class CallInstruction extends Instruction {
 		ret[1] = getProgName();
 
 		return ret;
+	}
+
+	private String getProgName() {
+		return (tgt == null) ? "..." : tgt.getName();
 	}
 }

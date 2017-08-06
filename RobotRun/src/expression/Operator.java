@@ -2,28 +2,28 @@ package expression;
 /* These are used to store the operators used in register statement expressions in the ExpressionSet Object */
 public enum Operator implements ExpressionElement {
 	ADD("+", ARITH_OP), 
-	SUB("-", ARITH_OP), 
-	MULT("*", ARITH_OP), 
+	AND("&&", LOGIC_OP), 
 	DIV("/", ARITH_OP), 
-	MOD("%", ARITH_OP), 
-	IDIV("|", ARITH_OP),
-	
-	PT_ADD("+", POINT_OP),
-	PT_SUB("-", POINT_OP),
-		
-	AND("&&", LOGIC_OP),
-	OR("||", LOGIC_OP),
-	NOT("!", LOGIC_OP),
-	
+	EQUAL("=", BOOL_OP), 
+	GREQ(">=", BOOL_OP), 
 	GRTR(">", BOOL_OP),
-	LESS("<", BOOL_OP),
-	GREQ(">=", BOOL_OP),
-	LSEQ("<=", BOOL_OP),
-	EQUAL("=", BOOL_OP),
-	NEQUAL("<>", BOOL_OP),
 	
-	PAR_OPEN("(", NO_OP),
+	IDIV("|", ARITH_OP),
+	LESS("<", BOOL_OP),
+		
+	LSEQ("<=", BOOL_OP),
+	MOD("%", ARITH_OP),
+	MULT("*", ARITH_OP),
+	
+	NEQUAL("<>", BOOL_OP),
+	NOT("!", LOGIC_OP),
+	OR("||", LOGIC_OP),
 	PAR_CLOSE(")", NO_OP),
+	PAR_OPEN("(", NO_OP),
+	PT_ADD("+", POINT_OP),
+	
+	PT_SUB("-", POINT_OP),
+	SUB("-", ARITH_OP),
 	UNINIT("_", NO_OP);
 
 	/**

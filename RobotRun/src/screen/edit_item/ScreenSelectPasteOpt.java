@@ -21,17 +21,6 @@ public class ScreenSelectPasteOpt extends ST_ScreenEditItem {
 	}
 
 	@Override
-	protected void loadOptions() {
-		options.addLine("1 Logic");
-		options.addLine("2 Position");
-		options.addLine("3 Pos ID");
-		options.addLine("4 R Logic");
-		options.addLine("5 R Position");
-		options.addLine("6 R Pos ID");
-		options.addLine("7 RM Pos ID");
-	}
-
-	@Override
 	public void actionEntr() {
 		RoboticArm r = robotRun.getActiveRobot();
 		Program p = robotRun.getActiveProg();
@@ -67,5 +56,16 @@ public class ScreenSelectPasteOpt extends ST_ScreenEditItem {
 			robotRun.getLastScreen().setContentIdx(contents.getLineIdx());
 			robotRun.lastScreen();
 		}
+	}
+
+	@Override
+	protected void loadOptions() {
+		options.addLine("1 Logic");
+		options.addLine("2 Position");
+		options.addLine("3 Pos ID");
+		options.addLine("4 R Logic");
+		options.addLine("5 R Position");
+		options.addLine("6 R Pos ID");
+		options.addLine("7 RM Pos ID");
 	}
 }

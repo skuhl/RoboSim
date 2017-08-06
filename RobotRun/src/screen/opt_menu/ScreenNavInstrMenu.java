@@ -10,23 +10,6 @@ public class ScreenNavInstrMenu extends ST_ScreenOptionsMenu {
 	}
 	
 	@Override
-	protected String loadHeader() {
-		return robotRun.getActiveProg().getName();
-	}
-	
-	@Override
-	protected void loadOptions() {
-		options.addLine("1 Undo");
-		options.addLine("2 Insert");
-		options.addLine("3 Delete");
-		options.addLine("4 Cut/ Copy");
-		options.addLine("5 Paste");
-		options.addLine("6 Find/ Replace");
-		options.addLine("7 Renumber");
-		options.addLine("8 Comment");
-	}
-
-	@Override
 	public void actionEntr() {
 		switch (options.getLineIdx()) {
 		case 0: // Undo
@@ -56,5 +39,22 @@ public class ScreenNavInstrMenu extends ST_ScreenOptionsMenu {
 			break;
 		case 8: // Remark
 		}
+	}
+	
+	@Override
+	protected String loadHeader() {
+		return robotRun.getActiveProg().getName();
+	}
+
+	@Override
+	protected void loadOptions() {
+		options.addLine("1 Undo");
+		options.addLine("2 Insert");
+		options.addLine("3 Delete");
+		options.addLine("4 Cut/ Copy");
+		options.addLine("5 Paste");
+		options.addLine("6 Find/ Replace");
+		options.addLine("7 Renumber");
+		options.addLine("8 Comment");
 	}
 }

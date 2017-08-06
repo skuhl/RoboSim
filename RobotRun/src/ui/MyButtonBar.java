@@ -42,12 +42,6 @@ public class MyButtonBar extends ButtonBar {
 		return null;
 	}
 	
-	@Override
-	protected void onEndDrag() {
-		// Allow drag clicks
-		onClick();
-	}
-	
 	/**
 	 * TODO comment this
 	 * 
@@ -69,5 +63,11 @@ public class MyButtonBar extends ButtonBar {
 				item.put("selected", new Boolean(false));
 			}
 		}
+	}
+	
+	@Override
+	protected void onEndDrag() {
+		// Allow drag clicks
+		onClick();
 	}
 }

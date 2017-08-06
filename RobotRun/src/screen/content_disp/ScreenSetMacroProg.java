@@ -13,8 +13,14 @@ public class ScreenSetMacroProg extends ST_ScreenListContents {
 	}
 
 	@Override
-	protected String loadHeader() {
-		return "SELECT MACRO PROGRAM";
+	public void actionEntr() {
+		RoboticArm r = robotRun.getActiveRobot();
+		int idx = robotRun.getLastScreen().getContentIdx();
+		Program p = r.getProgram(contents.getLineIdx());
+		
+		r.getMacro(idx).setProg(p);
+		DataManagement.saveRobotData(r, 8);
+		robotRun.lastScreen();
 	}
 
 	@Override
@@ -24,13 +30,7 @@ public class ScreenSetMacroProg extends ST_ScreenListContents {
 	}
 
 	@Override
-	public void actionEntr() {
-		RoboticArm r = robotRun.getActiveRobot();
-		int idx = robotRun.getLastScreen().getContentIdx();
-		Program p = r.getProgram(contents.getLineIdx());
-		
-		r.getMacro(idx).setProg(p);
-		DataManagement.saveRobotData(r, 8);
-		robotRun.lastScreen();
+	protected String loadHeader() {
+		return "SELECT MACRO PROGRAM";
 	}
 }

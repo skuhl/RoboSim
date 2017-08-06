@@ -23,49 +23,6 @@ public abstract class RMath {
 	public static final float TWO_PI = RobotRun.TWO_PI;
 	
 	/**
-	 * Tests orientation conversion methods
-	 * 
-	 * @param args	Unused
-	 */
-	public static void main(String[] args) {
-		
-		float[] testVals = new float[] { 0f, 1f / 8f, 1f / 4f,  };
-		
-		PVector wpr = new PVector(-170f, 90f, 170f);
-		wpr.mult(PConstants.DEG_TO_RAD);
-		
-		RMatrix m = eulerToMatrix(wpr);
-		
-		PVector wpr1 = matrixToEuler(m);
-		
-		System.out.printf("\n%s\n%s\n%s\n", wpr, m, wpr1);
-	}
-	
-	public static PVector convertRGBtoHSL(PVector rgb) {
-		float rP = rgb.x / 255f;
-		float gP = rgb.y / 255f;
-		float bP = rgb.z / 255f;
-		
-		float cMax = Math.max(rP, Math.max(gP, bP));
-		float cMin = Math.min(rP, Math.min(gP, bP));
-		float delta = cMax - cMin;
-		
-		float H = 0;
-		float S = 0;
-		float L = (cMax + cMin) / 2;
-				
-		if(delta != 0) {
-			if(cMax == rP) { H = (PI/3)*((gP - bP)/delta) % 26; }
-			else if(cMax == gP) { H = (PI/3)*((bP - rP)/delta) + 2; }
-			else if(cMax == bP) { H = (PI/3)*((rP - gP)/delta) + 4; }
-			
-			S = delta/(1-Math.abs(2*L-1));
-		}
-		
-		return new PVector(H, S, L);
-	}
-	
-	/**
 	 * Determines if the lies within the range of angles that span from
 	 * rangeStart to rangeEnd, going clockwise around the Unit Cycle. It is
 	 * assumed that all parameters are in radians and within the range [0,
@@ -143,7 +100,7 @@ public abstract class RMath {
 		/**/
 		return Math.atan2(x, y);
 	}
-
+	
 	/**
 	 * Calculate the Jacobian matrix for the robotic arm for a given set of
 	 * joint rotational values using a 1 DEGREE offset for each joint rotation
@@ -193,9 +150,33 @@ public abstract class RMath {
 	public static float clamp(float in, float min, float max) {
 		return Math.min(max, Math.max(min, in));
 	}
-	
+
 	public static int clamp(int in, int min, int max) {
 		return Math.min(max, Math.max(min, in));
+	}
+	
+	public static PVector convertRGBtoHSL(PVector rgb) {
+		float rP = rgb.x / 255f;
+		float gP = rgb.y / 255f;
+		float bP = rgb.z / 255f;
+		
+		float cMax = Math.max(rP, Math.max(gP, bP));
+		float cMin = Math.min(rP, Math.min(gP, bP));
+		float delta = cMax - cMin;
+		
+		float H = 0;
+		float S = 0;
+		float L = (cMax + cMin) / 2;
+				
+		if(delta != 0) {
+			if(cMax == rP) { H = (PI/3)*((gP - bP)/delta) % 26; }
+			else if(cMax == gP) { H = (PI/3)*((bP - rP)/delta) + 2; }
+			else if(cMax == bP) { H = (PI/3)*((rP - gP)/delta) + 4; }
+			
+			S = delta/(1-Math.abs(2*L-1));
+		}
+		
+		return new PVector(H, S, L);
 	}
 	
 	// converts a double array to a float array
@@ -211,7 +192,7 @@ public abstract class RMath {
 
 		return r;
 	}
-
+	
 	// calculates rotation matrix from euler angles
 	public static RMatrix eulerToMatrix(PVector wpr) {
 		double xRot = wpr.x;
@@ -281,19 +262,21 @@ public abstract class RMath {
 
 		return r;
 	}
-	
+
 	/**
-	 * Returns a rotation matrix representing the rotation of the given
-	 * transformation matrix.
-	 * 
-	 * @param tMat	A transformation matrix
+	 * Define a rotation matrix from the given rotation entries. (For mxy, x is
+	 * the row index and y is the column index in the rotation matrix).
 	 */
-	public static RMatrix formRMat(RMatrix tMat) {
+	public static RMatrix formRMat(double m00, double m01, double m02,
+			double m10, double m11, double m12,
+			double m20, double m21, double m22) {
 		
-		return formRMat(
-			tMat.getEntry(0, 0), tMat.getEntry(0, 1), tMat.getEntry(0, 2),
-			tMat.getEntry(1, 0), tMat.getEntry(1, 1), tMat.getEntry(1, 2),
-			tMat.getEntry(2, 0), tMat.getEntry(2, 1), tMat.getEntry(2, 2)
+		return new RMatrix(
+			new double[][] {
+				{ m00, m01, m02 },
+				{ m10, m11, m12 },
+				{ m20, m21, m22 }
+			}
 		);
 	}
 	
@@ -327,97 +310,18 @@ public abstract class RMath {
 	}
 	
 	/**
-	 * Define a rotation matrix from the given rotation entries. (For mxy, x is
-	 * the row index and y is the column index in the rotation matrix).
-	 */
-	public static RMatrix formRMat(double m00, double m01, double m02,
-			double m10, double m11, double m12,
-			double m20, double m21, double m22) {
-		
-		return new RMatrix(
-			new double[][] {
-				{ m00, m01, m02 },
-				{ m10, m11, m12 },
-				{ m20, m21, m22 }
-			}
-		);
-	}
-	
-	/**
-	 * Forms the 4x4 transformation matrix (row major order) form the given
-	 * origin offset and axes offset (row major order) of the Native Coordinate
-	 * system.
+	 * Returns a rotation matrix representing the rotation of the given
+	 * transformation matrix.
 	 * 
-	 * @param origin
-	 *            the X, Y, Z, offset of the origin for the Coordinate frame
-	 * @param axes
-	 *            a 3x3 rotatin matrix (row major order) representing the unit
-	 *            vector axes offset of the new Coordinate Frame from the Native
-	 *            Coordinate Frame
-	 * @returning the 4x4 transformation matrix (row major order) formed from
-	 *            the given origin and axes offset
+	 * @param tMat	A transformation matrix
 	 */
-	public static RMatrix formTMat(PVector origin, RMatrix axes) {		
-		return formTMat(
-			axes.getEntry(0, 0), axes.getEntry(0, 1), axes.getEntry(0, 2), (double)origin.x,
-			axes.getEntry(1, 0), axes.getEntry(1, 1), axes.getEntry(1, 2), (double)origin.y,
-			axes.getEntry(2, 0), axes.getEntry(2, 1), axes.getEntry(2, 2), (double)origin.z
+	public static RMatrix formRMat(RMatrix tMat) {
+		
+		return formRMat(
+			tMat.getEntry(0, 0), tMat.getEntry(0, 1), tMat.getEntry(0, 2),
+			tMat.getEntry(1, 0), tMat.getEntry(1, 1), tMat.getEntry(1, 2),
+			tMat.getEntry(2, 0), tMat.getEntry(2, 1), tMat.getEntry(2, 2)
 		);
-	}
-	
-	/**
-	 * Forms a transformation matrix from the given rotation matrix.
-	 * 
-	 * @param axes	The rotation matrix
-	 * @return		A transformation matrix with the given rotation: no
-	 * 				translation or scaling
-	 */
-	public static RMatrix fromTMat(RMatrix axes) {		
-		return formTMat(
-			axes.getEntry(0, 0), axes.getEntry(0, 1), axes.getEntry(0, 2), 0.0,
-			axes.getEntry(1, 0), axes.getEntry(1, 1), axes.getEntry(1, 2), 0.0,
-			axes.getEntry(2, 0), axes.getEntry(2, 1), axes.getEntry(2, 2), 0.0
-		);
-	}
-	
-	/**
-	 * Forms a transformation matrix with the rotation defined by the given
-	 * axis and rotation about the axis.
-	 */
-	public static RMatrix formTMat(PVector axis, float theta) {
-		double[][] tMat = new double[4][4];
-		
-		double ct = Math.cos(theta);
-		double st = Math.sin(theta);
-		double one_ct = 1f - ct;
-		
-		tMat[0][0] = ct + axis.x * axis.x * one_ct;
-		tMat[0][1] = axis.x * axis.y * one_ct - axis.z * st;
-		tMat[0][2] = axis.x * axis.z * one_ct + axis.y * st;
-		tMat[0][3] = 0f;
-		tMat[1][0] = axis.y * axis.x * one_ct + axis.z * st;
-		tMat[1][1] = ct + axis.y * axis.y * one_ct;
-		tMat[1][2] = axis.y * axis.z * one_ct - axis.x * st;
-		tMat[1][3] = 0f;
-		tMat[2][0] = axis.z * axis.x * one_ct - axis.y * st;
-		tMat[2][1] = axis.z * axis.y * one_ct + axis.x * st;
-		tMat[2][2] = ct + axis.z * axis.z * one_ct;
-		tMat[2][3] = 0f;
-		tMat[3][0] = 0f;
-		tMat[3][1] = 0f;
-		tMat[3][2] = 0f;
-		tMat[3][3] = 1f;
-		
-		return new RMatrix(tMat);
-	}
-	
-	/**
-	 * Define a transformation matrix from the given translation vector.
-	 * 
-	 * @param translation	The translation portion of the matrix
-	 */
-	public static RMatrix formTMat(final PVector translation) {
-		return formTMat(translation.x, translation.y, translation.z);
 	}
 	
 	/**
@@ -475,22 +379,80 @@ public abstract class RMath {
 	}
 	
 	/**
-	 * Returns the position defined by x, y, and z in g's coordinate frame in
-	 * terms of the native coordinate frame.
+	 * Define a transformation matrix from the given translation vector.
 	 * 
-	 * @param g	A graphics object
-	 * @param x	The x position in terms of g's coordinate frame
-	 * @param y	The y position in terms of g's coordinate frame
-	 * @param z The z position in terms of g's coordinate frame
-	 * @return	The native coordinate frame position
+	 * @param translation	The translation portion of the matrix
 	 */
-	public static PVector getPosition(PGraphics g, float x, float y, float z) {
-		PVector position = new PVector();
-		position.x = g.modelX(x, y, z);
-		position.y = g.modelY(x, y, z);
-		position.z = g.modelZ(x, y, z);
+	public static RMatrix formTMat(final PVector translation) {
+		return formTMat(translation.x, translation.y, translation.z);
+	}
+	
+	/**
+	 * Forms a transformation matrix with the rotation defined by the given
+	 * axis and rotation about the axis.
+	 */
+	public static RMatrix formTMat(PVector axis, float theta) {
+		double[][] tMat = new double[4][4];
 		
-		return position;
+		double ct = Math.cos(theta);
+		double st = Math.sin(theta);
+		double one_ct = 1f - ct;
+		
+		tMat[0][0] = ct + axis.x * axis.x * one_ct;
+		tMat[0][1] = axis.x * axis.y * one_ct - axis.z * st;
+		tMat[0][2] = axis.x * axis.z * one_ct + axis.y * st;
+		tMat[0][3] = 0f;
+		tMat[1][0] = axis.y * axis.x * one_ct + axis.z * st;
+		tMat[1][1] = ct + axis.y * axis.y * one_ct;
+		tMat[1][2] = axis.y * axis.z * one_ct - axis.x * st;
+		tMat[1][3] = 0f;
+		tMat[2][0] = axis.z * axis.x * one_ct - axis.y * st;
+		tMat[2][1] = axis.z * axis.y * one_ct + axis.x * st;
+		tMat[2][2] = ct + axis.z * axis.z * one_ct;
+		tMat[2][3] = 0f;
+		tMat[3][0] = 0f;
+		tMat[3][1] = 0f;
+		tMat[3][2] = 0f;
+		tMat[3][3] = 1f;
+		
+		return new RMatrix(tMat);
+	}
+	
+	/**
+	 * Forms the 4x4 transformation matrix (row major order) form the given
+	 * origin offset and axes offset (row major order) of the Native Coordinate
+	 * system.
+	 * 
+	 * @param origin
+	 *            the X, Y, Z, offset of the origin for the Coordinate frame
+	 * @param axes
+	 *            a 3x3 rotatin matrix (row major order) representing the unit
+	 *            vector axes offset of the new Coordinate Frame from the Native
+	 *            Coordinate Frame
+	 * @returning the 4x4 transformation matrix (row major order) formed from
+	 *            the given origin and axes offset
+	 */
+	public static RMatrix formTMat(PVector origin, RMatrix axes) {		
+		return formTMat(
+			axes.getEntry(0, 0), axes.getEntry(0, 1), axes.getEntry(0, 2), (double)origin.x,
+			axes.getEntry(1, 0), axes.getEntry(1, 1), axes.getEntry(1, 2), (double)origin.y,
+			axes.getEntry(2, 0), axes.getEntry(2, 1), axes.getEntry(2, 2), (double)origin.z
+		);
+	}
+	
+	/**
+	 * Forms a transformation matrix from the given rotation matrix.
+	 * 
+	 * @param axes	The rotation matrix
+	 * @return		A transformation matrix with the given rotation: no
+	 * 				translation or scaling
+	 */
+	public static RMatrix fromTMat(RMatrix axes) {		
+		return formTMat(
+			axes.getEntry(0, 0), axes.getEntry(0, 1), axes.getEntry(0, 2), 0.0,
+			axes.getEntry(1, 0), axes.getEntry(1, 1), axes.getEntry(1, 2), 0.0,
+			axes.getEntry(2, 0), axes.getEntry(2, 1), axes.getEntry(2, 2), 0.0
+		);
 	}
 	
 	/**
@@ -515,6 +477,25 @@ public abstract class RMath {
 	}
 	
 	/**
+	 * Returns the position defined by x, y, and z in g's coordinate frame in
+	 * terms of the native coordinate frame.
+	 * 
+	 * @param g	A graphics object
+	 * @param x	The x position in terms of g's coordinate frame
+	 * @param y	The y position in terms of g's coordinate frame
+	 * @param z The z position in terms of g's coordinate frame
+	 * @return	The native coordinate frame position
+	 */
+	public static PVector getPosition(PGraphics g, float x, float y, float z) {
+		PVector position = new PVector();
+		position.x = g.modelX(x, y, z);
+		position.y = g.modelY(x, y, z);
+		position.z = g.modelZ(x, y, z);
+		
+		return position;
+	}
+	
+	/**
 	 * Returns the transformation matrix representing the orientation and
 	 * position associated with the given graphic object's coordinate system.
 	 * 
@@ -533,7 +514,7 @@ public abstract class RMath {
 				xAxis.z, yAxis.z, zAxis.z, origin.z
 		);
 	}
-
+	
 	/**
 	 * Attempts to calculate the joint angles that would place the Robot in the
 	 * given target position and orientation. The srcAngles parameter defines
@@ -657,6 +638,25 @@ public abstract class RMath {
 		return new RMatrix(inv);
 	}
 
+	/**
+	 * Tests orientation conversion methods
+	 * 
+	 * @param args	Unused
+	 */
+	public static void main(String[] args) {
+		
+		float[] testVals = new float[] { 0f, 1f / 8f, 1f / 4f,  };
+		
+		PVector wpr = new PVector(-170f, 90f, 170f);
+		wpr.mult(PConstants.DEG_TO_RAD);
+		
+		RMatrix m = eulerToMatrix(wpr);
+		
+		PVector wpr1 = matrixToEuler(m);
+		
+		System.out.printf("\n%s\n%s\n%s\n", wpr, m, wpr1);
+	}
+
 	// calculates euler angles from rotation matrix
 	public static PVector matrixToEuler(RMatrix m) {
 		float x, y, z;
@@ -743,35 +743,6 @@ public abstract class RMath {
 	}
 	
 	/**
-	 * Finds the maximum value amongst all given integer values.
-	 * 
-	 * @param args	A set of integer values
-	 * @return		The maximum amongst all values of args
-	 */
-	public static int max(int... args) {
-		
-		if (args == null || args.length == 0) {
-			// Because why not
-			return Integer.MAX_VALUE;
-			
-		} else if (args.length == 1) {
-			// No comparison needed
-			return args[0];
-		}
-		
-		// Find the maximum amongst all given values
-		int max = Integer.MIN_VALUE;
-		
-		for (int val : args) {
-			if (val > max) {
-				max = val;
-			}
-		}
-		
-		return max;
-	}
-	
-	/**
 	 * Finds the maximum value amongst all given float values.
 	 * 
 	 * @param args	A set of float values
@@ -801,33 +772,32 @@ public abstract class RMath {
 	}
 	
 	/**
-	 * Find the minimum value amongst all given integer values.
+	 * Finds the maximum value amongst all given integer values.
 	 * 
 	 * @param args	A set of integer values
-	 * @return		The minimum amongst all values of args
+	 * @return		The maximum amongst all values of args
 	 */
-	public static int min(int... args) {
+	public static int max(int... args) {
 		
 		if (args == null || args.length == 0) {
 			// Because why not
-			return Integer.MIN_VALUE;
+			return Integer.MAX_VALUE;
 			
 		} else if (args.length == 1) {
 			// No comparison needed
 			return args[0];
-			
 		}
 		
-		// Find the minimum amongst all given values
-		int min = Integer.MAX_VALUE;
+		// Find the maximum amongst all given values
+		int max = Integer.MIN_VALUE;
 		
 		for (int val : args) {
-			if (val < min) {
-				min = val;
+			if (val > max) {
+				max = val;
 			}
 		}
 		
-		return min;
+		return max;
 	}
 	
 	/**
@@ -851,6 +821,36 @@ public abstract class RMath {
 		float min = Float.MAX_VALUE;
 		
 		for (float val : args) {
+			if (val < min) {
+				min = val;
+			}
+		}
+		
+		return min;
+	}
+	
+	/**
+	 * Find the minimum value amongst all given integer values.
+	 * 
+	 * @param args	A set of integer values
+	 * @return		The minimum amongst all values of args
+	 */
+	public static int min(int... args) {
+		
+		if (args == null || args.length == 0) {
+			// Because why not
+			return Integer.MIN_VALUE;
+			
+		} else if (args.length == 1) {
+			// No comparison needed
+			return args[0];
+			
+		}
+		
+		// Find the minimum amongst all given values
+		int min = Integer.MAX_VALUE;
+		
+		for (int val : args) {
 			if (val < min) {
 				min = val;
 			}
@@ -1090,17 +1090,6 @@ public abstract class RMath {
 	}
 	
 	/**
-	 * Applies the given translation, delta, to the given transformation
-	 * matrix, tMat.
-	 * 
-	 * @param tMat	A transformation matrix
-	 * @param delta	The translation to apply to tMat
-	 */
-	public static void translateTMat(RMatrix tMat, final PVector delta) {
-		translateTMat(tMat, delta.x, delta.y, delta.z);
-	}
-	
-	/**
 	 * Applies the given translations to the given transformation
 	 * matrix, tMat.
 	 * 
@@ -1124,6 +1113,17 @@ public abstract class RMath {
 		tMat.setEntry(0, 3, tMat.getEntry(0, 3) + newX);
 		tMat.setEntry(1, 3, tMat.getEntry(1, 3) + newY);
 		tMat.setEntry(2, 3, tMat.getEntry(2, 3) + newZ);
+	}
+	
+	/**
+	 * Applies the given translation, delta, to the given transformation
+	 * matrix, tMat.
+	 * 
+	 * @param tMat	A transformation matrix
+	 * @param delta	The translation to apply to tMat
+	 */
+	public static void translateTMat(RMatrix tMat, final PVector delta) {
+		translateTMat(tMat, delta.x, delta.y, delta.z);
 	}
 
 	/**
@@ -1227,28 +1227,6 @@ public abstract class RMath {
 
 	
 	/**
-	 * Takes a set of euler angles, in degrees, and applies the inverse of the
-	 * world frame to the orientation and converts the euler angles to a
-	 * 3x3 rotation matrix.
-	 * 
-	 * @param wpr	A set of euler angles, in degrees
-	 * @return		A rotation matrix representing the product of the given
-	 * 				orientation and the inverse of the world frame
-	 * 				orientation
-	 */
-	public static RMatrix wEulerToNRMat(PVector wpr) {
-		float limbo = wpr.y;
-		// Convert from world frame
-		wpr.x *= -1;
-		wpr.y = -wpr.z;
-		wpr.z = limbo;
-		// Convert to radians
-		wpr.mult(DEG_TO_RAD);
-		
-		return RMath.eulerToMatrix(wpr);
-	}
-	
-	/**
 	 * Takes a set of euler angles, in degrees and applies the inverse of the
 	 * world frame to the rotations and converts the euler angles to a
 	 * quaternion.
@@ -1268,5 +1246,27 @@ public abstract class RMath {
 		wpr.mult(DEG_TO_RAD);
 		
 		return RMath.eulerToQuat(wpr);
+	}
+	
+	/**
+	 * Takes a set of euler angles, in degrees, and applies the inverse of the
+	 * world frame to the orientation and converts the euler angles to a
+	 * 3x3 rotation matrix.
+	 * 
+	 * @param wpr	A set of euler angles, in degrees
+	 * @return		A rotation matrix representing the product of the given
+	 * 				orientation and the inverse of the world frame
+	 * 				orientation
+	 */
+	public static RMatrix wEulerToNRMat(PVector wpr) {
+		float limbo = wpr.y;
+		// Convert from world frame
+		wpr.x *= -1;
+		wpr.y = -wpr.z;
+		wpr.z = limbo;
+		// Convert to radians
+		wpr.mult(DEG_TO_RAD);
+		
+		return RMath.eulerToMatrix(wpr);
 	}
 }

@@ -16,6 +16,14 @@ public class ScreenSetObjectOperandTgt extends ST_ScreenEditItem {
 	}
 
 	@Override
+	public void actionEntr() {
+		RobotCamera cam = robotRun.getRobotCamera();
+		ArrayList<CameraObject> objects = cam.getTaughtObjects();
+		((OperandCamObj)robotRun.opEdit).setValue(objects.get(options.getLineIdx() - 1));
+		robotRun.lastScreen();
+	}
+
+	@Override
 	protected void loadOptions() {
 		RobotCamera cam = robotRun.getRobotCamera();
 		
@@ -29,14 +37,6 @@ public class ScreenSetObjectOperandTgt extends ST_ScreenEditItem {
 		} else {
 			options.addLine("No objects to select");
 		}
-	}
-
-	@Override
-	public void actionEntr() {
-		RobotCamera cam = robotRun.getRobotCamera();
-		ArrayList<CameraObject> objects = cam.getTaughtObjects();
-		((OperandCamObj)robotRun.opEdit).setValue(objects.get(options.getLineIdx() - 1));
-		robotRun.lastScreen();
 	}
 
 }

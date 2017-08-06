@@ -23,24 +23,24 @@ import ui.MessageDisplay;
 public abstract class Fields {
 	
 	/**
+	 * A color used in the UI's color scheme.
+	 */
+	public static final int BG_C, F_TEXT_C, F_CURSOR_C, F_ACTIVE_C, F_BG_C,
+			F_FG_C, B_TEXT_C, B_DEFAULT_C, B_FG_C, B_ACTIVE_C, UI_LIGHT_C,
+			UI_DARK_C;
+	
+	/**
+	 * A color defining either the fill or outline color of a world object.
+	 */
+	public static final int BLACK, WHITE, RED, GREEN, BLUE, ORANGE, YELLOW,
+			PINK, PURPLE, LT_BLUE, DK_GREEN, ROBOT_YELLOW, ROBOT_GREY, EE_DEFAULT;
+	
+	public static final int CHAR_WDTH = 8;
+	
+	/**
 	 * A flag used for displaying current debug output to standard out.
 	 */
 	public static final boolean DEBUG = true;
-	
-	/**
-	 * The off state of an end effector
-	 */
-	public static final boolean OFF = false;
-	
-	/**
-	 * The on state of an end effector
-	 */
-	public static final boolean ON = true;
-	
-	/**
-	 * The maximum number of tool or user frames associated with a robot.
-	 */
-	public static final int FRAME_NUM = 10;
 	
 	/**
 	 * The maximum number of data or position registers associated with a robot.
@@ -48,44 +48,14 @@ public abstract class Fields {
 	public static final int DPREG_NUM = 100;
 	
 	/**
-	 * The program position type for motion instructions
+	 * The y position of the floor of the world.
 	 */
-	public static final int PTYPE_PROG = 0;
+	public static final float FLOOR_Y;
 	
 	/**
-	 * The position register position type for motion instructions.
+	 * The maximum number of tool or user frames associated with a robot.
 	 */
-	public static final int PTYPE_PREG = 1;
-	
-	/**
-	 * The world object position type for motion instructions
-	 */
-	public static final int PTYPE_WO = 2;
-	
-	/**
-	 * The joint motion type of a motion instruction.
-	 */
-	public static final int MTYPE_JOINT = 0;
-	
-	/**
-	 * The linear motion type of a motion instruction.
-	 */
-	public static final int MTYPE_LINEAR = 1;
-	
-	/**
-	 * The circular motion type of a motion instruction.
-	 */
-	public static final int MTYPE_CIRCULAR = 2;
-	
-	/**
-	 * Defines a state of a motion instruction's offset.
-	 */
-	public static final int OFFSET_NONE = 0;
-	
-	/**
-	 * Defines the state of a motion instruction's offset.
-	 */
-	public static final int OFFSET_PREG = 1;
+	public static final int FRAME_NUM = 10;
 	
 	/**
 	 * The tool frame type of a motion instruction
@@ -98,23 +68,6 @@ public abstract class Fields {
 	public static final int FTYPE_USER = 1;
 	
 	/**
-	 * A UI input element type. Defines the element as short lasting (i.e.
-	 * cleared every time a window is loaded).
-	 */
-	public static final int ITYPE_TRANSIENT = 0;
-	
-	/**
-	 * A UI input element type. Defines the element as everlasting (i.e.
-	 * never cleared).
-	 */
-	public static final int ITYPE_PERMENANT = 1;
-	
-	/**
-	 * The y position of the floor of the world.
-	 */
-	public static final float FLOOR_Y;
-	
-	/**
 	 * The 3x3 floating-point array representation of the identity matrix.
 	 */
 	public static final float[][] IDENTITY;
@@ -125,15 +78,35 @@ public abstract class Fields {
 	public static final RMatrix IDENTITY_MAT;
 	
 	/**
-	 * The orientation of the world frame with respect to the native coordinate
-	 * system.
+	 * A UI input element type. Defines the element as everlasting (i.e.
+	 * never cleared).
 	 */
-	public static final float[][] WORLD_AXES;
+	public static final int ITYPE_PERMENANT = 1;
 	
 	/**
-	 * The RMatrix representation of the world frame orientation.
+	 * A UI input element type. Defines the element as short lasting (i.e.
+	 * cleared every time a window is loaded).
 	 */
-	public static final RMatrix WORLD_AXES_MAT;
+	public static final int ITYPE_TRANSIENT = 0;
+	
+	public static final int LARGE_BUTTON = 50;
+	
+	public static final MessageDisplay msgSystem;
+	
+	/**
+	 * The circular motion type of a motion instruction.
+	 */
+	public static final int MTYPE_CIRCULAR = 2;
+	
+	/**
+	 * The joint motion type of a motion instruction.
+	 */
+	public static final int MTYPE_JOINT = 0;
+	
+	/**
+	 * The linear motion type of a motion instruction.
+	 */
+	public static final int MTYPE_LINEAR = 1;
 	
 	/**
 	 * The inverse of the world frame orientation, or the native coordinate
@@ -146,34 +119,6 @@ public abstract class Fields {
 	 */
 	public static final RMatrix NATIVE_AXES_MAT;
 	
-	public static final int SMALL_BUTTON = 35;
-	public static final int LARGE_BUTTON = 50;
-	public static final int CHAR_WDTH = 8;
-	public static final int TXT_PAD = 18;
-	public static final int PAD_OFFSET = 8;
-	
-	/**
-	 * A dimension pertaining to the pendant or pendant screen UI elements.
-	 */
-	public static final int PENDANT_X = 0, 
-							PENDANT_Y = SMALL_BUTTON - 14,
-							PENDANT_WIDTH = 440, 
-							PENDANT_HEIGHT = 720,
-							PENDANT_SCREEN_WIDTH = PENDANT_WIDTH - 20,
-							PENDANT_SCREEN_HEIGHT = 280;
-	
-	public static final int PASTE_DEFAULT = 0,
-			PASTE_REVERSE = 0b1,
-			CLEAR_POSITION = 0b10,
-			NEW_POSITION = 0b100,
-			REVERSE_MOTION = 0b1000;
-	
-	/**
-	 * A color defining either the fill or outline color of a world object.
-	 */
-	public static final int BLACK, WHITE, RED, GREEN, BLUE, ORANGE, YELLOW,
-			PINK, PURPLE, LT_BLUE, DK_GREEN, ROBOT_YELLOW, ROBOT_GREY, EE_DEFAULT;
-	
 	/**
 	 * A color used to render the bounding box of a part that indicates the
 	 * state the bounding box.
@@ -181,18 +126,73 @@ public abstract class Fields {
 	public static final int OBB_DEFAULT, OBB_COLLISION, OBB_SELECTED, OBB_HELD;
 	
 	/**
-	 * A color used in the UI's color scheme.
+	 * The off state of an end effector
 	 */
-	public static final int BG_C, F_TEXT_C, F_CURSOR_C, F_ACTIVE_C, F_BG_C,
-			F_FG_C, B_TEXT_C, B_DEFAULT_C, B_FG_C, B_ACTIVE_C, UI_LIGHT_C,
-			UI_DARK_C;
+	public static final boolean OFF = false;
+	
+	/**
+	 * Defines a state of a motion instruction's offset.
+	 */
+	public static final int OFFSET_NONE = 0;
+	
+	/**
+	 * Defines the state of a motion instruction's offset.
+	 */
+	public static final int OFFSET_PREG = 1;
+	
+	/**
+	 * The on state of an end effector
+	 */
+	public static final boolean ON = true;
+	public static final int PAD_OFFSET = 8;
+	public static final int PASTE_DEFAULT = 0,
+			PASTE_REVERSE = 0b1,
+			CLEAR_POSITION = 0b10,
+			NEW_POSITION = 0b100,
+			REVERSE_MOTION = 0b1000;
+	/**
+	 * A dimension pertaining to the pendant or pendant screen UI elements.
+	 */
+	public static final int PENDANT_X = 0, 
+							PENDANT_Y = 21,
+							PENDANT_WIDTH = 440, 
+							PENDANT_HEIGHT = 720,
+							PENDANT_SCREEN_WIDTH = PENDANT_WIDTH - 20,
+							PENDANT_SCREEN_HEIGHT = 280;
+	/**
+	 * The position register position type for motion instructions.
+	 */
+	public static final int PTYPE_PREG = 1;
+	
+	/**
+	 * The program position type for motion instructions
+	 */
+	public static final int PTYPE_PROG = 0;
+	
+	/**
+	 * The world object position type for motion instructions
+	 */
+	public static final int PTYPE_WO = 2;
 	
 	/**
 	 * A font used for rendering text in the UI.
 	 */
 	public static PFont small, medium, bond;
 	
-	public static final MessageDisplay msgSystem;
+	public static final int SMALL_BUTTON = 35;
+	
+	public static final int TXT_PAD = 18;
+	
+	/**
+	 * The orientation of the world frame with respect to the native coordinate
+	 * system.
+	 */
+	public static final float[][] WORLD_AXES;
+	
+	/**
+	 * The RMatrix representation of the world frame orientation.
+	 */
+	public static final RMatrix WORLD_AXES_MAT;
 	
 	/**
 	 * Initialize the static fields.
@@ -262,57 +262,6 @@ public abstract class Fields {
 		bond = null;
 		
 		msgSystem = new MessageDisplay();
-	}
-	
-	/**
-	 * Tests various methods of the Fields class.
-	 * 
-	 * @param args	Unused
-	 */
-	public static void main(String[] args) {
-		
-		/* editDistance() tests */
-		
-		String s1, s2;
-		int dist;
-		
-		s1 = "";
-		s2 = "";
-		dist = editDistance(s1, s2);
-		System.out.printf("editDist(\"%s\", \"%s\") = %d\n", s1, s2, dist);
-		
-		s1 = "";
-		s2 = "sunrise";
-		dist = editDistance(s1, s2);
-		System.out.printf("editDist(\"%s\", \"%s\") = %d\n", s1, s2, dist);
-		
-		s1 = "light";
-		s2 = "";
-		dist = editDistance(s1, s2);
-		System.out.printf("editDist(\"%s\", \"%s\") = %d\n", s1, s2, dist);
-		
-		s1 = "string";
-		s2 = "string";
-		dist = editDistance(s1, s2);
-		System.out.printf("editDist(\"%s\", \"%s\") = %d\n", s1, s2, dist);
-		
-		s1 = "mint";
-		s2 = "wing";
-		dist = editDistance(s1, s2);
-		System.out.printf("editDist(\"%s\", \"%s\") = %d\n", s1, s2, dist);
-		
-		s1 = "decorate";
-		s2 = "carriage";
-		dist = editDistance(s1, s2);
-		System.out.printf("editDist(\"%s\", \"%s\") = %d\n", s1, s2, dist);
-		
-		s1 = "whip";
-		s2 = "drum";
-		dist = editDistance(s1, s2);
-		System.out.printf("editDist(\"%s\", \"%s\") = %d\n", s1, s2, dist);
-		
-		/**/
-		
 	}
 	
 	/**
@@ -552,18 +501,6 @@ public abstract class Fields {
 	}
 	
 	/**
-	 * Calls System.out.printf(format, args), if the field, DEBUG, is true.
-	 * 
-	 * @param format	The format string
-	 * @param args		The arguments to print to standard out
-	 */
-	public static void debug(String format, Object... args) {
-		if (DEBUG) {
-			System.out.printf(format, args);
-		}
-	}
-	
-	/**
 	 * Calls System.out.println(out), if the field, DEBUG, is true.
 	 * 
 	 * @param out	The string to print to standard out
@@ -575,23 +512,15 @@ public abstract class Fields {
 	}
 	
 	/**
-	 * Draws the xyz coordinate axes defined by the given origin position and
-	 * axis vectors with the specified axis length and origin color.
+	 * Calls System.out.printf(format, args), if the field, DEBUG, is true.
 	 * 
-	 * @param g				The graphics object used to render the axes
-	 * @param origin		The origin position of the axes
-	 * @param axesVectors	The rotation matrix which defines the coordinate
-	 * 						system axes
-	 * @param axesLength	The render length of the axes
+	 * @param format	The format string
+	 * @param args		The arguments to print to standard out
 	 */
-	public static void drawAxes(PGraphics g, PVector origin,
-			RMatrix axesVectors, float axesLength) {
-		
-		g.pushMatrix();
-		// Transform to the reference frame defined by the axes vectors		
-		Fields.transform(g, origin, axesVectors);
-		drawAxes(g, axesLength);
-		g.popMatrix();
+	public static void debug(String format, Object... args) {
+		if (DEBUG) {
+			System.out.printf(format, args);
+		}
 	}
 	
 	/**
@@ -652,6 +581,26 @@ public abstract class Fields {
 
 		g.popMatrix();
 		g.popStyle();
+	}
+	
+	/**
+	 * Draws the xyz coordinate axes defined by the given origin position and
+	 * axis vectors with the specified axis length and origin color.
+	 * 
+	 * @param g				The graphics object used to render the axes
+	 * @param origin		The origin position of the axes
+	 * @param axesVectors	The rotation matrix which defines the coordinate
+	 * 						system axes
+	 * @param axesLength	The render length of the axes
+	 */
+	public static void drawAxes(PGraphics g, PVector origin,
+			RMatrix axesVectors, float axesLength) {
+		
+		g.pushMatrix();
+		// Transform to the reference frame defined by the axes vectors		
+		Fields.transform(g, origin, axesVectors);
+		drawAxes(g, axesLength);
+		g.popMatrix();
 	}
 	
 	/**
@@ -752,27 +701,61 @@ public abstract class Fields {
 	}
 	
 	/**
-	 * Calculates the square differences between the alpha, red, green, and
-	 * blue byte values in the 32-bit colors, c0 and c1.
+	 * Tests various methods of the Fields class.
 	 * 
-	 * @param c0	A 32-bit color value
-	 * @param c1	A 32-bit color value
-	 * @return		A 4-element array containing the square differences of c0
-	 * 				and c1's alpha, red, green, blue byte values.
+	 * @param args	Unused
 	 */
-	public static int[] rgbaDiffs(int c0, int c1) {
-		int[] diffs = new int[4];
-		// Separate each color into r, g, b, a portions
-		int[] c1_rgba = rgba(c0);
-		int[] c2_rgba = rgba(c1);
+	public static void main(String[] args) {
 		
-		// Calculate the square difference between the portions of c0 and c1
-		for (int idx = 0; idx < diffs.length; ++idx) {
-			int diff = c1_rgba[idx] - c2_rgba[idx];
-			diffs[idx] = diff * diff;
-		}
+		/* editDistance() tests */
 		
-		return diffs;
+		String s1, s2;
+		int dist;
+		
+		s1 = "";
+		s2 = "";
+		dist = editDistance(s1, s2);
+		System.out.printf("editDist(\"%s\", \"%s\") = %d\n", s1, s2, dist);
+		
+		s1 = "";
+		s2 = "sunrise";
+		dist = editDistance(s1, s2);
+		System.out.printf("editDist(\"%s\", \"%s\") = %d\n", s1, s2, dist);
+		
+		s1 = "light";
+		s2 = "";
+		dist = editDistance(s1, s2);
+		System.out.printf("editDist(\"%s\", \"%s\") = %d\n", s1, s2, dist);
+		
+		s1 = "string";
+		s2 = "string";
+		dist = editDistance(s1, s2);
+		System.out.printf("editDist(\"%s\", \"%s\") = %d\n", s1, s2, dist);
+		
+		s1 = "mint";
+		s2 = "wing";
+		dist = editDistance(s1, s2);
+		System.out.printf("editDist(\"%s\", \"%s\") = %d\n", s1, s2, dist);
+		
+		s1 = "decorate";
+		s2 = "carriage";
+		dist = editDistance(s1, s2);
+		System.out.printf("editDist(\"%s\", \"%s\") = %d\n", s1, s2, dist);
+		
+		s1 = "whip";
+		s2 = "drum";
+		dist = editDistance(s1, s2);
+		System.out.printf("editDist(\"%s\", \"%s\") = %d\n", s1, s2, dist);
+		
+		/**/
+		
+	}
+	
+	/**
+	 * Calls msgSystem.resetMessage().
+	 */
+	public static void resetMessage() {
+		msgSystem.resetMessage();
 	}
 	
 	/**
@@ -798,10 +781,27 @@ public abstract class Fields {
 	}
 	
 	/**
-	 * Calls msgSystem.resetMessage().
+	 * Calculates the square differences between the alpha, red, green, and
+	 * blue byte values in the 32-bit colors, c0 and c1.
+	 * 
+	 * @param c0	A 32-bit color value
+	 * @param c1	A 32-bit color value
+	 * @return		A 4-element array containing the square differences of c0
+	 * 				and c1's alpha, red, green, blue byte values.
 	 */
-	public static void resetMessage() {
-		msgSystem.resetMessage();
+	public static int[] rgbaDiffs(int c0, int c1) {
+		int[] diffs = new int[4];
+		// Separate each color into r, g, b, a portions
+		int[] c1_rgba = rgba(c0);
+		int[] c2_rgba = rgba(c1);
+		
+		// Calculate the square difference between the portions of c0 and c1
+		for (int idx = 0; idx < diffs.length; ++idx) {
+			int diff = c1_rgba[idx] - c2_rgba[idx];
+			diffs[idx] = diff * diff;
+		}
+		
+		return diffs;
 	}
 	
 	/**

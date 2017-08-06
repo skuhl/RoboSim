@@ -6,5 +6,5 @@ package enums;
  * @author Joshua Hooker
  */
 public enum CoordFrame {
-	JOINT, WORLD, TOOL, USER;
+	JOINT, TOOL, USER, WORLD;
 }

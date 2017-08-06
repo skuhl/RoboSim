@@ -3,8 +3,8 @@ package core;
 import processing.core.PVector;
 
 class Projectile {
-	PVector projPos;
 	PVector projDir;
+	PVector projPos;
 	
 	Projectile(PVector p, PVector t) {
 		projPos = p;

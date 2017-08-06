@@ -12,114 +12,6 @@ import screen.ScreenState;
 
 public abstract class ST_ScreenTeachPoints extends Screen {
 	
-	protected int frameIdx;
-	
-	public ST_ScreenTeachPoints(ScreenMode m, RobotRun r, int frameIdx) {
-		super(m, r);
-		this.frameIdx = frameIdx;
-	}
-	
-	public ST_ScreenTeachPoints(ScreenMode m, String header, RobotRun r,
-			int frameIdx) {
-		
-		super(m, header, r);
-		this.frameIdx = frameIdx;
-	}
-	
-	@Override
-	protected void loadLabels() {
-		// F1, F5
-		labels[0] = "";
-		labels[1] = "[Method]";
-		labels[2] = "";
-		labels[3] = "[Mov To]";
-		labels[4] = "[Record]";
-	}
-
-	@Override
-	protected void loadVars(ScreenState s) {
-		setScreenIndices(0, 0, 0, 0, 0);
-	}
-	
-	@Override
-	public void actionKeyPress(char key) {}
-
-	@Override
-	public void actionUp() {
-		options.moveUp(false);
-	}
-
-	@Override
-	public void actionDn() {
-		options.moveDown(false);
-	}
-
-	@Override
-	public void actionLt() {}
-
-	@Override
-	public void actionRt() {}
-	
-	@Override
-	public void actionBkspc() {}
-
-	@Override
-	public void actionF1() {}
-
-	@Override
-	public void actionF2() {
-		robotRun.lastScreen();
-	}
-
-	@Override
-	public void actionF3() {}
-
-	@Override
-	public void actionF4() {
-		if (robotRun.isShift()) {
-			Point tgt = getTeachPoint(options.getLineIdx());
-
-			if (mode == ScreenMode.TEACH_3PT_USER || mode == ScreenMode.TEACH_4PT) {
-				if (tgt != null && tgt.position != null && tgt.orientation != null) {
-					// Move to the point's position and orientation
-					robotRun.getActiveRobot().updateMotion(tgt);
-				}
-			} else {
-				if (tgt != null && tgt.angles != null) {
-					// Move to the point's joint angles
-					robotRun.getActiveRobot().updateMotion(tgt.angles);
-				}
-			}
-		}
-	}
-
-	@Override
-	public void actionF5() {
-		if (robotRun.isShift()) {
-			// Save the Robot's current position and joint angles
-			RoboticArm r = robotRun.getActiveRobot();
-			Point pt;
-			
-			if (mode == ScreenMode.TEACH_3PT_USER || mode == ScreenMode.TEACH_4PT) {
-				pt = r.getToolTipNative();
-				
-			} else {
-				pt = r.getFacePlatePoint();
-			}
-
-			setTeachPoint(pt, options.getLineIdx());
-			DataManagement.saveRobotData(r, 2);
-			robotRun.updatePendantScreen();
-		}
-	}
-	
-	/**
-	 * TODO comment this
-	 * 
-	 * @param g
-	 */
-	public abstract void drawTeachPts(PGraphics g);
-	
 	/**
 	 * TODO comment this
 	 * 
@@ -176,12 +68,98 @@ public abstract class ST_ScreenTeachPoints extends Screen {
 		return Fields.BLACK;
 	}
 	
+	protected int frameIdx;
+	
+	public ST_ScreenTeachPoints(ScreenMode m, RobotRun r, int frameIdx) {
+		super(m, r);
+		this.frameIdx = frameIdx;
+	}
+
+	public ST_ScreenTeachPoints(ScreenMode m, String header, RobotRun r,
+			int frameIdx) {
+		
+		super(m, header, r);
+		this.frameIdx = frameIdx;
+	}
+	
+	@Override
+	public void actionArrowDn() {
+		options.moveDown(false);
+	}
+
+	@Override
+	public void actionArrowLt() {}
+
+	@Override
+	public void actionArrowRt() {}
+
+	@Override
+	public void actionArrowUp() {
+		options.moveUp(false);
+	}
+
+	@Override
+	public void actionBkspc() {}
+	
+	@Override
+	public void actionF1() {}
+
+	@Override
+	public void actionF2() {
+		robotRun.lastScreen();
+	}
+
+	@Override
+	public void actionF3() {}
+
+	@Override
+	public void actionF4() {
+		if (robotRun.isShift()) {
+			Point tgt = getTeachPoint(options.getLineIdx());
+
+			if (mode == ScreenMode.TEACH_3PT_USER || mode == ScreenMode.TEACH_4PT) {
+				if (tgt != null && tgt.position != null && tgt.orientation != null) {
+					// Move to the point's position and orientation
+					robotRun.getActiveRobot().updateMotion(tgt);
+				}
+			} else {
+				if (tgt != null && tgt.angles != null) {
+					// Move to the point's joint angles
+					robotRun.getActiveRobot().updateMotion(tgt.angles);
+				}
+			}
+		}
+	}
+
+	@Override
+	public void actionF5() {
+		if (robotRun.isShift()) {
+			// Save the Robot's current position and joint angles
+			RoboticArm r = robotRun.getActiveRobot();
+			Point pt;
+			
+			if (mode == ScreenMode.TEACH_3PT_USER || mode == ScreenMode.TEACH_4PT) {
+				pt = r.getToolTipNative();
+				
+			} else {
+				pt = r.getFacePlatePoint();
+			}
+
+			setTeachPoint(pt, options.getLineIdx());
+			DataManagement.saveRobotData(r, 2);
+			robotRun.updatePendantScreen();
+		}
+	}
+
+	@Override
+	public void actionKeyPress(char key) {}
+	
 	/**
 	 * TODO comment this
 	 * 
-	 * @param idx
+	 * @param g
 	 */
-	protected abstract Point getTeachPoint(int idx);
+	public abstract void drawTeachPts(PGraphics g);
 	
 	/**
 	 * TODO comment this
@@ -189,6 +167,28 @@ public abstract class ST_ScreenTeachPoints extends Screen {
 	 * @return
 	 */
 	public abstract boolean readyToTeach();
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param idx
+	 */
+	protected abstract Point getTeachPoint(int idx);
+	
+	@Override
+	protected void loadLabels() {
+		// F1, F5
+		labels[0] = "";
+		labels[1] = "[Method]";
+		labels[2] = "";
+		labels[3] = "[Mov To]";
+		labels[4] = "[Record]";
+	}
+	
+	@Override
+	protected void loadVars(ScreenState s) {
+		setScreenIndices(0, 0, 0, 0, 0);
+	}
 	
 	/**
 	 * TODO comment this

@@ -6,5 +6,5 @@ package enums;
  * @author Joshua Hooker
  */
 public enum InstUndoType {
-	INSERTED, EDITED, REPLACED, REMOVED;
+	EDITED, INSERTED, REMOVED, REPLACED;
 }

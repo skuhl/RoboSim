@@ -13,12 +13,6 @@ public class ScreenInputPosRegIdx extends ST_ScreenNumEntry {
 	}
 
 	@Override
-	protected void loadOptions() {
-		options.addLine("Input register index:");
-		options.addLine("\0" + workingText);
-	}
-
-	@Override
 	public void actionEntr() {
 		RoboticArm r = robotRun.getActiveRobot();
 		
@@ -42,5 +36,11 @@ public class ScreenInputPosRegIdx extends ST_ScreenNumEntry {
 		} catch (NumberFormatException NFEx) {
 			errorMessage("The index must be an integer");
 		}
+	}
+
+	@Override
+	protected void loadOptions() {
+		options.addLine("Input register index:");
+		options.addLine("\0" + workingText);
 	}
 }

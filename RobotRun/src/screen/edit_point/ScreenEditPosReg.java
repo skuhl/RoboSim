@@ -16,6 +16,21 @@ public class ScreenEditPosReg extends ST_ScreenPointEntry {
 	}
 	
 	@Override
+	public void actionEntr() {
+		RoboticArm r = robotRun.getActiveRobot();
+		PositionRegister pReg = r.getPReg(robotRun.getLastScreen().getContentIdx());
+		Point pt = parsePosFromContents(pReg.isCartesian);
+
+		if (pt != null) {
+			// Position was successfully pulled form the contents menu
+			pReg.point = pt;
+			DataManagement.saveRobotData(r, 3);
+			robotRun.lastScreen();
+			
+		}
+	}
+
+	@Override
 	public void actionF3() {
 		// Reset input values
 		for (int idx = 0; idx < workingText.length; ++idx) {
@@ -24,7 +39,7 @@ public class ScreenEditPosReg extends ST_ScreenPointEntry {
 		
 		updateScreen();
 	}
-
+	
 	@Override
 	protected String loadHeader() {
 		Register reg = robotRun.getActiveRobot().getPReg(robotRun.getLastScreen().getContentIdx());
@@ -63,21 +78,6 @@ public class ScreenEditPosReg extends ST_ScreenPointEntry {
 		for(int i = 0; i < entries.length; i += 1) {
 			prefixes[i] = entries[i][0];
 			workingText[i] = new StringBuilder(entries[i][1]);
-		}
-	}
-	
-	@Override
-	public void actionEntr() {
-		RoboticArm r = robotRun.getActiveRobot();
-		PositionRegister pReg = r.getPReg(robotRun.getLastScreen().getContentIdx());
-		Point pt = parsePosFromContents(pReg.isCartesian);
-
-		if (pt != null) {
-			// Position was successfully pulled form the contents menu
-			pReg.point = pt;
-			DataManagement.saveRobotData(r, 3);
-			robotRun.lastScreen();
-			
 		}
 	}
 }

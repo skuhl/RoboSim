@@ -17,14 +17,14 @@ import processing.core.PVector;
 public class LinearJog extends LinearMotion {
 	
 	/**
-	 * The robot's translation motion along the frame axes.
-	 */
-	private PVector translation;
-	
-	/**
 	 * The robot's rotation motion about the frame axes.
 	 */
 	private PVector rotation;
+	
+	/**
+	 * The robot's translation motion along the frame axes.
+	 */
+	private PVector translation;
 	
 	/**
 	 * Initialize motion vectors to all zeros and motion fault to false.
@@ -173,24 +173,9 @@ public class LinearJog extends LinearMotion {
 		rotation.z = 0f;
 	}
 	
-	/**
-	 * @return	Does the motion include translational motion
-	 */
-	protected boolean hasTransMotion() {
-		return translation.x != 0f || translation.y != 0f
-				|| translation.z != 0f;
-	}
-	
 	@Override
 	public boolean hasMotion() {
 		return !hasFault() && (hasTransMotion() || hasRotMotion());
-	}
-	
-	/**
-	 * @return	Does the motion include rotational motion
-	 */
-	protected boolean hasRotMotion() {
-		return rotation.x != 0f || rotation.y != 0f	|| rotation.z != 0f;
 	}
 	
 	/**
@@ -230,5 +215,20 @@ public class LinearJog extends LinearMotion {
 		}
 		
 		return newDir;
+	}
+	
+	/**
+	 * @return	Does the motion include rotational motion
+	 */
+	protected boolean hasRotMotion() {
+		return rotation.x != 0f || rotation.y != 0f	|| rotation.z != 0f;
+	}
+	
+	/**
+	 * @return	Does the motion include translational motion
+	 */
+	protected boolean hasTransMotion() {
+		return translation.x != 0f || translation.y != 0f
+				|| translation.z != 0f;
 	}
 }

@@ -10,12 +10,12 @@ import enums.ExecType;
  */
 public class ProgExecution implements Cloneable {
 	
-	private int rid;
-	private Program prog;
-	private ExecType type;
-	private ExecState state;
 	private int curIdx;
 	private int nextIdx;
+	private Program prog;
+	private int rid;
+	private ExecState state;
+	private ExecType type;
 	
 	/**
 	 * Initializes all the fields. Not a valid execution state!
@@ -58,12 +58,12 @@ public class ProgExecution implements Cloneable {
 		return curIdx;
 	}
 	
-	public Program getProg() {
-		return prog;
-	}
-	
 	public int getNextIdx() {
 		return nextIdx;
+	}
+	
+	public Program getProg() {
+		return prog;
 	}
 	
 	public int getRID() {
@@ -103,11 +103,6 @@ public class ProgExecution implements Cloneable {
 		curIdx = idx;
 	}
 	
-	public void setType(ExecType type) {
-		this.type = type;
-		this.state = ExecState.EXEC_START;
-	}
-	
 	public void setExec(int rid, ExecType type, Program prog, int curIdx) {
 		this.rid = rid;
 		this.type = type;
@@ -133,5 +128,10 @@ public class ProgExecution implements Cloneable {
 	
 	public void setState(ExecState newState) {
 		state = newState;
+	}
+	
+	public void setType(ExecType type) {
+		this.type = type;
+		this.state = ExecState.EXEC_START;
 	}
 }

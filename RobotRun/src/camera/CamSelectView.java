@@ -5,8 +5,8 @@ import processing.core.PVector;
 public class CamSelectView {
 	public final int viewAlignment;
 	private final int x1;
-	private final int y1;
 	private final int x2;
+	private final int y1;
 	private final int y2;
 	
 	public CamSelectView(String align, int x1, int y1, int x2, int y2) {
@@ -34,8 +34,8 @@ public class CamSelectView {
 		this.y2 = y2;
 	}
 	
-	public PVector getTopLeftBound() {
-		return new PVector(x1, y1);
+	public CamSelectView copy() {
+		return new CamSelectView(viewAlignment, x1, y1, x2, y2);
 	}
 	
 	public PVector getBottomRightBound() {
@@ -46,19 +46,19 @@ public class CamSelectView {
 		return new PVector(x1/2 + x2/2, y1/2 + y2/2);
 	}
 	
-	public float getWidth() {
-		return x2 - x1;
-	}
-	
 	public float getHeight() {
 		return y2 - y1;
+	}
+	
+	public PVector getTopLeftBound() {
+		return new PVector(x1, y1);
 	}
 
 	public int getViewAlign() {
 		return viewAlignment;
 	}
 	
-	public CamSelectView copy() {
-		return new CamSelectView(viewAlignment, x1, y1, x2, y2);
+	public float getWidth() {
+		return x2 - x1;
 	}
 }

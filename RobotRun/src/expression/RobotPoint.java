@@ -28,13 +28,13 @@ public class RobotPoint extends Operand<RoboticArm> implements PointMath {
 	}
 	
 	@Override
-	public Point getPointValue() {
-		return value.getToolTipUser();
+	public Operand<RoboticArm> clone() {
+		return new RobotPoint(value, isCartesian);
 	}
 
 	@Override
-	public Operand<RoboticArm> clone() {
-		return new RobotPoint(value, isCartesian);
+	public Point getPointValue() {
+		return value.getToolTipUser();
 	}
 
 

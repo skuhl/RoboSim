@@ -11,8 +11,8 @@ import processing.core.PVector;
  */
 public abstract class WorldObject implements Cloneable {
 	protected CoordinateSystem localOrientation;
-	private String name;
 	private RShape model;
+	private String name;
 	
 	public WorldObject() {
 		name = "Object";
@@ -184,8 +184,6 @@ public abstract class WorldObject implements Cloneable {
 
 	// Getter and Setter methods for the World Object's local orientation, name, and form
 
-	public RShape getModel() { return model; }
-	
 	public PVector getLocalCenter() {
 		return localOrientation.getOrigin();
 	}
@@ -193,6 +191,8 @@ public abstract class WorldObject implements Cloneable {
 	public RMatrix getLocalOrientation() {
 		return localOrientation.getAxes();
 	}
+	
+	public RShape getModel() { return model; }
 	
 	public String getName() { return name; }
 	

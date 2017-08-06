@@ -9,14 +9,14 @@ public class BooleanBinaryExpression extends Expression {
 		this(new OperandGeneric(), new OperandGeneric(), Operator.UNINIT);
 	}
 
-	public BooleanBinaryExpression(Operator o){
-		this(new OperandGeneric(), new OperandGeneric(), o);
-	}
-	
 	public BooleanBinaryExpression(Operand<?> a1, Operand<?> a2, Operator o) {
 		operator = o;
 		arg1 = a1;
 		arg2 = a2;
+	}
+	
+	public BooleanBinaryExpression(Operator o){
+		this(new OperandGeneric(), new OperandGeneric(), o);
 	}
 	
 	@Override

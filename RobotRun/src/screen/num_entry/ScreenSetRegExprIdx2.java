@@ -14,12 +14,6 @@ public class ScreenSetRegExprIdx2 extends ST_ScreenNumEntry {
 	}
 
 	@Override
-	protected void loadOptions() {
-		options.addLine("Select point index:");
-		options.addLine("\0" + workingText);
-	}
-
-	@Override
 	public void actionEntr() {
 		try {
 			RoboticArm r = robotRun.getActiveRobot();
@@ -42,5 +36,11 @@ public class ScreenSetRegExprIdx2 extends ST_ScreenNumEntry {
 			// Not an integer
 			errorMessage("Index must be an integer");
 		}
+	}
+
+	@Override
+	protected void loadOptions() {
+		options.addLine("Select point index:");
+		options.addLine("\0" + workingText);
 	}
 }

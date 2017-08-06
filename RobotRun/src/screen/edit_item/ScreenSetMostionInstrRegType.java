@@ -15,13 +15,6 @@ public class ScreenSetMostionInstrRegType extends ST_ScreenEditItem {
 	}
 
 	@Override
-	protected void loadOptions() {
-		options.addLine("1.LOCAL(P)");
-		options.addLine("2.GLOBAL(PR)");
-		options.addLine("3.CAM OBJECT(OBJ)");
-	}
-
-	@Override
 	public void actionEntr() {
 		RoboticArm r = robotRun.getActiveRobot();
 		MotionInstruction mInst = (MotionInstruction) r.getInstToEdit(robotRun.getActiveProg(), 
@@ -65,6 +58,13 @@ public class ScreenSetMostionInstrRegType extends ST_ScreenEditItem {
 		}
 		
 		robotRun.lastScreen();
+	}
+
+	@Override
+	protected void loadOptions() {
+		options.addLine("1.LOCAL(P)");
+		options.addLine("2.GLOBAL(PR)");
+		options.addLine("3.CAM OBJECT(OBJ)");
 	}
 
 }

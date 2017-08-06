@@ -17,6 +17,22 @@ public class ScreenEditProgramPos extends ST_ScreenPointEntry {
 	}
 
 	@Override
+	public void actionEntr() {
+		RoboticArm r = robotRun.getActiveRobot();
+		PosMotionInst pMInst = (PosMotionInst) r.getInstToEdit(robotRun.getActiveProg(), 
+				robotRun.getActiveInstIdx());
+		Point pt = parsePosFromContents(pMInst.getMotionType() != Fields.MTYPE_JOINT);
+
+		if (pt != null) {
+			// Update the position of the active motion instruction
+			robotRun.getActiveProg().setPosition(pMInst.getPosIdx(), pt);
+			DataManagement.saveRobotData(r, 1);
+			robotRun.lastScreen();
+			
+		}
+	}
+	
+	@Override
 	protected String loadHeader() {
 		return String.format("EDIT %s POSITION", robotRun.getActiveProg().getName());
 	}
@@ -47,22 +63,6 @@ public class ScreenEditProgramPos extends ST_ScreenPointEntry {
 		for(int i = 0; i < entries.length; i += 1) {
 			prefixes[i] = entries[i][0];
 			workingText[i] = new StringBuilder(entries[i][1]);
-		}
-	}
-	
-	@Override
-	public void actionEntr() {
-		RoboticArm r = robotRun.getActiveRobot();
-		PosMotionInst pMInst = (PosMotionInst) r.getInstToEdit(robotRun.getActiveProg(), 
-				robotRun.getActiveInstIdx());
-		Point pt = parsePosFromContents(pMInst.getMotionType() != Fields.MTYPE_JOINT);
-
-		if (pt != null) {
-			// Update the position of the active motion instruction
-			robotRun.getActiveProg().setPosition(pMInst.getPosIdx(), pt);
-			DataManagement.saveRobotData(r, 1);
-			robotRun.lastScreen();
-			
 		}
 	}
 }

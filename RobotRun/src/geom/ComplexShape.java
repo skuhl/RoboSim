@@ -9,13 +9,13 @@ import processing.core.PVector;
  * A complex shape formed from a .stl source file.
  */
 public class ComplexShape extends RShape {
-	public final float MIN_SCALE;
 	public final float MAX_SCALE;
+	public final float MIN_SCALE;
 	
-	private String srcFilePath;
-	private PShape mesh;
-	private PVector centerOffset, baseDims;	
+	private PVector centerOffset, baseDims;
 	private float mdlScale = 1f;
+	private PShape mesh;	
+	private String srcFilePath;
 
 	/**
 	 * Create a complex model from the soruce .stl file of the

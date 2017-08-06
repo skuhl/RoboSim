@@ -13,12 +13,6 @@ public class ScreenSetMotionInstrCIdx extends ST_ScreenNumEntry {
 	}
 
 	@Override
-	protected void loadOptions() {
-		options.addLine("Enter desired position/ register:");
-		options.addLine("\0" + workingText);
-	}
-
-	@Override
 	public void actionEntr() {
 		try {
 			RoboticArm r = robotRun.getActiveRobot();
@@ -49,5 +43,11 @@ public class ScreenSetMotionInstrCIdx extends ST_ScreenNumEntry {
 			// Not an integer
 			Fields.setMessage("Index must be an integer");
 		}
+	}
+
+	@Override
+	protected void loadOptions() {
+		options.addLine("Enter desired position/ register:");
+		options.addLine("\0" + workingText);
 	}
 }

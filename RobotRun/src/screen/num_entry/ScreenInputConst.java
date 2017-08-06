@@ -13,17 +13,6 @@ public class ScreenInputConst extends ST_ScreenNumEntry {
 	}
 
 	@Override
-	protected String loadHeader() {
-		return robotRun.getActiveProg().getName();
-	}
-	
-	@Override
-	protected void loadOptions() {
-		options.addLine("Input constant value:");
-		options.addLine("\0" + workingText);
-	}
-
-	@Override
 	public void actionEntr() {
 		try {
 			RoboticArm r = robotRun.getActiveRobot();
@@ -35,5 +24,16 @@ public class ScreenInputConst extends ST_ScreenNumEntry {
 		} catch (NumberFormatException e) {
 			errorMessage("The constant must be a real number");
 		}
+	}
+	
+	@Override
+	protected String loadHeader() {
+		return robotRun.getActiveProg().getName();
+	}
+
+	@Override
+	protected void loadOptions() {
+		options.addLine("Input constant value:");
+		options.addLine("\0" + workingText);
 	}
 }

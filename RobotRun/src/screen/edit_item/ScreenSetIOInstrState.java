@@ -12,12 +12,6 @@ public class ScreenSetIOInstrState extends ST_ScreenEditItem {
 	}
 
 	@Override
-	protected void loadOptions() {
-		options.addLine("1. ON");
-		options.addLine("2. OFF");
-	}
-
-	@Override
 	public void actionEntr() {
 		RoboticArm r = robotRun.getActiveRobot();
 		IOInstruction ioInst = (IOInstruction) r.getInstToEdit(robotRun.getActiveProg(), 
@@ -30,5 +24,11 @@ public class ScreenSetIOInstrState extends ST_ScreenEditItem {
 		}
 
 		robotRun.lastScreen();
+	}
+
+	@Override
+	protected void loadOptions() {
+		options.addLine("1. ON");
+		options.addLine("2. OFF");
 	}
 }

@@ -30,9 +30,9 @@ public class RobotCamera {
 	private RQuaternion camOrient;
 	private PVector camPos;
 	private float exposure;
-	private PGraphics snapshot;
 	private final int RES = 8;
 	private float sensitivity;
+	private PGraphics snapshot;
 	private ArrayList<CameraObject> taughtObjects;
 	
 	public RobotCamera(RobotRun appRef) {
@@ -78,6 +78,63 @@ public class RobotCamera {
 		});
 		
 		camOrient = RMath.matrixToQuat(coord);
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param posX
+	 * @param posY
+	 * @return
+	 */
+	public RRay camPosToWldRay(int posX, int posY) {
+		
+		if (snapshot != null) {
+			PVector cPos = camPos;
+			PVector cOrien = RMath.quatToEuler(camOrient);
+			// Get the dimensions of the near and far plane
+			float nearWidth = getPlaneWidth(camClipNear);
+			float nearHeight = getPlaneHeight(camClipNear);
+			float farWidth = getPlaneWidth(camClipFar);
+			float farHeight = getPlaneHeight(camClipFar);
+			
+			/* Scale the mouse position on the image to match the range of the
+			 * near and far plane dimensions */
+			
+			PVector nearPos = new PVector(posX - snapshot.width / 2f,
+					posY - snapshot.height / 2f, -camClipNear);
+			
+			nearPos.x *= nearWidth / snapshot.width;
+			nearPos.y *= nearHeight / snapshot.height;
+			
+			PVector farPos = new PVector(posX - snapshot.width / 2f,
+					posY - snapshot.height / 2f, -camClipFar);
+			
+			farPos.x *= farWidth / snapshot.width;
+			farPos.y *= farHeight / snapshot.height;
+			
+			snapshot.pushMatrix();
+			snapshot.resetMatrix();
+			// Apply the inverse of the camera orientation and position
+			snapshot.translate(cPos.x, cPos.y, cPos.z);
+			
+			snapshot.rotateZ(-cOrien.z);
+			snapshot.rotateY(-cOrien.y);
+			snapshot.rotateX(-cOrien.x);
+			
+			// Begin the ray on the near plane
+			PVector rayOrigin = RMath.getPosition(snapshot, nearPos.x, nearPos.y, nearPos.z);
+			// End the ray on the far plane
+			PVector pointOnRay = RMath.getPosition(snapshot, farPos.x, farPos.y, farPos.z);
+			
+			snapshot.popMatrix();
+			
+			RRay ray = new RRay(rayOrigin, pointOnRay, camClipFar - camClipNear, Fields.BLACK);
+			
+			return ray;
+		}
+		
+		return null;
 	}
 	
 	/**
@@ -207,11 +264,11 @@ public class RobotCamera {
 	public float getFOV() {
 		return camFOV;
 	}
-	
+		
 	public float getNearClipDist() {
 		return camClipNear;
 	}
-		
+	
 	public WorldObject getNearestObjectInFrame(Scenario scene) {
 		float minDist = Float.MAX_VALUE;
 		WorldObject closeObj = null;
@@ -227,6 +284,55 @@ public class RobotCamera {
 		}
 		
 		return closeObj;
+	}
+	
+	public float getObjectImageQuality(WorldObject o) {
+		if(o instanceof Fixture) return 0f;
+		
+		CameraObject camObj = new CameraObject(appRef, (Part)o);
+		PVector objCenter = ((Part)o).getCenter();
+		float[] dims = o.getModel().getDimArray();
+		float len = dims[0];
+		float hgt = dims[1];
+		float wid = dims[2];
+		
+		RMatrix objMat = ((Part)o).getOrientation();
+		PVector xAxis = new PVector(objMat.getEntryF(0, 0), objMat.getEntryF(1, 0), objMat.getEntryF(2, 0));
+		PVector yAxis = new PVector(objMat.getEntryF(0, 1), objMat.getEntryF(1, 1), objMat.getEntryF(2, 1));
+		PVector zAxis = new PVector(objMat.getEntryF(0, 2), objMat.getEntryF(1, 2), objMat.getEntryF(2, 2));
+		PVector incrX = PVector.mult(xAxis, len/(RES - 1));
+		PVector incrY = PVector.mult(yAxis, hgt/(RES - 1));
+		PVector incrZ = PVector.mult(zAxis, wid/(RES - 1));
+				
+		PVector s = PVector.add(objCenter, PVector.mult(xAxis, -len/2))
+				.add(PVector.mult(yAxis, -hgt/2))
+				.add(PVector.mult(zAxis, -wid/2));
+		
+		int inView = 0;
+		for(int i = 0; i < RES; i += 1) {
+			for(int j = 0; j < RES; j += 1) {
+				for(int k = 0; k < RES; k += 1) {
+					PVector test = PVector.add(s, PVector.mult(incrX, i))
+							.add(PVector.mult(incrY, j))
+							.add(PVector.mult(incrZ, k));
+					if(isPointInFrame(test)) {
+						inView += 1;
+					}
+				}
+			}
+		}
+		
+		float reflect = camObj.reflective_IDX;
+		float lightIntensity = exposure*brightness;
+		float lightFactor = RMath.clamp((float)Math.min(
+				1 - Math.pow(Math.log10(lightIntensity), 2), 
+				1 - Math.pow(Math.log10(Math.pow(lightIntensity, reflect)), 2)), 0, 1);
+		float imageQuality = (inView / (float)(RES*RES*RES)) * lightFactor;
+		
+		Fields.debug("inView=%d\nreflect=%f\nlight=%f\nquality=%f\n\n", inView,
+				reflect, lightFactor, imageQuality);
+		
+		return imageQuality;
 	}
 	
 	/**
@@ -345,7 +451,7 @@ public class RobotCamera {
 		
 		return new PVector((float)x, (float)y, (float)z);
 	}
-	
+
 	public PVector getVectUp() {
 		//Up vector is aligned to local y axis
 		double x = 2*camOrient.x()*camOrient.y() + 2*camOrient.z()*camOrient.w();
@@ -355,12 +461,12 @@ public class RobotCamera {
 		return new PVector((float)x, (float)y, (float)z);
 	}
 	
-	public boolean isMatchVisible(int objIdx, Scenario scene) {
-		return matchTaughtObject(objIdx, scene).size() != 0;
-	}
-
 	public boolean isMatchVisible(CameraObject proto, Scenario s) {
 		return matchTaughtObject(proto, s).size() != 0;
+	}
+	
+	public boolean isMatchVisible(int objIdx, Scenario scene) {
+		return matchTaughtObject(objIdx, scene).size() != 0;
 	}
 	
 	/**
@@ -375,56 +481,7 @@ public class RobotCamera {
 		float imageQuality = getObjectImageQuality(o);
 		return imageQuality >= sensitivity;
 	}
-	
-	public float getObjectImageQuality(WorldObject o) {
-		if(o instanceof Fixture) return 0f;
 		
-		CameraObject camObj = new CameraObject(appRef, (Part)o);
-		PVector objCenter = ((Part)o).getCenter();
-		float[] dims = o.getModel().getDimArray();
-		float len = dims[0];
-		float hgt = dims[1];
-		float wid = dims[2];
-		
-		RMatrix objMat = ((Part)o).getOrientation();
-		PVector xAxis = new PVector(objMat.getEntryF(0, 0), objMat.getEntryF(1, 0), objMat.getEntryF(2, 0));
-		PVector yAxis = new PVector(objMat.getEntryF(0, 1), objMat.getEntryF(1, 1), objMat.getEntryF(2, 1));
-		PVector zAxis = new PVector(objMat.getEntryF(0, 2), objMat.getEntryF(1, 2), objMat.getEntryF(2, 2));
-		PVector incrX = PVector.mult(xAxis, len/(RES - 1));
-		PVector incrY = PVector.mult(yAxis, hgt/(RES - 1));
-		PVector incrZ = PVector.mult(zAxis, wid/(RES - 1));
-				
-		PVector s = PVector.add(objCenter, PVector.mult(xAxis, -len/2))
-				.add(PVector.mult(yAxis, -hgt/2))
-				.add(PVector.mult(zAxis, -wid/2));
-		
-		int inView = 0;
-		for(int i = 0; i < RES; i += 1) {
-			for(int j = 0; j < RES; j += 1) {
-				for(int k = 0; k < RES; k += 1) {
-					PVector test = PVector.add(s, PVector.mult(incrX, i))
-							.add(PVector.mult(incrY, j))
-							.add(PVector.mult(incrZ, k));
-					if(isPointInFrame(test)) {
-						inView += 1;
-					}
-				}
-			}
-		}
-		
-		float reflect = camObj.reflective_IDX;
-		float lightIntensity = exposure*brightness;
-		float lightFactor = RMath.clamp((float)Math.min(
-				1 - Math.pow(Math.log10(lightIntensity), 2), 
-				1 - Math.pow(Math.log10(Math.pow(lightIntensity, reflect)), 2)), 0, 1);
-		float imageQuality = (inView / (float)(RES*RES*RES)) * lightFactor;
-		
-		Fields.debug("inView=%d\nreflect=%f\nlight=%f\nquality=%f\n\n", inView,
-				reflect, lightFactor, imageQuality);
-		
-		return imageQuality;
-	}
-	
 	public boolean isPointInFrame(PVector p) {
 		RMatrix vMat = getViewMat();
 		RMatrix pMat = getPerspProjMat();
@@ -436,16 +493,6 @@ public class RobotCamera {
 		}
 		else {
 			return false;
-		}
-	}
-		
-	public ArrayList<WorldObject> matchTaughtObject(int objIdx, Scenario scene) {
-		if(objIdx >= 0 && objIdx < taughtObjects.size()) {
-			CameraObject objProto = taughtObjects.get(objIdx);
-			return matchTaughtObject(objProto, scene);
-		}
-		else {
-			return new ArrayList<WorldObject>();
 		}
 	}
 	
@@ -501,21 +548,31 @@ public class RobotCamera {
 		return objMatches;
 	}
 
+	public ArrayList<WorldObject> matchTaughtObject(int objIdx, Scenario scene) {
+		if(objIdx >= 0 && objIdx < taughtObjects.size()) {
+			CameraObject objProto = taughtObjects.get(objIdx);
+			return matchTaughtObject(objProto, scene);
+		}
+		else {
+			return new ArrayList<WorldObject>();
+		}
+	}
+	
 	public RobotCamera setOrientation(PVector o) {
 		camOrient = RMath.eulerToQuat(o);
 		return this;
 	}
-	
+		
 	public RobotCamera setOrientation(RQuaternion o) {
 		camOrient = o;
 		return this;
 	}
-		
+
 	public RobotCamera setPosition(PVector p) {
 		camPos = p;
 		return this;
 	}
-
+	
 	public ArrayList<CameraObject> teachObjectToCamera(Scenario scene) {
 		ArrayList<CameraObject> objs = getObjectsInFrame(scene);
 		CameraObject teachObj = null;
@@ -546,63 +603,6 @@ public class RobotCamera {
 		}
 		
 		return taughtObjects;
-	}
-	
-	/**
-	 * TODO comment this
-	 * 
-	 * @param posX
-	 * @param posY
-	 * @return
-	 */
-	public RRay camPosToWldRay(int posX, int posY) {
-		
-		if (snapshot != null) {
-			PVector cPos = camPos;
-			PVector cOrien = RMath.quatToEuler(camOrient);
-			// Get the dimensions of the near and far plane
-			float nearWidth = getPlaneWidth(camClipNear);
-			float nearHeight = getPlaneHeight(camClipNear);
-			float farWidth = getPlaneWidth(camClipFar);
-			float farHeight = getPlaneHeight(camClipFar);
-			
-			/* Scale the mouse position on the image to match the range of the
-			 * near and far plane dimensions */
-			
-			PVector nearPos = new PVector(posX - snapshot.width / 2f,
-					posY - snapshot.height / 2f, -camClipNear);
-			
-			nearPos.x *= nearWidth / snapshot.width;
-			nearPos.y *= nearHeight / snapshot.height;
-			
-			PVector farPos = new PVector(posX - snapshot.width / 2f,
-					posY - snapshot.height / 2f, -camClipFar);
-			
-			farPos.x *= farWidth / snapshot.width;
-			farPos.y *= farHeight / snapshot.height;
-			
-			snapshot.pushMatrix();
-			snapshot.resetMatrix();
-			// Apply the inverse of the camera orientation and position
-			snapshot.translate(cPos.x, cPos.y, cPos.z);
-			
-			snapshot.rotateZ(-cOrien.z);
-			snapshot.rotateY(-cOrien.y);
-			snapshot.rotateX(-cOrien.x);
-			
-			// Begin the ray on the near plane
-			PVector rayOrigin = RMath.getPosition(snapshot, nearPos.x, nearPos.y, nearPos.z);
-			// End the ray on the far plane
-			PVector pointOnRay = RMath.getPosition(snapshot, farPos.x, farPos.y, farPos.z);
-			
-			snapshot.popMatrix();
-			
-			RRay ray = new RRay(rayOrigin, pointOnRay, camClipFar - camClipNear, Fields.BLACK);
-			
-			return ray;
-		}
-		
-		return null;
 	}
 	
 	public RobotCamera update(PVector pos, PVector rot,	float fov, float ar, 

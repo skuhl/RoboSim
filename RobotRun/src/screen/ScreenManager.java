@@ -106,21 +106,21 @@ import ui.MenuScroll;
 public class ScreenManager {
 	
 	/**
+	 * The active pendant screen.
+	 */
+	private Screen activeScreen;
+
+	private ArrayList<Instruction> clipBoard;
+	
+	/**
 	 * A reference to the RobotRun application
 	 */
 	private final RobotRun robotRun;
-
+	
 	/**
 	 * The set of previous screens with reference to the active screen.
 	 */
 	private final Stack<Screen> screenStack;
-	
-	/**
-	 * The active pendant screen.
-	 */
-	private Screen activeScreen;
-	
-	private ArrayList<Instruction> clipBoard;
 	
 	/**
 	 * Initializes the screen stack and the active screen as the default screen.
@@ -141,12 +141,12 @@ public class ScreenManager {
 		return activeScreen;
 	}
 	
-	public Screen getPrevScreen() {
-		return screenStack.peek();
-	}
-	
 	public ScreenMode getPrevMode() {		
 		return screenStack.peek().mode;
+	}
+	
+	public Screen getPrevScreen() {
+		return screenStack.peek();
 	}
 	
 	/**
@@ -158,46 +158,46 @@ public class ScreenManager {
 	}
 	
 	/**
-	 * Creates and initializes the screen with the given screen mode.
-	 * 
-	 * @param mode	The mode of the screen to load
-	 * @return				The screen with the specified mode
+	 * Trashes the active screen and sets the last active screen back as the
+	 * active screen.
 	 */
-	private Screen loadScreen(ScreenMode mode) {
-		Screen prevScreen = null;
-		
-		if (mode == ScreenMode.DEFAULT) {
-			prevScreen = null;
-			
-		// Give the previous program navigation screen to the option screens
-		} else if (mode == ScreenMode.CONFIRM_INSERT || mode == ScreenMode.SELECT_INSTR_DELETE
-			|| mode == ScreenMode.CONFIRM_RENUM || mode == ScreenMode.SELECT_COMMENT
-			|| mode == ScreenMode.SELECT_CUT_COPY || mode == ScreenMode.FIND_REPL
-			|| (mode == ScreenMode.SELECT_PASTE_OPT &&
-			getPrevMode() != ScreenMode.SELECT_CUT_COPY)) {
-			
-			if (screenStack.size() > 2) {
-				// Find the program navigation screen
-				prevScreen = screenStack.get( screenStack.size() - 2 );
-				
-				if (prevScreen.mode != ScreenMode.NAV_PROG_INSTR) {
-					prevScreen = null;
-				}
-			}
-			
-		} else {
-			prevScreen = screenStack.peek();
+	public void lastScreen() {
+		if (!screenStack.isEmpty()) {
+			activeScreen = screenStack.pop();
 		}
-		
-		Screen screen = initScreen(mode, prevScreen);
-		screen.updateScreen();
-		
-		if (prevScreen != null) {
-			// It is possible for the previous screen to be null
-			screen.loadVars(prevScreen.getScreenState());
-		}
-		
-		return screen;
+	}
+	
+	/**
+	 * Pushes the active screen onto the screen stack, loads the screen with the
+	 * specified mode and sets it as active.
+	 * 
+	 * @param mode	The mode of the next active screen
+	 */
+	public void nextScreen(ScreenMode mode) {
+		screenStack.push(activeScreen);
+		activeScreen = loadScreen(mode);
+	}
+	
+	public void resetStack() {
+		screenStack.clear();
+		activeScreen = loadScreen(ScreenMode.DEFAULT);
+	}
+	
+	/**
+	 * Creates the screen with the specified mode and sets the screen as active
+	 * without saving the last active screen onto the stack.
+	 * 
+	 * @param mode	The mode of the next active screen
+	 */
+	public void switchScreen(ScreenMode mode) {
+		nextScreen(mode);
+		// Remove the last screen from the screen stack
+		screenStack.pop();
+	}
+	
+	@Override
+	public String toString() {
+		return String.format("Active: %s\nStack: %s\n", activeScreen, screenStack);
 	}
 	
 	/**
@@ -404,45 +404,45 @@ public class ScreenManager {
 	}
 	
 	/**
-	 * Trashes the active screen and sets the last active screen back as the
-	 * active screen.
+	 * Creates and initializes the screen with the given screen mode.
+	 * 
+	 * @param mode	The mode of the screen to load
+	 * @return				The screen with the specified mode
 	 */
-	public void lastScreen() {
-		if (!screenStack.isEmpty()) {
-			activeScreen = screenStack.pop();
+	private Screen loadScreen(ScreenMode mode) {
+		Screen prevScreen = null;
+		
+		if (mode == ScreenMode.DEFAULT) {
+			prevScreen = null;
+			
+		// Give the previous program navigation screen to the option screens
+		} else if (mode == ScreenMode.CONFIRM_INSERT || mode == ScreenMode.SELECT_INSTR_DELETE
+			|| mode == ScreenMode.CONFIRM_RENUM || mode == ScreenMode.SELECT_COMMENT
+			|| mode == ScreenMode.SELECT_CUT_COPY || mode == ScreenMode.FIND_REPL
+			|| (mode == ScreenMode.SELECT_PASTE_OPT &&
+			getPrevMode() != ScreenMode.SELECT_CUT_COPY)) {
+			
+			if (screenStack.size() > 2) {
+				// Find the program navigation screen
+				prevScreen = screenStack.get( screenStack.size() - 2 );
+				
+				if (prevScreen.mode != ScreenMode.NAV_PROG_INSTR) {
+					prevScreen = null;
+				}
+			}
+			
+		} else {
+			prevScreen = screenStack.peek();
 		}
-	}
-	
-	/**
-	 * Pushes the active screen onto the screen stack, loads the screen with the
-	 * specified mode and sets it as active.
-	 * 
-	 * @param mode	The mode of the next active screen
-	 */
-	public void nextScreen(ScreenMode mode) {
-		screenStack.push(activeScreen);
-		activeScreen = loadScreen(mode);
-	}
-	
-	public void resetStack() {
-		screenStack.clear();
-		activeScreen = loadScreen(ScreenMode.DEFAULT);
-	}
-	
-	/**
-	 * Creates the screen with the specified mode and sets the screen as active
-	 * without saving the last active screen onto the stack.
-	 * 
-	 * @param mode	The mode of the next active screen
-	 */
-	public void switchScreen(ScreenMode mode) {
-		nextScreen(mode);
-		// Remove the last screen from the screen stack
-		screenStack.pop();
-	}
-	
-	@Override
-	public String toString() {
-		return String.format("Active: %s\nStack: %s\n", activeScreen, screenStack);
+		
+		Screen screen = initScreen(mode, prevScreen);
+		screen.updateScreen();
+		
+		if (prevScreen != null) {
+			// It is possible for the previous screen to be null
+			screen.loadVars(prevScreen.getScreenState());
+		}
+		
+		return screen;
 	}
 }

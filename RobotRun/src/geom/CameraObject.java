@@ -12,14 +12,14 @@ import processing.core.PVector;
 
 public class CameraObject extends Part {
 	
-	public final int model_ID;
 	public final int group_ID;
-	public final float reflective_IDX;
 	public final float image_quality;
+	public final int model_ID;
+	public final float reflective_IDX;
 	
-	private ArrayList<CamSelectArea> selectAreas;
-	private PGraphics preview;
 	private RobotRun appRef;
+	private PGraphics preview;
+	private ArrayList<CamSelectArea> selectAreas;
 	
 	public CameraObject(RobotRun appRef, Part p) {
 		this(appRef, p, 1f);

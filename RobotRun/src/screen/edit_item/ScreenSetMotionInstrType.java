@@ -13,13 +13,6 @@ public class ScreenSetMotionInstrType extends ST_ScreenEditItem {
 	}
 
 	@Override
-	protected void loadOptions() {
-		options.addLine("1.JOINT");
-		options.addLine("2.LINEAR");
-		options.addLine("3.CIRCULAR");
-	}
-
-	@Override
 	public void actionEntr() {
 		RoboticArm r = robotRun.getActiveRobot();
 		MotionInstruction m = (MotionInstruction) r.getInstToEdit(robotRun.getActiveProg(), 
@@ -37,5 +30,12 @@ public class ScreenSetMotionInstrType extends ST_ScreenEditItem {
 		}
 		
 		robotRun.lastScreen();
+	}
+
+	@Override
+	protected void loadOptions() {
+		options.addLine("1.JOINT");
+		options.addLine("2.LINEAR");
+		options.addLine("3.CIRCULAR");
 	}
 }

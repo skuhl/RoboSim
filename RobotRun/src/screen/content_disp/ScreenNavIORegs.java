@@ -14,49 +14,25 @@ public class ScreenNavIORegs extends ST_ScreenListContents {
 	}
 
 	@Override
-	protected String loadHeader() {
-		return "I/O REGISTERS";
-	}
-	
-	@Override
-	protected void loadLabels() {
-		labels[0] = "[OFF]";
-		labels[1] = "[ON]";
-		labels[2] = "";
-		labels[3] = "";
-		labels[4] = "";
-	}
-	
-	@Override
-	protected void loadVars(ScreenState s) {
-		setScreenIndices(0, 1, 0, 0, 0);
-	}
-	
-	@Override
-	protected void loadContents() {
-		contents.setLines(loadIORegNav(robotRun.getActiveRobot()));
-	}
-	
-	@Override
-	public void actionUp() {
-		// Disable page up functionality
-		contents.moveUp(false);
-	}
-	
-	@Override
-	public void actionDn() {
+	public void actionArrowDn() {
 		// Disable page down functionality
 		contents.moveDown(false);
 	}
 	
 	@Override
-	public void actionLt() {
+	public void actionArrowLt() {
 		// Disable the ability to change columns
 	}
 	
 	@Override
-	public void actionRt() {
+	public void actionArrowRt() {
 		// Disable the ability to change columns
+	}
+	
+	@Override
+	public void actionArrowUp() {
+		// Disable page up functionality
+		contents.moveUp(false);
 	}
 	
 	@Override
@@ -75,5 +51,29 @@ public class ScreenNavIORegs extends ST_ScreenListContents {
 		// Set the selected I/ register's state to on
 		ioReg.setState(Fields.ON);
 		robotRun.updatePendantScreen();
+	}
+	
+	@Override
+	protected void loadContents() {
+		contents.setLines(loadIORegNav(robotRun.getActiveRobot()));
+	}
+	
+	@Override
+	protected String loadHeader() {
+		return "I/O REGISTERS";
+	}
+	
+	@Override
+	protected void loadLabels() {
+		labels[0] = "[OFF]";
+		labels[1] = "[ON]";
+		labels[2] = "";
+		labels[3] = "";
+		labels[4] = "";
+	}
+	
+	@Override
+	protected void loadVars(ScreenState s) {
+		setScreenIndices(0, 1, 0, 0, 0);
 	}
 }

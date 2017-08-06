@@ -14,16 +14,6 @@ public class ScreenSetSelectStmtAction extends ST_ScreenEditItem {
 	}
 
 	@Override
-	protected void loadOptions() {
-		options.addLine("JMP LBL[x]");
-		options.addLine("CALL");
-		
-		if (robotRun.isSecondRobotUsed()) {
-			options.addLine("RCALL");
-		}
-	}
-
-	@Override
 	public void actionEntr() {
 		RoboticArm r = robotRun.getActiveRobot();
 		SelectStatement s = (SelectStatement) r.getInstToEdit(robotRun.getActiveProg(), 
@@ -39,6 +29,16 @@ public class ScreenSetSelectStmtAction extends ST_ScreenEditItem {
 		}
 
 		robotRun.lastScreen();
+	}
+
+	@Override
+	protected void loadOptions() {
+		options.addLine("JMP LBL[x]");
+		options.addLine("CALL");
+		
+		if (robotRun.isSecondRobotUsed()) {
+			options.addLine("RCALL");
+		}
 	}
 
 }

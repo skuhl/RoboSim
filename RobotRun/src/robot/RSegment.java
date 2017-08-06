@@ -15,14 +15,14 @@ import processing.core.PVector;
 public class RSegment {
 	
 	/**
-	 * The bounding boxes associated with this segment.
-	 */
-	protected final BoundingBox[] OBBS;
-	
-	/**
 	 * The models defining the shape of this segment.
 	 */
 	protected final PShape[] MODEL_SET;
+	
+	/**
+	 * The bounding boxes associated with this segment.
+	 */
+	protected final BoundingBox[] OBBS;
 	
 	/**
 	 * Defines a segment with the given model, bounding boxes, and draw

@@ -21,10 +21,10 @@ import processing.core.PVector;
 public class Point  {
 	
 	/**
-	 * A position of the robot's tool tip defined with respect to some frame
-	 * (the world or a user frame).
+	 * A set of joint angles representation an orientation of the robot. This
+	 * does not necessary correlate with the defined position and orientation.
 	 */
-	public PVector position;
+	public float[] angles;
 	
 	/**
 	 * An orientation of the robot's tool tip defined with respect to some
@@ -33,10 +33,10 @@ public class Point  {
 	public RQuaternion orientation;
 	
 	/**
-	 * A set of joint angles representation an orientation of the robot. This
-	 * does not necessary correlate with the defined position and orientation.
+	 * A position of the robot's tool tip defined with respect to some frame
+	 * (the world or a user frame).
 	 */
-	public float[] angles;
+	public PVector position;
 	
 	/**
 	 * Initializes the position, orientation and angles associated with this
@@ -52,19 +52,6 @@ public class Point  {
 	 * Defines a point with the given position and orientation. The angles are
 	 * assumed to be zero.
 	 * 
-	 * @param pos		The position of the robot's tool tip
-	 * @param orient	The orientation of the robot's tool tip
-	 */
-	public Point(PVector pos, RQuaternion orient) {
-		position = pos;
-		orientation = orient;
-		angles = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
-	}
-	
-	/**
-	 * Defines a point with the given position and orientation. The angles are
-	 * assumed to be zero.
-	 * 
 	 * @param pos	The position of the robot's tool tip
 	 * @param rMat	The orientation of the robot's tool tip
 	 */
@@ -72,6 +59,19 @@ public class Point  {
 		angles = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
 		position = pos;
 		orientation = RMath.matrixToQuat(rMat);
+	}
+	
+	/**
+	 * Defines a point with the given position and orientation. The angles are
+	 * assumed to be zero.
+	 * 
+	 * @param pos		The position of the robot's tool tip
+	 * @param orient	The orientation of the robot's tool tip
+	 */
+	public Point(PVector pos, RQuaternion orient) {
+		position = pos;
+		orientation = orient;
+		angles = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
 	}
 	
 	/**
@@ -87,25 +87,6 @@ public class Point  {
 		position = pos;
 		orientation = orient;
 		angles = jointAngles;
-	}
-	
-	/**
-	 * Defines a point, whose position and orientation are the combination of
-	 * the given position and orientation with that of this position. The joint
-	 * angles of the defined point are that of this point. 
-	 * 
-	 * @param pos		The position to add with this point's position
-	 * @param orien		The combine to merge with this point's orientation
-	 * @return			A point with the modified position and orientation
-	 */
-	public Point add(PVector pos, RQuaternion orien) {
-		PVector resPos = PVector.add(position, pos);
-		resPos.x = RMath.clamp(resPos.x, -9999f, 9999f);
-		resPos.y = RMath.clamp(resPos.y, -9999f, 9999f);
-		resPos.z = RMath.clamp(resPos.z, -9999f, 9999f);
-		RQuaternion resOrien = RQuaternion.mult(orientation, orien).normalize();
-		
-		return new Point(resPos, resOrien, angles.clone());
 	}
 	
 	/**
@@ -134,23 +115,25 @@ public class Point  {
 		return new Point(cartSum.position, cartSum.orientation, jointSum.angles);
 	}
 	
-	public Point sub(Point p) {
-		return add(p.negate());
+	/**
+	 * Defines a point, whose position and orientation are the combination of
+	 * the given position and orientation with that of this position. The joint
+	 * angles of the defined point are that of this point. 
+	 * 
+	 * @param pos		The position to add with this point's position
+	 * @param orien		The combine to merge with this point's orientation
+	 * @return			A point with the modified position and orientation
+	 */
+	public Point add(PVector pos, RQuaternion orien) {
+		PVector resPos = PVector.add(position, pos);
+		resPos.x = RMath.clamp(resPos.x, -9999f, 9999f);
+		resPos.y = RMath.clamp(resPos.y, -9999f, 9999f);
+		resPos.z = RMath.clamp(resPos.z, -9999f, 9999f);
+		RQuaternion resOrien = RQuaternion.mult(orientation, orien).normalize();
+		
+		return new Point(resPos, resOrien, angles.clone());
 	}
 	
-	public Point negate() {
-		PVector negPos = new PVector().sub(position);
-		RQuaternion negOrient = orientation.conjugate();
-		float[] negJointAngles = new float[6];
-		
-		
-		for(int i = 0; i < 6; i += 1) {
-			negJointAngles[i] = -angles[i];
-		}
-		
-		return new Point(negPos, negOrient, negJointAngles);
-	}
-
 	@Override
 	public Point clone() {
 		return new Point(position.copy(), orientation.clone(), angles.clone());
@@ -183,7 +166,7 @@ public class Point  {
 		
 		return true;
 	}
-	
+
 	/**
 	 * Compares the joint angle values of this point and pt to see if they are
 	 * close enough to be considered the same.
@@ -202,6 +185,19 @@ public class Point  {
 		}
 		
 		return true;
+	}
+	
+	public Point negate() {
+		PVector negPos = new PVector().sub(position);
+		RQuaternion negOrient = orientation.conjugate();
+		float[] negJointAngles = new float[6];
+		
+		
+		for(int i = 0; i < 6; i += 1) {
+			negJointAngles[i] = -angles[i];
+		}
+		
+		return new Point(negPos, negOrient, negJointAngles);
 	}
 	
 	/**
@@ -231,6 +227,10 @@ public class Point  {
 		}
 		
 		return new Point(position.copy(), orientation.clone(), nAngles);
+	}
+	
+	public Point sub(Point p) {
+		return add(p.negate());
 	}
 
 	/**

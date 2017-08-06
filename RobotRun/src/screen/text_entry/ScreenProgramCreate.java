@@ -13,11 +13,6 @@ public class ScreenProgramCreate extends ST_ScreenTextEntry {
 	}
 
 	@Override
-	protected String loadHeader() {
-		return "NAME PROGRAM";
-	}
-
-	@Override
 	public void actionEntr() {
 		RoboticArm r = robotRun.getActiveRobot();
 		if (workingText.length() > 0 && !workingText.equals("\0")) {
@@ -33,6 +28,11 @@ public class ScreenProgramCreate extends ST_ScreenTextEntry {
 			DataManagement.saveRobotData(robotRun.getActiveRobot(), 1);
 			robotRun.switchScreen(ScreenMode.NAV_PROG_INSTR);
 		}
+	}
+
+	@Override
+	protected String loadHeader() {
+		return "NAME PROGRAM";
 	}
 
 }

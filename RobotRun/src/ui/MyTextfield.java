@@ -15,8 +15,8 @@ import processing.core.PGraphics;
  */
 public class MyTextfield extends Textfield implements UIInputElement {
 	
-	private int inputType;
 	private PGraphics buffer;
+	private int inputType;
 	
 	public MyTextfield(ControlP5 theControlP5, String theName, int inputType) {
 		this(theControlP5, theName, 0, 0, 199, 19, inputType);
@@ -96,16 +96,6 @@ public class MyTextfield extends Textfield implements UIInputElement {
 		return inputType;
 	}
 	
-	/**
-	 * Calculates the draw width of a string based on the text-field's label
-	 * and PGraphics buffer.
-	 * 
-	 * @return	The draw width of the given string
-	 */
-	private int getTextWidthFor(String text) {
-		return ControlFont.getWidthFor(text, _myValueLabel, buffer);
-	}
-	
 	@Override
 	public void keyEvent(processing.event.KeyEvent e) {
 		
@@ -129,6 +119,21 @@ public class MyTextfield extends Textfield implements UIInputElement {
 	}
 	
 	@Override
+	public MyTextfield setSize( int theWidth , int theHeight ) {
+		super.setSize( theWidth , theHeight );
+		buffer = cp5.papplet.createGraphics( getWidth( ) , getHeight( ) );
+		return this;
+	}
+	
+	@Override
+	public Textfield setValue(float newValue) {
+		// Broadcast control events for text field input
+		super.setValue(newValue);
+		broadcast( FLOAT );
+		return this;
+	}
+	
+	@Override
 	protected void mousePressed() {
 		super.mousePressed();
 		
@@ -143,6 +148,16 @@ public class MyTextfield extends Textfield implements UIInputElement {
 				System.err.println(NPEx.getMessage());
 			}
 		}
+	}
+	
+	/**
+	 * Calculates the draw width of a string based on the text-field's label
+	 * and PGraphics buffer.
+	 * 
+	 * @return	The draw width of the given string
+	 */
+	private int getTextWidthFor(String text) {
+		return ControlFont.getWidthFor(text, _myValueLabel, buffer);
 	}
 	
 	/**
@@ -197,20 +212,5 @@ public class MyTextfield extends Textfield implements UIInputElement {
 		}
 		
 		return newlabel;
-	}
-	
-	@Override
-	public MyTextfield setSize( int theWidth , int theHeight ) {
-		super.setSize( theWidth , theHeight );
-		buffer = cp5.papplet.createGraphics( getWidth( ) , getHeight( ) );
-		return this;
-	}
-	
-	@Override
-	public Textfield setValue(float newValue) {
-		// Broadcast control events for text field input
-		super.setValue(newValue);
-		broadcast( FLOAT );
-		return this;
 	}
 }

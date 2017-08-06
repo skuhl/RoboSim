@@ -78,8 +78,44 @@ public class IfStatement extends Instruction implements ExpressionEvaluation {
 		return expr;
 	}
 
+	@Override
+	public int getHeaderLength() {
+		//Number of elements before expression start
+		return expr instanceof Expression ? 3 : 2;
+	}
+
 	public Instruction getInstr() {
 		return instr;
+	}
+
+	@Override
+	public Operand<?> getOperand(int idx) {
+		Operand<?> ret = null;
+		
+		if(expr instanceof BooleanBinaryExpression) {
+			if(idx == 0) {
+				ret = ((BooleanBinaryExpression)expr).getArg1();
+			} else if(idx == 2) {
+				ret = ((BooleanBinaryExpression)expr).getArg2();
+			}
+		} else {
+			ret = ((Expression)expr).getOperand(idx);
+		}
+		
+		return ret;
+	}
+
+	@Override
+	public Operator getOperator(int idx) {
+		Operator ret;
+		
+		if(expr instanceof BooleanBinaryExpression) {
+			ret = ((BooleanBinaryExpression)expr).getOperator();
+		} else {
+			ret = expr.getOperator(idx);
+		}
+		
+		return ret;
 	}
 
 	public void setExpr(BooleanBinaryExpression expr) {
@@ -88,38 +124,6 @@ public class IfStatement extends Instruction implements ExpressionEvaluation {
 
 	public void setInstr(Instruction instr) {
 		this.instr = instr;
-	}
-
-	@Override
-	public String toString() {
-		return String.format("IF %s : %s\n", expr, instr);
-	}
-
-	@Override
-	public String[] toStringArray() {
-		String[] exprArray = expr.toStringArray();
-		String[] ret;
-		
-		if(instr == null) {
-			ret = new String[exprArray.length + 2];
-			ret[ret.length - 1] = "...";
-			
-		} else {
-			String[] instArray = instr.toStringArray();
-			ret = new String[exprArray.length + instArray.length + 1];
-			
-			for (int idx = 0; idx < instArray.length; ++idx) {
-				ret[idx + exprArray.length + 1] = instArray[idx];
-			}
-		}
-
-		ret[0] = "IF";
-		for(int i = 1; i < exprArray.length + 1; i += 1) {
-			ret[i] = exprArray[i - 1];
-		}
-		ret[exprArray.length] += " :";
-
-		return ret;
 	}
 
 	@Override
@@ -153,38 +157,34 @@ public class IfStatement extends Instruction implements ExpressionEvaluation {
 	}
 
 	@Override
-	public Operand<?> getOperand(int idx) {
-		Operand<?> ret = null;
-		
-		if(expr instanceof BooleanBinaryExpression) {
-			if(idx == 0) {
-				ret = ((BooleanBinaryExpression)expr).getArg1();
-			} else if(idx == 2) {
-				ret = ((BooleanBinaryExpression)expr).getArg2();
-			}
-		} else {
-			ret = ((Expression)expr).getOperand(idx);
-		}
-		
-		return ret;
-	}
-
-	@Override
-	public Operator getOperator(int idx) {
-		Operator ret;
-		
-		if(expr instanceof BooleanBinaryExpression) {
-			ret = ((BooleanBinaryExpression)expr).getOperator();
-		} else {
-			ret = expr.getOperator(idx);
-		}
-		
-		return ret;
+	public String toString() {
+		return String.format("IF %s : %s\n", expr, instr);
 	}
 	
 	@Override
-	public int getHeaderLength() {
-		//Number of elements before expression start
-		return expr instanceof Expression ? 3 : 2;
+	public String[] toStringArray() {
+		String[] exprArray = expr.toStringArray();
+		String[] ret;
+		
+		if(instr == null) {
+			ret = new String[exprArray.length + 2];
+			ret[ret.length - 1] = "...";
+			
+		} else {
+			String[] instArray = instr.toStringArray();
+			ret = new String[exprArray.length + instArray.length + 1];
+			
+			for (int idx = 0; idx < instArray.length; ++idx) {
+				ret[idx + exprArray.length + 1] = instArray[idx];
+			}
+		}
+
+		ret[0] = "IF";
+		for(int i = 1; i < exprArray.length + 1; i += 1) {
+			ret[i] = exprArray[i - 1];
+		}
+		ret[exprArray.length] += " :";
+
+		return ret;
 	}
 }

@@ -17,11 +17,6 @@ public class ScreenUserFrameRename extends ST_ScreenTextEntry {
 	}
 
 	@Override
-	protected String loadHeader() {
-		return "";
-	}
-
-	@Override
 	public void actionEntr() {
 		// Update frame name
 		if (workingText.length() > 0 && !workingText.equals("\0")) {
@@ -37,5 +32,10 @@ public class ScreenUserFrameRename extends ST_ScreenTextEntry {
 		
 		DataManagement.saveRobotData(robotRun.getActiveRobot(), 1);
 		robotRun.lastScreen();
+	}
+
+	@Override
+	protected String loadHeader() {
+		return "";
 	}
 }

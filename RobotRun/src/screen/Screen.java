@@ -21,22 +21,12 @@ import ui.MenuScroll;
 
 public abstract class Screen {
 	public final ScreenMode mode;
-	protected final RobotRun robotRun;
+	protected MenuScroll contents;
 	
 	protected final String header;
-	protected MenuScroll contents;
-	protected MenuScroll options;
 	protected String[] labels;
-	
-	public Screen(ScreenMode m, String header, RobotRun r) {
-		mode = m;
-		robotRun = r;
-		
-		this.header = header;
-		contents = new MenuScroll("cont", 8, 10, 20);
-		options = new MenuScroll("opt", 3, 10, 180);
-		labels = new String[5];
-	}
+	protected MenuScroll options;
+	protected final RobotRun robotRun;
 	
 	public Screen(ScreenMode m, RobotRun r) {
 		mode = m;
@@ -48,107 +38,49 @@ public abstract class Screen {
 		labels = new String[5];
 	}
 	
-	public void updateScreen() {
-		contents.clear();
-		options.clear();
+	public Screen(ScreenMode m, String header, RobotRun r) {
+		mode = m;
+		robotRun = r;
 		
-		loadContents();
-		loadOptions();
-		loadLabels();
+		this.header = header;
+		contents = new MenuScroll("cont", 8, 10, 20);
+		options = new MenuScroll("opt", 3, 10, 180);
+		labels = new String[5];
 	}
 	
-	public void updateScreen(ScreenState s) {
-		updateScreen();
-		loadVars(s);
-		
-		printScreenInfo();
-	}
+	public abstract void actionArrowDn();
+	public abstract void actionArrowLt();
+	public abstract void actionArrowRt();
+	public abstract void actionArrowUp();
 	
-	//Used for displaying screen text
-	public String getHeader() { return header; }
-	public MenuScroll getContents() { return contents; }
-	public MenuScroll getOptions() { return options; }
-	public String[] getLabels() { return labels; }
-	
-	public int getContentIdx() { return contents.getLineIdx(); }
-	public int getContentColIdx() { return contents.getColumnIdx(); }
-	public int getContentStart() { return contents.getRenderStart(); }
-
-	public int getOptionIdx() { return options.getLineIdx(); }
-	public int getOptionStart() { return options.getRenderStart(); }
-	
-	public void setContentIdx(int i) { contents.setLineIdx(i); }
-	
-	public ScreenState getScreenState() {
-		ScreenState s = new ScreenState(mode, contents.getLineIdx(), contents.getColumnIdx(),
-				contents.getRenderStart(), options.getLineIdx(), options.getRenderStart());
-		
-		return s;
-	}
-		
-	//Loads given set of screen state variables 
-	public void setScreenIndices(int contLine, int col, int contRS, int optLine, int optRS) {
-		contents.setLineIdx(contLine);
-		contents.setColumnIdx(col);
-		contents.setRenderStart(contRS);
-		
-		options.setLineIdx(optLine);
-		options.setRenderStart(optRS);
-	}
-	
-	public void printScreenInfo() {
-		Fields.debug("Current screen: ");
-		Fields.debug("\tMode: " + mode.name());
-		Fields.debug("\tRow: " + contents.getLineIdx() + ", col: " + contents.getColumnIdx() +
-				", RS: " + contents.getRenderStart());
-		Fields.debug("\tOpt row: " + options.getLineIdx() + ", opt RS: " + options.getRenderStart());
-	}
-	
-	//Sets text for each screen
-	protected abstract String loadHeader();
-	protected abstract void loadContents();
-	protected abstract void loadOptions();
-	protected abstract void loadLabels();
-	protected abstract void loadVars(ScreenState s);
-		
-	//Button actions
-	public abstract void actionKeyPress(char key);
-	public abstract void actionUp();
-	public abstract void actionDn();
-	public abstract void actionLt();
-	public abstract void actionRt();
-	public abstract void actionEntr();
 	public abstract void actionBkspc();
+	public abstract void actionEntr();
+	
 	public abstract void actionF1();
 	public abstract void actionF2();
 	public abstract void actionF3();
 	public abstract void actionF4();
 	public abstract void actionF5();
 	
-	public ArrayList<DisplayLine> loadMacros() {
-		ArrayList<DisplayLine> disp = new ArrayList<DisplayLine>();
-		RoboticArm r = robotRun.getActiveRobot();
+	//Button actions
+	public abstract void actionKeyPress(char key);
+	
+	public int getContentColIdx() { return contents.getColumnIdx(); }
+	public int getContentIdx() { return contents.getLineIdx(); }
+	public MenuScroll getContents() { return contents; }
+	public int getContentStart() { return contents.getRenderStart(); }
+	//Used for displaying screen text
+	public String getHeader() { return header; }
+	public String[] getLabels() { return labels; }
+	public int getOptionIdx() { return options.getLineIdx(); }
+	public MenuScroll getOptions() { return options; }
+	public int getOptionStart() { return options.getRenderStart(); }
+	
+	public ScreenState getScreenState() {
+		ScreenState s = new ScreenState(mode, contents.getLineIdx(), contents.getColumnIdx(),
+				contents.getRenderStart(), options.getLineIdx(), options.getRenderStart());
 		
-		for (int i = 0; i < r.getMacroList().size(); i += 1) {
-			String[] strArray = r.getMacroList().get(i).toStringArray();
-			disp.add(new DisplayLine(i, Integer.toString(i + 1), strArray[0], strArray[1], strArray[2]));
-		}
-		
-		return disp;
-	}
-
-	public ArrayList<DisplayLine> loadManualFunct() {
-		ArrayList<DisplayLine> disp = new ArrayList<DisplayLine>();
-		RoboticArm r = robotRun.getActiveRobot();
-
-		for (int i = 0; i < r.getMacroList().size(); i += 1) {
-			if (r.getMacroList().get(i).isManual()) {
-				String manFunct = r.getMacroList().get(i).toString();
-				disp.add(new DisplayLine(i, (i + 1) + " " + manFunct));
-			}
-		}
-		
-		return disp;
+		return s;
 	}
 	
 	/**
@@ -287,7 +219,7 @@ public abstract class Screen {
 		
 		return lines;
 	}
-
+	
 	/**
 	 * Complies a of list of display lines, which represents the instructions
 	 * defined by the given program p.
@@ -381,7 +313,7 @@ public abstract class Screen {
 		
 		return instruct_list;
 	}
-
+	
 	/**
 	 * Compiles a list of the given robot's I/O registers in the format for I/O
 	 * Instruction creation pendant screen.
@@ -403,7 +335,7 @@ public abstract class Screen {
 		
 		return lines;
 	}
-
+	
 	/**
 	 * Compiles a list of the given robot's I/O registers in the format for the
 	 * I/O register navigation pendant screen.
@@ -424,6 +356,32 @@ public abstract class Screen {
 		}
 		
 		return lines;
+	}
+	
+	public ArrayList<DisplayLine> loadMacros() {
+		ArrayList<DisplayLine> disp = new ArrayList<DisplayLine>();
+		RoboticArm r = robotRun.getActiveRobot();
+		
+		for (int i = 0; i < r.getMacroList().size(); i += 1) {
+			String[] strArray = r.getMacroList().get(i).toStringArray();
+			disp.add(new DisplayLine(i, Integer.toString(i + 1), strArray[0], strArray[1], strArray[2]));
+		}
+		
+		return disp;
+	}
+	
+	public ArrayList<DisplayLine> loadManualFunct() {
+		ArrayList<DisplayLine> disp = new ArrayList<DisplayLine>();
+		RoboticArm r = robotRun.getActiveRobot();
+
+		for (int i = 0; i < r.getMacroList().size(); i += 1) {
+			if (r.getMacroList().get(i).isManual()) {
+				String manFunct = r.getMacroList().get(i).toString();
+				disp.add(new DisplayLine(i, (i + 1) + " " + manFunct));
+			}
+		}
+		
+		return disp;
 	}
 	
 	/**
@@ -475,4 +433,48 @@ public abstract class Screen {
 		
 		return progList;
 	}
+	
+	public void printScreenInfo() {
+		Fields.debug("Current screen: ");
+		Fields.debug("\tMode: " + mode.name());
+		Fields.debug("\tRow: " + contents.getLineIdx() + ", col: " + contents.getColumnIdx() +
+				", RS: " + contents.getRenderStart());
+		Fields.debug("\tOpt row: " + options.getLineIdx() + ", opt RS: " + options.getRenderStart());
+	}
+	
+	public void setContentIdx(int i) { contents.setLineIdx(i); }
+	
+	//Loads given set of screen state variables 
+	public void setScreenIndices(int contLine, int col, int contRS, int optLine, int optRS) {
+		contents.setLineIdx(contLine);
+		contents.setColumnIdx(col);
+		contents.setRenderStart(contRS);
+		
+		options.setLineIdx(optLine);
+		options.setRenderStart(optRS);
+	}
+	
+	public void updateScreen() {
+		contents.clear();
+		options.clear();
+		
+		loadContents();
+		loadOptions();
+		loadLabels();
+	}
+	
+	public void updateScreen(ScreenState s) {
+		updateScreen();
+		loadVars(s);
+		
+		printScreenInfo();
+	}
+
+	protected abstract void loadContents();
+
+	//Sets text for each screen
+	protected abstract String loadHeader();
+	protected abstract void loadLabels();
+	protected abstract void loadOptions();
+	protected abstract void loadVars(ScreenState s);
 }

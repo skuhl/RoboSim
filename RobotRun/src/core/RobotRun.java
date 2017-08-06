@@ -137,32 +137,32 @@ public class RobotRun extends PApplet {
 	 */
 	private WorldObject mouseOverWO;
 	
-	private Stack<ProgExecution> progCallStack;
-	private ProgExecution progExecState;
-	private RobotCamera rCamera;
-
-	private final HashMap<Integer, RoboticArm> ROBOTS = new HashMap<>();
-	private RTrace robotTrace;
-	
-	private final Stack<WOUndoState> SCENARIO_UNDO = new Stack<>();
-	private final ArrayList<Scenario> SCENARIOS = new ArrayList<>();
-	
-	private ScreenManager screens;
-
-	private WGUI UI;
-	
-	private RecordScreen record;
-	
 	/**
 	 * Keeps track of the last mouse click, so that it can be rendered on the
 	 * screen as a ray, in the world frame.
 	 */
 	private RRay mouseRay;
-	
 	/**
 	 * Keeps track of a point, so that is can be display in the world frame.
 	 */
 	private Point position;
+	private Stack<ProgExecution> progCallStack;
+
+	private ProgExecution progExecState;
+	private RobotCamera rCamera;
+	
+	private RecordScreen record;
+	private final HashMap<Integer, RoboticArm> ROBOTS = new HashMap<>();
+	
+	private RTrace robotTrace;
+
+	private final Stack<WOUndoState> SCENARIO_UNDO = new Stack<>();
+	
+	private final ArrayList<Scenario> SCENARIOS = new ArrayList<>();
+	
+	private ScreenManager screens;
+	
+	private WGUI UI;
 	
 	/**
 	 * Applies the given camera to the matrix stack. assuming that the current
@@ -236,7 +236,7 @@ public class RobotRun extends PApplet {
 	 */
 	public void button_arrowDn() {
 		try {
-			screens.getActiveScreen().actionDn();
+			screens.getActiveScreen().actionArrowDn();
 			updatePendantScreen();
 			
 		} catch (Exception Ex) {
@@ -255,7 +255,7 @@ public class RobotRun extends PApplet {
 	 */
 	public void button_arrowLt() {
 		try {
-			screens.getActiveScreen().actionLt();
+			screens.getActiveScreen().actionArrowLt();
 			updatePendantScreen();
 			
 		} catch (Exception Ex) {
@@ -276,7 +276,7 @@ public class RobotRun extends PApplet {
 	 */
 	public void button_arrowRt() {
 		try {
-			screens.getActiveScreen().actionRt();
+			screens.getActiveScreen().actionArrowRt();
 			updatePendantScreen();
 			
 		} catch (Exception Ex) {
@@ -295,7 +295,7 @@ public class RobotRun extends PApplet {
 	 */
 	public void button_arrowUp() {
 		try {
-			screens.getActiveScreen().actionUp();
+			screens.getActiveScreen().actionArrowUp();
 			updatePendantScreen();
 			
 		} catch (Exception Ex) {
@@ -1985,10 +1985,6 @@ public class RobotRun extends PApplet {
 		return progCallStack;
 	}
 
-	public boolean isRecording() {
-		return record.isRecording();
-	}
-
 	/**
 	 * Returns the robot with the associated ID, or null if no such robot
 	 * exists.
@@ -2004,7 +2000,7 @@ public class RobotRun extends PApplet {
 	public RobotCamera getRobotCamera() {
 		return rCamera;
 	}
-	
+
 	/**
 	 * Returns a reference to the trace point buffer.
 	 * 
@@ -2013,7 +2009,7 @@ public class RobotRun extends PApplet {
 	public RTrace getRobotTrace() {
 		return robotTrace;
 	}
-
+	
 	public ArrayList<Scenario> getScenarios() {
 		return SCENARIOS;
 	}
@@ -2038,6 +2034,10 @@ public class RobotRun extends PApplet {
 
 	public boolean isRCamEnable() {
 		return UI.getButtonState(WGUI_Buttons.CamToggleActive);
+	}
+
+	public boolean isRecording() {
+		return record.isRecording();
 	}
 
 	public Boolean isRobotAtPostn(int i) {
@@ -3324,6 +3324,23 @@ public class RobotRun extends PApplet {
 
 	/**
 	 * Begins forward program execution for the program specified by the given
+	 * program index in the robot's, specified by the given robot ID, list of
+	 * programs. Program execution begins at the specified instruction index.
+	 * 
+	 * @param rid		The index of the robot for which to bring begin program
+	 * 					execution
+	 * @param progIdx	The index of the program to execute
+	 * @param instIdx	The index of the instruction from which to begin
+	 * 					program execution
+	 * @param exec		Whether to execute a single instruction or the entire
+	 * 					program
+	 */
+	private void progExec(int rid, Program p, int instIdx, ExecType exec) {
+		progExecState.setExec(rid, exec, p, instIdx);
+	}
+	
+	/**
+	 * Begins forward program execution for the program specified by the given
 	 * program index in the active robot's list of programs. Program execution
 	 * begins at the specified instruction index.
 	 * 
@@ -3341,23 +3358,6 @@ public class RobotRun extends PApplet {
 			
 			progExec(getActiveRobot().RID, p, instIdx, pExec);
 		}
-	}
-	
-	/**
-	 * Begins forward program execution for the program specified by the given
-	 * program index in the robot's, specified by the given robot ID, list of
-	 * programs. Program execution begins at the specified instruction index.
-	 * 
-	 * @param rid		The index of the robot for which to bring begin program
-	 * 					execution
-	 * @param progIdx	The index of the program to execute
-	 * @param instIdx	The index of the instruction from which to begin
-	 * 					program execution
-	 * @param exec		Whether to execute a single instruction or the entire
-	 * 					program
-	 */
-	private void progExec(int rid, Program p, int instIdx, ExecType exec) {
-		progExecState.setExec(rid, exec, p, instIdx);
 	}
 	
 	/**

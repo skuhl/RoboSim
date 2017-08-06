@@ -7,8 +7,8 @@ import processing.core.PGraphics;
 import processing.core.PVector;
 
 public class RoboBlaster {
-	private PVector pos;
 	private RQuaternion orient;
+	private PVector pos;
 	private ArrayList<Projectile> projectilesInFlight;
 	
 	public RoboBlaster(PVector p, RQuaternion o) {
@@ -17,22 +17,22 @@ public class RoboBlaster {
 		projectilesInFlight = new ArrayList<Projectile>();
 	}
 	
-	public void setPosition(PVector p) {
-		pos = p;
+	public PVector getAimVect() {
+		float[][] m = orient.toMatrix().getDataF();
+		return new PVector(m[0][0], m[1][0], m[2][0]);
 	}
 	
 	public void setOrientation(RQuaternion q) {
 		orient = q;
 	}
 	
+	public void setPosition(PVector p) {
+		pos = p;
+	}
+	
 	public void shoot() {
 		System.out.println("pew!");
 		projectilesInFlight.add(new Projectile(pos.copy(), getAimVect()));
-	}
-	
-	public PVector getAimVect() {
-		float[][] m = orient.toMatrix().getDataF();
-		return new PVector(m[0][0], m[1][0], m[2][0]);
 	}
 	
 	public void updateAndDrawProjectiles(PGraphics g) {

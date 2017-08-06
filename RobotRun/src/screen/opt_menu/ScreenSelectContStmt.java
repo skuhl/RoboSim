@@ -10,18 +10,6 @@ public class ScreenSelectContStmt extends ST_ScreenOptionsMenu {
 	}
 	
 	@Override
-	protected String loadHeader() {
-		 return "INSERT IF/ SELECT STATEMENT";
-	}
-
-	@Override
-	protected void loadOptions() {
-		options.addLine("1. IF Stmt");
-		options.addLine("2. IF (...)");
-		options.addLine("3. SELECT Stmt");
-	}
-	
-	@Override
 	public void actionEntr() {
 		if (options.getLineIdx() == 0) {
 			robotRun.newIfStatement();
@@ -36,6 +24,18 @@ public class ScreenSelectContStmt extends ST_ScreenOptionsMenu {
 			robotRun.lastScreen();
 			robotRun.lastScreen();
 		}
+	}
+
+	@Override
+	protected String loadHeader() {
+		 return "INSERT IF/ SELECT STATEMENT";
+	}
+	
+	@Override
+	protected void loadOptions() {
+		options.addLine("1. IF Stmt");
+		options.addLine("2. IF (...)");
+		options.addLine("3. SELECT Stmt");
 	}
 
 }

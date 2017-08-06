@@ -11,13 +11,23 @@ public class ScreenNavMFMacros extends ST_ScreenListContents {
 	}
 
 	@Override
-	protected String loadHeader() {
-		return "EXECUTE MANUAL FUNCTION";
+	public void actionEntr() {
+		if(robotRun.isShift()) {
+			RoboticArm r = robotRun.getActiveRobot();
+			int idx = contents.getCurrentItemIdx();
+			System.out.println(idx);
+			robotRun.execute(r.getMacro(idx));
+		}
 	}
 
 	@Override
 	protected void loadContents() {
 		contents.setLines(loadManualFunct());
+	}
+
+	@Override
+	protected String loadHeader() {
+		return "EXECUTE MANUAL FUNCTION";
 	}
 
 	@Override
@@ -27,15 +37,5 @@ public class ScreenNavMFMacros extends ST_ScreenListContents {
 		labels[2] = "";
 		labels[3] = "";
 		labels[4] = "";
-	}
-
-	@Override
-	public void actionEntr() {
-		if(robotRun.isShift()) {
-			RoboticArm r = robotRun.getActiveRobot();
-			int idx = contents.getCurrentItemIdx();
-			System.out.println(idx);
-			robotRun.execute(r.getMacro(idx));
-		}
 	}
 }

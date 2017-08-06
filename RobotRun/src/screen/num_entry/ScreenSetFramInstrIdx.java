@@ -13,12 +13,6 @@ public class ScreenSetFramInstrIdx extends ST_ScreenNumEntry {
 	}
 
 	@Override
-	protected void loadOptions() {
-		options.addLine("Select frame index:");
-		options.addLine("\0" + workingText);
-	}
-	
-	@Override
 	public void actionEntr() {
 		try {
 			RoboticArm r = robotRun.getActiveRobot();
@@ -39,5 +33,11 @@ public class ScreenSetFramInstrIdx extends ST_ScreenNumEntry {
 			// Not a number
 			errorMessage("The frame index must be an integer");
 		}	
+	}
+	
+	@Override
+	protected void loadOptions() {
+		options.addLine("Select frame index:");
+		options.addLine("\0" + workingText);
 	}
 }

@@ -20,53 +20,6 @@ public class MyPShape extends PShapeOpenGL {
 	private static PApplet appRef;
 	
 	/**
-	 * Processing, I hate you
-	 */
-	protected PGraphicsOpenGL g;
-	
-	/**
-	 * Creates a PShape with the given graphics object and type.
-	 * 
-	 * @param g		The graphics object of the application
-	 * @param type	One three PShape type constants (GROUP, PATH, GEOMETRY)
-	 */
-	public MyPShape(PGraphicsOpenGL g, int type) {
-		super(g, type);
-		
-		if (g.is3D()) {
-			set3D(true);
-		}
-		
-		this.g = g;
-	}
-	
-	/**
-	 * Inspired by the processing thread:
-	 * https://forum.processing.org/two/discussion/752/how-to-copy-a-pshape-object
-	 */
-	@Override
-	public MyPShape clone() {
-		MyPShape copy = new MyPShape(g, GEOMETRY);
-		
-		// Copy fill color and all vertices
-		copy.beginShape(PShape.TRIANGLES);
-		copy.noStroke();
-		copy.fill(fillColor);
-		
-		for (int vdx = 0; vdx < getVertexCount(); ++vdx) {
-			PVector n = getNormal(vdx);
-			PVector v = getVertex(vdx);
-			
-			copy.normal(n.x, n.y, n.z);
-			copy.vertex(v.x, v.y, v.z);
-		}
-		
-		copy.endShape();
-		
-		return copy;
-	}
-	
-	/**
 	 * Build a PShape object from the contents of the given .stl source file
 	 * stored in /RobotRun/data/.
 	 * 
@@ -135,5 +88,52 @@ public class MyPShape extends PShapeOpenGL {
 	 */
 	public static void setAppRef(PApplet appRef) {
 		MyPShape.appRef = appRef;
+	}
+	
+	/**
+	 * Processing, I hate you
+	 */
+	protected PGraphicsOpenGL g;
+	
+	/**
+	 * Creates a PShape with the given graphics object and type.
+	 * 
+	 * @param g		The graphics object of the application
+	 * @param type	One three PShape type constants (GROUP, PATH, GEOMETRY)
+	 */
+	public MyPShape(PGraphicsOpenGL g, int type) {
+		super(g, type);
+		
+		if (g.is3D()) {
+			set3D(true);
+		}
+		
+		this.g = g;
+	}
+	
+	/**
+	 * Inspired by the processing thread:
+	 * https://forum.processing.org/two/discussion/752/how-to-copy-a-pshape-object
+	 */
+	@Override
+	public MyPShape clone() {
+		MyPShape copy = new MyPShape(g, GEOMETRY);
+		
+		// Copy fill color and all vertices
+		copy.beginShape(PShape.TRIANGLES);
+		copy.noStroke();
+		copy.fill(fillColor);
+		
+		for (int vdx = 0; vdx < getVertexCount(); ++vdx) {
+			PVector n = getNormal(vdx);
+			PVector v = getVertex(vdx);
+			
+			copy.normal(n.x, n.y, n.z);
+			copy.vertex(v.x, v.y, v.z);
+		}
+		
+		copy.endShape();
+		
+		return copy;
 	}
 }

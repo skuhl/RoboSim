@@ -8,6 +8,13 @@ import global.RMath;
 public class Fixture extends WorldObject {
 
 	/**
+	 * Creates a fixture with the given name and shape.
+	 */
+	public Fixture(String n, ComplexShape model) {
+		super(n, model);
+	}
+
+	/**
 	 * Create a cube object with the given colors and dimension
 	 */
 	public Fixture(String n, int fill, int strokeVal, float edgeLen) {
@@ -26,13 +33,6 @@ public class Fixture extends WorldObject {
 	 */
 	public Fixture(String n, int fill, int strokeVal, float len, float hgt, float wdh) {
 		super(n, new RBox(fill, strokeVal, len, hgt, wdh));
-	}
-
-	/**
-	 * Creates a fixture with the given name and shape.
-	 */
-	public Fixture(String n, ComplexShape model) {
-		super(n, model);
 	}
 
 	/**

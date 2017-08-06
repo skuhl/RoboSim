@@ -10,38 +10,20 @@ public class ScreenNavMainMenu extends ST_ScreenListContents {
 	}
 
 	@Override
-	protected String loadHeader() {
-		return "MAIN MENU";
-	}
-
-	@Override
-	protected void loadContents() {
-		contents.addLine("1 Frames");
-		contents.addLine("2 Macros");
-		contents.addLine("3 Manual Fncts");
-		contents.addLine("4 I/O Registers");
-	}
-	
-	@Override
-	protected void loadOptions() {
-		options.clear();
-	}
-	
-	@Override
-	public void actionUp() {
-		contents.moveUp(false);
-	}
-
-	@Override
-	public void actionDn() {
+	public void actionArrowDn() {
 		contents.moveDown(false);
 	}
 
 	@Override
-	public void actionLt() {}
-
+	public void actionArrowLt() {}
+	
 	@Override
-	public void actionRt() {}
+	public void actionArrowRt() {}
+	
+	@Override
+	public void actionArrowUp() {
+		contents.moveUp(false);
+	}
 
 	@Override
 	public void actionEntr() {
@@ -54,5 +36,23 @@ public class ScreenNavMainMenu extends ST_ScreenListContents {
 		} else if (contents.getLineIdx() == 3) { // IO Registers
 			robotRun.nextScreen(ScreenMode.NAV_IOREGS);
 		}
+	}
+
+	@Override
+	protected void loadContents() {
+		contents.addLine("1 Frames");
+		contents.addLine("2 Macros");
+		contents.addLine("3 Manual Fncts");
+		contents.addLine("4 I/O Registers");
+	}
+
+	@Override
+	protected String loadHeader() {
+		return "MAIN MENU";
+	}
+
+	@Override
+	protected void loadOptions() {
+		options.clear();
 	}
 }

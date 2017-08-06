@@ -15,6 +15,7 @@ import processing.core.PVector;
  * Quaternions during the evaluation of Register Statement Expressions.
  */
 public class RegStmtPoint {
+	private boolean isCartesian;
 	/**
 	 * The values associated with a register point:
 	 * 
@@ -26,7 +27,6 @@ public class RegStmtPoint {
 	 *   0 - 5 -> J1 - J6
 	 */
 	private final float[] values;
-	private boolean isCartesian;
 
 	public RegStmtPoint() {
 		values = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };

@@ -15,12 +15,6 @@ public class ScreenSetSelectStmtArg extends ST_ScreenEditItem {
 	}
 
 	@Override
-	protected void loadOptions() {
-		options.addLine("R[x]");
-		options.addLine("Const");
-	}
-
-	@Override
 	public void actionEntr() {
 		RoboticArm r  = robotRun.getActiveRobot();
 		SelectStatement s = (SelectStatement) r.getInstToEdit(robotRun.getActiveProg(), 
@@ -34,6 +28,12 @@ public class ScreenSetSelectStmtArg extends ST_ScreenEditItem {
 		
 		s.setOperand(robotRun.editIdx, robotRun.opEdit);
 		robotRun.nextScreen(ScreenMode.SET_SELECT_ARGVAL);
+	}
+
+	@Override
+	protected void loadOptions() {
+		options.addLine("R[x]");
+		options.addLine("Const");
 	}
 
 }
