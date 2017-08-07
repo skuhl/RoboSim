@@ -671,8 +671,8 @@ public class RobotCamera {
 		PVector cOrien = RMath.quatToEuler(camOrient);
 		PGraphics img = appRef.createGraphics(width, height, RobotRun.P3D);
 		
-		img.perspective((camFOV/camAspectRatio)*RobotRun.DEG_TO_RAD, camAspectRatio, camClipNear, camClipFar);
 		img.beginDraw();
+		img.perspective((camFOV/camAspectRatio)*RobotRun.DEG_TO_RAD, camAspectRatio, camClipNear, camClipFar);
 		
 		//img.printMatrix();
 		

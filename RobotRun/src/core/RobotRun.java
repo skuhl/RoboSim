@@ -3010,6 +3010,9 @@ public class RobotRun extends PApplet {
 		popMatrix();
 		
 		/**/
+		
+		Fields.debug("Near: %f\nFar: %f\n\n", rCamera.getNearClipDist(), rCamera.getFarClipDist());
+		
 	}
 	
 	/**
