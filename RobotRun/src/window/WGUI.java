@@ -819,12 +819,6 @@ public class WGUI implements ControlListener {
 		addTextarea("CAspectLbl", "Aspect Ratio:", camera, lLblWidth, fieldHeight, Fields.medium);
 		addTextfield("CAspectCur", camera, fieldWidthSm, fieldHeight, Fields.medium, app.getKeyCodeMap());
 		
-		addTextarea("CCNearLbl", "Near Clip:", camera, lLblWidth, fieldHeight, Fields.medium);
-		addTextfield("CCNearCur", camera, fieldWidthSm, fieldHeight, Fields.medium, app.getKeyCodeMap());
-		
-		addTextarea("CCFarLbl", "Far Clip:", camera, lLblWidth, fieldHeight, Fields.medium);
-		addTextfield("CCFarCur", camera, fieldWidthSm, fieldHeight, Fields.medium, app.getKeyCodeMap());
-		
 		addSlider("CBright", "Brightness", camera, fieldWidthMed, fieldHeight,
 				0f, 10f, 1f, Fields.ITYPE_TRANSIENT, Fields.medium);
 		addSlider("CExp", "Exposure", camera, fieldWidthMed, fieldHeight,
@@ -1708,16 +1702,13 @@ public class WGUI implements ControlListener {
 			PVector pos = new PVector(x, y, z);
 			PVector rot = new PVector(w, p, r);
 			
-			float clipNear = Float.parseFloat(getTextField("CCNearCur").getText());
-			float clipFar = Float.parseFloat(getTextField("CCFarCur").getText());
-			
 			float fov = Float.parseFloat(getTextField("CFOVCur").getText());
 			float aspect = Float.parseFloat(getTextField("CAspectCur").getText());
 			
 			float br = getSlider("CBright").getValue();
 			float exp = getSlider("CExp").getValue();
 			
-			app.getRobotCamera().update(pos, rot, fov, aspect, clipNear, clipFar, br, exp);
+			app.getRobotCamera().updateFromWorld(pos, rot, fov, aspect, br, exp);
 		}
 		catch (NumberFormatException NFEx) {
 			Fields.setMessage("Invalid number input!");
@@ -1757,9 +1748,6 @@ public class WGUI implements ControlListener {
 		getTextField("CWCur").setText(String.format("%4.3f", ori.x));
 		getTextField("CPCur").setText(String.format("%4.3f", ori.y));
 		getTextField("CRCur").setText(String.format("%4.3f", ori.z));
-		
-		getTextField("CCNearCur").setText(String.format("%4.3f", rCam.getNearClipDist()));
-		getTextField("CCFarCur").setText(String.format("%4.3f", rCam.getFarClipDist()));
 		
 		getTextField("CFOVCur").setText(String.format("%4.3f", rCam.getFOV()));
 		getTextField("CAspectCur").setText(String.format("%4.3f", rCam.getAspectRatio()));
@@ -3332,84 +3320,70 @@ public class WGUI implements ControlListener {
 	private void updateCameraWindowContentPositions() {
 		// X label and fields
 		int[] relPos = new int[] { winMargin, winMargin };
-		ControllerInterface<?> c0, c = getTextArea("CXLbl").setPosition(relPos[0], relPos[1]);
-		
-		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
-		c0 = getTextField("CXCur").setPosition(relPos[0], relPos[1]);
-
-		// Cam clip near label and fields
-		relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
-		c0 = getTextArea("CCNearLbl").setPosition(relPos[0], relPos[1]);
+		ControllerInterface<?> c, c0 = getTextArea("CXLbl").setPosition(relPos[0], relPos[1]);
 		
 		relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distLblToFieldX, 0);
-		getTextField("CCNearCur").setPosition(relPos[0], relPos[1]);
+		c = getTextField("CXCur").setPosition(relPos[0], relPos[1]);
 		
-		// Y label and fields
-		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		c = getTextArea("CYLbl").setPosition(relPos[0], relPos[1]);
-
-		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
-		c0 = getTextField("CYCur").setPosition(relPos[0], relPos[1]);
-		
-		// Cam clip far label and fields
-		relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
-		c0 = getTextArea("CCFarLbl").setPosition(relPos[0], relPos[1]);
-		
-		relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distLblToFieldX, 0);
-		getTextField("CCFarCur").setPosition(relPos[0], relPos[1]);
-
-		// Z label and fields
-		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		c = getTextArea("CZLbl").setPosition(relPos[0], relPos[1]);;
-
-		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
-		c0 = getTextField("CZCur").setPosition(relPos[0], relPos[1]);
-		
-		// FOV label and fields
-		relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
-		c0 = getTextArea("CFOVLbl").setPosition(relPos[0], relPos[1]);
-		
-		relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distLblToFieldX, 0);
-		getTextField("CFOVCur").setPosition(relPos[0], relPos[1]);
-
 		// W label and fields
-		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
 		c = getTextArea("CWLbl").setPosition(relPos[0], relPos[1]);
 
 		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
-		c0 = getTextField("CWCur").setPosition(relPos[0], relPos[1]);
+		getTextField("CWCur").setPosition(relPos[0], relPos[1]);
 		
-		// Aspect ratio label and fields
-		relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
-		c0 = getTextArea("CAspectLbl").setPosition(relPos[0], relPos[1]);
-		
-		relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distLblToFieldX, 0);
-		getTextField("CAspectCur").setPosition(relPos[0], relPos[1]);
+		// Y label and fields
+		relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		c0 = getTextArea("CYLbl").setPosition(relPos[0], relPos[1]);
 
+		relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distLblToFieldX, 0);
+		c = getTextField("CYCur").setPosition(relPos[0], relPos[1]);
+		
 		// P label and fields
-		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
 		c = getTextArea("CPLbl").setPosition(relPos[0], relPos[1]);
 
 		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
-		c0 = getTextField("CPCur").setPosition(relPos[0], relPos[1]);
+		getTextField("CPCur").setPosition(relPos[0], relPos[1]);
 		
-		// Brightness slider 
-		relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
-		getSlider("CBright").setPosition(relPos[0], relPos[1]);
+		// Z label and fields
+		relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		c0 = getTextArea("CZLbl").setPosition(relPos[0], relPos[1]);;
 
+		relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distLblToFieldX, 0);
+		c = getTextField("CZCur").setPosition(relPos[0], relPos[1]);
+		
 		// R label and fields
-		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
 		c = getTextArea("CRLbl").setPosition(relPos[0], relPos[1]);
 		
 		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
-		c0 = getTextField("CRCur").setPosition(relPos[0], relPos[1]);
+		getTextField("CRCur").setPosition(relPos[0], relPos[1]);
+		
+		// FOV label and fields
+		relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		c0 = getTextArea("CFOVLbl").setPosition(relPos[0], relPos[1]);
+		
+		relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distLblToFieldX, 0);
+		c = getTextField("CFOVCur").setPosition(relPos[0], relPos[1]);
+		
+		// Brightness slider 
+		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
+		getSlider("CBright").setPosition(relPos[0], relPos[1]);
+		
+		// Aspect ratio label and fields
+		relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		c0 = getTextArea("CAspectLbl").setPosition(relPos[0], relPos[1]);
+		
+		relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distLblToFieldX, 0);
+		c = getTextField("CAspectCur").setPosition(relPos[0], relPos[1]);
 		
 		// Shutter speed timer
-		relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
+		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
 		getSlider("CExp").setPosition(relPos[0], relPos[1]);
 		
 		// Cam update button
-		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		c = getButton(WGUI_Buttons.CamUpdate).setPosition(relPos[0], relPos[1]);
 		
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);

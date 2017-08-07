@@ -326,12 +326,10 @@ public abstract class DataManagement {
 			
 			float FOV = dataIn.readFloat();
 			float aspect = dataIn.readFloat();
-			float near = dataIn.readFloat();
-			float far = dataIn.readFloat();
 			float br = dataIn.readFloat();
 			float exp = dataIn.readFloat();
 			
-			robotRun.getRobotCamera().update(camPos, camOrient, FOV, aspect, near, far, br, exp);
+			robotRun.getRobotCamera().update(camPos, camOrient, FOV, aspect, br, exp);
 			
 			int numObj = dataIn.readInt();
 			for(int i = 0; i < numObj; i += 1) {
@@ -1422,8 +1420,6 @@ public abstract class DataManagement {
 			// Save other parameters (FOV, aspect ratio, etc)
 			dataOut.writeFloat(rCam.getFOV());
 			dataOut.writeFloat(rCam.getAspectRatio());
-			dataOut.writeFloat(rCam.getNearClipDist());
-			dataOut.writeFloat(rCam.getFarClipDist());
 			dataOut.writeFloat(rCam.getBrightness());
 			dataOut.writeFloat(rCam.getExposure());
 			

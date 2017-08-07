@@ -20,6 +20,16 @@ import processing.core.PImage;
 import processing.core.PVector;
 
 public class RobotCamera {
+	public static final float DEFAULT_ASPECT = 1.5f;
+	public static final float DEFAULT_BRIGHTNESS = 10f;
+	public static final float DEFAULT_CLIP_FAR = 5000f;
+	public static final float DEFAULT_CLIP_NEAR = 0.1f;
+	public static final float DEFAULT_EXPOSURE_LEN = 0.1f;
+	public static final float DEFAULT_FOV = 75f;
+	public static final float DEFAULT_POS_X = -500;
+	public static final float DEFAULT_POS_Y = -500;
+	public static final float DEFAULT_POS_Z = 0;
+	public static final float DEFAULT_SENSITIVITY = 0.75f;
 	
 	private RobotRun appRef;
 	private float brightness;
@@ -36,12 +46,13 @@ public class RobotCamera {
 	private ArrayList<CameraObject> taughtObjects;
 	
 	public RobotCamera(RobotRun appRef) {
-		this(appRef, -500, 0, 500, new RQuaternion(), 75, 1.5f, 0.5f, 1000);
+		this(appRef, DEFAULT_POS_X, DEFAULT_POS_Y, DEFAULT_POS_Z, 
+				new RQuaternion(), DEFAULT_FOV, DEFAULT_ASPECT);
 	}
 	
-	public RobotCamera(RobotRun appRef, float posX, float posY, float posZ, RQuaternion orient, 
-			float fov, float ar, float near, float far) {
-		this(appRef, new PVector(posX, posY, posZ), orient, fov, ar, near, far, 10.0f, 0.1f);
+	public RobotCamera(RobotRun appRef, float posX, float posY, float posZ, RQuaternion orient, float fov, float ar) {
+		this(appRef, new PVector(posX, posY, posZ), orient, fov, ar, DEFAULT_CLIP_NEAR, DEFAULT_CLIP_FAR, 
+				DEFAULT_BRIGHTNESS, DEFAULT_EXPOSURE_LEN);
 	}
 	
 	public RobotCamera(RobotRun appRef, PVector pos, RQuaternion orient, float fov, float ar, float near, float far,
@@ -54,7 +65,7 @@ public class RobotCamera {
 		camAspectRatio = ar;
 		camClipNear = near;
 		camClipFar = far;
-		sensitivity = 0.75f;
+		sensitivity = DEFAULT_SENSITIVITY;
 		
 		brightness = br;
 		exposure = exp;
@@ -576,7 +587,7 @@ public class RobotCamera {
 	public ArrayList<CameraObject> teachObjectToCamera(Scenario scene) {
 		ArrayList<CameraObject> objs = getObjectsInFrame(scene);
 		CameraObject teachObj = null;
-		takeSnapshot();
+		snapshot = updateSnapshot();
 		
 		
 		for(WorldObject o: objs) {
@@ -605,30 +616,18 @@ public class RobotCamera {
 		return taughtObjects;
 	}
 	
-	public RobotCamera update(PVector pos, PVector rot,	float fov, float ar, 
-			float near, float far, float br, float exp) {
-		camPos = RMath.vFromWorld(pos);
-		camOrient = RMath.wEulerToNQuat(rot);
+	public RobotCamera update(PVector pos, RQuaternion orient, float fov, float ar,	float br, float exp) {
+		camPos = pos;
+		camOrient = orient;
 		camFOV = fov;
 		camAspectRatio = ar;
-		camClipNear = near;
-		camClipFar = far;
 		brightness = br;
 		exposure = exp;
 		return this;
 	}
 	
-	public RobotCamera update(PVector pos, RQuaternion orient, float fov, float ar, 
-			float near, float far, float br, float exp) {
-		camPos = pos;
-		camOrient = orient;
-		camFOV = fov;
-		camAspectRatio = ar;
-		camClipNear = near;
-		camClipFar = far;
-		brightness = br;
-		exposure = exp;
-		return this;
+	public RobotCamera updateFromWorld(PVector pos, PVector rot, float fov, float ar, float br, float exp) {
+		return update(RMath.vFromWorld(pos), RMath.wEulerToNQuat(rot), fov, ar, br, exp);
 	}
 	
 	private RMatrix getPerspProjMat() {
@@ -666,7 +665,7 @@ public class RobotCamera {
 		return new RMatrix(vMat);
 	}
 
-	private void takeSnapshot() {
+	private PGraphics updateSnapshot() {
 		int height = 200, width = 250;
 		PVector cPos = camPos;
 		PVector cOrien = RMath.quatToEuler(camOrient);
@@ -711,6 +710,6 @@ public class RobotCamera {
 		
 		img.endDraw();
 		
-		snapshot = img;
+		return img;
 	}
 }
