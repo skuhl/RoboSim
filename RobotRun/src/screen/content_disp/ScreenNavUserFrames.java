@@ -31,7 +31,7 @@ public class ScreenNavUserFrames extends ST_ScreenListContents {
 
 	@Override
 	public void actionF3() {
-		robotRun.switchScreen(ScreenMode.NAV_TOOL_FRAMES);
+		robotRun.switchScreen(ScreenMode.NAV_TOOL_FRAMES, false);
 	}
 
 	@Override

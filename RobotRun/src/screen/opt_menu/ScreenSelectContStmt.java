@@ -14,7 +14,7 @@ public class ScreenSelectContStmt extends ST_ScreenOptionsMenu {
 		if (options.getLineIdx() == 0) {
 			robotRun.newIfStatement();
 			robotRun.lastScreen();
-			robotRun.switchScreen(ScreenMode.SET_EXPR_OP);
+			robotRun.switchScreen(ScreenMode.SET_EXPR_OP, false);
 		} else if (options.getLineIdx() == 1) {
 			robotRun.newIfExpression();
 			robotRun.lastScreen();

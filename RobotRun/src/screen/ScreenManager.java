@@ -162,6 +162,13 @@ public class ScreenManager {
 	 * active screen.
 	 */
 	public void lastScreen() {
+		try {
+			throw new RuntimeException("LASTSCREEN()");
+			
+		} catch (RuntimeException REx)  {
+			REx.printStackTrace();
+		}
+		
 		if (!screenStack.isEmpty()) {
 			activeScreen = screenStack.pop();
 		}
@@ -187,12 +194,22 @@ public class ScreenManager {
 	 * Creates the screen with the specified mode and sets the screen as active
 	 * without saving the last active screen onto the stack.
 	 * 
-	 * @param mode	The mode of the next active screen
+	 * @param mode					The mode of the next active screen
+	 * @param ignoreActiveScreen	Whether to completely disregard the active
+	 * 								screen when transition screens or not
 	 */
-	public void switchScreen(ScreenMode mode) {
-		nextScreen(mode);
-		// Remove the last screen from the screen stack
-		screenStack.pop();
+	public void switchScreen(ScreenMode mode, boolean ignoreActiveScreen) {
+		
+		if (ignoreActiveScreen) {
+			// Discard the active screen completely
+			activeScreen = loadScreen(mode);
+			
+		} else {
+			nextScreen(mode);
+			// Remove the last screen from the screen stack
+			screenStack.pop();
+		}
+		
 	}
 	
 	@Override

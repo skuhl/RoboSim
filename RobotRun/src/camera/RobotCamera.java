@@ -140,7 +140,8 @@ public class RobotCamera {
 			
 			snapshot.popMatrix();
 			
-			RRay ray = new RRay(rayOrigin, pointOnRay, camClipFar - camClipNear, Fields.BLACK);
+			float rayLen = Math.abs(PVector.dist(pointOnRay, rayOrigin));
+			RRay ray = new RRay(rayOrigin, pointOnRay, rayLen, Fields.BLACK);
 			
 			return ray;
 		}

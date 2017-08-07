@@ -21,8 +21,8 @@ public class ScreenSetFrameInstrType extends ST_ScreenEditItem {
 		} else {
 			fInst.setFrameType(Fields.FTYPE_USER);
 		}
-
-		robotRun.switchScreen(ScreenMode.SET_FRAME_INSTR_IDX);
+		
+		robotRun.lastScreen();
 	}
 
 	@Override

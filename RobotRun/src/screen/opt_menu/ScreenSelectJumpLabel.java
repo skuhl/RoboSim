@@ -11,14 +11,16 @@ public class ScreenSelectJumpLabel extends ST_ScreenOptionsMenu {
 
 	@Override
 	public void actionEntr() {
-		robotRun.lastScreen();
-
+		
 		if (options.getLineIdx() == 0) {
 			robotRun.newLabel();
-			robotRun.switchScreen(ScreenMode.SET_LBL_NUM);
+			robotRun.lastScreen();
+			robotRun.switchScreen(ScreenMode.SET_LBL_NUM, true);
+			
 		} else {
 			robotRun.newJumpInstruction();
-			robotRun.switchScreen(ScreenMode.SET_JUMP_TGT);
+			robotRun.lastScreen();
+			robotRun.switchScreen(ScreenMode.SET_JUMP_TGT, true);
 		}
 	}
 

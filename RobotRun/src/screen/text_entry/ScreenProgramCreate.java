@@ -26,7 +26,7 @@ public class ScreenProgramCreate extends ST_ScreenTextEntry {
 			robotRun.setActiveInstIdx(0);
 
 			DataManagement.saveRobotData(robotRun.getActiveRobot(), 1);
-			robotRun.switchScreen(ScreenMode.NAV_PROG_INSTR);
+			robotRun.switchScreen(ScreenMode.NAV_PROG_INSTR, false);
 		}
 	}
 
