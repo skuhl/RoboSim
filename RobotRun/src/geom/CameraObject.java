@@ -73,7 +73,7 @@ public class CameraObject extends Part {
 	
 	public PGraphics getModelPreview(RMatrix m) {
 		if(preview == null) {
-			PGraphics img = appRef.createGraphics(150, 200, RobotRun.P3D);
+			PGraphics img = appRef.createGraphics(200, 200, RobotRun.P3D);
 			float[][] rMat = m.getDataF();
 			img.beginDraw();
 			img.ortho();

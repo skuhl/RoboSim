@@ -2930,7 +2930,6 @@ public class RobotRun extends PApplet {
 		Fields.bond = createFont("fonts/ConsolasBold.ttf", 12);
 		
 		camera = new Camera(1000f, 100f, 8000f);
-		rCamera = new RobotCamera(this);
 		robotTrace = new RTrace();
 		activeRobot = new Pointer<>(null);
 		activeScenario = new Pointer<>(null);
@@ -2963,6 +2962,7 @@ public class RobotRun extends PApplet {
 			ROBOTS.put(r.RID, r);
 
 			activeRobot.set( ROBOTS.get(0) );
+			rCamera = new RobotCamera(this);
 			
 			DataManagement.loadState(this);
 			
@@ -3848,6 +3848,15 @@ public class RobotRun extends PApplet {
 		lastTextPositionY += 20;
 		lastTextPositionY = Fields.msgSystem.draw(getGraphics(),
 				lastTextPositionX, lastTextPositionY);
+		
+		if(isRCamEnable()) {
+			text("Camera view:",
+					lastTextPositionX, lastTextPositionY);
+			
+			PImage img = rCamera.getSnapshot();
+			rect(width - img.width - 2, height - img.height - 2, width, height);
+			image(img, width - img.width - 1, height - img.height - 1);
+		}
 		
 		UI.updateAndDrawUI();
 		
