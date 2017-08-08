@@ -71,6 +71,7 @@ public class RobotCamera {
 		exposure = exp;
 		
 		taughtObjects = new ArrayList<CameraObject>();
+		snapshot = updateSnapshot();
 	}
 
 	public void addTaughtObject(CameraObject o) {
@@ -217,7 +218,7 @@ public class RobotCamera {
 	}
 	
 	@Deprecated
-	public float[] getColinearDimensions(WorldObject o) {
+	public PVector getColinearDimensions(WorldObject o) {
 		float[] dims = o.getModel().getDimArray();
 		float len = dims[0];
 		float hgt = dims[1];
@@ -262,7 +263,7 @@ public class RobotCamera {
 		float visY = Math.min(RMath.clamp(dimY/2 + aY, 0, dimY), pHeight);
 		float visZ = Math.min(RMath.clamp(dimZ/2 + aZ, 0, dimZ), camClipFar - camClipNear);
 		
-		return new float[] {visX, visY, visZ};
+		return new PVector(visX, visY, visZ);
 	}
 	
 	public float getExposure() {
@@ -588,7 +589,6 @@ public class RobotCamera {
 	public ArrayList<CameraObject> teachObjectToCamera(Scenario scene) {
 		ArrayList<CameraObject> objs = getObjectsInFrame(scene);
 		CameraObject teachObj = null;
-		snapshot = updateSnapshot();
 		
 		
 		for(WorldObject o: objs) {
@@ -624,6 +624,7 @@ public class RobotCamera {
 		camAspectRatio = ar;
 		brightness = br;
 		exposure = exp;
+		snapshot = updateSnapshot();
 		return this;
 	}
 	
