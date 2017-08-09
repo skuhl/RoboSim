@@ -1404,8 +1404,8 @@ public class RobotRun extends PApplet {
 				WorldObject selectedWO = UI.getSelectedWO();
 				
 				if (selectedWO instanceof Part && (r == null || !r.isHeld((Part)selectedWO))) {
-					WOUndoState undoState = UI.updateWOCurrent(selectedWO);
 					UI.fillCurWithDef( (Part)selectedWO );
+					WOUndoState undoState = UI.updateWOCurrent(selectedWO);
 	
 					if (undoState != null) {
 						// If the part was modified, then save its previous state
@@ -2381,7 +2381,7 @@ public class RobotRun extends PApplet {
 						// Check for collisions with objects in the scene
 						WorldObject collision = checkForCollisionsInScene(mouseRay);
 						
-						if (mouseButton == LEFT && collision != null) {
+						if (mouseButton == LEFT) {
 							UI.setSelectedWO(collision);
 						}
 						

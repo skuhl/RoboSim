@@ -119,15 +119,16 @@ public class BoundingBox {
 				float t = -E / G;
 				
 				if (t >= 0) {
+					float[] dimArray = dims.array();
 					PVector ptOnRay = PVector.add(rayOrigin, PVector.mult(rayDirect, t));
 					float[] ptOnRayArray = new float[] { ptOnRay.x, ptOnRay.y, ptOnRay.z };
 					int dimToCheck0 = (planeAxis + 1) % 3;
 					int dimToCheck1 = (dimToCheck0 + 1) % 3;
 					
-					if (ptOnRayArray[dimToCheck0] >= -dims.array()[dimToCheck0] &&
-						ptOnRayArray[dimToCheck0] <= dims.array()[dimToCheck0] &&
-						ptOnRayArray[dimToCheck1] >= -dims.array()[dimToCheck1] &&
-						ptOnRayArray[dimToCheck1] <= dims.array()[dimToCheck1]) {
+					if (ptOnRayArray[dimToCheck0] >= -dimArray[dimToCheck0] &&
+						ptOnRayArray[dimToCheck0] <= dimArray[dimToCheck0] &&
+						ptOnRayArray[dimToCheck1] >= -dimArray[dimToCheck1] &&
+						ptOnRayArray[dimToCheck1] <= dimArray[dimToCheck1]) {
 						
 						// Collision exists
 						return PVector.add(ray.getOrigin(),  PVector.mult(ray.getDirection(), t));

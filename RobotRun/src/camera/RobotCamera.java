@@ -661,6 +661,7 @@ public class RobotCamera {
 		img.rotateZ(cOrien.z);
 		
 		img.translate(-cPos.x + width / 2f, -cPos.y + width / 2f,  -cPos.z);
+		//img.translate(-cPos.x, -cPos.y,  -cPos.z);
 		
 		if(tgt instanceof Part && tgt != null) {
 			PVector dims = getAxisDimensions(tgt);
@@ -685,6 +686,7 @@ public class RobotCamera {
 		appRef.getActiveRobot().draw(img, false, AxesDisplay.NONE);
 		
 		img.translate(cPos.x - width / 2f, cPos.y - height / 2f,  cPos.z);
+		//img.translate(cPos.x, cPos.y,  cPos.z);
 		
 		img.noStroke();
 		img.fill(img.color(255, 255, 255, (int)(240f*Math.max(0, Math.log10(brightness*exposure)))));
