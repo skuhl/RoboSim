@@ -1711,7 +1711,7 @@ public class WGUI implements ControlListener {
 			float br = getSlider("CBright").getValue();
 			float exp = getSlider("CExp").getValue();
 			
-			app.getRobotCamera().updateFromWorld(pos, rot, fov, aspect, br, exp);
+			app.getRobotCamera().updateFromWorld(pos, rot, getSelectedWO(), fov, aspect, br, exp);
 		}
 		catch (NumberFormatException NFEx) {
 			Fields.setMessage("Invalid number input!");
@@ -3427,8 +3427,9 @@ public class WGUI implements ControlListener {
 			getButton(WGUI_Buttons.CamObjPreview).hide();
 		}
 		
-		if(app.getRobotCamera().getSnapshot() != null) {
-			getButton(WGUI_Buttons.CamSnapPreview).setImage(app.getRobotCamera().getSnapshot());
+		PGraphics snapshot = app.getRobotCamera().getSnapshot();
+		if(snapshot != null) {
+			getButton(WGUI_Buttons.CamSnapPreview).setImage(snapshot);
 			getButton(WGUI_Buttons.CamSnapPreview).show();
 		} else {
 			getButton(WGUI_Buttons.CamSnapPreview).hide();

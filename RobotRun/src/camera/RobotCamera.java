@@ -16,7 +16,6 @@ import global.Fields;
 import global.RMath;
 import processing.core.PApplet;
 import processing.core.PGraphics;
-import processing.core.PImage;
 import processing.core.PVector;
 import window.WGUI;
 
@@ -72,7 +71,7 @@ public class RobotCamera {
 		exposure = exp;
 		
 		taughtObjects = new ArrayList<CameraObject>();
-		snapshot = updateSnapshot();
+		snapshot = updateSnapshot(null);
 	}
 
 	public void addTaughtObject(CameraObject o) {
@@ -217,12 +216,11 @@ public class RobotCamera {
 		return brightness;
 	}
 	
-	@Deprecated
-	public PVector getColinearDimensions(WorldObject o) {
-		PVector dims = o.getModel().getDims();
-		float len = dims.x;
-		float hgt = dims.y;
-		float wid = dims.z;
+	public PVector getAxisDimensions(WorldObject o) {
+		PVector dimensions = o.getModel().getDims();
+		float len = dimensions.z;
+		float wid = dimensions.x;
+		float hgt = dimensions.y;
 		
 		//Generate camera axes
 		PVector lookVect = getVectLook();
@@ -230,40 +228,17 @@ public class RobotCamera {
 		PVector ltVect = lookVect.cross(upVect);
 		
 		//Generate object axes and produce the diagonal vector of the object
-		float[][] objCoord = o.getLocalOrientation().getDataF();
-		PVector objAxisX = new PVector(objCoord[0][0], objCoord[1][0], objCoord[2][0]);
-		PVector objAxisY = new PVector(objCoord[0][1], objCoord[1][1], objCoord[2][1]);
-		PVector objAxisZ = new PVector(objCoord[0][2], objCoord[1][2], objCoord[2][2]);
+		RMatrix mat = o instanceof Part ? ((Part)o).getOrientation() : o.getLocalOrientation();
+		PVector objAxisX = new PVector(mat.getEntryF(0, 0), mat.getEntryF(0, 1), mat.getEntryF(0, 2));
+		PVector objAxisY = new PVector(mat.getEntryF(1, 0), mat.getEntryF(1, 1), mat.getEntryF(1, 2));
+		PVector objAxisZ = new PVector(mat.getEntryF(2, 0), mat.getEntryF(2, 1), mat.getEntryF(2, 2));
 		
 		//Projected "apparent" dimensions of box on to camera axes 
-		float dimX = Math.abs(len*objAxisX.dot(ltVect)) + Math.abs(hgt*objAxisY.dot(ltVect)) + Math.abs(wid*objAxisZ.dot(ltVect));
-		float dimY = Math.abs(len*objAxisX.dot(upVect)) + Math.abs(hgt*objAxisY.dot(upVect)) + Math.abs(wid*objAxisZ.dot(upVect));
-		float dimZ = Math.abs(len*objAxisX.dot(lookVect)) + Math.abs(hgt*objAxisY.dot(lookVect)) + Math.abs(wid*objAxisZ.dot(lookVect));
+		float dimX = Math.abs(wid*objAxisX.dot(ltVect)) + Math.abs(hgt*objAxisY.dot(ltVect)) + Math.abs(len*objAxisZ.dot(ltVect));
+		float dimY = Math.abs(wid*objAxisX.dot(upVect)) + Math.abs(hgt*objAxisY.dot(upVect)) + Math.abs(len*objAxisZ.dot(upVect));
+		float dimZ = Math.abs(wid*objAxisX.dot(lookVect)) + Math.abs(hgt*objAxisY.dot(lookVect)) + Math.abs(len*objAxisZ.dot(lookVect));
 		
-		//Create vector to object center point, find x, y, z offset components
-		PVector objCenter = o.getLocalCenter();
-		PVector toObj = new PVector(objCenter.x - camPos.x, objCenter.y - camPos.y, objCenter.z - camPos.z);
-		float distX = Math.abs(toObj.dot(ltVect));
-		float distY = Math.abs(toObj.dot(upVect));
-		float distZ = toObj.dot(lookVect);
-		
-		//Calculate the width and height of our frustum view plane
-		float pWidth = getPlaneWidth(distZ);
-		float pHeight = getPlaneHeight(distZ);
-		
-		System.out.println(String.format("plane width: %4f, plane height: %4f", pWidth, pHeight));
-		
-		//Calculate signed distance from center of object to near edge of view plane
-		float aX = (pWidth/2 - distX);
-		float aY = (pHeight/2 - distY);
-		float aZ = Math.min(distZ - camClipNear, camClipFar - distZ);
-		
-		//Find the portion of the object projected dimensions that are in view
-		float visX = Math.min(RMath.clamp(dimX/2 + aX, 0, dimX), pWidth);
-		float visY = Math.min(RMath.clamp(dimY/2 + aY, 0, dimY), pHeight);
-		float visZ = Math.min(RMath.clamp(dimZ/2 + aZ, 0, dimZ), camClipFar - camClipNear);
-		
-		return new PVector(visX, visY, visZ);
+		return new PVector(dimX, dimY, dimZ);
 	}
 	
 	public float getExposure() {
@@ -300,7 +275,7 @@ public class RobotCamera {
 	}
 	
 	public float getObjectImageQuality(WorldObject o) {
-		if(o instanceof Fixture) return 0f;
+		if(o instanceof Fixture || o == null) return 0f;
 		
 		CameraObject camObj = new CameraObject(appRef, (Part)o);
 		PVector objCenter = ((Part)o).getCenter();
@@ -448,7 +423,7 @@ public class RobotCamera {
 		return camPos; 
 	}
 	
-	public PImage getSnapshot() {
+	public PGraphics getSnapshot() {
 		return snapshot;
 	}
 	
@@ -614,19 +589,21 @@ public class RobotCamera {
 		return taughtObjects;
 	}
 	
-	public RobotCamera update(PVector pos, RQuaternion orient, float fov, float ar,	float br, float exp) {
+	public RobotCamera update(PVector pos, RQuaternion orient, WorldObject tgt, 
+			float fov, float ar, float br, float exp) {
 		camPos = pos;
 		camOrient = orient;
 		camFOV = fov;
 		camAspectRatio = ar;
 		brightness = br;
 		exposure = exp;
-		snapshot = updateSnapshot();
+		snapshot = updateSnapshot(tgt);
 		return this;
 	}
 	
-	public RobotCamera updateFromWorld(PVector pos, PVector rot, float fov, float ar, float br, float exp) {
-		return update(RMath.vFromWorld(pos), RMath.wEulerToNQuat(rot), fov, ar, br, exp);
+	public RobotCamera updateFromWorld(PVector pos, PVector rot, WorldObject tgt, 
+			float fov, float ar, float br, float exp) {
+		return update(RMath.vFromWorld(pos), RMath.wEulerToNQuat(rot), tgt, fov, ar, br, exp);
 	}
 	
 	private RMatrix getPerspProjMat() {
@@ -664,7 +641,7 @@ public class RobotCamera {
 		return new RMatrix(vMat);
 	}
 
-	private PGraphics updateSnapshot() {
+	private PGraphics updateSnapshot(WorldObject tgt) {
 		int height = WGUI.imageHeight, width = WGUI.imageWidth;
 		PVector cPos = camPos;
 		PVector cOrien = RMath.quatToEuler(camOrient);
@@ -673,7 +650,7 @@ public class RobotCamera {
 		img.beginDraw();
 		img.perspective((camFOV/camAspectRatio)*RobotRun.DEG_TO_RAD, camAspectRatio, camClipNear, camClipFar);
 		
-		float light = 20 + 235 * brightness * exposure;
+		float light = 10 + 245 * brightness * exposure;
 		img.directionalLight(light, light, light, 0, 0, -1);
 		img.ambientLight(light, light, light);
 		img.background(light);
@@ -682,17 +659,25 @@ public class RobotCamera {
 		img.rotateY(cOrien.y);
 		img.rotateZ(cOrien.z);
 		
-		img.translate(-cPos.x + width / 2f, -cPos.y + height / 2f,  -cPos.z);
+		img.translate(-cPos.x + width / 2f, -cPos.y + width / 2f,  -cPos.z);
+		
+		if(tgt instanceof Part && tgt != null) {
+			PVector dims = getAxisDimensions(tgt);
+			PVector pos = ((Part)tgt).getCenter();
+			img.translate(-pos.x + cPos.x, -pos.y + cPos.y, -pos.z + cPos.z - dims.z);
+			//img.scale();
+		}
 		
 		Scenario active = appRef.getActiveScenario();
 		if(active != null) {
 			for (WorldObject o : active) {
-				boolean isSelect = appRef.getUI().getSelectedWO() != null &&
-						appRef.getUI().getSelectedWO().equals(o);
-				if(o instanceof Part) 
+				boolean isSelect = tgt != null && tgt.equals(o);
+				if(o instanceof Part) {
 					((Part)o).draw(img, isSelect);
-				else
+				}
+				else {
 					o.draw(img);
+				}
 			}
 		}
 		
@@ -701,7 +686,7 @@ public class RobotCamera {
 		img.translate(cPos.x - width / 2f, cPos.y - height / 2f,  cPos.z);
 		
 		img.noStroke();
-		img.fill(img.color(255, 255, 255, (int)(200f*Math.max(0, Math.log10(brightness*exposure)))));
+		img.fill(img.color(255, 255, 255, (int)(240f*Math.max(0, Math.log10(brightness*exposure)))));
 		img.translate(width/2, height/2);
 		img.sphere(300);
 		img.translate(-width/2, -height/2);

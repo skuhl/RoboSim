@@ -329,7 +329,7 @@ public abstract class DataManagement {
 			float br = dataIn.readFloat();
 			float exp = dataIn.readFloat();
 			
-			robotRun.getRobotCamera().update(camPos, camOrient, FOV, aspect, br, exp);
+			robotRun.getRobotCamera().update(camPos, camOrient, null, FOV, aspect, br, exp);
 			
 			int numObj = dataIn.readInt();
 			for(int i = 0; i < numObj; i += 1) {
