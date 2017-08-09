@@ -36,36 +36,36 @@ public class ScreenSetExpressionArg extends ST_ScreenEditItem {
 			// set arg to new data reg
 			operand = new OperandDReg(new DataRegister());
 			robotRun.opEdit = expr.setOperand(robotRun.editIdx, operand);
-			robotRun.switchScreen(ScreenMode.INPUT_DREG_IDX);
+			robotRun.switchScreen(ScreenMode.INPUT_DREG_IDX, false);
 		} else if(options.getCurrentItemIdx()== 1) {
 			// set arg to new preg idx
 			operand = new OperandPRegIdx(new PositionRegister(), 0);
 			robotRun.opEdit = expr.setOperand(robotRun.editIdx, operand);
-			robotRun.switchScreen(ScreenMode.INPUT_PREG_IDX2);
+			robotRun.switchScreen(ScreenMode.INPUT_PREG_IDX2, false);
 			robotRun.nextScreen(ScreenMode.INPUT_PREG_IDX1);
 		} else if(options.getCurrentItemIdx() == 2) {
 			// set arg to new constant
 			operand = new OperandFloat();
 			robotRun.opEdit = expr.setOperand(robotRun.editIdx, operand);
-			robotRun.switchScreen(ScreenMode.INPUT_CONST);
+			robotRun.switchScreen(ScreenMode.INPUT_CONST, false);
 		} else if(options.getCurrentItemIdx() == 3) {
 			// set arg to new io reg
 			operand = new OperandIOReg(new IORegister());
 			robotRun.opEdit = expr.setOperand(robotRun.editIdx, operand);
-			robotRun.switchScreen(ScreenMode.INPUT_IOREG_IDX);
+			robotRun.switchScreen(ScreenMode.INPUT_IOREG_IDX, false);
 		} else if(options.getCurrentItemIdx() == 4) {
 			operand = new OperandCamObj();
 			robotRun.opEdit = expr.setOperand(robotRun.editIdx, operand);
-			robotRun.switchScreen(ScreenMode.SET_OBJ_OPERAND_TGT);
+			robotRun.switchScreen(ScreenMode.SET_OBJ_OPERAND_TGT, false);
 		} else if(options.getCurrentItemIdx() == 5) {
 			operand = new OperandBool();
 			robotRun.opEdit = expr.setOperand(robotRun.editIdx, operand);
-			robotRun.switchScreen(ScreenMode.SET_BOOL_CONST);
+			robotRun.switchScreen(ScreenMode.SET_BOOL_CONST, false);
 		} else if(options.getCurrentItemIdx() == 6) {
 			// set arg to new preg
 			operand = new OperandPReg(new PositionRegister());
 			robotRun.opEdit = expr.setOperand(robotRun.editIdx, operand);
-			robotRun.switchScreen(ScreenMode.INPUT_PREG_IDX1);
+			robotRun.switchScreen(ScreenMode.INPUT_PREG_IDX1, false);
 		} else if(options.getCurrentItemIdx() == 7) {	
 			// JPos operand
 			operand = new RobotPoint(robotRun.getActiveRobot(), false);

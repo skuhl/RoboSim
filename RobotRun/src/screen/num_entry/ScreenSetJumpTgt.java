@@ -39,6 +39,7 @@ public class ScreenSetJumpTgt extends ST_ScreenNumEntry {
 			} else {
 				JumpInstruction jmp = (JumpInstruction) inst;
 				jmp.setTgtLblNum(lblNum);
+				robotRun.lastScreen();
 			}
 			
 		} catch (NumberFormatException NFEx) {

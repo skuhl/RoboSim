@@ -346,6 +346,7 @@ public class WGUI implements ControlListener {
 
 		// Initialize the window groups
 		pendant = addGroup("PENDANT", relPos[0], relPos[1], Fields.PENDANT_WIDTH, Fields.PENDANT_HEIGHT);
+		pendant.setBackgroundColor(Fields.color(208, 208, 208, 125));
 		createWO = addGroup("CREATEWO", relPos[0], relPos[1], windowTabs.getWidth(), 0);
 		editWO = addGroup("EDITWO", relPos[0], relPos[1], windowTabs.getWidth(), 0);
 		editWOPos = addGroup("EDITWOPOS", editWO, 0, 0, windowTabs.getWidth(), 0);
@@ -947,9 +948,11 @@ public class WGUI implements ControlListener {
 				
 			} else if (actLbl.equals("ROBOT1")) {
 				updateView( WindowTab.ROBOT1 );
+				background.setBackgroundHeight(0);
 
 			} else if (actLbl.equals("ROBOT2")) {
 				updateView( WindowTab.ROBOT2 );
+				background.setBackgroundHeight(0);
 
 			} else if (actLbl.equals("CREATE")) {
 				updateView( WindowTab.CREATE );
@@ -1320,10 +1323,15 @@ public class WGUI implements ControlListener {
 	}
 
 	/**
-	 * TODO comment this
+	 * Converts the given mouse position from the coordinates of the robot
+	 * camera snapshot window, into the coordinate frame of the world, in which
+	 * the robot and world objects are drawn.
 	 * 
-	 * @param mx
-	 * @param my
+	 * @param mx	The x position of the mouse on the screen
+	 * @param my	The y position of the mouse on the screen
+	 * @return		A ray extends from the mouse position mapped to the near
+	 * 				plane through the mouse position mapped to the far plane of
+	 * 				the robot camera in the world coordinate frame
 	 */
 	public RRay getMouseRayFromRCam(int mx, int my) {
 		Button b = getButton(WGUI_Buttons.CamSnapPreview);
@@ -2737,9 +2745,10 @@ public class WGUI implements ControlListener {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Updates the dimensions of the given shape, so that all its dimensions
+	 * are within their respective bounds.
 	 * 
-	 * @param shape
+	 * @param shape	The shape of which to update the dimensions
 	 */
 	private void clampDims(RShape shape) {
 		
@@ -3282,22 +3291,6 @@ public class WGUI implements ControlListener {
 
 		return TAIdx;
 	}
-	
-	/**
-	 * TODO comment this
-	 * 
-	 * @param newView
-	 */
-	/*private void setView(WindowTab newView) {
-		if (newView == null) {
-			windowTabs.setActiveButton("Hide");
-			
-		} else {
-			windowTabs.setActiveButton(newView.toString());
-		}
-		
-		updateView(newView);
-	}*/
 
 	/**
 	 * Updates the background color of the button with the given name based off

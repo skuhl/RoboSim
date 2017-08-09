@@ -135,23 +135,51 @@ public class ScreenManager {
 	}
 	
 	/**
+	 * Returns a reference to the current active screen.
+	 * 
 	 * @return	The active screen
 	 */
 	public Screen getActiveScreen() {
 		return activeScreen;
 	}
 	
-	public ScreenMode getPrevMode() {		
-		return screenStack.peek().mode;
-	}
-	
-	public Screen getPrevScreen() {
-		return screenStack.peek();
+	/**
+	 * Returns a reference to the previous screen's mode (if one exists), or
+	 * null if no previous screen exists.
+	 * 
+	 * @return	The previous screen's mode
+	 */
+	public ScreenMode getPrevMode() {
+		if (screenStack.isEmpty()) {
+			// No previous screen
+			return null;
+			
+		} else {
+			return screenStack.peek().mode;
+		}
 	}
 	
 	/**
-	 * @return	The maximum depth of all previous screens with reference to the active
-	 * 			screen
+	 * Returns a reference to the previous screen (if one exists), or null if
+	 * no previous screen exists.
+	 * 
+	 * @return	The previous screen
+	 */
+	public Screen getPrevScreen() {
+		if (screenStack.isEmpty()) {
+			// No previous screen
+			return null;
+			
+		} else {
+			return screenStack.peek();
+		}
+	}
+	
+	/**
+	 * The maximum depth of all previous screens with reference to the active
+	 * screen.
+	 * 
+	 * @return	previous screen stack depth
 	 */
 	public int getScreenStackSize() {
 		return screenStack.size();
@@ -178,6 +206,10 @@ public class ScreenManager {
 		activeScreen = loadScreen(mode);
 	}
 	
+	/**
+	 * Clears the previous screen stack and sets the active screen as the
+	 * default pendant screen.
+	 */
 	public void resetStack() {
 		screenStack.clear();
 		activeScreen = loadScreen(ScreenMode.DEFAULT);
@@ -187,12 +219,22 @@ public class ScreenManager {
 	 * Creates the screen with the specified mode and sets the screen as active
 	 * without saving the last active screen onto the stack.
 	 * 
-	 * @param mode	The mode of the next active screen
+	 * @param mode					The mode of the next active screen
+	 * @param ignoreActiveScreen	Whether to completely disregard the active
+	 * 								screen when transition screens or not
 	 */
-	public void switchScreen(ScreenMode mode) {
-		nextScreen(mode);
-		// Remove the last screen from the screen stack
-		screenStack.pop();
+	public void switchScreen(ScreenMode mode, boolean ignoreActiveScreen) {
+		
+		if (ignoreActiveScreen) {
+			// Discard the active screen completely
+			activeScreen = loadScreen(mode);
+			
+		} else {
+			nextScreen(mode);
+			// Remove the last screen from the screen stack
+			screenStack.pop();
+		}
+		
 	}
 	
 	@Override
@@ -407,7 +449,7 @@ public class ScreenManager {
 	 * Creates and initializes the screen with the given screen mode.
 	 * 
 	 * @param mode	The mode of the screen to load
-	 * @return				The screen with the specified mode
+	 * @return		The screen with the specified mode
 	 */
 	private Screen loadScreen(ScreenMode mode) {
 		Screen prevScreen = null;

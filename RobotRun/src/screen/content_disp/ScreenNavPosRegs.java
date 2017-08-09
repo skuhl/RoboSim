@@ -70,7 +70,7 @@ public class ScreenNavPosRegs extends ST_ScreenListContents {
 	@Override
 	public void actionF3() {
 		if (robotRun.isShift()) {
-			robotRun.switchScreen(ScreenMode.NAV_DREGS);
+			robotRun.switchScreen(ScreenMode.NAV_DREGS, false);
 		} else {
 			// Switch to Data Registers
 			int itemIdx = contents.getCurrentItemIdx();
