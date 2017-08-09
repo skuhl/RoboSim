@@ -662,12 +662,6 @@ public class RobotCamera {
 		
 		img.translate(-cPos.x + width / 2f, -cPos.y + width / 2f,  -cPos.z);
 		
-		if(tgt instanceof Part && tgt != null) {
-			PVector dims = getAxisDimensions(tgt);
-			PVector pos = ((Part)tgt).getCenter();
-			img.translate(-pos.x + cPos.x, -pos.y + cPos.y, -pos.z + cPos.z - dims.z);
-			//img.scale();
-		}
 		
 		Scenario active = appRef.getActiveScenario();
 		if(active != null) {
@@ -683,6 +677,15 @@ public class RobotCamera {
 		}
 		
 		appRef.getActiveRobot().draw(img, false, AxesDisplay.NONE);
+		
+		if(tgt instanceof Part && tgt != null) {
+			PVector dims = getAxisDimensions(tgt);
+			PVector pos = ((Part)tgt).getCenter();
+			img.translate(-pos.x + cPos.x, -pos.y + cPos.y, -pos.z + cPos.z - dims.z);
+			//img.scale();
+		}
+		
+		
 		
 		img.translate(cPos.x - width / 2f, cPos.y - height / 2f,  cPos.z);
 		

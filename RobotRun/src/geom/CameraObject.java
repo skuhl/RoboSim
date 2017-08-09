@@ -85,7 +85,6 @@ public class CameraObject extends Part {
 			
 			img.beginDraw();
 			img.ortho();
-			img.lights();
 			img.background(255);
 			img.stroke(0);
 			img.translate(WGUI.imageWidth/2, WGUI.imageHeight/2, len + 20);
@@ -108,7 +107,7 @@ public class CameraObject extends Part {
 			float dimY = Math.abs(wid*objAxisX.dot(upVect)) + Math.abs(hgt*objAxisY.dot(upVect)) + Math.abs(len*objAxisZ.dot(upVect));
 			
 			float light = 20 + 235 * light_value;
-			img.directionalLight(light, light, light, 0, 0, -1);
+			img.directionalLight(light, light, light, 0, 0, 1);
 			img.ambientLight(light, light, light);
 			img.background(light);
 			
