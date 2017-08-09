@@ -4,6 +4,7 @@ import core.RobotRun;
 import processing.core.PApplet;
 import processing.core.PConstants;
 import processing.core.PGraphics;
+import processing.core.PVector;
 
 /**
  * Defines the radius and height to draw a uniform cylinder
@@ -88,12 +89,12 @@ public class RCylinder extends RShape {
 	}
 	
 	@Override
-	public float[] getDimArray() {
+	public PVector getDims() {
 		float[] dims = new float[3];
 		dims[0] = 2*getDim(DimType.RADIUS);
 		dims[1] = 2*getDim(DimType.RADIUS);
 		dims[2] = getDim(DimType.HEIGHT);
-		return dims;
+		return new PVector(dims[0], dims[1], dims[2]);
 	}
 
 	@Override

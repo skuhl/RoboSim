@@ -18,6 +18,7 @@ import processing.core.PApplet;
 import processing.core.PGraphics;
 import processing.core.PImage;
 import processing.core.PVector;
+import window.WGUI;
 
 public class RobotCamera {
 	public static final float DEFAULT_ASPECT = 1.5f;
@@ -218,10 +219,10 @@ public class RobotCamera {
 	
 	@Deprecated
 	public PVector getColinearDimensions(WorldObject o) {
-		float[] dims = o.getModel().getDimArray();
-		float len = dims[0];
-		float hgt = dims[1];
-		float wid = dims[2];
+		PVector dims = o.getModel().getDims();
+		float len = dims.x;
+		float hgt = dims.y;
+		float wid = dims.z;
 		
 		//Generate camera axes
 		PVector lookVect = getVectLook();
@@ -303,10 +304,10 @@ public class RobotCamera {
 		
 		CameraObject camObj = new CameraObject(appRef, (Part)o);
 		PVector objCenter = ((Part)o).getCenter();
-		float[] dims = o.getModel().getDimArray();
-		float len = dims[0];
-		float hgt = dims[1];
-		float wid = dims[2];
+		PVector dims = o.getModel().getDims();
+		float len = dims.x;
+		float hgt = dims.y;
+		float wid = dims.z;
 		
 		RMatrix objMat = ((Part)o).getOrientation();
 		PVector xAxis = new PVector(objMat.getEntryF(0, 0), objMat.getEntryF(1, 0), objMat.getEntryF(2, 0));
@@ -341,6 +342,7 @@ public class RobotCamera {
 				1 - Math.pow(Math.log10(Math.pow(lightIntensity, reflect)), 2)), 0, 1);
 		float imageQuality = (inView / (float)(RES*RES*RES)) * lightFactor;
 		
+		System.out.println(o.getName());
 		Fields.debug("inView=%d\nreflect=%f\nlight=%f\nquality=%f\n\n", inView,
 				reflect, lightFactor, imageQuality);
 		
@@ -599,6 +601,7 @@ public class RobotCamera {
 		
 		if(teachObj != null) {
 			RMatrix objOrient = teachObj.getOrientation();
+			System.out.println(objOrient.toString());
 			RMatrix viewOrient = objOrient.transpose().multiply(camOrient.toMatrix());
 			teachObj.setLocalOrientation(viewOrient);
 			
@@ -667,7 +670,7 @@ public class RobotCamera {
 	}
 
 	private PGraphics updateSnapshot() {
-		int height = 200, width = 250;
+		int height = WGUI.imageHeight, width = WGUI.imageWidth;
 		PVector cPos = camPos;
 		PVector cOrien = RMath.quatToEuler(camOrient);
 		PGraphics img = appRef.createGraphics(width, height, RobotRun.P3D);

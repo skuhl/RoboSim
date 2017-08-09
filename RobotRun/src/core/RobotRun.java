@@ -3849,15 +3849,6 @@ public class RobotRun extends PApplet {
 		lastTextPositionY = Fields.msgSystem.draw(getGraphics(),
 				lastTextPositionX, lastTextPositionY);
 		
-		if(isRCamEnable()) {
-			text("Camera view:",
-					lastTextPositionX, lastTextPositionY);
-			
-			PImage img = rCamera.getSnapshot();
-			rect(width - img.width - 2, height - img.height - 2, width, height);
-			image(img, width - img.width - 1, height - img.height - 1);
-		}
-		
 		UI.updateAndDrawUI();
 		
 		popStyle();
