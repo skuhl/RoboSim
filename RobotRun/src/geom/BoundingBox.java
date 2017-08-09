@@ -81,10 +81,10 @@ public class BoundingBox {
 		PVector rayOrigin = RMath.rotateVector(PVector.sub(ray.getOrigin(), origin), axes);
 		PVector rayDirect = RMath.rotateVector(ray.getDirection(), axes);
 		
-		float[] dims = boxFrame.getDimArray();
-		dims[0] /= 2f;
-		dims[1] /= 2f;
-		dims[2] /= 2f;
+		PVector dims = boxFrame.getDims();
+		dims.x /= 2f;
+		dims.y /= 2f;
+		dims.z /= 2f;
 		
 		int[] planeAxes = new int[] {
 			(rayOrigin.x < 0) ? -1 : 1,
@@ -96,15 +96,15 @@ public class BoundingBox {
 			float E, G;
 			
 			if (planeAxis == 0) {
-				E = planeAxes[0] * (rayOrigin.x - (planeAxes[0] * dims[0]));
+				E = planeAxes[0] * (rayOrigin.x - (planeAxes[0] * dims.x));
 				G = planeAxes[0] * rayDirect.x;
 				
 			} else if (planeAxis == 1) {
-				E = planeAxes[1] * (rayOrigin.y - (planeAxes[1] * dims[1]));
+				E = planeAxes[1] * (rayOrigin.y - (planeAxes[1] * dims.y));
 				G = planeAxes[1] * rayDirect.y;
 				
 			} else {
-				E = planeAxes[2] * (rayOrigin.z - (planeAxes[2] * dims[2]));
+				E = planeAxes[2] * (rayOrigin.z - (planeAxes[2] * dims.z));
 				G = planeAxes[2] * rayDirect.z;
 				
 			}
@@ -124,10 +124,10 @@ public class BoundingBox {
 					int dimToCheck0 = (planeAxis + 1) % 3;
 					int dimToCheck1 = (dimToCheck0 + 1) % 3;
 					
-					if (ptOnRayArray[dimToCheck0] >= -dims[dimToCheck0] &&
-						ptOnRayArray[dimToCheck0] <= dims[dimToCheck0] &&
-						ptOnRayArray[dimToCheck1] >= -dims[dimToCheck1] &&
-						ptOnRayArray[dimToCheck1] <= dims[dimToCheck1]) {
+					if (ptOnRayArray[dimToCheck0] >= -dims.array()[dimToCheck0] &&
+						ptOnRayArray[dimToCheck0] <= dims.array()[dimToCheck0] &&
+						ptOnRayArray[dimToCheck1] >= -dims.array()[dimToCheck1] &&
+						ptOnRayArray[dimToCheck1] <= dims.array()[dimToCheck1]) {
 						
 						// Collision exists
 						return PVector.add(ray.getOrigin(),  PVector.mult(ray.getDirection(), t));

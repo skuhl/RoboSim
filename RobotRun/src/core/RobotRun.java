@@ -355,10 +355,18 @@ public class RobotRun extends PApplet {
 		UI.updateUIContentPositions();
 	}
 	
+	public void button_camSnapPreview() {
+		if (rCamera != null) {
+			UI.updateCameraCurrent();
+			UI.updateCameraListContents();
+			UI.updateUIContentPositions();
+		}
+	}
+	
 	public void button_camTeachObj() {
 		try {
 			if(getActiveScenario() != null) {
-				rCamera.teachObjectToCamera(getActiveScenario());
+				rCamera.teachObjectToCamera(UI.getSelectedWO());
 			}
 			
 			UI.updateCameraListContents();
@@ -374,6 +382,8 @@ public class RobotRun extends PApplet {
 		try {
 			if (rCamera != null) {
 				UI.updateCameraCurrent();
+				UI.updateCameraListContents();
+				UI.updateUIContentPositions();
 				Fields.resetMessage();
 			}
 			
@@ -2177,7 +2187,7 @@ public class RobotRun extends PApplet {
 					case KeyEvent.VK_SLASH:		button_jointPos6(); break;
 					case KeyEvent.VK_MINUS:		button_speedDn(); break;
 					case KeyEvent.VK_EQUALS:	button_speedUp(); break;
-					case KeyEvent.VK_S:			rCamera.teachObjectToCamera(getActiveScenario()); break;
+					case KeyEvent.VK_S:			rCamera.teachObjectToCamera(UI.getSelectedWO()); break;
 					case KeyEvent.VK_R:			button_reset();
 					}
 				}
@@ -3851,15 +3861,6 @@ public class RobotRun extends PApplet {
 		lastTextPositionY += 20;
 		lastTextPositionY = Fields.msgSystem.draw(getGraphics(),
 				lastTextPositionX, lastTextPositionY);
-		
-		if(isRCamEnable()) {
-			text("Camera view:",
-					lastTextPositionX, lastTextPositionY);
-			
-			PImage img = rCamera.getSnapshot();
-			rect(width - img.width - 2, height - img.height - 2, width, height);
-			image(img, width - img.width - 1, height - img.height - 1);
-		}
 		
 		UI.updateAndDrawUI();
 		

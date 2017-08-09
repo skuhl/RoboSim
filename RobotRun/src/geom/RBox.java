@@ -82,12 +82,12 @@ public class RBox extends RShape {
 	}
 	
 	@Override
-	public float[] getDimArray() {
+	public PVector getDims() {
 		float[] dims = new float[3];
 		dims[0] = getDim(DimType.LENGTH);
 		dims[1] = getDim(DimType.HEIGHT);
 		dims[2] = getDim(DimType.WIDTH);
-		return dims;
+		return new PVector(dims[0], dims[1], dims[2]);
 	}
 	
 	@Override

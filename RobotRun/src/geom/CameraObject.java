@@ -6,14 +6,15 @@ import camera.CamSelectArea;
 import camera.CamSelectView;
 import camera.RegisteredModels;
 import core.RobotRun;
-import processing.core.PApplet;
 import processing.core.PGraphics;
 import processing.core.PVector;
+import window.WGUI;
 
 public class CameraObject extends Part {
 	
 	public final int group_ID;
 	public final float image_quality;
+	public final float light_value;
 	public final int model_ID;
 	public final float reflective_IDX;
 	
@@ -22,11 +23,11 @@ public class CameraObject extends Part {
 	private ArrayList<CamSelectArea> selectAreas;
 	
 	public CameraObject(RobotRun appRef, Part p) {
-		this(appRef, p, 1f);
+		this(appRef, p, 1f, 1f);
 	}
 	
-	public CameraObject(RobotRun appRef, Part p, float q) {
-		super(p.getName(), p.getModel().clone(), p.getOBBDims().copy(), 
+	public CameraObject(RobotRun appRef, Part p, float q, float l) {
+		super(p.getName(), p.getModel().clone(), p.getOBBDims().copy(),
 				p.localOrientation.clone(), p.defaultOrientation.clone(), p.getFixtureRef());
 		
 		this.appRef = appRef;
@@ -51,12 +52,13 @@ public class CameraObject extends Part {
 		}
 		
 		image_quality = q;
+		light_value = l;
 		selectAreas = loadCamSelectAreas();
 	}
 	
 	@Override
 	public Part clone() {
-		return new CameraObject(appRef, this, image_quality);
+		return new CameraObject(appRef, this, image_quality, light_value);
 	}
 	
 	public CamSelectArea getCamSelectArea(int i) {
@@ -73,14 +75,20 @@ public class CameraObject extends Part {
 	
 	public PGraphics getModelPreview(RMatrix m) {
 		if(preview == null) {
-			PGraphics img = appRef.createGraphics(200, 200, RobotRun.P3D);
+			PGraphics img = appRef.createGraphics(WGUI.imageWidth, WGUI.imageHeight, RobotRun.P3D);
 			float[][] rMat = m.getDataF();
+			
+			PVector dimensions = this.getModel().getDims();
+			float len = dimensions.z;
+			float wid = dimensions.x;
+			float hgt = dimensions.y;
+			
 			img.beginDraw();
 			img.ortho();
 			img.lights();
 			img.background(255);
 			img.stroke(0);
-			img.translate(75, 100, 0);
+			img.translate(WGUI.imageWidth/2, WGUI.imageHeight/2, len + 20);
 			img.applyMatrix(
 					rMat[0][0], rMat[1][0], rMat[2][0], 0,
 					rMat[0][1], rMat[1][1], rMat[2][1], 0,
@@ -88,13 +96,26 @@ public class CameraObject extends Part {
 					0, 0, 0, 1
 			);
 			
-			//TODO object scaling
-			//img.scale(0.5f);
+			RMatrix mat = this.getOrientation();
+			PVector objAxisX = new PVector(mat.getEntryF(0, 0), mat.getEntryF(0, 1), mat.getEntryF(0, 2));
+			PVector objAxisY = new PVector(mat.getEntryF(1, 0), mat.getEntryF(1, 1), mat.getEntryF(1, 2));
+			PVector objAxisZ = new PVector(mat.getEntryF(2, 0), mat.getEntryF(2, 1), mat.getEntryF(2, 2));
 			
+			PVector ltVect = new PVector(1, 0, 0);
+			PVector upVect = new PVector(0, 1, 0);
+			
+			float dimX = Math.abs(wid*objAxisX.dot(ltVect)) + Math.abs(hgt*objAxisY.dot(ltVect)) + Math.abs(len*objAxisZ.dot(ltVect));
+			float dimY = Math.abs(wid*objAxisX.dot(upVect)) + Math.abs(hgt*objAxisY.dot(upVect)) + Math.abs(len*objAxisZ.dot(upVect));
+			
+			float light = 20 + 235 * light_value;
+			img.directionalLight(light, light, light, 0, 0, -1);
+			img.ambientLight(light, light, light);
+			img.background(light);
+			
+			img.scale((float)Math.min(200f/dimX, 150f/dimY));
 			this.getModel().draw(img);
-			img.filter(PApplet.BLUR, 5*(1 - image_quality*image_quality));
 			img.resetMatrix();
-			img.translate(-75, -100);
+			img.translate(-WGUI.imageWidth/2, -WGUI.imageHeight/2, -len - 20);
 						
 			for(CamSelectArea a: selectAreas) {
 				CamSelectView v = a.getView(m);

@@ -2,6 +2,7 @@ package geom;
 
 import global.Fields;
 import processing.core.PGraphics;
+import processing.core.PVector;
 
 /**
  * A simple class that defines the stroke and fill color for a shape
@@ -42,7 +43,7 @@ public abstract class RShape implements Cloneable {
 	 */
 	public abstract float getDim(DimType dim);
 	
-	public abstract float[] getDimArray();
+	public abstract PVector getDims();
 	
 	/**
 	 * Returns the lower bound for the specified dimension, if one exists. If
