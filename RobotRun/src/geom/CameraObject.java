@@ -6,7 +6,6 @@ import camera.CamSelectArea;
 import camera.CamSelectView;
 import camera.RegisteredModels;
 import core.RobotRun;
-import processing.core.PApplet;
 import processing.core.PGraphics;
 import processing.core.PVector;
 import window.WGUI;
@@ -15,6 +14,7 @@ public class CameraObject extends Part {
 	
 	public final int group_ID;
 	public final float image_quality;
+	public final float light_value;
 	public final int model_ID;
 	public final float reflective_IDX;
 	
@@ -23,10 +23,10 @@ public class CameraObject extends Part {
 	private ArrayList<CamSelectArea> selectAreas;
 	
 	public CameraObject(RobotRun appRef, Part p) {
-		this(appRef, p, 1f);
+		this(appRef, p, 1f, 1f);
 	}
 	
-	public CameraObject(RobotRun appRef, Part p, float q) {
+	public CameraObject(RobotRun appRef, Part p, float q, float l) {
 		super(p.getName(), p.getModel().clone(), p.getOBBDims().copy(), 
 				p.localOrientation.clone(), p.defaultOrientation.clone(), p.getFixtureRef());
 		
@@ -52,12 +52,13 @@ public class CameraObject extends Part {
 		}
 		
 		image_quality = q;
+		light_value = l;
 		selectAreas = loadCamSelectAreas();
 	}
 	
 	@Override
 	public Part clone() {
-		return new CameraObject(appRef, this, image_quality);
+		return new CameraObject(appRef, this, image_quality, light_value);
 	}
 	
 	public CamSelectArea getCamSelectArea(int i) {
@@ -105,6 +106,11 @@ public class CameraObject extends Part {
 			
 			float dimX = Math.abs(wid*objAxisX.dot(ltVect)) + Math.abs(hgt*objAxisY.dot(ltVect)) + Math.abs(len*objAxisZ.dot(ltVect));
 			float dimY = Math.abs(wid*objAxisX.dot(upVect)) + Math.abs(hgt*objAxisY.dot(upVect)) + Math.abs(len*objAxisZ.dot(upVect));
+			
+			float light = 20 + 235 * light_value;
+			img.directionalLight(light, light, light, 0, 0, -1);
+			img.ambientLight(light, light, light);
+			img.background(light);
 			
 			img.scale((float)Math.min(200f/dimX, 150f/dimY));
 			this.getModel().draw(img);

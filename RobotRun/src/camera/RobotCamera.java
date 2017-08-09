@@ -337,14 +337,13 @@ public class RobotCamera {
 		
 		float reflect = camObj.reflective_IDX;
 		float lightIntensity = exposure*brightness;
-		float lightFactor = RMath.clamp((float)Math.min(
-				1 - Math.pow(Math.log10(lightIntensity), 2), 
+		float lightingCoefficient = RMath.clamp((float)Math.min(1 - Math.pow(Math.log10(lightIntensity), 2), 
 				1 - Math.pow(Math.log10(Math.pow(lightIntensity, reflect)), 2)), 0, 1);
-		float imageQuality = (inView / (float)(RES*RES*RES)) * lightFactor;
+		float imageQuality = (inView / (float)(RES*RES*RES)) * lightingCoefficient;
 		
 		System.out.println(o.getName());
 		Fields.debug("inView=%d\nreflect=%f\nlight=%f\nquality=%f\n\n", inView,
-				reflect, lightFactor, imageQuality);
+				reflect, lightingCoefficient, imageQuality);
 		
 		return imageQuality;
 	}
@@ -363,7 +362,7 @@ public class RobotCamera {
 			if(o instanceof Part) {
 				float imageQuality = getObjectImageQuality(o);
 				if(isPointInFrame(((Part)o).getCenter()) && imageQuality >= sensitivity) {
-					objList.add(new CameraObject(appRef, (Part)o, imageQuality));
+					objList.add(new CameraObject(appRef, (Part)o, imageQuality, brightness*exposure));
 				}
 			}
 		}
@@ -587,21 +586,17 @@ public class RobotCamera {
 		return this;
 	}
 	
-	public ArrayList<CameraObject> teachObjectToCamera(Scenario scene) {
-		ArrayList<CameraObject> objs = getObjectsInFrame(scene);
+	public ArrayList<CameraObject> teachObjectToCamera(WorldObject obj){
 		CameraObject teachObj = null;
+		float quality = getObjectImageQuality(obj);
 		
-		
-		for(WorldObject o: objs) {
-			if(o instanceof Part) {
-				float quality = getObjectImageQuality(o);
-				teachObj = new CameraObject(appRef, (Part)o, quality);
-			}
+		if(obj instanceof Part && quality >= sensitivity) {
+			teachObj = new CameraObject(appRef, (Part)obj, quality, brightness*exposure);
 		}
+		
 		
 		if(teachObj != null) {
 			RMatrix objOrient = teachObj.getOrientation();
-			System.out.println(objOrient.toString());
 			RMatrix viewOrient = objOrient.transpose().multiply(camOrient.toMatrix());
 			teachObj.setLocalOrientation(viewOrient);
 			
@@ -678,10 +673,7 @@ public class RobotCamera {
 		img.beginDraw();
 		img.perspective((camFOV/camAspectRatio)*RobotRun.DEG_TO_RAD, camAspectRatio, camClipNear, camClipFar);
 		
-		//img.printMatrix();
-		
 		float light = 20 + 235 * brightness * exposure;
-		//img.noLights();
 		img.directionalLight(light, light, light, 0, 0, -1);
 		img.ambientLight(light, light, light);
 		img.background(light);
@@ -695,8 +687,10 @@ public class RobotCamera {
 		Scenario active = appRef.getActiveScenario();
 		if(active != null) {
 			for (WorldObject o : active) {
+				boolean isSelect = appRef.getUI().getSelectedWO() != null &&
+						appRef.getUI().getSelectedWO().equals(o);
 				if(o instanceof Part) 
-					((Part)o).draw(img, false);
+					((Part)o).draw(img, isSelect);
 				else
 					o.draw(img);
 			}

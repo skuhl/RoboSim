@@ -348,8 +348,9 @@ public abstract class DataManagement {
 	private static CameraObject loadCameraObject(DataInputStream in, RobotRun app) throws IOException, NullPointerException {
 		WorldObject o = loadWorldObject(in, app).obj;
 		float imageQuality = in.readFloat();
+		float lighting = in.readFloat();		
 		
-		return new CameraObject(app, (Part)o, imageQuality);
+		return new CameraObject(app, (Part)o, imageQuality, lighting);
 	}
 
 	private static ExpressionElement loadExpressionElement(RoboticArm robot,
@@ -1427,6 +1428,7 @@ public abstract class DataManagement {
 			for(CameraObject o : rCam.getTaughtObjects()) {
 				DataManagement.saveWorldObject(o, dataOut);
 				dataOut.writeFloat(o.image_quality);
+				dataOut.writeFloat(o.light_value);
 			}
 			
 			dataOut.close();
