@@ -150,6 +150,7 @@ public abstract class Fields {
 			CLEAR_POSITION = 0b10,
 			NEW_POSITION = 0b100,
 			REVERSE_MOTION = 0b1000;
+	
 	/**
 	 * A dimension pertaining to the pendant or pendant screen UI elements.
 	 */

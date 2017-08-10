@@ -132,6 +132,29 @@ public class RobotRun extends PApplet {
 	private boolean mouseDragWO;
 	
 	/**
+	 * Keeps track of whether the mouse is being dragged in order to resize the
+	 * window.
+	 */
+	private boolean mDragWinResize;
+	
+	/**
+	 * The last time that the window was resized, while dragging the mouse.
+	 */
+	private long timeLastResize;
+	
+	/**
+	 * The current time since the window was last resized, while dragging the
+	 * mouse.
+	 */
+	private long timeSinceResize;
+	
+	/**
+	 * Keeps track of the distance the mouse is dragged in between window
+	 * resize calls, when resizing the application window.
+	 */
+	private int mDragX, mDragY;
+	
+	/**
 	 * Keeps track of the world object that the mouse was over, when the mouse
 	 * was first pressed down.
 	 */
@@ -1810,6 +1833,20 @@ public class RobotRun extends PApplet {
 	@Override
 	public void draw() {
 		try {
+			if (mDragWinResize) {
+				timeSinceResize = System.currentTimeMillis();
+				
+				if ((timeSinceResize - timeLastResize) > 250L) {
+					/* Resize the window after dragging the mouse a set amount
+					 * of time */
+					resizeWindow(mDragX, mDragY);
+					timeLastResize = timeSinceResize;
+					timeSinceResize = 0L;
+					mDragX = 0;
+					mDragY = 0;
+				}
+			}
+			
 			background(255);
 			hint(ENABLE_DEPTH_TEST);
 			directionalLight(255, 255, 255, 1, 1, 0);
@@ -2150,6 +2187,10 @@ public class RobotRun extends PApplet {
 					// Save EVERYTHING!
 					DataManagement.saveState(this);
 					
+				} else if (keyCode == KeyEvent.VK_W) {
+					// Restore the window to its default size
+					surface.setSize(1080, 720);
+					
 				} else if (keyCode == KeyEvent.VK_Z) {
 					// Scenario undo
 					if (UI != null) {
@@ -2258,81 +2299,17 @@ public class RobotRun extends PApplet {
 	}
 	
 	public void mouseDragged(MouseEvent e) {
-		WorldObject selectedWO = UI.getSelectedWO();
 		
-		// Manipulate the selected world object
-		if (selectedWO != null && selectedWO == mouseOverWO) {
-			PVector camOrien = camera.getOrientation();
-			
-			pushMatrix();
-			resetMatrix();
-			rotateX(-camOrien.x);
-			rotateY(-camOrien.y);
-			rotateZ(-camOrien.z);
-			
-			RMatrix camRMat = getOrientation();
-			
-			popMatrix();
-			
-			if (!mouseDragWO && (mouseButton == CENTER || mouseButton == RIGHT)) {
-				// Save the selected world object's current state
-				updateScenarioUndo(new WOUndoCurrent(selectedWO));
-			}
-			
-			mouseDragWO = true;
-			
-			if (mouseButton == CENTER) {
-				// Drag the center mouse button to move the object
-				PVector translation = new PVector(
-						camera.getScale() * (mouseX - pmouseX),
-						camera.getScale() * (mouseY - pmouseY),
-						0f
-				);
-				
-				/* Translate the world object with respect to the native
-				 * coordinate system */
-				translation = RMath.rotateVector(translation, camRMat);
-				
-				selectedWO.translate(translation.x, translation.y, translation.z);
-			}
-	
-			if (mouseButton == RIGHT) {
-				// Drag the right mouse button to rotate the object
-				float mouseXDiff = pmouseX - mouseX;
-				float mouseYDiff = pmouseY - mouseY;
-				float mouseDiff = (float) Math.sqrt(mouseXDiff * mouseXDiff + mouseYDiff * mouseYDiff);
-				float angle = DEG_TO_RAD * mouseDiff / 4f;
-				
-				/* Form an axis perpendicular to the line formed by the previous
-				 * and current mouse position to use as the axis of rotation. */
-				PVector m = new PVector(mouseX - pmouseX, mouseY - pmouseY, 0f);
-				PVector n = new PVector(0, 0, 1f);
-				PVector axis = RMath.rotateVector(n.cross(m).normalize(), camRMat);
-				
-				selectedWO.rotateAroundAxis(axis, angle);
-			}
-			
-			UI.fillCurWithCur(selectedWO);
-			
-			/* If the edited object is a fixture, then update the orientation
-			 * of all parts, which reference this fixture, in this scenario. */
-			if (selectedWO instanceof Fixture) {
-				for (WorldObject wldObj : getActiveScenario()) {
-					if (wldObj instanceof Part) {
-						Part p = (Part)wldObj;
-
-						if (p.getFixtureRef() == selectedWO) {
-							p.updateAbsoluteOrientation();
-						}
-					}
-				}
-			}
-			
-		// Manipulate the camera otherwise
+		if (mDragWinResize) {
+			// Accumulate the distance of the mouse dragging
+			mDragX += (mouseX - pmouseX);
+			mDragY += (mouseY - pmouseY);
+		
 		} else {
+			WorldObject selectedWO = UI.getSelectedWO();
 			
-			if (mouseButton == CENTER|| mouseButton == LEFT && keyCodeMap.isKeyDown(KeyEvent.VK_CONTROL)) {
-				// Drag the center mouse button to pan the camera
+			// Manipulate the selected world object
+			if (selectedWO != null && selectedWO == mouseOverWO) {
 				PVector camOrien = camera.getOrientation();
 				
 				pushMatrix();
@@ -2345,31 +2322,110 @@ public class RobotRun extends PApplet {
 				
 				popMatrix();
 				
-				// Drag the center mouse button to move the object
-				PVector translation = new PVector(
-						(pmouseX - mouseX),
-						(pmouseY - mouseY),
-						0f
-				);
+				if (!mouseDragWO && (mouseButton == CENTER || mouseButton == RIGHT)) {
+					// Save the selected world object's current state
+					updateScenarioUndo(new WOUndoCurrent(selectedWO));
+				}
 				
-				/* Translate the world object with respect to the native
-				 * coordinate system */
-				translation = RMath.rotateVector(translation, camRMat);
+				mouseDragWO = true;
 				
-				camera.translate(translation.x, translation.y, translation.z);
-			}
+				if (mouseButton == CENTER) {
+					// Drag the center mouse button to move the object
+					PVector translation = new PVector(
+							camera.getScale() * (mouseX - pmouseX),
+							camera.getScale() * (mouseY - pmouseY),
+							0f
+					);
+					
+					/* Translate the world object with respect to the native
+					 * coordinate system */
+					translation = RMath.rotateVector(translation, camRMat);
+					
+					selectedWO.translate(translation.x, translation.y, translation.z);
+				}
+		
+				if (mouseButton == RIGHT) {
+					// Drag the right mouse button to rotate the object
+					float mouseXDiff = pmouseX - mouseX;
+					float mouseYDiff = pmouseY - mouseY;
+					float mouseDiff = (float) Math.sqrt(mouseXDiff * mouseXDiff + mouseYDiff * mouseYDiff);
+					float angle = DEG_TO_RAD * mouseDiff / 4f;
+					
+					/* Form an axis perpendicular to the line formed by the previous
+					 * and current mouse position to use as the axis of rotation. */
+					PVector m = new PVector(mouseX - pmouseX, mouseY - pmouseY, 0f);
+					PVector n = new PVector(0, 0, 1f);
+					PVector axis = RMath.rotateVector(n.cross(m).normalize(), camRMat);
+					
+					selectedWO.rotateAroundAxis(axis, angle);
+				}
+				
+				UI.fillCurWithCur(selectedWO);
+				
+				/* If the edited object is a fixture, then update the orientation
+				 * of all parts, which reference this fixture, in this scenario. */
+				if (selectedWO instanceof Fixture) {
+					for (WorldObject wldObj : getActiveScenario()) {
+						if (wldObj instanceof Part) {
+							Part p = (Part)wldObj;
 	
-			if (mouseButton == RIGHT) {
-				// Drag right mouse button to rotate the camera
-				camera.rotate(pmouseY - mouseY, pmouseX - mouseX, 0f);
+							if (p.getFixtureRef() == selectedWO) {
+								p.updateAbsoluteOrientation();
+							}
+						}
+					}
+				}
+				
+			// Manipulate the camera otherwise
+			} else {
+				
+				if (mouseButton == CENTER|| mouseButton == LEFT && keyCodeMap.isKeyDown(KeyEvent.VK_CONTROL)) {
+					// Drag the center mouse button to pan the camera
+					PVector camOrien = camera.getOrientation();
+					
+					pushMatrix();
+					resetMatrix();
+					rotateX(-camOrien.x);
+					rotateY(-camOrien.y);
+					rotateZ(-camOrien.z);
+					
+					RMatrix camRMat = getOrientation();
+					
+					popMatrix();
+					
+					// Drag the center mouse button to move the object
+					PVector translation = new PVector(
+							(pmouseX - mouseX),
+							(pmouseY - mouseY),
+							0f
+					);
+					
+					/* Translate the world object with respect to the native
+					 * coordinate system */
+					translation = RMath.rotateVector(translation, camRMat);
+					
+					camera.translate(translation.x, translation.y, translation.z);
+				}
+		
+				if (mouseButton == RIGHT) {
+					// Drag right mouse button to rotate the camera
+					camera.rotate(pmouseY - mouseY, pmouseX - mouseX, 0f);
+				}
 			}
 		}
 	}
 	
 	@Override
 	public void mousePressed() {
+		
+		if (mouseX >= (width - 10) && mouseY >= (height - 10)) {
+			// Only allow window resizing from the bottom right corner
+			timeLastResize = System.currentTimeMillis();
+			mDragWinResize = true;
+			mouseDragWO = false;
+		
 		/* Check if the mouse position is colliding with a world object */
-		if (!isProgExec() && getActiveRobot() != null &&
+		} else if (!isProgExec() && getActiveRobot() != null &&
 				getActiveScenario() != null) {
 			
 			if (UI.isFocus()) {
@@ -2453,6 +2509,18 @@ public class RobotRun extends PApplet {
 	public void mouseReleased() {
 		mouseOverWO = null;
 		mouseDragWO = false;
+		
+		if (mDragWinResize && mDragX > 0 && mDragY > 0) {
+			// Apply any remaining drag to resizing the window
+			resizeWindow(mDragX, mDragY);
+		}
+		
+		mDragWinResize = false;
+		timeLastResize = 0L;
+		timeSinceResize = 0L;
+		mDragX = 0;
+		mDragY = 0;
+		
 	}
 
 	@Override
@@ -2703,6 +2771,50 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
+	 * Applies the given difference to the window dimensions while still
+	 * keeping the window's current aspect ratio. In addition, the window size
+	 * will not fall below the minimum window size.
+	 * 
+	 * NOTE: This method will cause major lag if it is called too frequently.
+	 * 
+	 * @param dx	The difference along the y axis
+	 * @param dy	The difference along the x axis
+	 */
+	public void resizeWindow(int dx, int dy) {
+		final int MIN_WIDTH = 1080;
+		final int MIN_HEIGHT = 720;
+		
+		int dist = Math.abs(dx);
+		boolean dominantX = Math.abs(dx) > Math.abs(dy);
+		
+		
+		if (dx < 0 && width > MIN_WIDTH && height > MIN_HEIGHT) {
+			int newWidth, newHeight;
+			
+			// Reduce window size
+			if (dominantX) {
+				newWidth = Math.max(MIN_WIDTH, width - dist);
+				newHeight = Math.max(MIN_HEIGHT, height - dist * height / width);
+				
+			} else {
+				newWidth = Math.max(MIN_WIDTH, width - dist * width / height);
+				newHeight = Math.max(MIN_HEIGHT, height - dist);
+			}
+			
+			surface.setSize(newWidth, newHeight);
+			
+		} else if (dx > 0) {
+			// Increase window size
+			if (dominantX) {
+				surface.setSize(width + dist, height + dist * height / width);
+				
+			} else {
+				surface.setSize(width + dist * width / height, height + dist);
+			}
+		}
+	}
+	
+	/**
 	 * Determines a integer state based on the active instruction and selected
 	 * index in a program instruction menu.
 	 * 
@@ -2921,6 +3033,11 @@ public class RobotRun extends PApplet {
 		position = null;
 		mouseOverWO = null;
 		mouseDragWO = false;
+		mDragWinResize = false;
+		timeLastResize = 0L;
+		timeSinceResize = 0L;
+		mDragX = 0;
+		mDragY = 0;
 		
 		PImage[][] buttonImages = new PImage[][] {
 			
