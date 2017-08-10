@@ -5,22 +5,29 @@ import java.util.Calendar;
 import global.Fields;
 
 /**
- * TODO general comments
+ * Contains the logic for screen capture when running the application. Not
+ * really sure if it works or not, though.
  * 
  * @author James Walker
  */
 public class RecordScreen implements Runnable {
 	
+	/**
+	 * Controls whether recording is enabled or not.
+	 */
 	private boolean recording;
 	
+	/**
+	 * Initializes the recording state to false.
+	 */
 	public RecordScreen() {
 		recording = false;
 	}
 	
 	/**
-	 * TODO comment this
+	 * Returns the state of recording.
 	 * 
-	 * @return
+	 * @return	Whether or not recording is enabled
 	 */
 	public boolean isRecording() {
 		return recording;
@@ -56,9 +63,9 @@ public class RecordScreen implements Runnable {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Sets the recording state for this.
 	 * 
-	 * @param state
+	 * @param state	The new recording state
 	 */
 	public void setRecording(boolean state) {
 		recording = state;

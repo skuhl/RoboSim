@@ -33,9 +33,9 @@ public class PositionRegister extends Register {
 	}
 
 	/**
-	 * TODO comment this
+	 * Creates an empty position register with the given ID.
 	 * 
-	 * @param i
+	 * @param i	The ID of this position register
 	 */
 	public PositionRegister(int i) {
 		super(i, null);
@@ -44,12 +44,13 @@ public class PositionRegister extends Register {
 	}
 
 	/**
-	 * TODO comment this
+	 * Creates a position register with given ID, comment, point value, and
+	 * position type.
 	 * 
-	 * @param i
-	 * @param c
-	 * @param pt
-	 * @param isCart
+	 * @param i			The ID of this position register
+	 * @param c			The comment associated with this position register
+	 * @param pt		The point associated with this position register
+	 * @param isCart	The position type of this position register
 	 */
 	public PositionRegister(int i, String c, Point pt, boolean isCart) {
 		super(i, c);

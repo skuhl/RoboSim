@@ -93,11 +93,14 @@ public class RobotCamera {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Generates a ray, which represents the position of a mouse click on the
+	 * camera snapshot image mapped to the robot camera view perspective, in
+	 * the world frame.
 	 * 
-	 * @param posX
-	 * @param posY
-	 * @return
+	 * @param posX	The mouse position along the image's x axis
+	 * @param posY	The mouse position along the image's y axis
+	 * @return		The ray representing the mouse click in the world
+	 * 				coordinate system
 	 */
 	public RRay camPosToWldRay(int posX, int posY) {
 		

@@ -187,9 +187,12 @@ public abstract class ST_ScreenTeachPoints extends Screen {
 	public abstract boolean readyToTeach();
 	
 	/**
-	 * TODO comment this
+	 * Returns the point taught to the associated frame for the teaching method
+	 * associated with this screen. The mapping between indices and points
+	 * varies depending the teaching method and frame type, however, the
+	 * maximum range of indices is 0 to 6, inclusive.
 	 * 
-	 * @param idx
+	 * @param idx	The index of the teach point to get
 	 */
 	protected abstract Point getTeachPoint(int idx);
 	
@@ -209,10 +212,11 @@ public abstract class ST_ScreenTeachPoints extends Screen {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Sets the teach point associated with the given index, if the given index
+	 * is valid. See getTeachPoint() method. 
 	 * 
-	 * @param pt
-	 * @param idx
+	 * @param pt	The new teach point
+	 * @param idx	The index associated with the teach point
 	 */
 	protected abstract void setTeachPoint(Point pt, int idx);
 }

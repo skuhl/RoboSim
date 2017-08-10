@@ -84,11 +84,21 @@ public class RMatrix extends Array2DRowRealMatrix {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Generates a string representation of the matrix, where each row of the
+	 * matrix is surrounded by brackets and ends with a new line character. In
+	 * addition, the given precision specifications are applied to each value
+	 * in the matrix.
 	 * 
-	 * @param digitsBefore
-	 * @param digitsAfter
-	 * @return
+	 * @param digitsBefore	The default number of digits, before the decimal
+	 * 						point, to account for each value in the matrix.
+	 * 						This value counts towards the padding applied to a
+	 * 						matrix value
+	 * @param digitsAfter	The maximum number of digits to account for after
+	 * 						the decimal point for each value in the matrix.
+	 * 						This value counts towards the total padding applied
+	 * 						to each matrix value
+	 * @return				A string representation of the matrix with space
+	 * 						padding for all matrix values
 	 */
 	public String toString(int digitsBefore, int digitsAfter) {
 		String str = new String();
