@@ -145,7 +145,7 @@ public abstract class WorldObject implements Cloneable {
 			if (this instanceof Part)  {
 				// Use bounding-box dimensions instead
 				fields = new String[4];
-				PVector dims = ((Part)this).getOBBDims();
+				PVector dims = model.getDims();
 
 				fields[0] = "S: " + DebugFloatFormat.format(model.getDim(DimType.SCALE));
 				fields[1] = "L: " + DebugFloatFormat.format(dims.x);

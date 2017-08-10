@@ -4105,6 +4105,21 @@ public class WGUI implements ControlListener {
 			app.setRobot(1);
 		}
 		
+		if (menu == WindowTab.CREATE) {
+			// Initialize the sample fill and outline color text-areas
+			Textarea txa = getTextArea("WOFillSmp");
+			
+			if (txa != null) {
+				txa.setColorBackground( getFillColor() );
+			}
+			
+			txa = getTextArea("WOOutlineSmp");
+			
+			if (txa != null) {
+				txa.setColorBackground( getStrokeColor() );
+			}
+		}
+		
 		updateAndDrawUI();
 	}
 
