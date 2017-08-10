@@ -79,24 +79,6 @@ import window.WGUI_Buttons;
  * @author Vincent Druckte, Joshua Hooker, and James Walker
  */
 public class RobotRun extends PApplet {
-	
-	@Deprecated
-	private static RobotRun instance;
-	
-	@Deprecated
-	public static RobotRun getInstance() {
-		return instance;
-	}
-	
-	@Deprecated
-	public static RoboticArm getInstanceRobot() {
-		return instance.getActiveRobot();
-	}
-	
-	@Deprecated
-	public static Scenario getInstanceScenario() {
-		return instance.getActiveScenario();
-	}
 
 	public static void main(String[] args) {
 		String[] appletArgs = new String[] { "core.RobotRun" };
@@ -3047,8 +3029,6 @@ public class RobotRun extends PApplet {
 			{ loadImage("images/arrow-r.png"), loadImage("images/arrow-r_over.png"), loadImage("images/arrow-r_down.png") }
 			
 		};
-		
-		instance = this;
 		
 		RegisteredModels.loadModelDefs(this);
 		
