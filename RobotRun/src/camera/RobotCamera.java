@@ -661,14 +661,7 @@ public class RobotCamera {
 		img.rotateY(cOrien.y);
 		img.rotateZ(cOrien.z);
 		
-		img.translate(-cPos.x, -cPos.y,  -cPos.z);
-		
-		if(tgt instanceof Part && tgt != null) {
-			PVector dims = getAxisDimensions(tgt);
-			PVector pos = ((Part)tgt).getCenter();
-			//img.translate(-pos.x + cPos.x, -pos.y + cPos.y, -pos.z + cPos.z - dims.z);
-			//img.scale();
-		}
+		img.translate(-cPos.x, -cPos.y, -cPos.z);
 		
 		Scenario active = appRef.getActiveScenario();
 		if(active != null) {

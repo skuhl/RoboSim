@@ -88,8 +88,8 @@ public class WGUI implements ControlListener {
 			ldropItemWidth = 120,
 			dropItemHeight = 21,
 			imageLabelWidth = 150,
-			imageWidth = 250,
-			imageHeight = 200,
+			imageWidth = 275,
+			imageHeight = 240,
 			DIM_LBL = 3,
 			DIM_TXT = 3,
 			DIM_DDL = 1;
@@ -3384,31 +3384,33 @@ public class WGUI implements ControlListener {
 		
 		// Cam object select dropdown
 		relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		getDropdown("CamObjects").setPosition(relPos[0], relPos[1]);
+		c = getDropdown("CamObjects").setPosition(relPos[0], relPos[1]);
+		
+		// Cam teach object button
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		c = getButton(WGUI_Buttons.CamTeachObj).setPosition(relPos[0], relPos[1]);
+		
+		// Cam delete object button
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		c = getButton(WGUI_Buttons.CamDeleteObj).setPosition(relPos[0], relPos[1]);
+		
+		getDropdown("CamObjects").bringToFront();
 		
 		// Object preview image
-		relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, 0, 0);
+		relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, -10, 0);
 		getButton(WGUI_Buttons.CamObjPreview).setPosition(relPos[0], relPos[1]);
 		
 		// Camera snapshot label
 		relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY + imageHeight - 20);
 		c0 = getTextArea("SnapPreviewLbl").setPosition(relPos[0], relPos[1]);
 		
-		// Camera snapshot image
-		relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, 0, 0);
-		getButton(WGUI_Buttons.CamSnapPreview).setPosition(relPos[0], relPos[1]);
-		
 		// Cam update button
-		relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY + imageHeight - 20);
-		c0 = getButton(WGUI_Buttons.CamUpdate).setPosition(relPos[0], relPos[1]);
+		relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		getButton(WGUI_Buttons.CamUpdate).setPosition(relPos[0], relPos[1]);
 		
-		// Cam teach object button
-		relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
-		c = getButton(WGUI_Buttons.CamTeachObj).setPosition(relPos[0], relPos[1]);
-		
-		// Cam delete object button
-		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
-		c = getButton(WGUI_Buttons.CamDeleteObj).setPosition(relPos[0], relPos[1]);
+		// Camera snapshot image
+		relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, -10, 0);
+		c = getButton(WGUI_Buttons.CamSnapPreview).setPosition(relPos[0], relPos[1]);
 
 		CameraObject o = (CameraObject)getDropdown("CamObjects").getSelectedItem();
 		if(o != null) {
