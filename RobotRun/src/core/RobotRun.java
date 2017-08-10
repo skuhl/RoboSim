@@ -11,6 +11,7 @@ import enums.AxesDisplay;
 import enums.CoordFrame;
 import enums.ExecState;
 import enums.ExecType;
+import enums.WindowTab;
 import expression.Operand;
 import expression.OperandCamObj;
 import expression.Operator;
@@ -2415,14 +2416,11 @@ public class RobotRun extends PApplet {
 				if (mouseButton == LEFT) {
 					mouseRay = UI.getMouseRayFromRCam(mouseX, mouseY);
 					
-					if (mouseRay != null) {
+					if (UI.getMenu() == WindowTab.CAMERA && mouseRay != null) {
 						// Check for collisions with objects in the scene
 						WorldObject collision = checkForCollisionsInScene(mouseRay);
 						
-						if (mouseButton == LEFT) {
-							UI.setSelectedWO(collision);
-						}
-						
+						UI.setSelectedWO(collision);
 						mouseOverWO = collision;
 					}
 				}
