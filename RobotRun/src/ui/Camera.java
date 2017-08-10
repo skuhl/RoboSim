@@ -12,13 +12,28 @@ import processing.core.PVector;
 public class Camera {
 	private final float DEF_ZOFFSET, MIN_ZOFFSET, MAX_ZOFFSET;
 	
+	/**
+	 * The base position of the camera.
+	 */
 	private PVector position;
-	// Rotations in X, Y, Z in radians
+
+	/**
+	 * The camera's orientation about the xyz axes.
+	 */
 	private PVector rotation;
+	
+	/**
+	 * The distance from the camera's view plane to its base position. This
+	 * value is defined with respect to the screen coordinate system.
+	 */
 	private float zOffset;
 	
 	/**
 	 * Creates a camera with the default position, orientation and scale.
+	 * 
+	 * @param	defZOffset	The default z offset of the camera's view plane
+	 * @param	minZOffset	The minimum z offset of the camera's view plane
+	 * @param	maxZOffset	The maximum z offset of the camera's view plane
 	 */
 	public Camera(float defZOffset, float minZOffset, float maxZOffset) {
 		DEF_ZOFFSET = defZOffset;
@@ -45,63 +60,64 @@ public class Camera {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Returns the position of the camera's base, which is a point in the world
+	 * frame.
 	 * 
-	 * @return
+	 * @return	The camera's base position in the world frame
 	 */
 	public PVector getBasePosition() {
 		return position.copy();
 	}
 	
 	/**
-	 * TODO comment this
+	 * Returns the default z offset of the camera's view plane.
 	 * 
-	 * @return
+	 * @return	The camera's default z offset
 	 */
 	public float getDefZOffset() {
 		return DEF_ZOFFSET;
 	}
 	
 	/**
-	 * TODO comment this
+	 * Returns the maximum z offset of the camera's view plane.
 	 * 
-	 * @return
+	 * @return	The camera's maximum z offset
 	 */
 	public float getMaxZOffset() {
 		return MAX_ZOFFSET;
 	}
 	
 	/**
-	 * TODO comment this
+	 * Returns the minimum z offset of the camera's view plane.
 	 * 
-	 * @return
+	 * @return	The camera's minimum z offset
 	 */
 	public float getMinZOffset() {
 		return MIN_ZOFFSET;
 	}
 	
 	/**
-	 * TODO comment this
+	 * Returns a copy of the orientation angles.
 	 * 
-	 * @return
+	 * @return	The camera's current orientation
 	 */
 	public PVector getOrientation() {
 		return rotation.copy();
 	}
 	
 	/**
-	 * TODO comment this
+	 * Returns the scale value used to simulate camera zoom.
 	 * 
-	 * @return
+	 * @return	The camera's current scale
 	 */
 	public float getScale() {
 		return zOffset / DEF_ZOFFSET;
 	}
 	
 	/**
-	 * TODO comment this
+	 * Returns the current z offset of the camera's view plane.
 	 * 
-	 * @return
+	 * @return	The current z offset of the camera
 	 */
 	public float getZOffset() {
 		return zOffset;
@@ -175,9 +191,10 @@ public class Camera {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Sets the camera view plane's z offset to the given value. The new value
+	 * is then clamped to the valid range of the camera's z offset as well.
 	 * 
-	 * @param newOffset
+	 * @param newOffset	The new camera z offset
 	 */
 	public void setZOffset(float newOffset) {
 		zOffset = RMath.clamp(newOffset, MIN_ZOFFSET, MAX_ZOFFSET);

@@ -82,9 +82,9 @@ public class MyPShape extends PShapeOpenGL {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Sets the PApplet reference for MyPShape objects.
 	 * 
-	 * @param appRef
+	 * @param appRef	The reference to the main application class
 	 */
 	public static void setAppRef(PApplet appRef) {
 		MyPShape.appRef = appRef;

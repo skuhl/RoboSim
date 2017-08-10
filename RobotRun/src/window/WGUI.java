@@ -274,7 +274,9 @@ public class WGUI implements ControlListener {
 		return null;
 	}
 	
-	/** A reference to the application, in which the UI resides. */
+	/**
+	 * A reference to the application, in which the UI resides.
+	 */
 	private final RobotRun app;
 
 	/** The background shared amongst all windows */

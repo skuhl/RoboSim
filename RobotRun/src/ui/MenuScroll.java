@@ -70,9 +70,9 @@ public class MenuScroll {
 	}
 	
 	/**
-	 * TODO comment
+	 * Returns a reference to the display line at the active line index.
 	 * 
-	 * @return
+	 * @return	The display line that is highlighted on the pendant
 	 */
 	public DisplayLine getCurrentItem() {
 		if (lineIdx >= 0 && lineIdx < lines.size()) {
@@ -83,9 +83,9 @@ public class MenuScroll {
 	}
 	
 	/**
-	 * TODO comment
+	 * Returns the index of the item associated with the active display line.
 	 * 
-	 * @return
+	 * @return	The index of the highlighted display line's associated item
 	 */
 	public int getCurrentItemIdx() {
 		DisplayLine active = getCurrentItem();
@@ -149,9 +149,12 @@ public class MenuScroll {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Sets the active line index to the first line corresponding to the given
+	 * item index and updates the render start index to reflect the change in
+	 * the line index.
 	 * 
-	 * @param itemIdx
+	 * @param itemIdx	The index of the item, to which to set as the active
+	 * 					line
 	 */
 	public void jumpToItem(int itemIdx) {
 		

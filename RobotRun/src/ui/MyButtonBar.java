@@ -43,9 +43,10 @@ public class MyButtonBar extends ButtonBar {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Sets the button, whose label matches the given string as active, while
+	 * deactivating all other buttons in the process.
 	 * 
-	 * @param name
+	 * @param label	The label of the button to set as active
 	 */
 	@SuppressWarnings("unchecked")
 	public void setActiveButton(String label) {

@@ -8,15 +8,19 @@ public class CallInstruction extends Instruction {
 	private static Pointer<RoboticArm> robotRef;
 	
 	/**
-	 * TODO comment this
+	 * Sets the robotic arm reference for all call instructions. This should be
+	 * a reference to the active robot of the application.
 	 * 
-	 * @param ref
+	 * @param ref	The active robot reference
 	 */
 	public static void setRobotRef(Pointer<RoboticArm> ref) {
 		robotRef = ref;
 	}
+	
 	/**
-	 * TODO comment this
+	 * The ID of the robot, with which this call instruction is associated.
+	 * This field is only valid when initializing this instruction's parent
+	 * program after loading the instructions from a binary file.
 	 */
 	private int loadedID;
 	

@@ -172,13 +172,13 @@ public class DropdownSearch extends MyDropdownList {
 				/* Add more to name, where the search buffer is non-prefix
 				 * substring to give names, in order to give names, where the
 				 * search buffer is a prefix, a higher priority. */
-				return ED + diff / 2;
+				return ED + diff;
 				
 			} else {
 				/* Add even more to a name, where the search buffer is not a
 				 * substring, in order to give names, where the search buffer
 				 * is a substring a higher priority. */
-				return ED + diff * diff;
+				return (ED + diff) * (ED + diff);
 			}
 		}
 	}
