@@ -40,6 +40,11 @@ import ui.DisplayLine;
 public class RoboticArm {
 	
 	/**
+	 * The maximum number of programs allowed for a single robotic arm.
+	 */
+	public static final int PROG_NUM = 100;
+	
+	/**
 	 * Defines the conversion between the robot's maximum rotation speed and
 	 * its maximum linear motion speed.
 	 */
@@ -394,10 +399,16 @@ public class RoboticArm {
 	 * Adds the given program to this Robot's list of programs.
 	 * 
 	 * @param p	The program to add to the Robot
+	 * @return	-1		the given program is null,
+	 * 			-2		this robot has already reached its program capacity,
+	 * 			>= 0	the index of the newly inserted program
 	 */
 	public int addProgram(Program p) {
 		if (p == null) {
 			return -1;
+			
+		} else if (PROGRAM.size() >= PROG_NUM) {
+			return -2;
 			
 		} else {
 			int idx = 0;

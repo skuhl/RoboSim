@@ -239,7 +239,7 @@ public abstract class DataManagement {
 		if ((dataFlag & 0x1) != 0) {
 			// Save the robot's programs
 			saveProgramBytes(robot, String.format("%s/programs.bin", destDir.getAbsolutePath()));
-			//exportProgsToTxt(robot, destDir.getAbsolutePath());
+			exportProgsToTxt(robot, destDir.getAbsolutePath());
 		}
 		
 		if ((dataFlag & 0x2) != 0) {
@@ -823,7 +823,8 @@ public abstract class DataManagement {
 			FileInputStream in = new FileInputStream(src);
 			DataInputStream dataIn = new DataInputStream(in);
 			// Read the number of programs stored in src
-			int size = Math.max(0, Math.min(dataIn.readInt(), 200));
+			int size = Math.max(0, Math.min(dataIn.readInt(),
+					RoboticArm.PROG_NUM));
 			
 			while(size-- > 0) {
 				// Read each program from src

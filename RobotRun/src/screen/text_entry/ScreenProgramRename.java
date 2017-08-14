@@ -2,7 +2,9 @@ package screen.text_entry;
 
 import core.RobotRun;
 import global.DataManagement;
+import global.Fields;
 import programming.Program;
+import robot.RoboticArm;
 import screen.ScreenMode;
 
 public class ScreenProgramRename extends ST_ScreenTextEntry {
@@ -20,13 +22,30 @@ public class ScreenProgramRename extends ST_ScreenTextEntry {
 			}
 			// Rename the active program
 			Program prog = robotRun.getActiveProg();
+			
 			if (prog != null) {
-				prog.setName(workingText.toString());
-				robotRun.getActiveRobot().reorderPrograms();
-				DataManagement.saveRobotData(robotRun.getActiveRobot(), 1);
+				String name = workingText.toString();
+				RoboticArm r = robotRun.getActiveRobot();
+				Program withSameName = r.getProgram(name);
+				
+				if (withSameName == null) {
+					prog.setName(name);
+					r.reorderPrograms();
+					DataManagement.saveRobotData(robotRun.getActiveRobot(), 1);
+					robotRun.lastScreen();
+					
+				} else {
+					Fields.setMessage("A program with the name %s already exists",
+							name);
+				}
+				
+			} else {
+				Fields.debug("No program selected to rename!");
 			}
 
-			robotRun.lastScreen();
+			
+		} else {
+			Fields.setMessage("The program's name cannot be empty");
 		}
 	}
 

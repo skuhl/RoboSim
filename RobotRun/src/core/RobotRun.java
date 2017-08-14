@@ -1307,17 +1307,25 @@ public class RobotRun extends PApplet {
 	 */
 	public void button_objCreate() {
 		try {
-			if (getActiveScenario() != null) {
+			Scenario s = getActiveScenario();
+			
+			if (s != null) {
 				Fields.resetMessage();
-				WorldObject newObject = UI.createWorldObject();
-	
-				if (newObject != null) {
-					newObject.setLocalCenter(new PVector(-500f, 0f, 0f));
-					getActiveScenario().addWorldObject(newObject);
-					DataManagement.saveScenarios(this);
+				
+				if (!s.isFull()) {
+					WorldObject newObject = UI.createWorldObject();
+		
+					if (newObject != null) {
+						newObject.setLocalCenter(new PVector(-500f, 0f, 0f));
+						s.addWorldObject(newObject);
+						DataManagement.saveScenarios(this);
+					}
+					
+				} else {
+					Fields.setMessage("This scenario has already reached its capacity for world objects");
 				}
-			}
-			else {
+				
+			} else {
 				Fields.setMessage("No active scenario!");
 			}
 			
