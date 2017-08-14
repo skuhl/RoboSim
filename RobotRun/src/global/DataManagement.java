@@ -239,7 +239,7 @@ public abstract class DataManagement {
 		if ((dataFlag & 0x1) != 0) {
 			// Save the robot's programs
 			saveProgramBytes(robot, String.format("%s/programs.bin", destDir.getAbsolutePath()));
-			exportProgsToTxt(robot, destDir.getAbsolutePath());
+			//exportProgsToTxt(robot, destDir.getAbsolutePath());
 		}
 		
 		if ((dataFlag & 0x2) != 0) {
@@ -805,7 +805,7 @@ public abstract class DataManagement {
 		} while (true);
 
 		// Read the number of instructions stored for this program
-		int numOfInst = Math.max(0, Math.min(in.readInt(), 500));
+		int numOfInst = Math.max(0, Math.min(in.readInt(), Program.MAX_SIZE));
 
 		while(numOfInst-- > 0) {
 			// Read in each instruction

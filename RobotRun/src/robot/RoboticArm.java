@@ -365,8 +365,12 @@ public class RoboticArm {
 	 */
 	public void addAt(Program p, int idx, Instruction inst, boolean group) {
 		if (p != null && inst != null && idx >= 0 && idx <= p.getNumOfInst()) {
-			p.addInstAt(idx, inst);
-			pushUndoState(InstUndoType.INSERTED, p, idx, p.get(idx), group);
+			int insertIdx = p.addInstAt(idx, inst);
+			
+			if (insertIdx != -1) {
+				pushUndoState(InstUndoType.INSERTED, p, idx, p.get(idx),
+						group);
+			}
 		}
 	}
 	
@@ -380,8 +384,10 @@ public class RoboticArm {
 	 * 				undo states
 	 */
 	public void addInstAtEnd(Program p, Instruction inst, boolean group) {
-		int idx = p.getNumOfInst();
-		addAt(p, idx, inst, group);
+		if (p != null) {
+			int idx = p.getNumOfInst();
+			addAt(p, idx, inst, group);
+		}
 	}
 
 	/**
@@ -1872,7 +1878,9 @@ public class RoboticArm {
 		}
 
 		/* Perform forward/ reverse insertion. */
-		for (int i = 0; i < toInsert.size(); i += 1) {
+		for (int i = 0; p.getNumOfInst() < Program.MAX_SIZE &&
+				i < toInsert.size(); i += 1) {
+			
 			Instruction instr;
 			if ((options & Fields.PASTE_REVERSE) == Fields.PASTE_REVERSE) {
 				instr = pasteList.get(pasteList.size() - 1 - i);

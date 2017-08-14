@@ -12,6 +12,12 @@ import global.Fields;
  * @author Joshua Hooker
  */
 public class Scenario implements Iterable<WorldObject>, Cloneable {
+	
+	/**
+	 * The maximum number of objects allowed in a single scenario.
+	 */
+	public static final int MAX_SIZE = 30;
+	
 	private boolean gravity;
 	private String name;
 	
@@ -39,7 +45,11 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 	 * @returning        Whether the object was added to a list or not
 	 */
 	public boolean addWorldObject(WorldObject newObject) {
-		if (newObject == null || objList.contains(newObject)) {
+		if (isFull()) {
+			Fields.debug("Scenario is full");
+			return false;
+			
+		} else if (newObject == null || objList.contains(newObject)) {
 			// Ignore nulls and duplicates
 			if (newObject == null) {
 				Fields.debug("New Object is null");
@@ -131,10 +141,6 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 
 	public String getName() { return name; }
 
-	public ArrayList<WorldObject> getObjectList() {
-		return objList;
-	}
-
 	/**
 	 * Return the world object that corresponds to the given index in
 	 * the list of world objects contained in this scenario, or null
@@ -154,6 +160,17 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 
 	public boolean isGravity() {
 		return gravity;
+	}
+	
+	/**
+	 * Has the scenario's number of parts and fixtures reached the maximum size
+	 * defined for scenarios?
+	 * 
+	 * @return	The scenario has reached the maximum number of objects allowed
+	 * 			for a scenario
+	 */
+	public boolean isFull() {
+		return objList.size() >= MAX_SIZE;
 	}
 
 	@Override

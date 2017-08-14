@@ -58,6 +58,11 @@ public abstract class Fields {
 	public static final int FRAME_NUM = 10;
 	
 	/**
+	 * The maximum number of scenarios used by the software at one time.
+	 */
+	public static final int SCENARIO_NUM = 60;
+	
+	/**
 	 * The tool frame type of a motion instruction
 	 */
 	public static final int FTYPE_TOOL = 0;

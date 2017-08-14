@@ -304,7 +304,7 @@ public abstract class Screen {
 			instruct_list.add(line);
 		}
 		
-		if (includeEND) {
+		if (includeEND && p.getNumOfInst() < Program.MAX_SIZE) {
 			DisplayLine endl = new DisplayLine(size);
 			endl.add("[End]");
 	

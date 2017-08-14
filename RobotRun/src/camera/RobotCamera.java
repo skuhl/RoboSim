@@ -337,7 +337,7 @@ public class RobotCamera {
 		ArrayList<CameraObject> objList = new ArrayList<CameraObject>();
 		if(scene == null) return objList;
 		
-		for(WorldObject o : scene.getObjectList()) {
+		for(WorldObject o : scene) {
 			if(o instanceof Part) {
 				float imageQuality = getObjectImageQuality(o);
 				if(isPointInFrame(((Part)o).getCenter()) && imageQuality >= sensitivity) {

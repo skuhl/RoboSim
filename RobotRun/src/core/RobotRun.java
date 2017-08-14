@@ -86,6 +86,7 @@ public class RobotRun extends PApplet {
 
 		if (args != null) {
 			PApplet.main(concat(appletArgs, args));
+			
 		} else {
 			PApplet.main(appletArgs);
 		}
@@ -3123,7 +3124,7 @@ public class RobotRun extends PApplet {
 	 * pendant display based on the state of the shift switch on the pendant.
 	 */
 	public void shiftUpkeep() {
-		if (isShift()) {
+		if (!isShift()) {
 			// Stop all robot motion and program execution
 			getActiveRobot().halt();
 			progExecState.halt();

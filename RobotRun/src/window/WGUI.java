@@ -1008,6 +1008,9 @@ public class WGUI implements ControlListener {
 					}
 				}
 
+			} else if (arg0.isFrom("Scenario")) {
+				getDropdown("WO").clear();
+				
 			} else if (arg0.isFrom("RobotEE")) {
 				RoboticArm r = app.getActiveRobot();
 
@@ -1799,7 +1802,6 @@ public class WGUI implements ControlListener {
 		} else if (form instanceof RCylinder) {
 			getTextField("Dim0").setText( String.format("%4.3f", form.getDim(DimType.RADIUS)) );
 			getTextField("Dim1").setText( String.format("%4.3f", form.getDim(DimType.HEIGHT)) );
-
 
 		} else if (form instanceof ComplexShape) {
 			getTextField("Dim0").setText( String.format("%4.3f", form.getDim(DimType.SCALE)) );
