@@ -2533,6 +2533,7 @@ public class WGUI implements ControlListener {
 		
 		MySlider s = new MySlider(manager, name, inputType);
 		s.getCaptionLabel().set(lbl).setFont(lblFont);
+		s.getValueLabel().setFont(lblFont);
 		
 		s.setColorValue(Fields.B_TEXT_C)
 		.setColorLabel(Fields.F_TEXT_C)

@@ -237,9 +237,17 @@ public abstract class DataManagement {
 		}
 		
 		if ((dataFlag & 0x1) != 0) {
+			File oldSaveFile = new File(String.format("%s/programs.bin",
+					destDir.getAbsolutePath()));
+			
+			if (oldSaveFile.exists()) {
+				// Remove old program save file
+				oldSaveFile.delete();
+			}
+			
 			// Save the robot's programs
-			saveProgramBytes(robot, String.format("%s/programs.bin", destDir.getAbsolutePath()));
-			exportProgsToTxt(robot, destDir.getAbsolutePath());
+			saveProgramBytes(robot, String.format("%s/programs", destDir.getAbsolutePath()));
+			exportProgsToTxt(robot, String.format("%s/programs", destDir.getAbsolutePath()));
 		}
 		
 		if ((dataFlag & 0x2) != 0) {
@@ -815,8 +823,72 @@ public abstract class DataManagement {
 
 		return prog;
 	}
+	
+	private static int loadProgramBytes(RoboticArm robot) {
+		
+		File progDir = new File(tmpDirPath + String.format("robot%d/", robot.RID)
+				+ "programs");
+		File progFile = new File(tmpDirPath + String.format("robot%d/programs.bin",
+				robot.RID));
+		
+		if (!progDir.exists() || !progDir.isDirectory()) {
+			if (progFile.exists() && progFile.isFile()) {
+				// Load programs from programs.bin if it exists
+				loadProgramBytesOldest(robot, progFile.getPath());
+			}
+			
+			return -1;
+			
+		} else {
+			int filesRead = 0;
+			File[] progFiles = progDir.listFiles();
+			
+			// Load in each program from there respective files
+			for (File src : progFiles) {
+				try {
+					FileInputStream in = new FileInputStream(src);
+					DataInputStream dataIn = new DataInputStream(in);
+					
+					robot.addProgram( loadProgram(robot, dataIn) );
+					
+					dataIn.close();
+					in.close();
+					++filesRead;
+					
+				} catch (FileNotFoundException FNFEx) {
+					// Could not locate src
+					System.err.printf("%s does not exist!\n", src.getName());
+					FNFEx.printStackTrace();
 
-	private static int loadProgramBytes(RoboticArm robot, String srcPath) {
+				} catch (EOFException EOFEx) {
+					// Reached the end of src unexpectedly
+					System.err.printf("End of file, %s, was reached unexpectedly!\n",
+							src.getName());
+					EOFEx.printStackTrace();
+
+				} catch (IOException IOEx) {
+					// An error occurred with reading from src
+					System.err.printf("%s is corrupt!\n", src.getName());
+					IOEx.printStackTrace();
+					
+				} catch (ClassCastException CCEx) {
+					/* An error occurred with casting between objects while loading a
+					 * program's instructions */
+					System.err.printf("%s is corrupt!\n", src.getName());
+					CCEx.printStackTrace();
+					
+				} catch (NegativeArraySizeException NASEx) {
+					// Issue with loading program points
+					System.err.printf("%s is corrupt!\n", src.getName());
+					NASEx.printStackTrace();
+				}
+			}
+			
+			return filesRead;
+		}
+	}
+
+	private static int loadProgramBytesOldest(RoboticArm robot, String srcPath) {
 		File src = new File(srcPath);
 
 		try {
@@ -971,7 +1043,7 @@ public abstract class DataManagement {
 		}
 		
 		// Load the Robot's programs, frames, and registers from their respective files
-		loadProgramBytes(robot, String.format("%s/programs.bin", srcDir.getAbsolutePath()));
+		loadProgramBytes(robot);
 		loadFrameBytes(robot, String.format("%s/frames.bin", srcDir.getAbsolutePath()));
 		loadRegisterBytes(robot, String.format("%s/registers.bin", srcDir.getAbsolutePath()));
 		loadMacros(robot, String.format("%s/macros.bin", srcDir.getAbsolutePath()));
@@ -1863,48 +1935,52 @@ public abstract class DataManagement {
 		}
 	}
 
-	private static int saveProgramBytes(RoboticArm robot, String destPath) {
-		File dest = new File(destPath);
+	private static int saveProgramBytes(RoboticArm robot, String destDirPath) {
+		File destDir = new File(destDirPath);
 		
-		try {
-			// Create dest if it does not already exist
-			if(!dest.exists()) {      
-				try {
-					dest.createNewFile();
-					System.err.printf("Successfully created %s.\n", dest.getName());
-				} catch (IOException IOEx) {
-					System.err.printf("Could not create %s ...\n", dest.getName());
-					IOEx.printStackTrace();
-					return 1;
-				}
-			} 
-
-			FileOutputStream out = new FileOutputStream(dest);
-			DataOutputStream dataOut = new DataOutputStream(out);
-			// Save the number of programs
-			dataOut.writeInt(robot.numOfPrograms());
-
-			for(int idx = 0; idx < robot.numOfPrograms(); ++idx) {
-				// Save each program
-				saveProgram(robot.getProgram(idx), dataOut);
-			}
-
-			dataOut.close();
-			out.close();
-			return 0;
-
-		} catch (FileNotFoundException FNFEx) {
-			// Could not locate dest
-			System.err.printf("%s does not exist!\n", dest.getName());
-			FNFEx.printStackTrace();
+		if (destDir.exists() && destDir.isFile()) {
+			// Verify the destination directory
+			destDir.delete();
+			destDir.mkdir();
+			System.err.printf("Successfully created %s.\n", destDir.getName());
 			return 1;
-
-		} catch (IOException IOEx) {
-			// An error occurred with writing to dest
-			System.err.printf("%s is corrupt!\n", dest.getName());
-			IOEx.printStackTrace();
-			return 2;
+			
+		// Create dest if it does not already exist
+		} else if (!destDir.exists()) {
+			destDir.mkdir();
+			System.err.printf("Successfully created %s.\n", destDir.getName());
 		}
+		
+		/* Save each program in a separate file under the given robot's program
+		 * directory */
+		for (int idx = 0; idx < robot.numOfPrograms(); ++idx) {
+			Program p = robot.getProgram(idx);
+			File dest = new File( String.format("%s/%s.bin", destDirPath,
+					p.getName()) );
+			
+			try {
+				if (!dest.exists()) {
+					// Create the file if it does not exist
+					dest.createNewFile();
+				}
+				
+				FileOutputStream out = new FileOutputStream(dest);
+				DataOutputStream dataOut = new DataOutputStream(out);
+				
+				saveProgram(robot.getProgram(idx), dataOut);
+
+				dataOut.close();
+				out.close();
+
+			} catch (IOException IOEx) {
+				// An error occurred with writing to dest
+				System.err.printf("%s is corrupt!\n", dest.getName());
+				IOEx.printStackTrace();
+				return 2;
+			}
+		}
+		
+		return 0;
 	}
 
 	private static void savePVector(PVector p, DataOutputStream out) throws IOException {
