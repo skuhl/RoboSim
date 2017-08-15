@@ -1612,9 +1612,16 @@ public class RobotRun extends PApplet {
 	
 			} else if (ret == 0) {
 				DataManagement.saveScenarios(this);
+				
+			} else if (ret == -1 || ret == -4) {
+				Fields.setMessage("The given name is not valid for a scenario");
+				
+			} else if (ret == -3) {
+				Fields.setMessage("A scenarion must be set to be renamed");
+				
+			} else if (ret == -5) {
+				Fields.setMessage("The maximum scenario capacity has already been reached");
 			}
-			
-			Fields.debug(String.format("SConfirm: %d\n", ret));
 			
 		} catch (Exception Ex) {
 			// Log any errors

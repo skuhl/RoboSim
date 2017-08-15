@@ -275,6 +275,37 @@ public class WGUI implements ControlListener {
 	}
 	
 	/**
+	 * TODO comment this
+	 * 
+	 * @param name
+	 * @param scenarios
+	 * @return
+	 */
+	private static String validWOName(String name, Scenario parent) {
+		// Names only consist of letters and numbers
+		if (name != null && parent != null && Pattern.matches("[a-zA-Z0-9]+",
+				name)) {
+
+			if (name.length() > 16) {
+				// Names have a max length of 16 characters
+				name = name.substring(0, 16);
+			}
+
+			for (WorldObject wo : parent) {
+				if (wo.getName().equals(name)) {
+					// Duplicate name
+					return null;
+				}
+			}
+
+			return name;
+		}
+
+		// Invalid characters
+		return null;
+	}
+	
+	/**
 	 * A reference to the application, in which the UI resides.
 	 */
 	private final RobotRun app;
@@ -1123,18 +1154,21 @@ public class WGUI implements ControlListener {
 	 */
 	public WorldObject createWorldObject() {
 		// Determine if the object to be create is a Fixture or a Part
+		Scenario s = app.getActiveScenario();
+		String name = validWOName(getTextField("WOName").getText(), s);
 		float typeVal = getRadioButton("WOType").getValue();
-
-		app.pushMatrix();
-		app.resetMatrix();
+		int typeID = (int)getRadioButton("Shape").getValue();
 		WorldObject wldObj = null;
+		
+		
+		if (name == null) {
+			Fields.setMessage("The given name is invalid for a world object");
+			return null;
+		}
 
 		try {
-
 			if (typeVal == 0.0f) {
 				// Create a Part
-				String name = getTextField("WOName").getText();
-				int typeID = (int)getRadioButton("Shape").getValue();
 				int fill = getFillColor();
 
 				switch(typeID) {
@@ -1179,8 +1213,6 @@ public class WGUI implements ControlListener {
 
 			} else if (typeVal == 1.0f) {
 				// Create a fixture
-				String name = getTextField("WOName").getText();
-				int typeID = (int)getRadioButton("Shape").getValue();
 				int fill = getFillColor();
 
 				switch(typeID) {
@@ -1241,8 +1273,6 @@ public class WGUI implements ControlListener {
 			Fields.setMessage(IAEx.getMessage());
 			wldObj = null;
 		}
-
-		app.popMatrix();
 		
 		if (wldObj != null) {
 			clampDims(wldObj.getModel());
@@ -1930,6 +1960,8 @@ public class WGUI implements ControlListener {
 	 * 					-2	A new scenario failed to be created,
 	 * 					-3	No scenario is selected to be renamed,
 	 * 					-4	The replacement name for a scenario is invalid
+	 * 					-5	The maximum number of allowed scenarios already
+	 * 						exists
 	 */
 	public int updateScenarios(ArrayList<Scenario> scenarios) {
 		float val = getRadioButton("ScenarioOpt").getValue();
@@ -1965,19 +1997,26 @@ public class WGUI implements ControlListener {
 			return (selected != null) ? 1 : -2;
 
 		} else {
-			// Create a scenario
-			String name = validScenarioName(getTextField("SInput").getText(), scenarios);
-
-			if (name != null) {
-				Scenario newScenario = new Scenario(name);
-				scenarios.add(newScenario);
-
-				updateListContents();
-				scenarioList.setItem(newScenario);
-				return 2;
-
+			
+			if (app.getScenarios().size() < Fields.SCENARIO_NUM) {
+				// Create a scenario
+				String name = validScenarioName(getTextField("SInput").getText(),
+						scenarios);
+	
+				if (name != null) {
+					Scenario newScenario = new Scenario(name);
+					scenarios.add(newScenario);
+	
+					updateListContents();
+					scenarioList.setItem(newScenario);
+					return 2;
+	
+				} else {
+					return -1;
+				}
+				
 			} else {
-				return -1;
+				return -5;
 			}
 		}
 	}
