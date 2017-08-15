@@ -31,6 +31,7 @@ public interface WGUI_Buttons {
 	public static final String Data = "button_data";
 	public static final String Edit = "button_edit";
 	public static final String Enter= "button_enter";
+	public static final String ExportProgs = "button_exportProgs";
 	public static final String F1 = "button_F1";
 	public static final String F2 = "button_F2";
 	public static final String F3 = "button_F3";

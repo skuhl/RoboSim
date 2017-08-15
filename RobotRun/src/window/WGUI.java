@@ -854,6 +854,8 @@ public class WGUI implements ControlListener {
 				miscellaneous, mdropItemWidth, sButtonHeight, Fields.small);
 		addButton(WGUI_Buttons.RobotClearTrace, "Clear Trace", miscellaneous,
 				mdropItemWidth, sButtonHeight, Fields.small);
+		addButton(WGUI_Buttons.ExportProgs, "Export Programs", miscellaneous,
+				ldropItemWidth, sButtonHeight, Fields.small);
 		
 		togValues = new float[] { 0f, 1f };
 		togNames = new String[] { "RenderMouseRayOpt", "RenderPointOpt" };
@@ -4014,6 +4016,10 @@ public class WGUI implements ControlListener {
 		// Clear trace button
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		c = b = getButton(WGUI_Buttons.RobotClearTrace).setPosition(relPos[0], relPos[1]);
+		
+		// Export programs button
+		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
+		b = getButton(WGUI_Buttons.ExportProgs).setPosition(relPos[0], relPos[1]);
 		
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		c = getRadioButton("DebugOptions").setPosition(relPos[0], relPos[1]);

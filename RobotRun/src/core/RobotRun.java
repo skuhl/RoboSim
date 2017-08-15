@@ -3,6 +3,7 @@ package core;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Set;
 import java.util.Stack;
 
 import camera.RegisteredModels;
@@ -631,6 +632,25 @@ public class RobotRun extends PApplet {
 			DataManagement.errLog(Ex);
 			throw Ex;
 		}
+	}
+	
+	/**
+	 * Miscellaneous menu button
+	 * 
+	 * Creates text files for each program stored in each robot in their
+	 * respective export directories that represent the pendant text format
+	 * of the program.
+	 */
+	public void button_exportProgs() {
+		Set<Integer> rids = ROBOTS.keySet();
+		
+		for (Integer rid : rids) {
+			// Export each robot's programs to their respective directories
+			String destDir = String.format("%s/robot%d/out",
+					DataManagement.getTmpDirPath(), rid);
+			DataManagement.exportProgsToTxt(getRobot(rid), destDir);
+		}
+		
 	}
 	
 	/**

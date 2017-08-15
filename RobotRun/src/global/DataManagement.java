@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Set;
 
 import camera.RobotCamera;
 import core.RobotRun;
@@ -119,6 +120,12 @@ public abstract class DataManagement {
 	}
 	
 	public static void exportProgsToTxt(RoboticArm r, String directory) {
+		File destDir = new File(directory);
+		
+		if (!destDir.exists()) {
+			destDir.mkdir();
+		}
+		
 		for(int i = 0; i < r.numOfPrograms(); i += 1) {
 			Program p = r.getProgram(i);
 			File textfile = new File(directory + "/" + p.getName() + ".txt");
@@ -188,6 +195,10 @@ public abstract class DataManagement {
 		return fileNames;
 	}
 	
+	public static String getTmpDirPath() {
+		return tmpDirPath;
+	}
+	
 	// Must be called when RobotRun starts!!!!
 	public static void initialize(RobotRun process) {
 		dataDirPath = process.sketchPath("data\\");
@@ -247,7 +258,6 @@ public abstract class DataManagement {
 			
 			// Save the robot's programs
 			saveProgramBytes(robot, String.format("%s/programs", destDir.getAbsolutePath()));
-			exportProgsToTxt(robot, String.format("%s/programs", destDir.getAbsolutePath()));
 		}
 		
 		if ((dataFlag & 0x2) != 0) {
