@@ -1333,11 +1333,11 @@ public class RobotRun extends PApplet {
 				Fields.resetMessage();
 				
 				if (!s.isFull()) {
-					WorldObject newObject = UI.createWorldObject();
+					WorldObject newObject = UI.createWO(s);//UI.createWorldObject();
 		
 					if (newObject != null) {
 						newObject.setLocalCenter(new PVector(-500f, 0f, 0f));
-						s.addWorldObject(newObject);
+						//s.addWorldObject(newObject);
 						DataManagement.saveScenarios(this);
 					}
 					
@@ -1346,7 +1346,7 @@ public class RobotRun extends PApplet {
 				}
 				
 			} else {
-				Fields.setMessage("No active scenario!");
+				Fields.setMessage("No active scenario is selected");
 			}
 			
 		} catch (Exception Ex) {

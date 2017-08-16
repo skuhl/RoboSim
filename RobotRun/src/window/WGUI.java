@@ -275,37 +275,6 @@ public class WGUI implements ControlListener {
 	}
 	
 	/**
-	 * TODO comment this
-	 * 
-	 * @param name
-	 * @param scenarios
-	 * @return
-	 */
-	private static String validWOName(String name, Scenario parent) {
-		// Names only consist of letters and numbers
-		if (name != null && parent != null && Pattern.matches("[a-zA-Z0-9]+",
-				name)) {
-
-			if (name.length() > 16) {
-				// Names have a max length of 16 characters
-				name = name.substring(0, 16);
-			}
-
-			for (WorldObject wo : parent) {
-				if (wo.getName().equals(name)) {
-					// Duplicate name
-					return null;
-				}
-			}
-
-			return name;
-		}
-
-		// Invalid characters
-		return null;
-	}
-	
-	/**
 	 * A reference to the application, in which the UI resides.
 	 */
 	private final RobotRun app;
@@ -388,7 +357,7 @@ public class WGUI implements ControlListener {
 		camera = addGroup("CAMERA", relPos[0], relPos[1], windowTabs.getWidth(), 0);
 		miscellaneous = addGroup("MISC", relPos[0], relPos[1], windowTabs.getWidth(), 0);
 		sharedElements = addGroup("SHARED", relPos[0], relPos[1], windowTabs.getWidth(), 0);
-
+		
 		// Initialize camera view buttons
 		addButton(WGUI_Buttons.CamViewDef, "D", sButtonWidth, sButtonHeight, Fields.small).hide();
 		addButton(WGUI_Buttons.CamViewFr, "F", sButtonWidth, sButtonHeight, Fields.small).hide();
@@ -1148,137 +1117,61 @@ public class WGUI implements ControlListener {
 	}
 	
 	/**
-	 * Creates a world object form the input fields in the Create window.
+	 * TODO comment this
 	 * 
-	 * @return	The new world object or null, if the input was invalid
+	 * @param parent
+	 * @return
 	 */
-	public WorldObject createWorldObject() {
-		// Determine if the object to be create is a Fixture or a Part
-		Scenario s = app.getActiveScenario();
-		String name = validWOName(getTextField("WOName").getText(), s);
-		float typeVal = getRadioButton("WOType").getValue();
-		int typeID = (int)getRadioButton("Shape").getValue();
-		WorldObject wldObj = null;
-		
+	public WorldObject createWO(Scenario parent) {
+		String name = getTextField("WOName").getText();
 		
 		if (name == null) {
-			Fields.setMessage("The given name is invalid for a world object");
-			return null;
-		}
-
-		try {
-			if (typeVal == 0.0f) {
-				// Create a Part
-				int fill = getFillColor();
-
-				switch(typeID) {
-				case 0: // Box shape
-					int strokeVal = getStrokeColor();
-					Float[] shapeDims = getBoxDimensions();
-					// Construct a box shape
-					if (shapeDims != null && shapeDims[0] != null && shapeDims[1] != null && shapeDims[2] != null) {
-						wldObj = new Part(name, fill, strokeVal, shapeDims[0], shapeDims[1], shapeDims[2]);
-					}
-					break;
-
-				case 1: // Cylinder shape
-					strokeVal = getStrokeColor();
-					shapeDims = getCylinderDimensions();
-					// Construct a cylinder
-					if (shapeDims != null && shapeDims[0] != null && shapeDims[1] != null) {
-						wldObj = new Part(name, fill, strokeVal, shapeDims[0], shapeDims[1]);
-					}
-					break;
-
-				case 2: // Complex shape
-					String srcFile = getShapeSourceFile();
-					shapeDims = getModelDimensions();
-					// Construct a complex model
-					if (shapeDims != null) {
-						ComplexShape shape;
-
-						if (shapeDims[0] != null) {
-							// Define shape scale
-							shape = new ComplexShape(srcFile, fill, shapeDims[0]);
-							
-						} else {
-							shape = new ComplexShape(srcFile, fill);
-						}
-
-						wldObj = new Part(name, shape);
-					}
-					break;
-				default:
-				}
-
-			} else if (typeVal == 1.0f) {
-				// Create a fixture
-				int fill = getFillColor();
-
-				switch(typeID) {
-				case 0: // Box shape
-					int strokeVal = getStrokeColor();
-					Float[] shapeDims = getBoxDimensions();
-					// Construct a box shape
-					if (shapeDims != null && shapeDims[0] != null && shapeDims[1] != null && shapeDims[2] != null) {
-						wldObj = new Fixture(name, fill, strokeVal, shapeDims[0], shapeDims[1], shapeDims[2]);
-					}
-					break;
-
-				case 1: // Cylinder shape
-					strokeVal = getStrokeColor();
-					shapeDims = getCylinderDimensions();
-					// Construct a cylinder
-					if (shapeDims != null && shapeDims[0] != null && shapeDims[1] != null) {
-						wldObj = new Fixture(name, fill, strokeVal, shapeDims[0], shapeDims[1]);
-					}
-					break;
-
-				case 2: // Complex shape
-					String srcFile = getShapeSourceFile();
-					shapeDims = getModelDimensions();
-					// Construct a complex model
-					ComplexShape shape;
-
-					if (shapeDims != null && shapeDims[0] != null) {
-						// Define model scale value
-						shape = new ComplexShape(srcFile, fill, shapeDims[0]);
+			Fields.setMessage("A world object must have a name");
+			
+		} else {
+			int ret = parent.validateWOName(name);
+			
+			if (ret == 1) {
+				Fields.setMessage("The given name is invalid for a world object");
+				
+			} else if (ret == 2) {
+				Fields.setMessage("The given name must not exceed 16 characters");
+				
+			} else if (ret == 3) {
+				Fields.setMessage("An object with the given name already exists in the active scenario");
+				
+			} else {
+				float shapeID = getRadioButton("Shape").getValue();
+				int fillVal = getFillColor();
+				int strokeVal = getStrokeColor();
+				Object validation = validateShapeInput(shapeID, fillVal, strokeVal);
+				
+				if (validation instanceof String) {
+					// Show the error message
+					Fields.setMessage((String)validation);
+					
+				} else {
+					WorldObject wo;
+					float woType = getRadioButton("WOType").getValue();
+					RShape form = (RShape)validation;
+					clampDims(form);
+					
+					if (woType == 1f) {
+						// Add a fixture with the given name and shape
+						wo = new Fixture(name, form);
+						
 					} else {
-						shape = new ComplexShape(srcFile, fill);
+						// Add a part with the given name and shape
+						wo = new Part(name, form);
 					}
-
-					wldObj = new Fixture(name, shape);
-					break;
-				default:
+					
+					parent.addWorldObject(wo);
+					return wo;
 				}
 			}
-			
-			if (wldObj == null) {
-				Fields.setMessage("Missing field");
-			}
-
-		} catch (NullPointerException NPEx) {
-			Fields.setMessage("Missing field");
-			wldObj = null;
-
-		} catch (ClassCastException CCEx) {
-			Fields.setMessage("Invalid field");
-			wldObj = null;
-
-		} catch (IndexOutOfBoundsException IOOBEx) {
-			Fields.setMessage("Missing field");
-			wldObj = null;
-			
-		} catch (IllegalArgumentException IAEx) {
-			Fields.setMessage(IAEx.getMessage());
-			wldObj = null;
 		}
 		
-		if (wldObj != null) {
-			clampDims(wldObj.getModel());
-		}
-
-		return wldObj;
+		return null;
 	}
 	
 	/**
@@ -2573,8 +2466,6 @@ public class WGUI implements ControlListener {
 			PFont lblFont) {
 		
 		MySlider s = new MySlider(manager, name, inputType);
-		s.getCaptionLabel().set(lbl).setFont(lblFont);
-		s.getValueLabel().setFont(lblFont);
 		
 		s.setColorValue(Fields.B_TEXT_C)
 		.setColorLabel(Fields.F_TEXT_C)
@@ -2585,6 +2476,9 @@ public class WGUI implements ControlListener {
 		.setDefaultValue(def)
 		.moveTo(parent)
 		.setSize(wdh, hgt);
+		
+		s.getCaptionLabel().set(lbl).setFont(lblFont);
+		s.getValueLabel().setFont(lblFont);
 		
 		return s;
 	}
@@ -2621,8 +2515,6 @@ public class WGUI implements ControlListener {
 			int bgColor, int fgColor, PFont lblFont, int inputType) {
 		
 		MySlider s = new MySlider(manager, name, inputType);
-		s.getCaptionLabel().set(lbl).setFont(lblFont);
-		s.getValueLabel().setFont(lblFont);
 		
 		s.setColorValue(valColor)
 		.setColorLabel(Fields.F_TEXT_C)
@@ -2635,6 +2527,9 @@ public class WGUI implements ControlListener {
 		.setSize(wdh, hgt)
 		.setScrollSensitivity(scrollSensitivity)
 		.moveTo(parent);
+		
+		s.getCaptionLabel().set(lbl).setFont(lblFont);
+		s.getValueLabel().setFont(lblFont);
 		
 		return s;
 	}
@@ -2782,13 +2677,13 @@ public class WGUI implements ControlListener {
 	private MyTextfield addTextfield(String name, Group parent, int wdh,
 			int hgt, PFont lblFont, KeyCodeMap keys) {
 
-		MyTextfield t = new MyTextfield(manager, name, 0, 0, wdh, hgt,
-				Fields.ITYPE_TRANSIENT);
+		MyTextfield t = new MyTextfield(manager, name, Fields.ITYPE_TRANSIENT);
 		t.setColor(Fields.F_TEXT_C)
 		.setColorCursor(Fields.F_CURSOR_C)
 		.setColorActive(Fields.F_CURSOR_C)
 		.setColorBackground(Fields.F_BG_C)
 		.setColorForeground(Fields.F_FG_C)
+		.setSize(wdh, hgt)
 		.moveTo(parent)
 		.setFont(lblFont)
 		.setBehavior(new KeyDownBehavior(keys));
@@ -2871,13 +2766,13 @@ public class WGUI implements ControlListener {
 	 * objects. If any of the input was ignored, then its corresponding array
 	 * element will be null.
 	 * 
-	 * @return a 3-element array: [length, height, width], or null
+	 * @return a 3-element array: [length, height, width]
 	 */
 	private Float[] getBoxDimensions() {
+		// null values represent an uninitialized field
+		Float[] dimensions = new Float[] { null, null, null };
+					
 		try {
-			// null values represent an uninitialized field
-			final Float[] dimensions = new Float[] { null, null, null };
-
 			// Pull from the dim fields
 			String lenField = getDimText(DimType.LENGTH),
 					hgtField = getDimText(DimType.HEIGHT),
@@ -2898,16 +2793,12 @@ public class WGUI implements ControlListener {
 				dimensions[2] = Float.parseFloat(wdhField);
 			}
 
-			return dimensions;
+			
 
-		} catch (NumberFormatException NFEx) {
-			Fields.setMessage(NFEx.getMessage());
-			return null;
-
-		} catch (NullPointerException NPEx) {
-			Fields.setMessage("All dimension fields must have a value");
-			return null;
-		}
+		} catch (NumberFormatException NFEx) {}
+		catch (NullPointerException NPEx) {}
+		
+		return dimensions;
 	}
 	
 	/**
@@ -2983,13 +2874,13 @@ public class WGUI implements ControlListener {
 	 * processed input returned contains two Float objects. If any of the
 	 * input was ignored, then its corresponding array element will be null.
 	 * 
-	 * @return a 3-element array: [radius, height], or null
+	 * @return a 3-element array: [radius, height]
 	 */
 	private Float[] getCylinderDimensions() {
+		// null values represent an uninitialized field
+		Float[] dimensions = new Float[] { null, null };
+					
 		try {
-			// null values represent an uninitialized field
-			final Float[] dimensions = new Float[] { null, null };
-
 			// Pull from the dim fields
 			String radField = getDimText(DimType.RADIUS),
 					hgtField = getDimText(DimType.HEIGHT);
@@ -3004,16 +2895,10 @@ public class WGUI implements ControlListener {
 				dimensions[1] = Float.parseFloat(hgtField);
 			}
 
-			return dimensions;
-
-		} catch (NumberFormatException NFEx) {
-			Fields.setMessage(NFEx.getMessage());
-			return null;
-
-		} catch (NullPointerException NPEx) {
-			Fields.setMessage("All dimension fields must have a value");
-			return null;
-		}
+		} catch (NumberFormatException NFEx) {}
+		catch (NullPointerException NPEx) {}
+		
+		return dimensions;
 	}
 	
 	/**
@@ -3090,10 +2975,10 @@ public class WGUI implements ControlListener {
 	 * @return a 3-element array: [scale], or null
 	 */
 	private Float[] getModelDimensions() {
+		// null values represent an uninitialized field
+		Float[] dimensions = new Float[] { null };
+		
 		try {
-			// null values represent an uninitialized field
-			final Float[] dimensions = new Float[] { null };
-
 			String sclField;
 			// Pull from the Dim fields
 			sclField = getDimText(DimType.SCALE);
@@ -3103,16 +2988,10 @@ public class WGUI implements ControlListener {
 				dimensions[0] = Float.parseFloat(sclField);
 			}
 
-			return dimensions;
-
-		} catch (NumberFormatException NFEx) {
-			Fields.setMessage("The scale must be a real number");
-			return null;
-
-		} catch (NullPointerException NPEx) {
-			Fields.setMessage("The scale must be a real number");
-			return null;
-		}
+		} catch (NumberFormatException NFEx) {}
+		catch (NullPointerException NPEx) {}
+		
+		return dimensions;
 	}
 
 	/**
@@ -3743,11 +3622,8 @@ public class WGUI implements ControlListener {
 	 * Updates the positions of all the contents of the world object editing window.
 	 */
 	private void updateEditWindowContentPositions() {
-		updateDimLblsAndFields();
-		getButton(WGUI_Buttons.ObjClearFields).hide();
-		
 		WorldObject wo = getSelectedWO();
-		boolean isPart = wo instanceof Part;
+		getButton(WGUI_Buttons.ObjClearFields).hide();
 		
 		// Object list dropdown and label
 		int[] relPos = new int[] { winMargin, winMargin };
@@ -3763,209 +3639,221 @@ public class WGUI implements ControlListener {
 		MyRadioButton rb = getRadioButton("EditTab");
 		c = rb.setPosition(relPos[0], relPos[1]);
 		
-		float val = rb.getValue();
-		
-		if (val == 0f) {
-			sharedElements.hide();
-			editWOPos.show();
+		if (wo == null) {
+			editWOPos.hide();
 			editWOOther.hide();
-			
-			if (isPart) {
-				relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-				c = getTextArea("RefLbl").setPosition(relPos[0], relPos[1]).show();
-		
-				relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
-				getDropdown("Fixture").setPosition(relPos[0], relPos[1]).show();
-			
-			} else {
-				getTextArea("RefLbl").hide();
-				getDropdown("Fixture").hide();
-			}
-			
-			// Orientation column labels
-			relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-			c = getTextArea("Blank").setPosition(relPos[0], relPos[1]);
-
-			relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
-			c0 = getTextArea("Current").setPosition(relPos[0], relPos[1]);
-
-			if (isPart) {
-				relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
-				getTextArea("Default").setPosition(relPos[0], relPos[1]).show();
-
-			} else {
-				// Only show them for parts
-				getTextArea("Default").hide();
-			}
-
-			// X label and fields
-			relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
-			c = getTextArea("XLbl").setPosition(relPos[0], relPos[1]);
-
-			relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
-			c0 = getTextField("XCur").setPosition(relPos[0], relPos[1]);
-
-			if (isPart) {
-				relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
-				getTextArea("XDef").setPosition(relPos[0], relPos[1]).show();
-
-			} else {
-				getTextArea("XDef").hide();
-			}
-
-			// Y label and fields
-			relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
-			c = getTextArea("YLbl").setPosition(relPos[0], relPos[1]);
-
-			relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
-			c0 = getTextField("YCur").setPosition(relPos[0], relPos[1]);
-
-			if (isPart) {
-				relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
-				getTextArea("YDef").setPosition(relPos[0], relPos[1]).show();
-
-			} else {
-				getTextArea("YDef").hide();
-			}
-
-			// Z label and fields
-			relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
-			c = getTextArea("ZLbl").setPosition(relPos[0], relPos[1]);;
-
-			relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
-			c0 = getTextField("ZCur").setPosition(relPos[0], relPos[1]);
-
-			if (isPart) {
-				relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
-				getTextArea("ZDef").setPosition(relPos[0], relPos[1]).show();
-
-			} else {
-				getTextArea("ZDef").hide();
-			}
-
-			// W label and fields
-			relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
-			c = getTextArea("WLbl").setPosition(relPos[0], relPos[1]);
-
-			relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
-			c0 = getTextField("WCur").setPosition(relPos[0], relPos[1]);
-
-			if (isPart) {
-				relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
-				getTextArea("WDef").setPosition(relPos[0], relPos[1]).show();
-
-			} else {
-				getTextArea("WDef").hide();
-			}
-
-			// P label and fields
-			relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
-			c = getTextArea("PLbl").setPosition(relPos[0], relPos[1]);
-
-			relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
-			c0 = getTextField("PCur").setPosition(relPos[0], relPos[1]);
-
-			if (isPart) {
-				relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
-				getTextArea("PDef").setPosition(relPos[0], relPos[1]).show();
-
-			} else {
-				getTextArea("PDef").hide();
-			}
-
-			// R label and fields
-			relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
-			c = getTextArea("RLbl").setPosition(relPos[0], relPos[1]);
-
-			relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
-			c0 = getTextField("RCur").setPosition(relPos[0], relPos[1]);
-
-			if (isPart) {
-				relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
-				getTextArea("RDef").setPosition(relPos[0], relPos[1]).show();
-
-			} else {
-				getTextArea("RDef").hide();
-			}
-
-			// Move to current button
-			relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-			c = getButton(WGUI_Buttons.ObjMoveToCur).setPosition(relPos[0], relPos[1]);
-
-			if (isPart) {
-				// Update default button
-				relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
-				getButton(WGUI_Buttons.ObjSetDefault).setPosition(relPos[0], relPos[1]).show();
-
-				// Move to default button
-				relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-				c0 = getButton(WGUI_Buttons.ObjMoveToDefault).setPosition(relPos[0], relPos[1]).show();
-
-				// Restore Defaults button
-				relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-				c = getButton(WGUI_Buttons.ObjResetDefault).setPosition(relPos[0], relPos[1]).show();
-
-			} else {
-				getButton(WGUI_Buttons.ObjSetDefault).hide();
-				getButton(WGUI_Buttons.ObjMoveToDefault).hide();
-
-				// Restore Defaults button
-				relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-				c = getButton(WGUI_Buttons.ObjResetDefault).setPosition(relPos[0], relPos[1]).show();
-			}
+			sharedElements.hide();
 			
 		} else {
-			sharedElements.show();
-			editWOPos.hide();
+			boolean isPart = wo instanceof Part;
+			float val = rb.getValue();
+			
+			editWOPos.show();
 			editWOOther.show();
+			updateDimLblsAndFields();
 			
-			// Dimension label and fields
-			relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-			relPos = updateDimLblAndFieldPositions(relPos[0], relPos[1]);
+			if (val == 0f) {
+				sharedElements.hide();
+				editWOPos.show();
+				editWOOther.hide();
+				
+				if (isPart) {
+					relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+					c = getTextArea("RefLbl").setPosition(relPos[0], relPos[1]).show();
 			
-			c0 = getButton(WGUI_Buttons.ObjConfirmDims).setPosition(relPos[0], relPos[1]);
-			
-			// Fill color label and dropdown
-			relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-			c0 = getTextArea("WOFillLbl").setPosition(relPos[0], relPos[1] + 5);
-
-			relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, winMargin);
-			c = getSlider("WOFillR").setPosition(relPos[0], relPos[1]);
-			
-			relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
-			c = getSlider("WOFillG").setPosition(relPos[0], relPos[1]);
-			
-			relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
-			c = getSlider("WOFillB").setPosition(relPos[0], relPos[1]);
-
-			if (wo != null && wo.getModel() instanceof ComplexShape) {
-				// No stroke color for Model Shapes
-				getTextArea("WOOutlineLbl").hide();
-				getSlider("WOOutlineR").hide();
-				getSlider("WOOutlineG").hide();
-				getSlider("WOOutlineB").hide();
-
+					relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
+					getDropdown("Fixture").setPosition(relPos[0], relPos[1]).show();
+				
+				} else {
+					getTextArea("RefLbl").hide();
+					getDropdown("Fixture").hide();
+				}
+				
+				// Orientation column labels
+				relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+				c = getTextArea("Blank").setPosition(relPos[0], relPos[1]);
+	
+				relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
+				c0 = getTextArea("Current").setPosition(relPos[0], relPos[1]);
+	
+				if (isPart) {
+					relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
+					getTextArea("Default").setPosition(relPos[0], relPos[1]).show();
+	
+				} else {
+					// Only show them for parts
+					getTextArea("Default").hide();
+				}
+	
+				// X label and fields
+				relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
+				c = getTextArea("XLbl").setPosition(relPos[0], relPos[1]);
+	
+				relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
+				c0 = getTextField("XCur").setPosition(relPos[0], relPos[1]);
+	
+				if (isPart) {
+					relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
+					getTextArea("XDef").setPosition(relPos[0], relPos[1]).show();
+	
+				} else {
+					getTextArea("XDef").hide();
+				}
+	
+				// Y label and fields
+				relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
+				c = getTextArea("YLbl").setPosition(relPos[0], relPos[1]);
+	
+				relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
+				c0 = getTextField("YCur").setPosition(relPos[0], relPos[1]);
+	
+				if (isPart) {
+					relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
+					getTextArea("YDef").setPosition(relPos[0], relPos[1]).show();
+	
+				} else {
+					getTextArea("YDef").hide();
+				}
+	
+				// Z label and fields
+				relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
+				c = getTextArea("ZLbl").setPosition(relPos[0], relPos[1]);;
+	
+				relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
+				c0 = getTextField("ZCur").setPosition(relPos[0], relPos[1]);
+	
+				if (isPart) {
+					relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
+					getTextArea("ZDef").setPosition(relPos[0], relPos[1]).show();
+	
+				} else {
+					getTextArea("ZDef").hide();
+				}
+	
+				// W label and fields
+				relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
+				c = getTextArea("WLbl").setPosition(relPos[0], relPos[1]);
+	
+				relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
+				c0 = getTextField("WCur").setPosition(relPos[0], relPos[1]);
+	
+				if (isPart) {
+					relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
+					getTextArea("WDef").setPosition(relPos[0], relPos[1]).show();
+	
+				} else {
+					getTextArea("WDef").hide();
+				}
+	
+				// P label and fields
+				relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
+				c = getTextArea("PLbl").setPosition(relPos[0], relPos[1]);
+	
+				relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
+				c0 = getTextField("PCur").setPosition(relPos[0], relPos[1]);
+	
+				if (isPart) {
+					relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
+					getTextArea("PDef").setPosition(relPos[0], relPos[1]).show();
+	
+				} else {
+					getTextArea("PDef").hide();
+				}
+	
+				// R label and fields
+				relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
+				c = getTextArea("RLbl").setPosition(relPos[0], relPos[1]);
+	
+				relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
+				c0 = getTextField("RCur").setPosition(relPos[0], relPos[1]);
+	
+				if (isPart) {
+					relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
+					getTextArea("RDef").setPosition(relPos[0], relPos[1]).show();
+	
+				} else {
+					getTextArea("RDef").hide();
+				}
+	
+				// Move to current button
+				relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+				c = getButton(WGUI_Buttons.ObjMoveToCur).setPosition(relPos[0], relPos[1]);
+	
+				if (isPart) {
+					// Update default button
+					relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
+					getButton(WGUI_Buttons.ObjSetDefault).setPosition(relPos[0], relPos[1]).show();
+	
+					// Move to default button
+					relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+					c0 = getButton(WGUI_Buttons.ObjMoveToDefault).setPosition(relPos[0], relPos[1]).show();
+	
+					// Restore Defaults button
+					relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+					c = getButton(WGUI_Buttons.ObjResetDefault).setPosition(relPos[0], relPos[1]).show();
+	
+				} else {
+					getButton(WGUI_Buttons.ObjSetDefault).hide();
+					getButton(WGUI_Buttons.ObjMoveToDefault).hide();
+	
+					// Restore Defaults button
+					relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+					c = getButton(WGUI_Buttons.ObjResetDefault).setPosition(relPos[0], relPos[1]).show();
+				}
+				
 			} else {
-				// Outline color labels and sliders
-				relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, 2 * distFieldToFieldX + sButtonWidth + 40, 0);
-				c0 = getTextArea("WOOutlineLbl").setPosition(relPos[0], relPos[1]).show();
+				sharedElements.show();
+				editWOPos.hide();
+				editWOOther.show();
 				
-				relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
-				getTextArea("WOOutlineSmp").setPosition(relPos[0], relPos[1]).show();
+				// Dimension label and fields
+				relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+				relPos = updateDimLblAndFieldPositions(relPos[0], relPos[1]);
 				
+				c0 = getButton(WGUI_Buttons.ObjConfirmDims).setPosition(relPos[0], relPos[1]);
+				
+				// Fill color label and dropdown
+				relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+				c0 = getTextArea("WOFillLbl").setPosition(relPos[0], relPos[1] + 5);
+	
 				relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, winMargin);
-				c0 = getSlider("WOOutlineR").setPosition(relPos[0], relPos[1]).show();
+				c = getSlider("WOFillR").setPosition(relPos[0], relPos[1]);
 				
-				relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, winMargin);
-				c0 = getSlider("WOOutlineG").setPosition(relPos[0], relPos[1]).show();
+				relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
+				c = getSlider("WOFillG").setPosition(relPos[0], relPos[1]);
 				
-				relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, winMargin);
-				getSlider("WOOutlineB").setPosition(relPos[0], relPos[1]).show();
+				relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
+				c = getSlider("WOFillB").setPosition(relPos[0], relPos[1]);
+	
+				if (wo != null && wo.getModel() instanceof ComplexShape) {
+					// No stroke color for Model Shapes
+					getTextArea("WOOutlineLbl").hide();
+					getSlider("WOOutlineR").hide();
+					getSlider("WOOutlineG").hide();
+					getSlider("WOOutlineB").hide();
+	
+				} else {
+					// Outline color labels and sliders
+					relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, 2 * distFieldToFieldX + sButtonWidth + 40, 0);
+					c0 = getTextArea("WOOutlineLbl").setPosition(relPos[0], relPos[1]).show();
+					
+					relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
+					getTextArea("WOOutlineSmp").setPosition(relPos[0], relPos[1]).show();
+					
+					relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, winMargin);
+					c0 = getSlider("WOOutlineR").setPosition(relPos[0], relPos[1]).show();
+					
+					relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, winMargin);
+					c0 = getSlider("WOOutlineG").setPosition(relPos[0], relPos[1]).show();
+					
+					relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, winMargin);
+					getSlider("WOOutlineB").setPosition(relPos[0], relPos[1]).show();
+				}
+				
+				// Delete button
+				relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+				c = getButton(WGUI_Buttons.ObjDelete).setPosition(winMargin, relPos[1]);
 			}
-			
-			// Delete button
-			relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-			c = getButton(WGUI_Buttons.ObjDelete).setPosition(winMargin, relPos[1]);
 		}
 
 		// Update window background display
@@ -4178,7 +4066,10 @@ public class WGUI implements ControlListener {
 		
 		updateAndDrawUI();
 	}
-
+	
+	/**
+	 * TODO comment this
+	 */
 	private void updateWindowTabs() {
 		windowTabs.clear();
 		windowTabs.setItems(WGUI.tabs);
@@ -4190,5 +4081,67 @@ public class WGUI implements ControlListener {
 		if(!getButton(WGUI_Buttons.CamToggleActive).isOn()) {
 			windowTabs.removeItem("CAMERA");
 		}
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param shapeID
+	 * @param fill
+	 * @param stroke
+	 * @return
+	 */
+	private Object validateShapeInput(float shapeID, int fill, int stroke) {
+		
+		if (shapeID == 0f) {
+			// Validate the dimensions for a box
+			Float[] boxDims = getBoxDimensions();
+			
+			if (boxDims[0] == null) {
+				return "A box's length must be a positive real number";
+				
+			} else if (boxDims[1] == null) {
+				return "A box's height must be a positive real number";
+				
+			} else if (boxDims[2] == null) {
+				return "A box's width must be a positive real number";
+				
+			} else {
+				return new RBox(fill, stroke, boxDims[0].floatValue(),
+						boxDims[1].floatValue(), boxDims[2].floatValue());
+			}
+			
+		} else if (shapeID == 1f) {
+			// Validate the dimensions for a cylinder
+			Float[] cynlinderDims = getCylinderDimensions();
+			
+			if (cynlinderDims[0] == null) {
+				return "A cylinder's radius must be a positive real number";
+				
+			} else if (cynlinderDims[1] == null) {
+				return "A cylinder's height must be a positive real number";
+				
+			} else {
+				return new RCylinder(fill, stroke, cynlinderDims[0].floatValue(),
+						cynlinderDims[1].floatValue());
+			}
+			
+		} else if (shapeID == 2f) {
+			// Validate the dimensions for a complex shape
+			Float[] complexDims = getModelDimensions();
+			String file = getShapeSourceFile();
+			
+			if (complexDims[0] == null) {
+				return "A complex shape's scale must be a positive real number";
+				
+			} else if (file == null) {
+				return "A model file must be selected for a complex shape";
+				
+			} else {
+				return new ComplexShape(file, fill, complexDims[0]);
+			}
+		}
+		
+		return null;
 	}
 }

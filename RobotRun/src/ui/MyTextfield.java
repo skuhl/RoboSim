@@ -19,16 +19,7 @@ public class MyTextfield extends Textfield implements UIInputElement {
 	private int inputType;
 	
 	public MyTextfield(ControlP5 theControlP5, String theName, int inputType) {
-		this(theControlP5, theName, 0, 0, 199, 19, inputType);
-	}
-	
-	public MyTextfield(ControlP5 theControlP5, String theName, int theX,
-			int theY, int theWidth, int theHeight, int inputType) {
-		
-		super( theControlP5, theControlP5.getDefaultTab(), theName, "", theX,
-				theY, theWidth, theHeight);
-		
-		theControlP5.register(theControlP5.papplet, theName, this);
+		super(theControlP5, theName);
 		this.inputType = inputType;
 	}
 	
@@ -157,6 +148,7 @@ public class MyTextfield extends Textfield implements UIInputElement {
 	 * @return	The draw width of the given string
 	 */
 	private int getTextWidthFor(String text) {
+		
 		return ControlFont.getWidthFor(text, _myValueLabel, buffer);
 	}
 	

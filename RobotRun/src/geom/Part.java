@@ -24,45 +24,28 @@ public class Part extends WorldObject {
 	protected CoordinateSystem defaultOrientation;
 	private BoundingBox absOBB;
 	private Fixture reference;
-
+	
 	/**
-	 * Define a complex object as a part.
+	 * TODO comment this
+	 * 
+	 * @param name
+	 * @param form
 	 */
-	public Part(String n, ComplexShape model) {
-		super(n, model);
-		absOBB = new BoundingBox(model.getDim(DimType.LENGTH),
-								 model.getDim(DimType.HEIGHT),
-								 model.getDim(DimType.WIDTH));
-		defaultOrientation = localOrientation.clone();
-		updateOBBDims();
-	}
+	public Part(String name, RShape form) {
+		super(name, form);
+		
+		if (form instanceof RCylinder) {
+			absOBB = new BoundingBox(form.getDim(DimType.RADIUS),
+									form.getDim(DimType.RADIUS),
+									form.getDim(DimType.HEIGHT));
+			
+		} else {
+			absOBB = new BoundingBox(form.getDim(DimType.LENGTH),
+					form.getDim(DimType.HEIGHT),
+					form.getDim(DimType.WIDTH));
 
-	/**
-	 * Create a cube object with the given colors and dimension
-	 */
-	public Part(String n, int fill, int strokeVal, float edgeLen) {
-		super(n, new RBox(fill, strokeVal, edgeLen));
-		absOBB = new BoundingBox(edgeLen);
-		defaultOrientation = localOrientation.clone();
-		updateOBBDims();
-	}
-
-	/**
-	 * Creates a cylinder objects with the given colors and dimensions.
-	 */
-	public Part(String n, int fill, int strokeVal, float rad, float hgt) {
-		super(n, new RCylinder(fill, strokeVal, rad, hgt));
-		absOBB = new BoundingBox(rad, rad, hgt);
-		defaultOrientation = localOrientation.clone();
-		updateOBBDims();
-	}
-
-	/**
-	 * Create a box object with the given colors and dimensions
-	 */
-	public Part(String n, int fill, int strokeVal, float len, float hgt, float wdh) {
-		super(n, new RBox(fill, strokeVal, len, hgt, wdh));
-		absOBB = new BoundingBox(len, hgt, wdh);
+		}
+		
 		defaultOrientation = localOrientation.clone();
 		updateOBBDims();
 	}
