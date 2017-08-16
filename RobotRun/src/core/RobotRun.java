@@ -1817,9 +1817,11 @@ public class RobotRun extends PApplet {
 			
 			pushMatrix();
 			resetMatrix();
+			
 			// Apply the camera for drawing objects
 			applyCamera(camera);
 			renderScene();
+			
 			// Update jog buttons
 			int[] jogMotion = getActiveRobot().getJogMotion();
 			
@@ -2082,34 +2084,7 @@ public class RobotRun extends PApplet {
 		if (UI != null) {
 			
 			if (ctrlDown) {
-				// Pendant function key shortcuts
-				if (keyCode == KeyEvent.VK_1) {
-					if (UI.isPendantActive()) {
-						button_F1();
-					}
-					
-				} else if (keyCode == KeyEvent.VK_2) {
-					if (UI.isPendantActive()) {
-						button_F2();
-					}
-					
-				} else if (keyCode == KeyEvent.VK_3) {
-					if (UI.isPendantActive()) {
-						button_F3();
-					}
-					
-				} else if (keyCode == KeyEvent.VK_4) {
-					if (UI.isPendantActive()) {
-						button_F4();
-					}
-					
-				} else if (keyCode == KeyEvent.VK_5) {
-					if (UI.isPendantActive()) {
-						button_F5();
-					}
-					
-				// General key functions
-				} else if (keyCode == KeyEvent.VK_D) {
+				if (keyCode == KeyEvent.VK_D) {
 					// Debug output
 					Program p = getActiveProg();
 					// Output all of the active program's instruction elements
@@ -2194,7 +2169,23 @@ public class RobotRun extends PApplet {
 				
 				if (UI.isPendantActive()) {
 					// Pendant shortcuts
-					if (keyCode == KeyEvent.VK_ENTER) {
+					// Pendant function key shortcuts
+					if (keyCode == KeyEvent.VK_1) {
+						button_F1();
+					
+					} else if (keyCode == KeyEvent.VK_2) {
+						button_F2();
+
+					} else if (keyCode == KeyEvent.VK_3) {
+						button_F3();
+						
+					} else if (keyCode == KeyEvent.VK_4) {
+						button_F4();
+						
+					} else if (keyCode == KeyEvent.VK_5) {
+						button_F5();
+						
+					} else if (keyCode == KeyEvent.VK_ENTER) {
 						button_enter();
 						
 					} else if (keyCode == KeyEvent.VK_BACK_SPACE) {
