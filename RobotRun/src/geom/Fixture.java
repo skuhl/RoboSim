@@ -29,6 +29,12 @@ public class Fixture extends WorldObject {
 		return new Fixture(getName(), getModel().clone(),
 				localOrientation.clone());
 	}
+	
+	@Override
+	public Fixture clone(String name) {
+		return new Fixture(name, getModel().clone(),
+				localOrientation.clone());
+	}
 
 	/**
 	 * Applies the inverse of this Fixture's Coordinate System's transformation

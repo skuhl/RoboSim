@@ -1333,11 +1333,10 @@ public class RobotRun extends PApplet {
 				Fields.resetMessage();
 				
 				if (!s.isFull()) {
-					WorldObject newObject = UI.createWO(s);//UI.createWorldObject();
+					WorldObject newObject = UI.createWO(s);
 		
 					if (newObject != null) {
 						newObject.setLocalCenter(new PVector(-500f, 0f, 0f));
-						//s.addWorldObject(newObject);
 						DataManagement.saveScenarios(this);
 					}
 					
@@ -1357,26 +1356,19 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Delete button in the edit window
+	 * Edit Window Manage sub-section confirmation button
 	 * 
-	 * Removes the selected world object from the active scenario.
+	 * TODO comment this
 	 */
-	public void button_objDelete() {
+	public void button_objConfirmMgmt() {
 		try {
-			// Delete focused world object and add to the scenario undo stack
-			WorldObject selected = UI.getSelectedWO();
+			Scenario activeScenario = getActiveScenario();
+			WorldObject selectedWO = UI.getSelectedWO();
+			String msg = UI.updateWOMgmt(selectedWO, activeScenario,
+					SCENARIOS);
 			
-			if (selected != null) {
-				updateScenarioUndo(new WOUndoDelete(selected, getActiveScenario()));
-				int ret = getActiveScenario().removeWorldObject( selected );
-				
-				if (ret == 0) {
-					UI.setSelectedWO(null);
-				}
-				
-				Fields.debug("World Object removed: %d\n", ret);
-				
-				DataManagement.saveScenarios(this);
+			if (msg != null) {
+				Fields.setMessage(msg);
 			}
 			
 		} catch (Exception Ex) {

@@ -71,6 +71,14 @@ public class Part extends WorldObject {
 				localOrientation.clone(), defaultOrientation.clone(),
 				reference);
 	}
+	
+	@Override
+	public WorldObject clone(String name) {
+		// The new object's reference still points to the same fixture!
+		return new Part(name, getModel().clone(), getOBBDims().copy(),
+				localOrientation.clone(), defaultOrientation.clone(),
+				reference);
+	}
 
 	/**
 	 * Determines if the given bounding box is colliding

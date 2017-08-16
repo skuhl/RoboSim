@@ -115,6 +115,23 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 
 		return copy;
 	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param name
+	 * @return
+	 */
+	public WorldObject findWOWithName(String name) {
+		for (WorldObject wo : objList) {
+			if (wo.getName().equals(name)) {
+				return wo;
+			}
+		}
+		
+		// No match found
+		return null;
+	}
 
 	public String getName() { return name; }
 

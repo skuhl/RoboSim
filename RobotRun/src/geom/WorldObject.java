@@ -36,6 +36,14 @@ public abstract class WorldObject implements Cloneable {
 	public abstract WorldObject clone();
 	
 	/**
+	 * Creates an independent replica of this object with the given name.
+	 * 
+	 * @param name	The name for the copied object
+	 * @return		The copy of this object
+	 */
+	public abstract WorldObject clone(String name);
+	
+	/**
 	 * Calculates the point of collision between this world object and the
 	 * given ray that is closest to the ray. If no collision exists, then null
 	 * is returned.
