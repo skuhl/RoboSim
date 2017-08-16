@@ -21,7 +21,7 @@ public class ScreenCreateMacro extends ST_ScreenListContents {
 		DataManagement.saveRobotData(r, 8);
 		
 		robotRun.getLastScreen().setContentIdx(r.getMacroList().size() - 1);
-		robotRun.switchScreen(ScreenMode.SET_MACRO_TYPE);
+		robotRun.switchScreen(ScreenMode.SET_MACRO_TYPE, false);
 	}
 
 	@Override

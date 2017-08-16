@@ -115,7 +115,9 @@ public class RoboticArm {
 	private Part heldPart;
 	
 	/**
-	 * Defines the last orientation and position of the robot's tool tip.
+	 * Returns a reference to the transformation matrix, which represents the
+	 * orientation and position of this robot's tooltip that was recorded after
+	 * previously rendering the robot.
 	 */
 	private RMatrix lastTipTMatrix;
 	
@@ -177,9 +179,6 @@ public class RoboticArm {
 	 * @param rid				The ID of this robot, which must be unique
 	 * 							amongst all robots
 	 * @param basePos			The position of the robot's base segment
-	 * @param segmentModels		The list of models for the robot's segment
-	 * @param endEffectorModels	The list of models for the robot's end
-	 * 							effectors
 	 * @param robotTrace		A reference to the trace in the robotRun
 	 * 							application
 	 */
@@ -1286,9 +1285,18 @@ public class RoboticArm {
 		};
 	}
 	
+	/**
+	 * Returns a reference to the transformation matrix, which represents the
+	 * orientation and position of this robot's tooltip that was recorded after
+	 * previously rendering the robot.
+	 * 
+	 * @return	A transformation matrix represent the robot's last tool tip
+	 * 			position and orientation
+	 */
 	public RMatrix getLastTipTMatrix() {
 		return lastTipTMatrix;
 	}
+	
 	
 	public int getLiveSpeed() {
 		return liveSpeed;
@@ -1779,11 +1787,13 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Adds the given set of instructions to the given program, starting at the
+	 * specified index, insertIdx.
 	 * 
-	 * @param p
-	 * @param insertIdx
-	 * @param toInsert
+	 * @param p				The program to which to add the instructions
+	 * @param insertIdx		The index in the program's list of instructions, at
+	 * 						which to starting inserting the given instructions
+	 * @param toInsert		The set of instructions to add to the given program
 	 */
 	public void pasteInstructions(Program p, int insertIdx,
 			ArrayList<Instruction> toInsert) {
@@ -1792,12 +1802,26 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Adds the given set of instructions to the given program, starting at
+	 * the specified index, insertIdx. The options argument defines different
+	 * methods of pasting the given set of instructions into the program:
 	 * 
-	 * @param p
-	 * @param insertIdx
-	 * @param toInsert
-	 * @param options
+	 * CLEAR_POSITION	Resets all the position indices of all pasted motion
+	 * 					instructions
+	 * NEW_POSITION		Defines a new position for each pasted motion
+	 * 					instruction (with a copy of the origin instrucion's
+	 * 					position values)
+	 * REVERSE_MOTION	Reverses the order of the pasted motion instructions
+	 * PASTE_REVERSE	Reverses the the order of all pasted instructions
+	 * 
+	 * These options can be combined with logic operators and are defined in
+	 * the Fields class.
+	 * 
+	 * @param p				The program to which to add the instructions
+	 * @param insertIdx		The index in the program's list of instructions, at
+	 * 						which to starting inserting the given instructions
+	 * @param toInsert		The set of instructions to add to the given program
+	 * @param options		The options to apply to the pasting process
 	 */
 	public void pasteInstructions(Program p, int insertIdx,
 			ArrayList<Instruction> toInsert, int options) {
@@ -2129,6 +2153,11 @@ public class RoboticArm {
 		this.liveSpeed = liveSpeed;
 	}
 	
+	/**
+	 * Updates this robot's macro key-binding set.
+	 * 
+	 * @param usrKeyBinds	The new set of macro key-binding for this robot
+	 */
 	public void setMacroBindings(Macro[] usrKeyBinds) {
 		macroKeyBinds = usrKeyBinds;
 	}
@@ -2482,10 +2511,28 @@ public class RoboticArm {
 		throw new NullPointerException("arg, newPt, cannot be null for updateMInstPosition()!");
 	}
 	
+	/**
+	 * Redefines this robot's motion as rotational interpolation where the
+	 * target orientation is defined by the given joint angles and the speed is
+	 * defined by this robot's current live speed.
+	 *  
+	 * @param jointAngles	The six joint angles defining the robot's target
+	 * 						orientation
+	 */
 	public void updateMotion(float[] jointAngles) {
 		updateMotion(jointAngles, liveSpeed / 100f);
 	}
 	
+	/**
+	 * Redefines this robot's motion as rotational interpolation where the
+	 * target orientation is defined by the given joint angles and the motion
+	 * speed is defined by the given speed value.
+	 * 
+	 * @param jointAngles	The six joint angles defining the robot's target
+	 * 						orientation
+	 * @param speed			The speed for the rotational interpolation (between
+	 * 						0.0 and 1.0)
+	 */
 	public void updateMotion(float[] jointAngles, float speed) {
 		if (motion instanceof JointInterpolation) {
 			((JointInterpolation)motion).setupRotationalInterpolation(this,
@@ -2496,10 +2543,26 @@ public class RoboticArm {
 		}
 	}
 	
+	/**
+	 * Redefines this robot's motion as linear interpolation where target
+	 * position and orientation of the robot's tool tip are defined by the
+	 * given point. The motion speed is defined by the robot's current
+	 * liveSpeed value.
+	 * 
+	 * @param tgt	The target point for the robot's tool tip
+	 */
 	public void updateMotion(Point tgt) {
 		updateMotion(tgt, liveSpeed / 100f);
 	}
 	
+	/**
+	 * Redefines this robot's motion as linear interpolation where the target
+	 * position and orientation of the robot's tool tip are defined by the
+	 * given point.
+	 * 
+	 * @param tgt		The target point for the robot's tool tip
+	 * @param speed		The speed of the motion (between 0.0 and 1.0)
+	 */
 	public void updateMotion(Point tgt, float speed) {
 		Point start = getToolTipNative();
 		
@@ -2511,6 +2574,17 @@ public class RoboticArm {
 				speed * motorSpeed);
 	}
 	
+	/**
+	 * Redefines this robot's motion as linear interpolation where the target
+	 * position is defined by the first point argument and the intermediate
+	 * point is defined by second point. The robot will move in the form of an
+	 * arc from its current point, to the intermediate point, and finally to
+	 * the target point.
+	 * 
+	 * @param tgt	The final point for the robot's tool tip
+	 * @param inter	The intermediate point in the circular motion
+	 * @param speed	The speed for the motion (between 0.0 and 1.0)
+	 */
 	public void updateMotion(Point tgt, Point inter, float speed) {
 		Point start = getToolTipNative();
 		
@@ -2522,6 +2596,19 @@ public class RoboticArm {
 				speed * motorSpeed);
 	}
 	
+	/**
+	 * Redefines this robot's motion linear interpolation where the target
+	 * position and orientation are defined by the first point, the second
+	 * point, and the argument, p, the percent of termination. With this motion
+	 * type, the robot approaches the target position. However, the closer p is
+	 * to 1, the greater the deviation from the target position.
+	 * 
+	 * @param tgt	The target point
+	 * @param next	The next point
+	 * @param speed	The speed of the motion
+	 * @param p		The percentage of termination with respect to the target
+	 * 				point
+	 */
 	public void updateMotion(Point tgt, Point next, float speed, float p) {
 		Point start = getToolTipNative();
 		
@@ -2534,8 +2621,8 @@ public class RoboticArm {
 	}
 
 	/**
-	 * Updates the program execution for this robot and the position of the
-	 * robot for linear or rotation interpolation.
+	 * Updates the robot's position and orientation as well as the robot's
+	 * bounding boxes based on its defined motion.
 	 */
 	public void updateRobot() {	
 		if (inMotion()) {
@@ -2623,7 +2710,7 @@ public class RoboticArm {
 	 * with respect to the world frame. 
 	 * 
 	 * @param jointAngles	The joint angles used to compute the robot's face
-	 * 						plate position and orientatton
+	 * 						plate position and orientation
 	 * @param tFrame		The frame, which defines the tool tip offset
 	 * @param uFrame		The coordinate frame, with which the robot's tool
 	 * 						tip position and orientation are defined 

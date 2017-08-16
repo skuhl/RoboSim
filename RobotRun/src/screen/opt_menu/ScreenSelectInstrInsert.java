@@ -17,7 +17,7 @@ public class ScreenSelectInstrInsert extends ST_ScreenOptionsMenu {
 			robotRun.nextScreen(ScreenMode.SELECT_IO_INSTR_REG);
 			break;
 		case 1: // Offset/Frames
-			robotRun.nextScreen(ScreenMode.SELECT_FRAME_INSTR_TYPE);
+			robotRun.switchScreen(ScreenMode.SELECT_FRAME_INSTR_TYPE, true);
 			break;
 		case 2: // Register
 			robotRun.nextScreen(ScreenMode.SELECT_REG_STMT);
@@ -31,7 +31,7 @@ public class ScreenSelectInstrInsert extends ST_ScreenOptionsMenu {
 		case 5: // Call
 			robotRun.newCallInstruction();
 			robotRun.editIdx = robotRun.getActiveRobot().RID;
-			robotRun.switchScreen(ScreenMode.SET_CALL_PROG);
+			robotRun.switchScreen(ScreenMode.SET_CALL_PROG, false);
 			break;
 		case 6: // RobotCall
 			robotRun.newRobotCallInstruction();
@@ -39,7 +39,7 @@ public class ScreenSelectInstrInsert extends ST_ScreenOptionsMenu {
 			
 			if (inactive.numOfPrograms() > 0) {
 				robotRun.editIdx = robotRun.getInactiveRobot().RID;
-				robotRun.switchScreen(ScreenMode.SET_CALL_PROG);
+				robotRun.switchScreen(ScreenMode.SET_CALL_PROG, false);
 				
 			} else {
 				// No programs exist in the inactive robot

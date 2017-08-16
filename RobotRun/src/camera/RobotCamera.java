@@ -141,7 +141,8 @@ public class RobotCamera {
 			
 			snapshot.popMatrix();
 			
-			RRay ray = new RRay(rayOrigin, pointOnRay, camClipFar - camClipNear, Fields.BLACK);
+			float rayLen = Math.abs(PVector.dist(pointOnRay, rayOrigin));
+			RRay ray = new RRay(rayOrigin, pointOnRay, rayLen, Fields.BLACK);
 			
 			return ray;
 		}
@@ -660,13 +661,6 @@ public class RobotCamera {
 		img.rotateZ(cOrien.z);
 		
 		img.translate(-cPos.x + width / 2f, -cPos.y + width / 2f,  -cPos.z);
-		
-		/*if(tgt instanceof Part && tgt != null) {
-			PVector dims = getAxisDimensions(tgt);
-			PVector pos = ((Part)tgt).getCenter();
-			img.translate(-pos.x + cPos.x, -pos.y + cPos.y, -pos.z + cPos.z - dims.z);
-			//img.scale();
-		}*/
 		
 		Scenario active = appRef.getActiveScenario();
 		if(active != null) {

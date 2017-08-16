@@ -25,18 +25,18 @@ public class ScreenSetBoolExpressionArg extends ST_ScreenEditItem {
 			// set arg to new data reg
 			robotRun.opEdit = new OperandDReg();
 			stmt.setOperand(robotRun.editIdx, robotRun.opEdit);
-			robotRun.switchScreen(ScreenMode.INPUT_DREG_IDX);
+			robotRun.switchScreen(ScreenMode.INPUT_DREG_IDX, false);
 		} else if(options.getLineIdx() == 2) {
 			// set arg to new preg idx
 			robotRun.opEdit = new OperandPRegIdx(new PositionRegister(), 0);
 			stmt.setOperand(robotRun.editIdx, robotRun.opEdit);
-			robotRun.switchScreen(ScreenMode.INPUT_PREG_IDX2);
+			robotRun.switchScreen(ScreenMode.INPUT_PREG_IDX2, false);
 			robotRun.nextScreen(ScreenMode.INPUT_PREG_IDX1);
 		} else if(options.getLineIdx() == 1) {
 			// set arg to new constant
 			robotRun.opEdit = new OperandFloat();
 			stmt.setOperand(robotRun.editIdx, robotRun.opEdit);
-			robotRun.switchScreen(ScreenMode.INPUT_CONST);
+			robotRun.switchScreen(ScreenMode.INPUT_CONST, false);
 		}
 	}
 

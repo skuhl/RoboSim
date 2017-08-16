@@ -13,10 +13,16 @@ import screen.ScreenState;
 public abstract class ST_ScreenTeachPoints extends Screen {
 	
 	/**
-	 * TODO comment this
+	 * Returns the color of a teach point for a tool frame based on the given
+	 * index value:
 	 * 
-	 * @param idx
-	 * @return
+	 * 0-2	Gray	tool tip offset
+	 * 3	Orange	orient origin
+	 * 4	Red		X direction
+	 * 5	Green	Y direction
+	 * 
+	 * @param idx	The index of a teach point for a tool frame
+	 * @return		The color of the point rendered for the given index
 	 */
 	protected static int getPtColorForTool(int idx) {
 		
@@ -41,10 +47,16 @@ public abstract class ST_ScreenTeachPoints extends Screen {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Returns the color of a teach point for a user frame based on the given
+	 * index value:
 	 * 
-	 * @param idx
-	 * @return
+	 * 0	Orange	orient origin
+	 * 1	Red		X direction
+	 * 2	Green	Y direction
+	 * 3	Blue	frame origin
+	 * 
+	 * @param idx	The index of a teach point for a user frame
+	 * @return		The color of the point rendered for the given index
 	 */
 	protected static int getPtColorForUser(int idx) {
 		
@@ -68,6 +80,10 @@ public abstract class ST_ScreenTeachPoints extends Screen {
 		return Fields.BLACK;
 	}
 	
+	/**
+	 * The index of the frame, with respect to the active robot's set of frame,
+	 * being taught.
+	 */
 	protected int frameIdx;
 	
 	public ST_ScreenTeachPoints(ScreenMode m, RobotRun r, int frameIdx) {
@@ -155,16 +171,18 @@ public abstract class ST_ScreenTeachPoints extends Screen {
 	public void actionKeyPress(char key) {}
 	
 	/**
-	 * TODO comment this
+	 * Draws the points for the frame's selected teaching method. The frame's
+	 * teaching method should be defined based on the screen mode.
 	 * 
-	 * @param g
+	 * @param g	The graphics object used to render the teach points
 	 */
 	public abstract void drawTeachPts(PGraphics g);
 	
 	/**
-	 * TODO comment this
+	 * Determines if all the points have been taught to the selected frame for
+	 * the selected teaching method.
 	 * 
-	 * @return
+	 * @return	If the frame has the necessary points to be taught
 	 */
 	public abstract boolean readyToTeach();
 	

@@ -2243,7 +2243,8 @@ public class RobotRun extends PApplet {
 			screens.lastScreen();
 			updatePendantScreen();
 			
-			Fields.debug("\n%s <= %s\n", cur.mode, screens.getActiveScreen().mode);
+			Fields.debug("\n%s: %s <= %s\n", screens,
+					screens.getActiveScreen().mode, cur.mode);
 		}		
 	}
 	
@@ -3031,11 +3032,13 @@ public class RobotRun extends PApplet {
 	 * Removes the current screen from the screen state stack and loads the
 	 * given screen mode.
 	 * 
-	 * @param nextScreen The new screen mode
+	 * @param nextScreen			The new screen mode
+	 * @param ignoreActiveScreen	Whether to completely disregard the active
+	 * 								screen, when transitioning screens
 	 */
-	public void switchScreen(ScreenMode nextScreen) {
+	public void switchScreen(ScreenMode nextScreen, boolean ignoreActiveScreen) {
 		Screen prevScreen = screens.getActiveScreen();
-		screens.switchScreen(nextScreen);
+		screens.switchScreen(nextScreen, ignoreActiveScreen);
 		updatePendantScreen();
 		Fields.resetMessage();
 				

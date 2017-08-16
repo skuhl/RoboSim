@@ -18,8 +18,7 @@ public class ScreenSelectFrameInstrType extends ST_ScreenOptionsMenu {
 			robotRun.newFrameInstruction(Fields.FTYPE_USER);
 		}
 
-		robotRun.lastScreen();
-		robotRun.switchScreen(ScreenMode.SET_FRAME_INSTR_IDX);
+		robotRun.switchScreen(ScreenMode.SET_FRAME_INSTR_IDX, true);
 	}
 
 	@Override

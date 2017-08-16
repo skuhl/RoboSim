@@ -19,7 +19,7 @@ public class ScreenSetMacroType extends ST_ScreenEditItem {
 		Fields.debug("%d\n", idx);
 		if (options.getLineIdx() == 0) {
 			r.getMacro(idx).setManual(false);
-			robotRun.switchScreen(ScreenMode.SET_MACRO_BINDING);
+			robotRun.switchScreen(ScreenMode.SET_MACRO_BINDING, false);
 		} else if (options.getLineIdx() == 1) {
 			r.getMacro(idx).setManual(true);
 			r.getMacro(idx).clearNum();

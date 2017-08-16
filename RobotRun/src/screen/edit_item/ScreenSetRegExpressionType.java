@@ -36,7 +36,7 @@ public class ScreenSetRegExpressionType extends ST_ScreenEditItem {
 				regStmt.setRegister(new PositionRegister());
 			}
 			
-			robotRun.switchScreen(ScreenMode.SET_REG_EXPR_IDX1);
+			robotRun.switchScreen(ScreenMode.SET_REG_EXPR_IDX1, false);
 		}
 	}
 
