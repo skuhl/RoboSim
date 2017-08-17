@@ -1369,6 +1369,9 @@ public class RobotRun extends PApplet {
 			
 			if (msg != null) {
 				Fields.setMessage(msg);
+				
+			} else {
+				Fields.resetMessage();
 			}
 			
 		} catch (Exception Ex) {
@@ -1600,7 +1603,6 @@ public class RobotRun extends PApplet {
 	
 			if (ret > 0) {
 				activeScenario.set( UI.getSelectedScenario() );
-				//UI.setSelectedWO(null);
 				DataManagement.saveScenarios(this);
 	
 			} else if (ret == 0) {
@@ -3495,7 +3497,7 @@ public class RobotRun extends PApplet {
 			ExecType pExec = (singleExec) ? ExecType.EXEC_SINGLE
 					: ExecType.EXEC_FULL;
 			
-			progExec(getActiveRobot().RID, p, instIdx, pExec);	
+			progExec(getActiveRobot().RID, p, instIdx, pExec);
 		}
 	}
 	

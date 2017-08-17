@@ -1088,7 +1088,6 @@ public class WGUI implements ControlListener {
 					WorldObject wo = getSelectedWO();
 					
 					if (wo != null) {
-						Fields.debug("THERE");
 						/* Update the fill color of the selected world object
 						 * based on the fill color slider values */
 						int newFill = getFillColor();
@@ -1975,7 +1974,6 @@ public class WGUI implements ControlListener {
 	
 			} else if (menu == WindowTab.EDIT) {
 				// Edit window
-				Fields.debug("WHERE");
 				updateEditWindowContentPositions();
 	
 			} else if (menu == WindowTab.SCENARIO) {
@@ -4000,7 +3998,7 @@ public class WGUI implements ControlListener {
 					getTextArea("WOTgtSLbl").hide();
 					getDropdown("WOTgtScenario").hide();
 					getTextArea("WORenameLbl").hide();
-					getTextField("WORename").hide();	
+					getTextField("WORename").hide();
 				}
 				
 				// Manage Confirm button
