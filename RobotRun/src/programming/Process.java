@@ -8,7 +8,7 @@ import enums.ExecType;
  * 
  * @author Joshua Hooker
  */
-public class ProgExecution implements Cloneable {
+public class Process implements Cloneable {
 	
 	private int curIdx;
 	private int nextIdx;
@@ -20,7 +20,7 @@ public class ProgExecution implements Cloneable {
 	/**
 	 * Initializes all the fields. Not a valid execution state!
 	 */
-	public ProgExecution() {
+	public Process() {
 		rid = -1;
 		prog = null;
 		type = ExecType.EXEC_FULL;
@@ -39,7 +39,7 @@ public class ProgExecution implements Cloneable {
 	 * @param curIdx
 	 * @param nextIdx
 	 */
-	private ProgExecution(int rid, Program prog, ExecType type, ExecState state,
+	private Process(int rid, Program prog, ExecType type, ExecState state,
 			int curIdx, int nextIdx) {
 		
 		this.prog = prog;
@@ -50,8 +50,8 @@ public class ProgExecution implements Cloneable {
 	}
 	
 	@Override
-	public ProgExecution clone() {
-		return new ProgExecution(rid, prog, type, state, curIdx, nextIdx);
+	public Process clone() {
+		return new Process(rid, prog, type, state, curIdx, nextIdx);
 	}	
 	
 	public int getCurIdx() {

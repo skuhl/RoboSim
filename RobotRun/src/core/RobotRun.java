@@ -45,7 +45,7 @@ import programming.LabelInstruction;
 import programming.Macro;
 import programming.MotionInstruction;
 import programming.PosMotionInst;
-import programming.ProgExecution;
+import programming.Process;
 import programming.Program;
 import programming.RegisterStatement;
 import programming.SelectStatement;
@@ -153,9 +153,9 @@ public class RobotRun extends PApplet {
 	 * Keeps track of a point, so that is can be display in the world frame.
 	 */
 	private Point position;
-	private Stack<ProgExecution> progCallStack;
+	private Stack<Process> progCallStack;
 
-	private ProgExecution progExecState;
+	private Process progExecState;
 	private RobotCamera rCamera;
 	
 	private RecordScreen record;
@@ -2042,7 +2042,7 @@ public class RobotRun extends PApplet {
 		return RMath.getPosition(getGraphics(), x, y, z);
 	}
 	
-	public Stack<ProgExecution> getProgCallStack() {
+	public Stack<Process> getProgCallStack() {
 		return progCallStack;
 	}
 
@@ -3077,7 +3077,7 @@ public class RobotRun extends PApplet {
 		MyPShape.setAppRef(this);
 		
 		keyCodeMap = new KeyCodeMap();
-		progExecState = new ProgExecution();
+		progExecState = new Process();
 		progCallStack = new Stack<>();
 		mInstRobotAt = new HashMap<>();
 		
@@ -4057,7 +4057,7 @@ public class RobotRun extends PApplet {
 					
 					if (!progCallStack.isEmpty()) {
 						// Return to the program state on the top of the call stack
-						ProgExecution prevExec = progCallStack.pop();
+						Process prevExec = progCallStack.pop();
 						RoboticArm r = getRobot(prevExec.getRID());
 						
 						if (r != null) {
