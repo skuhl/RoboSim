@@ -154,7 +154,9 @@ public class Point  {
 		if (posDist > 0.01f) {
 			return false;
 			
-		} else {
+		}
+		/* This doesn't work well ... *
+		else {
 			// Compare orientations
 			RQuaternion diff = RQuaternion.mult(pt.orientation, orientation);
 			float orienDist = diff.magnitude();
@@ -163,6 +165,7 @@ public class Point  {
 				return false;
 			}
 		}
+		/**/
 		
 		return true;
 	}

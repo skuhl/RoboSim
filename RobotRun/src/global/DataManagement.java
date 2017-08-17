@@ -219,6 +219,26 @@ public abstract class DataManagement {
 	}
 	
 	/**
+	 * TODO comment this
+	 * 
+	 * @param robotID
+	 * @param fileName
+	 * @return
+	 */
+	public static boolean removeProgram(int robotID, String fileName) {
+		String filePath = String.format("%srobot%d\\programs\\%s.bin",
+				DataManagement.tmpDirPath, robotID, fileName);
+		File progFile = new File(filePath);
+		
+		if (progFile.exists()) {
+			// Remove the file if it exists
+			return progFile.delete();
+		}
+		
+		return false;
+	}
+	
+	/**
 	 * Removes the save file for the scenario with the given name.
 	 * 
 	 * @param name	The name of the scenario, of which to remove the back file
