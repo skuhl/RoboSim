@@ -68,7 +68,6 @@ import ui.KeyCodeMap;
 import ui.MenuScroll;
 import ui.RecordScreen;
 import undo.WOUndoCurrent;
-import undo.WOUndoDelete;
 import undo.WOUndoState;
 import window.WGUI;
 import window.WGUI_Buttons;
@@ -379,6 +378,7 @@ public class RobotRun extends PApplet {
 			
 			UI.updateCameraListContents();
 			UI.updateUIContentPositions();
+			
 		} catch (Exception Ex) {
 			// Log any errors
 			DataManagement.errLog(Ex);
@@ -1600,6 +1600,7 @@ public class RobotRun extends PApplet {
 	
 			if (ret > 0) {
 				activeScenario.set( UI.getSelectedScenario() );
+				//UI.setSelectedWO(null);
 				DataManagement.saveScenarios(this);
 	
 			} else if (ret == 0) {
@@ -3211,17 +3212,19 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Revert the most recent change to the active scenario
+	 * Revert the most recent change to the active scenario.
 	 */
 	public void undoScenarioEdit() {
-		if (!SCENARIO_UNDO.empty()) {
+		Scenario activeScenario = getActiveScenario();
+		
+		if (activeScenario != null && !SCENARIO_UNDO.empty()) {
 			SCENARIO_UNDO.pop().undo();
 			UI.updateListContents();
 			
 			WorldObject wo = UI.getSelectedWO();
 			
 			if (wo != null) {
-				UI.updateEditWindowFields(wo);
+				UI.updateEditWindowFields(wo, activeScenario);
 				
 				if (wo instanceof Fixture) {
 					for (WorldObject wldObj : getActiveScenario()) {
@@ -3492,7 +3495,7 @@ public class RobotRun extends PApplet {
 			ExecType pExec = (singleExec) ? ExecType.EXEC_SINGLE
 					: ExecType.EXEC_FULL;
 			
-			progExec(getActiveRobot().RID, p, instIdx, pExec);
+			progExec(getActiveRobot().RID, p, instIdx, pExec);	
 		}
 	}
 	

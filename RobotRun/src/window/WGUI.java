@@ -15,7 +15,6 @@ import controlP5.ControllerInterface;
 import controlP5.DropdownList;
 import controlP5.Group;
 import controlP5.Pointer;
-import controlP5.RadioButton;
 import controlP5.Textarea;
 import controlP5.Toggle;
 import core.RobotRun;
@@ -678,29 +677,29 @@ public class WGUI implements ControlListener {
 		addSlider("WOFillR", "Red", sharedElements, fieldWidthMed, fieldHeight, 0f,
 				255f, 0, 10f / 255f, 0f, Fields.BLACK, Fields.color(255, 0, 0),
 				Fields.B_DEFAULT_C, Fields.color(200, 0, 0), Fields.medium,
-				Fields.ITYPE_TRANSIENT);
+				Fields.ITYPE_PERMENANT);
 		addSlider("WOFillG", "Green", sharedElements, fieldWidthMed, fieldHeight, 0f,
 				255f, 0, 10f / 255f, 0f, Fields.BLACK, Fields.color(0, 255, 0),
 				Fields.B_DEFAULT_C, Fields.color(0, 200, 0), Fields.medium,
-				Fields.ITYPE_TRANSIENT);
+				Fields.ITYPE_PERMENANT);
 		addSlider("WOFillB", "Blue", sharedElements, fieldWidthMed, fieldHeight, 0f,
 				255f, 0, 10f / 255f, 0f, Fields.BLACK, Fields.color(0, 0, 255),
 				Fields.B_DEFAULT_C, Fields.color(0, 0, 200), Fields.medium,
-				Fields.ITYPE_TRANSIENT);
+				Fields.ITYPE_PERMENANT);
 		addTextarea("WOFillLbl", "Fill:", sharedElements, mLblWidth, sButtonHeight, Fields.medium);
 		
 		addSlider("WOOutlineR", "Red", sharedElements, fieldWidthMed, fieldHeight,
 				0f, 255f, 0, 10f / 255f, 0f, Fields.BLACK, Fields.color(255, 0, 0),
 				Fields.B_DEFAULT_C, Fields.color(200, 0, 0), Fields.medium,
-				Fields.ITYPE_TRANSIENT);
+				Fields.ITYPE_PERMENANT);
 		addSlider("WOOutlineG", "Green", sharedElements, fieldWidthMed, fieldHeight,
 				0f, 255f, 0, 10f / 256f, 0f, Fields.BLACK, Fields.color(0, 255, 0),
 				Fields.B_DEFAULT_C, Fields.color(0, 200, 0), Fields.medium,
-				Fields.ITYPE_TRANSIENT);
+				Fields.ITYPE_PERMENANT);
 		addSlider("WOOutlineB", "Blue", sharedElements, fieldWidthMed, fieldHeight,
 				0f, 255f, 0, 10f / 256f, 0f, Fields.BLACK, Fields.color(0, 0, 255),
 				Fields.B_DEFAULT_C, Fields.color(0, 0, 200), Fields.medium,
-				Fields.ITYPE_TRANSIENT);
+				Fields.ITYPE_PERMENANT);
 		addTextarea("WOOutlineLbl", "Outline:", sharedElements, mLblWidth, sButtonHeight, Fields.medium);
 
 		addButton(WGUI_Buttons.ObjClearFields, "Clear", sharedElements, mButtonWidth, sButtonHeight, Fields.small);
@@ -737,8 +736,6 @@ public class WGUI implements ControlListener {
 		togNames = new String[] { "PositionOpt", "EditOpt", "MgmtOpt" };
 		togLbls = new String[] { "Position", "Edit", "Manage" };
 		
-		addTextarea("EditTabLbl", "Options:", editWO, mLblWidth, fieldHeight,
-				Fields.medium);
 		MyRadioButton rb = addRadioButton("EditTab", editWO, radioDim, radioDim,
 				Fields.medium, togValues, togNames, togLbls, false,
 				Fields.ITYPE_PERMENANT);
@@ -786,7 +783,10 @@ public class WGUI implements ControlListener {
 		togValues = new float[] { 0f, 1f, 2f };
 		togNames = new String[] { "CopyOpt", "MoveOpt", "DeleteOpt" };
 		togLbls = new String[] { "Copy", "Move", "Delete" };
-
+		
+		addTextarea("EditTabLbl", "Options:", editWOMgmt, mLblWidth,
+				fieldHeight, Fields.medium);
+		
 		rb = addRadioButton("WOMgmt", editWOMgmt, radioDim,
 				radioDim, Fields.medium, togValues, togNames, togLbls,
 				false, Fields.ITYPE_TRANSIENT);
@@ -1003,24 +1003,28 @@ public class WGUI implements ControlListener {
 			if (arg0.isFrom("WO") || arg0.isFrom("Shape") ||
 					arg0.isFrom("EditTab") || arg0.isFrom("ScenarioOpt") ||
 					arg0.isFrom("CamObjects") || arg0.isFrom("WOMgmt")) {
+				
 				/* The selected item in these lists influence the layout of
 				 * the menu */
+				Fields.resetMessage();
 				updateUIContentPositions();
 			}
 
 			if (arg0.isFrom("WO")) {
+				Scenario parent = app.getActiveScenario();
 				WorldObject selectedWO = getSelectedWO();
 				
-				if (selectedWO != null) {
+				if (selectedWO != null && parent != null) {
 					// Update the input fields on the edit menu
-					updateEditWindowFields(selectedWO);
+					updateEditWindowFields(selectedWO, parent);
 				}
 
 			} else if (arg0.isFrom("Fixture")) {
 				WorldObject selectedWO = getSelectedWO();
 				
 				if (menu == WindowTab.EDIT && selectedWO instanceof Part) {
-					// Set the reference of the Part to the currently active fixture
+					/* Set the reference of the Part to the currently active
+					 * fixture */
 					Part p = (Part)selectedWO;
 					Fixture refFixture = (Fixture)getDropdown("Fixture").getSelectedItem();
 
@@ -1044,8 +1048,9 @@ public class WGUI implements ControlListener {
 					MyDropdownList ddl = (MyDropdownList)arg0.getController();
 					r.setActiveEE( (Integer)ddl.getSelectedItem() );
 				}
+				
 			} else if (arg0.isFrom(WGUI_Buttons.CamObjPreview)) {
-				CameraObject o = (CameraObject)getDropdown("CamObjects").getSelectedItem();	
+				CameraObject o = (CameraObject)getDropdown("CamObjects").getSelectedItem();
 				RMatrix mdlOrient = o.getLocalOrientation();
 				Pointer p = getButton(WGUI_Buttons.CamObjPreview).getPointer();
 				int x = p.x();
@@ -1083,6 +1088,7 @@ public class WGUI implements ControlListener {
 					WorldObject wo = getSelectedWO();
 					
 					if (wo != null) {
+						Fields.debug("THERE");
 						/* Update the fill color of the selected world object
 						 * based on the fill color slider values */
 						int newFill = getFillColor();
@@ -1594,10 +1600,11 @@ public class WGUI implements ControlListener {
 				setGroupVisible(editWO, true);
 				setGroupVisible(sharedElements, true);
 				
+				Scenario parent = app.getActiveScenario();
 				WorldObject wo = getSelectedWO();
 				
-				if (wo != null) {
-					updateEditWindowFields(wo);
+				if (wo != null && parent != null) {
+					updateEditWindowFields(wo, parent);
 					
 				} else {
 					clearAllInputFields();
@@ -1736,8 +1743,9 @@ public class WGUI implements ControlListener {
 	 * 
 	 * @param selected	The world object, whose fields will be displayed in the
 	 * 					edit window
+	 * @param parent	The scenario to which the given world object belongs
 	 */
-	public void updateEditWindowFields(WorldObject selected) {
+	public void updateEditWindowFields(WorldObject selected, Scenario parent) {
 		RShape form = selected.getModel();
 		
 		// Update the dimension fields
@@ -1785,6 +1793,11 @@ public class WGUI implements ControlListener {
 		} else {
 			ddl.setValue(0);
 		}
+		
+		/* Update the target scenario and name text field based on the given
+		 * world object and scenario */
+		getDropdown("WOTgtScenario").setItem(parent);
+		getTextField("WORename").setText(selected.getName());
 	}
 
 	/**
@@ -1962,6 +1975,7 @@ public class WGUI implements ControlListener {
 	
 			} else if (menu == WindowTab.EDIT) {
 				// Edit window
+				Fields.debug("WHERE");
 				updateEditWindowContentPositions();
 	
 			} else if (menu == WindowTab.SCENARIO) {
@@ -2213,38 +2227,57 @@ public class WGUI implements ControlListener {
 		if (mgmtOpt == 0f) {
 			// Copy the given world object to the target scenario
 			Scenario tgt = (Scenario)getDropdown("WOTgtScenario").getSelectedItem();
-			WorldObject withSameName = tgt.findWOWithName(selectedWO.getName());
 			
-			if (withSameName == null) {
-				// TODO get name
-				WorldObject copyWO = selectedWO.clone();
-				int ret = tgt.addWorldObject(copyWO);
-				
-				if (ret == 0) {
-					return null;
-					
-				} else if (ret == 2) {
-					return "The target scenario has already reached its capacity";
-				}
+			if (tgt.isFull()) {
+				return "The target scenario has already reached its capacity";
 				
 			} else {
-				return "An object with the given name already exists";
+				String newName = getTextField("WORename").getText();
+				int ret = tgt.validateWOName(newName);
+				
+				if (ret == 1) {
+					return "The world object's name must be made of letters and numbers";
+					
+				} else if (ret == 2) {
+					return "The world object's name must not exceed 16 characters";
+					
+				} else if (ret == 3) {
+					return "A world object with the given name already exists";
+					
+				} else {
+					WorldObject copyWO = selectedWO.clone(newName);
+					tgt.addWorldObject(copyWO);
+					return null;
+				}
 			}
 			
 		} else if (mgmtOpt == 1f) {
 			// Move the given world object to target scenario
 			Scenario tgt = (Scenario)getDropdown("WOTgtScenario").getSelectedItem();
-			WorldObject withSameName = tgt.findWOWithName(selectedWO.getName());
 			
 			if (tgt.isFull()) {
 				return "The target scenario has already reached its capacity";
 				
-			} else if (withSameName != null) {
-				return "An object with the given name already exists";
-				
 			} else {
-				parent.removeWorldObject(selectedWO);
-				tgt.addWorldObject(selectedWO);
+				String newName = getTextField("WORename").getText();
+				int ret = tgt.validateWOName(newName);
+				
+				if (ret == 1) {
+					return "The world object's name must be made of letters and numbers";
+					
+				} else if (ret == 2) {
+					return "The world object's name must not exceed 16 characters";
+					
+				} else if (ret == 3) {
+					return "A world object with the given name already exists";
+					
+				} else {
+					parent.removeWorldObject(selectedWO);
+					selectedWO.setName(newName);
+					tgt.addWorldObject(selectedWO);
+					setSelectedWO(null);
+					return null;
+				}
 			}
 			
 		} else if (mgmtOpt == 2f) {
@@ -3716,9 +3749,7 @@ public class WGUI implements ControlListener {
 				c0 = null;
 		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
 		getDropdown("WO").setPosition(relPos[0], relPos[1]);
-		// Edit tab label and radio buttons
-		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		c = getTextArea("EditTabLbl").setPosition(relPos[0], relPos[1]);
+		// Edit tab radio buttons
 		
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
 		MyRadioButton rb = getRadioButton("EditTab");
@@ -3943,7 +3974,10 @@ public class WGUI implements ControlListener {
 				
 				float mgmtOpt = getRadioButton("WOMgmt").getValue();
 				
-				// Sub option radio buttons
+				// Sub option radio buttons and label
+				relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+				c = getTextArea("EditTabLbl").setPosition(relPos[0], relPos[1]);
+				
 				relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 				c = getRadioButton("WOMgmt").setPosition(relPos[0], relPos[1]);
 				
@@ -3955,13 +3989,6 @@ public class WGUI implements ControlListener {
 					relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
 					getDropdown("WOTgtScenario").setPosition(relPos[0], relPos[1]).show();
 					
-				} else {
-					getTextArea("WOTgtSLbl").hide();
-					getDropdown("WOTgtScenario").hide();
-					
-				}
-				
-				if (mgmtOpt == 1f) {
 					// New world object name
 					relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
 					c = getTextArea("WORenameLbl").setPosition(relPos[0], relPos[1]).show();
@@ -3970,8 +3997,10 @@ public class WGUI implements ControlListener {
 					getTextField("WORename").setPosition(relPos[0], relPos[1]).show();
 					
 				} else {
+					getTextArea("WOTgtSLbl").hide();
+					getDropdown("WOTgtScenario").hide();
 					getTextArea("WORenameLbl").hide();
-					getTextField("WORename").hide();
+					getTextField("WORename").hide();	
 				}
 				
 				// Manage Confirm button
