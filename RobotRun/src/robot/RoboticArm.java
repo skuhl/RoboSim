@@ -593,7 +593,15 @@ public class RoboticArm {
 		PVector closestCollPt = null;
 		
 		for (RSegment seg : SEGMENT) {
-			closestCollPt = seg.closestCollision(ray);
+			PVector collPt = seg.closestCollision(ray);
+			
+			if (collPt != null && (closestCollPt == null ||
+					PVector.dist(ray.getOrigin(), collPt) <
+					PVector.dist(ray.getOrigin(), closestCollPt))) {
+				
+				// Find the closest collision to the ray origin
+				closestCollPt = collPt;
+			}
 		}
 		
 		EndEffector activeEE = getActiveEE();

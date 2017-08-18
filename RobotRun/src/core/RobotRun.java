@@ -2491,7 +2491,7 @@ public class RobotRun extends PApplet {
 					WorldObject curSelectedWO = UI.getSelectedWO();
 					
 					if (curSelectedWO == collision) {
-						// Deselected the currently selected world object
+						// Deselect the currently selected world object
 						UI.setSelectedWO(null);
 						
 					} else {

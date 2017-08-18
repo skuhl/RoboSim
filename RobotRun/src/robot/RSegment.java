@@ -66,7 +66,6 @@ public class RSegment {
 				obb.setColor(Fields.OBB_COLLISION);
 				ret = 1;
 			}
-			
 		}
 		
 		return ret;
