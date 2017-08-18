@@ -21,7 +21,8 @@ public class ProgramExecution {
 	 * Initializes an empty process and call stack.
 	 */
 	public ProgramExecution() {
-		activeProc = new Process();
+		activeProc = new Process(-1, null, ExecType.EXEC_FULL,
+				ExecState.EXEC_DONE, 0, -1);
 		procCallStack = new Stack<>();
 	}
 	
@@ -216,17 +217,9 @@ public class ProgramExecution {
 	 * TODO comment this
 	 * 
 	 * @param instIdx
-	 * @return
 	 */
-	public boolean setProcCurIdx(int instIdx) {
-		Program p = activeProc.getProg();
-		
-		if (p != null && instIdx >= 0 && instIdx <= p.getNumOfInst()) {
-			activeProc.setCurIdx(instIdx);
-			return true;
-		}
-		
-		return false;
+	public void setProcCurIdx(int instIdx) {
+		activeProc.setCurIdx(instIdx);
 	}
 	
 	/**
@@ -246,6 +239,15 @@ public class ProgramExecution {
 	 */
 	public void setProcState(ExecState newState) {
 		activeProc.setState(newState);
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @return
+	 */
+	public String procToString() {
+		return activeProc.toString();
 	}
 	
 	/**

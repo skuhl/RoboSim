@@ -3436,13 +3436,8 @@ public class RobotRun extends PApplet {
 		
 		if (p != null && getActiveInstIdx() >= 1 && getActiveInstIdx() <
 				p.getNumOfInst()) {
-			/* The program must have a motion instruction prior to the active
-			 * instruction for backwards execution to be valid. */
-			Instruction prevInst = p.getInstAt(getActiveInstIdx() - 1);
 			
-			if (prevInst instanceof MotionInstruction) {
-				procExec.progExec(getActiveInstIdx() - 1, ExecType.EXEC_BWD);
-			}
+			procExec.progExec(getActiveInstIdx() - 1, ExecType.EXEC_BWD);
 		}
 	}
 	
@@ -3951,55 +3946,59 @@ public class RobotRun extends PApplet {
 				// Motion instruction has finished execution
 				procExec.setProcState(ExecState.EXEC_NEXT);
 			}
-			
 		}
 		
 		Program prog = getActiveProg();
 		ExecState state = procExec.getProcState();
 		int nextIdx = procExec.getProcNextIdx();
 		
-		// Wait until an instruction is complete
+		// When an instruction is finished executing ...
 		if (state == ExecState.EXEC_NEXT) {
 			
-			if (nextIdx < 0 || nextIdx > prog.getNumOfInst()) {
-				// Encountered a fault in program execution
-				procExec.setProcState(ExecState.EXEC_FAULT);
+			if (procExec.getProcType() == ExecType.EXEC_BWD) {
+				// Backward execution is similar to step execution
+				procExec.setProcState(ExecState.EXEC_DONE);
 				
 			} else {
-				procExec.setProcCurIdx(nextIdx);
-				
-				if (nextIdx == prog.getNumOfInst()) {
+				while (nextIdx >= prog.getNumOfInst() &&
+						!procExec.isCallStackEmpty()) {
 					
-					if (!procExec.isCallStackEmpty()) {
-						// Return to the program state on the top of the call stack
-						int pastProcRID = procExec.getProcRID();
-						RoboticArm r = getRobot(pastProcRID);
+					// Return to the program state on the top of the call stack
+					int pastProcRID = procExec.getProcRID();
+					RoboticArm r = getRobot(pastProcRID);
+					
+					if (r != null) {
+						procExec.procReturn();
 						
-						if (r != null) {
-							procExec.procReturn();
-							
-							if (r.RID != getActiveRobot().RID) {
-								// Update the active robot
-								activeRobot.set(ROBOTS.get(procExec.getProcRID()));
-								screens.getActiveScreen().getContents().setColumnIdx(0);
-							}
-							
-							procExec.setProcCurIdx( procExec.getProcNextIdx() );
+						if (r.RID != getActiveRobot().RID) {
+							// Update the active robot
+							activeRobot.set(ROBOTS.get(procExec.getProcRID()));
+							screens.getActiveScreen().getContents().setColumnIdx(0);
 						}
-						
-					} else {
-						// Reached the end of execution
-						procExec.setProcState(ExecState.EXEC_DONE);
 					}
+					
+					prog = procExec.getProg();
+					state = procExec.getProcState();
+					nextIdx = procExec.getProcNextIdx();
 				}
 				
-				if (procExec.isSingleExec()) {
-					// Reached the end of execution
-					procExec.setProcState(ExecState.EXEC_DONE);
+				if (nextIdx < 0 || nextIdx > prog.getNumOfInst()) {
+					// Encountered a fault in program execution
+					procExec.setProcState(ExecState.EXEC_FAULT);
 					
 				} else {
-					// Execute the next instruction
-					procExec.setProcState(ExecState.EXEC_INST);
+					procExec.setProcCurIdx(nextIdx);
+					
+					if (nextIdx == prog.getNumOfInst() ||
+							procExec.isSingleExec()) {
+						
+						// Reached the end of execution
+						procExec.setProcState(ExecState.EXEC_DONE);
+						
+					} else {
+						// Execute the next instruction
+						procExec.setProcState(ExecState.EXEC_INST);
+					}
 				}
 			}
 		}
@@ -4068,24 +4067,23 @@ public class RobotRun extends PApplet {
 	 * @return	0 ...
 	 */
 	private int updateProgExec() {
-		Program prog = getActiveProg();
-		Instruction activeInstr = prog.getInstAt(procExec.getProcCurIdx());
-		int nextIdx;
-		
-		if (procExec.getProcType() == ExecType.EXEC_BWD) {
-			// Backward program execution only works for motion instructions
-			nextIdx = procExec.getProcCurIdx() - 1;
-			
-			if (!(prog.getInstAt(nextIdx) instanceof MotionInstruction)) {
-				nextIdx = procExec.getProcCurIdx();
-			}
-			
-		} else {
-			nextIdx = procExec.getProcCurIdx() + 1;
-		}
-		
 		if (procExec.getProcState() == ExecState.EXEC_INST ||
 				procExec.getProcState() == ExecState.EXEC_START) {
+			
+			Program prog = getActiveProg();
+			Instruction activeInstr = prog.getInstAt(procExec.getProcCurIdx());
+			int nextIdx;
+			
+			if (procExec.getProcType() == ExecType.EXEC_BWD) {
+				nextIdx = procExec.getProcCurIdx() - 1;
+				// Backward program execution only works for motion instructions
+				if (!(prog.getInstAt(nextIdx) instanceof MotionInstruction)) {
+					nextIdx = -1;
+				}
+				
+			} else {
+				nextIdx = procExec.getProcCurIdx() + 1;
+			}
 			
 			if (activeInstr != null && !activeInstr.isCommented()) {
 				if (activeInstr instanceof MotionInstruction) {
@@ -4127,14 +4125,21 @@ public class RobotRun extends PApplet {
 					} else {
 						RoboticArm rCur = getActiveRobot();
 						RoboticArm rNext = cInst.getTgtDevice();
-						procExec.setProcNextIdx(nextIdx);
 						
-						if (rCur != rNext) {
-							setRobot(rNext.RID);
+						if (rNext != null) {
+							procExec.setProcNextIdx(nextIdx);
+							
+							if (rCur != rNext) {
+								// Switch to the target robot
+								activeRobot.set(rNext);
+							}
+							
+							procExec.callProgram(rNext.RID, cInst.getProg());
+							nextIdx = 0;
+							
+						} else {
+							nextIdx = -1;
 						}
-						
-						procExec.callProgram(rCur.RID, cInst.getProg());
-						nextIdx = 0;
 					}
 	
 				} else if (activeInstr instanceof IfStatement) {
@@ -4161,14 +4166,21 @@ public class RobotRun extends PApplet {
 							} else {
 								RoboticArm rCur = getActiveRobot();
 								RoboticArm rNext = cInst.getTgtDevice();
-								procExec.setProcNextIdx(nextIdx);
 								
-								if (rCur != rNext) {
-									setRobot(rNext.RID);
+								if (rNext != null) {
+									procExec.setProcNextIdx(nextIdx);
+									
+									if (rCur != rNext) {
+										// Switch to the target robot
+										activeRobot.set(rNext);
+									}
+									
+									procExec.callProgram(rNext.RID, cInst.getProg());
+									nextIdx = 0;
+									
+								} else {
+									nextIdx = -1;
 								}
-								
-								procExec.callProgram(rCur.RID, cInst.getProg());
-								nextIdx = 0;
 							}
 							
 						} else {
@@ -4207,14 +4219,21 @@ public class RobotRun extends PApplet {
 							} else {
 								RoboticArm rCur = getActiveRobot();
 								RoboticArm rNext = cInst.getTgtDevice();
-								procExec.setProcNextIdx(nextIdx);
 								
-								if (rCur != rNext) {
-									setRobot(rNext.RID);
+								if (rNext != null) {
+									procExec.setProcNextIdx(nextIdx);
+									
+									if (rCur != rNext) {
+										// Switch to the target robot
+										activeRobot.set(rNext);
+									}
+									
+									procExec.callProgram(rNext.RID, cInst.getProg());
+									nextIdx = 0;
+									
+								} else {
+									nextIdx = -1;
 								}
-								
-								procExec.callProgram(rCur.RID, cInst.getProg());
-								nextIdx = 0;
 							}
 							
 						} else {
@@ -4234,17 +4253,21 @@ public class RobotRun extends PApplet {
 					}
 				}
 			}
-		}
-		
-		if (activeInstr instanceof MotionInstruction) {
-			procExec.setProcState(ExecState.EXEC_MINST);
 			
-		} else {
-			procExec.setProcState(ExecState.EXEC_NEXT);
+			if (activeInstr instanceof MotionInstruction) {
+				procExec.setProcState(ExecState.EXEC_MINST);
+				
+			} else {
+				procExec.setProcState(ExecState.EXEC_NEXT);
+			}
+			
+			System.out.printf("%s\n", procExec.procToString());
+			procExec.setProcNextIdx(nextIdx);
+			System.out.printf("next=%d\n", nextIdx);
+			
+			return 0;
 		}
 		
-		procExec.setProcNextIdx(nextIdx);
-		
-		return 0;
+		return 1;
 	}
 }

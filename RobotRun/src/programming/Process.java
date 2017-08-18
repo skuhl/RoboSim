@@ -39,7 +39,7 @@ public class Process implements Cloneable {
 	 * @param curIdx
 	 * @param nextIdx
 	 */
-	private Process(int rid, Program prog, ExecType type, ExecState state,
+	public Process(int rid, Program prog, ExecType type, ExecState state,
 			int curIdx, int nextIdx) {
 		
 		this.prog = prog;
@@ -100,5 +100,16 @@ public class Process implements Cloneable {
 	
 	public void setType(ExecType type) {
 		this.type = type;
+	}
+	
+	@Override
+	public String toString() {
+		if (prog == null) {
+			return String.format("type=%s rid=%d prog=n/a cur=%d state=%s next=%d",
+					type, rid, curIdx, state, nextIdx);
+		}
+		
+		return String.format("type=%s rid=%d prog=%s cur=%d state=%s next=%d",
+				type, rid, prog.getName(), curIdx, state, nextIdx);
 	}
 }
