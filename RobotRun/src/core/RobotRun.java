@@ -3880,7 +3880,7 @@ public class RobotRun extends PApplet {
 		}
 		
 		if (record.isRecording()) {
-			text("Recording (press Ctrl + Alt + r)",
+			text("Recording (press Ctrl + r)",
 					lastTextPositionX, lastTextPositionY);
 			lastTextPositionY += 20;
 		}
@@ -3965,16 +3965,14 @@ public class RobotRun extends PApplet {
 					
 					// Return to the program state on the top of the call stack
 					int pastProcRID = procExec.getProcRID();
-					RoboticArm r = getRobot(pastProcRID);
+					RoboticArm curR = getRobot(pastProcRID);
+					procExec.procReturn();
+					RoboticArm nextR = ROBOTS.get(procExec.getProcRID());
 					
-					if (r != null) {
-						procExec.procReturn();
-						
-						if (r.RID != getActiveRobot().RID) {
-							// Update the active robot
-							activeRobot.set(ROBOTS.get(procExec.getProcRID()));
-							screens.getActiveScreen().getContents().setColumnIdx(0);
-						}
+					if (curR != nextR) {
+						// Update the active robot
+						activeRobot.set(nextR);
+						screens.getActiveScreen().getContents().setColumnIdx(0);
 					}
 					
 					prog = procExec.getProg();
