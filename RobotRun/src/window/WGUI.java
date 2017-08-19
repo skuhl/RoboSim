@@ -917,7 +917,7 @@ public class WGUI implements ControlListener {
 		}
 		
 		addDropdown("WOTgtScenario", editWOMgmt, ldropItemWidth, dropItemHeight,
-				4, Fields.small, Fields.ITYPE_PERMENANT);
+				4, Fields.small, Fields.ITYPE_TRANSIENT);
 
 		addDropdown("WO", editWO, ldropItemWidth, dropItemHeight, 4,
 				Fields.small, Fields.ITYPE_PERMENANT);
@@ -1848,6 +1848,7 @@ public class WGUI implements ControlListener {
 		}
 		
 		MyDropdownList dropdown2 = getDropdown("WOTgtScenario");
+		dropdown2.clear();
 		dropdown = getDropdown("Scenario");
 		dropdown.clear();
 

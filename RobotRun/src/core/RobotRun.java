@@ -3097,7 +3097,7 @@ public class RobotRun extends PApplet {
 			screens = new ScreenManager(this);
 			
 			updatePendantScreen();
-
+			
 		} catch (NullPointerException NPEx) {
 			DataManagement.errLog(NPEx);
 			throw NPEx;
