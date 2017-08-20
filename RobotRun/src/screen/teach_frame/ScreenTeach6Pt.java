@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import core.RobotRun;
 import frame.ToolFrame;
 import geom.Point;
+import geom.RMatrix;
 import global.DataManagement;
 import global.Fields;
 import processing.core.PGraphics;
@@ -25,7 +26,8 @@ public class ScreenTeach6Pt extends ST_ScreenTeachPoints {
 		RoboticArm r = robotRun.getActiveRobot();
 		ToolFrame teachFrame = r.getToolFrame(frameIdx);
 		
-		boolean success = teachFrame.teach6Pt();
+		Point RP = r.getFacePlatePoint();
+		boolean success = teachFrame.teach6Pt(RP);
 		
 		if (success) {
 			// Set the updated frame
