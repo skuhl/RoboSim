@@ -3726,6 +3726,24 @@ public class RobotRun extends PApplet {
 		text(String.format("Jog Speed: %d%%", getActiveRobot().getLiveSpeed()),
 				lastTextPositionX, lastTextPositionY);
 		lastTextPositionY += 20;
+		
+		int eeIdx = getActiveRobot().getActiveEEIdx();
+		// Display active end effector state
+		if (eeIdx > 0) {
+			boolean state = getActiveRobot().getEEState();
+			String eeText;
+			
+			if (state) {
+				eeText = String.format("%s:  ON",
+						getActiveRobot().getActiveEEName());
+			} else {
+				eeText = String.format("%s: OFF",
+						getActiveRobot().getActiveEEName());
+			}
+			
+			text(eeText, lastTextPositionX, lastTextPositionY);
+			lastTextPositionY += 20;
+		}
 
 		if (getActiveScenario() != null) {
 			String out = String.format("Active scenario: %s", getActiveScenario().getName());

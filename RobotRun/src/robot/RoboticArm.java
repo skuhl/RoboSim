@@ -946,6 +946,22 @@ public class RoboticArm {
 	}
 	
 	/**
+	 * TODO comment this
+	 * 
+	 * @return
+	 */
+	public String getActiveEEName() {
+		EndEffector ee = this.getActiveEE();
+		
+		if (ee != null) {
+			return ee.getName();
+			
+		}
+		
+		return null;
+	}
+	
+	/**
 	 * @return	The active tool frame or null if no tool frame is active
 	 */
 	public ToolFrame getActiveTool() {
