@@ -71,7 +71,7 @@ public class Macro {
 			case 3: ret[2] = "SETUP";  break;
 			case 4: ret[2] = "STATUS"; break;
 			case 5: ret[2] = "PSON";   break;
-			case 6: ret[2] = "IO";     break;
+			case 6: ret[2] = "FCTN";  break;
 			default: ret[2] = "...";   break;
 			}
 		}

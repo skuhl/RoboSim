@@ -746,6 +746,26 @@ public class RobotRun extends PApplet {
 			throw Ex;
 		}
 	}
+	
+	/**
+	 * Pendant Fnctl button
+	 * 
+	 * Functions as a marco key bindings.
+	 */
+	public void button_funct() {
+		try {
+			if (isShift()) {
+				if (getActiveRobot().getMacroKeyBinds()[6] != null) {
+					execute(getActiveRobot().getMacroKeyBinds()[6]);
+				}
+			}
+			
+		} catch (Exception Ex) {
+			// Log any errors
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
+	}
 
 	/**
 	 * Pendant FWD button
@@ -801,22 +821,12 @@ public class RobotRun extends PApplet {
 	/**
 	 * Pendant I/O button
 	 * 
-	 * If shift is inactive, then this button toggles the state of the active
-	 * robot's active end effector. If shift is active, then this button
-	 * executes the program binded with a macro to this button.
+	 * Changes the state of the active robot's active end effector.
 	 */
 	public void button_io() {
 		try {
-			if (isShift()) {
-				if (getActiveRobot().getMacroKeyBinds()[6] != null) {
-					execute(getActiveRobot().getMacroKeyBinds()[6]);
-				}
-	
-			} else {
-				if (!isProgExec()) {
-					// Map I/O to the robot's end effector state, if shift is off
-					toggleEEState(getActiveRobot());
-				}
+			if (!isProgExec()) {
+				toggleEEState(getActiveRobot());
 			}
 			
 		} catch (Exception Ex) {

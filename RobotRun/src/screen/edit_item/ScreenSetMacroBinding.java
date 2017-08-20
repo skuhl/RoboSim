@@ -46,7 +46,7 @@ public class ScreenSetMacroBinding extends ST_ScreenEditItem {
 		options.addLine("4. Setup");
 		options.addLine("5. Status");
 		options.addLine("6. POSN");
-		options.addLine("7. I/O");
+		options.addLine("7. FCTN");
 	}
 
 }
