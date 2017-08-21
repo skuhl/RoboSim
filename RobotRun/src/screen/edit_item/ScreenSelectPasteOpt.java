@@ -30,15 +30,15 @@ public class ScreenSelectPasteOpt extends ST_ScreenEditItem {
 		switch(options.getLineIdx()) {
 		case 0: optVal = Fields.CLEAR_POSITION;
 				break;
-		case 1: optVal = Fields.PASTE_DEFAULT;
+		case 1: optVal = Fields.NEW_POSITION;
 				break;
-		case 2: optVal = Fields.NEW_POSITION;
+		case 2: optVal = Fields.PASTE_DEFAULT;
 				break;
 		case 3: optVal = Fields.PASTE_REVERSE | Fields.CLEAR_POSITION;
 				break;
-		case 4: optVal = Fields.PASTE_REVERSE;
+		case 4: optVal = Fields.PASTE_REVERSE | Fields.NEW_POSITION;
 				break;
-		case 5: optVal = Fields.PASTE_REVERSE | Fields.NEW_POSITION;
+		case 5: optVal = Fields.PASTE_REVERSE;
 				break;
 		case 6: optVal = Fields.PASTE_REVERSE | Fields.REVERSE_MOTION;
 				break;

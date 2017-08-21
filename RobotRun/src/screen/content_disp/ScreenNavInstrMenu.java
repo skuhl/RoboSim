@@ -1,9 +1,9 @@
-package screen.opt_menu;
+package screen.content_disp;
 
 import core.RobotRun;
-import screen.ScreenMode;
+import screen.ScreenMode;;
 
-public class ScreenNavInstrMenu extends ST_ScreenOptionsMenu {
+public class ScreenNavInstrMenu extends ST_ScreenListContents {
 
 	public ScreenNavInstrMenu(RobotRun r) {
 		super(ScreenMode.NAV_INSTR_MENU, r);
@@ -11,7 +11,7 @@ public class ScreenNavInstrMenu extends ST_ScreenOptionsMenu {
 	
 	@Override
 	public void actionEntr() {
-		switch (options.getLineIdx()) {
+		switch (contents.getLineIdx()) {
 		case 0: // Undo
 			robotRun.getActiveRobot().undoProgramEdit();
 			robotRun.lastScreen();
@@ -42,19 +42,19 @@ public class ScreenNavInstrMenu extends ST_ScreenOptionsMenu {
 	}
 	
 	@Override
+	protected void loadContents() {
+		contents.addLine("1 Undo");
+		contents.addLine("2 Insert");
+		contents.addLine("3 Delete");
+		contents.addLine("4 Cut/ Copy");
+		contents.addLine("5 Paste");
+		contents.addLine("6 Find/ Replace");
+		contents.addLine("7 Renumber");
+		contents.addLine("8 Comment");
+	}
+	
+	@Override
 	protected String loadHeader() {
 		return robotRun.getActiveProg().getName();
-	}
-
-	@Override
-	protected void loadOptions() {
-		options.addLine("1 Undo");
-		options.addLine("2 Insert");
-		options.addLine("3 Delete");
-		options.addLine("4 Cut/ Copy");
-		options.addLine("5 Paste");
-		options.addLine("6 Find/ Replace");
-		options.addLine("7 Renumber");
-		options.addLine("8 Comment");
 	}
 }

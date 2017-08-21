@@ -1878,6 +1878,7 @@ public class RoboticArm {
 
 				if ((options & Fields.CLEAR_POSITION) == Fields.CLEAR_POSITION) {
 					m.setPosIdx(-1);
+					
 				} else if ((options & Fields.NEW_POSITION) == Fields.NEW_POSITION) {
 					/*
 					 * Copy the current instruction's position to a new local
@@ -1919,6 +1920,7 @@ public class RoboticArm {
 			Instruction instr;
 			if ((options & Fields.PASTE_REVERSE) == Fields.PASTE_REVERSE) {
 				instr = pasteList.get(pasteList.size() - 1 - i);
+				
 			} else {
 				instr = pasteList.get(i);
 			}
