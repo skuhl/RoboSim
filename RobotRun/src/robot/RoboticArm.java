@@ -2586,7 +2586,13 @@ public class RoboticArm {
 	 * 						orientation
 	 */
 	public void updateMotion(float[] jointAngles) {
-		updateMotion(jointAngles, liveSpeed / 100f);
+		if (motion instanceof JointInterpolation) {
+			((JointInterpolation)motion).setupRotationalInterpolation(this,
+					jointAngles);
+			
+		} else {
+			motion = new JointInterpolation(this, jointAngles);
+		}
 	}
 	
 	/**
