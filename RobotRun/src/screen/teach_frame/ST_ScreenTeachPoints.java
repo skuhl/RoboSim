@@ -152,6 +152,7 @@ public abstract class ST_ScreenTeachPoints extends Screen {
 					// Move to the point's position and orientation
 					robotRun.getActiveRobot().updateMotion(tgt);
 				}
+				
 			} else {
 				if (tgt != null && tgt.angles != null) {
 					// Move to the point's joint angles

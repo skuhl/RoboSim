@@ -106,6 +106,7 @@ public class ScreenNavPosRegs extends ST_ScreenListContents {
 					}
 
 					r.updateMotion(pt);
+					
 				} else {
 					r.updateMotion(pt.angles);
 				}

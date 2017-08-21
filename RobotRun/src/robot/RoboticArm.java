@@ -2249,7 +2249,7 @@ public class RoboticArm {
 					pMInst.getUFrameIdx() != activeUserIdx) {
 				
 				// Incorrect active frames for this motion instruction
-				LinearInterpolation liMotion = new LinearInterpolation();
+				StaticLinearInterpolation liMotion = new StaticLinearInterpolation();
 				liMotion.setFault(true);
 				motion = liMotion;
 				Fields.setMessage("Invalid active frames for %s", mInst);
@@ -2259,7 +2259,7 @@ public class RoboticArm {
 				// No point defined for given motion instruction
 				String error = getErrorMessage(pMInst, prog, false);
 				Fields.setMessage(error);
-				LinearInterpolation liMotion = new LinearInterpolation();
+				StaticLinearInterpolation liMotion = new StaticLinearInterpolation();
 				liMotion.setFault(true);
 				motion = liMotion;
 				return 2;
@@ -2288,7 +2288,7 @@ public class RoboticArm {
 					} else {
 						// Invalid motion instruction
 						nextPt = null;
-						LinearInterpolation liMotion = new LinearInterpolation();
+						StaticLinearInterpolation liMotion = new StaticLinearInterpolation();
 						liMotion.setFault(true);
 						motion = liMotion;
 						return 3;
@@ -2313,7 +2313,7 @@ public class RoboticArm {
 				
 			} else {
 				// Invalid motion type
-				LinearInterpolation liMotion = new LinearInterpolation();
+				StaticLinearInterpolation liMotion = new StaticLinearInterpolation();
 				liMotion.setFault(true);
 				motion = liMotion;
 				return 4;
@@ -2339,7 +2339,7 @@ public class RoboticArm {
 					} else {
 						// Invalid motion instruction
 						nextPt = null;
-						LinearInterpolation liMotion = new LinearInterpolation();
+						StaticLinearInterpolation liMotion = new StaticLinearInterpolation();
 						liMotion.setFault(true);
 						motion = liMotion;
 						return 3;
@@ -2580,7 +2580,7 @@ public class RoboticArm {
 	/**
 	 * Redefines this robot's motion as rotational interpolation where the
 	 * target orientation is defined by the given joint angles and the speed is
-	 * defined by this robot's current live speed.
+	 * defined by this robot's live speed.
 	 *  
 	 * @param jointAngles	The six joint angles defining the robot's target
 	 * 						orientation
@@ -2618,13 +2618,12 @@ public class RoboticArm {
 	/**
 	 * Redefines this robot's motion as linear interpolation where target
 	 * position and orientation of the robot's tool tip are defined by the
-	 * given point. The motion speed is defined by the robot's current
-	 * liveSpeed value.
+	 * given point. The motion speed is linked to the robot's livespeed.
 	 * 
 	 * @param tgt	The target point for the robot's tool tip
 	 */
 	public void updateMotion(Point tgt) {
-		updateMotion(tgt, liveSpeed / 100f);
+		motion = new DynamicLinearInterpolation(getToolTipNative(), tgt);
 	}
 	
 	/**
@@ -2638,11 +2637,11 @@ public class RoboticArm {
 	public void updateMotion(Point tgt, float speed) {
 		Point start = getToolTipNative();
 		
-		if (!(motion instanceof LinearInterpolation)) {
-			motion = new LinearInterpolation();
+		if (!(motion instanceof StaticLinearInterpolation)) {
+			motion = new StaticLinearInterpolation();
 		}
 		
-		((LinearInterpolation) motion).beginNewLinearMotion(start, tgt,
+		((StaticLinearInterpolation) motion).beginNewLinearMotion(start, tgt,
 				speed * motorSpeed);
 	}
 	
@@ -2660,11 +2659,11 @@ public class RoboticArm {
 	public void updateMotion(Point tgt, Point inter, float speed) {
 		Point start = getToolTipNative();
 		
-		if (!(motion instanceof LinearInterpolation)) {
-			motion = new LinearInterpolation();
+		if (!(motion instanceof StaticLinearInterpolation)) {
+			motion = new StaticLinearInterpolation();
 		}
 		
-		((LinearInterpolation) motion).beginNewCircularMotion(start, inter, tgt,
+		((StaticLinearInterpolation) motion).beginNewCircularMotion(start, inter, tgt,
 				speed * motorSpeed);
 	}
 	
@@ -2684,11 +2683,11 @@ public class RoboticArm {
 	public void updateMotion(Point tgt, Point next, float speed, float p) {
 		Point start = getToolTipNative();
 		
-		if (!(motion instanceof LinearInterpolation)) {
-			motion = new LinearInterpolation();
+		if (!(motion instanceof StaticLinearInterpolation)) {
+			motion = new StaticLinearInterpolation();
 		}
 		
-		((LinearInterpolation) motion).beginNewContinuousMotion(start, tgt, next, p,
+		((StaticLinearInterpolation) motion).beginNewContinuousMotion(start, tgt, next, p,
 				speed * motorSpeed);
 	}
 
