@@ -2,7 +2,10 @@ package screen.content_disp;
 
 import core.RobotRun;
 import enums.CoordFrame;
+import frame.UserFrame;
+import robot.RoboticArm;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenNavUserFrames extends ST_ScreenListContents {
 
@@ -60,5 +63,22 @@ public class ScreenNavUserFrames extends ST_ScreenListContents {
 			labels[3] = "";
 			labels[4] = "";
 		}
+	}
+	
+	@Override
+	protected void loadOptions() {
+		RoboticArm r = robotRun.getActiveRobot();
+		int itemIdx = contents.getCurrentItemIdx();
+		UserFrame frame = r.getUserFrame(itemIdx);
+		
+		if (frame != null) {
+			// Load frame detail for the frame associated with the selected line
+			options.setLines(loadFrameDetail(frame));
+		}
+	}
+	
+	@Override
+	protected void loadVars(ScreenState s) {
+		setScreenIndices(0, 0, 0, -1, 0);
 	}
 }

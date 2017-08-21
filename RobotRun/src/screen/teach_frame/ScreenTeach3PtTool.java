@@ -15,9 +15,20 @@ import ui.DisplayLine;
 
 public class ScreenTeach3PtTool extends ST_ScreenTeachPoints {
 	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param r
+	 * @param idx
+	 * @return
+	 */
+	private static String loadHeader(RoboticArm r, int idx) {
+		return String.format("TOOL: %s 3PT METHOD", r.toolLabel(idx));
+	}
+	
 	public ScreenTeach3PtTool(RobotRun r, int tFrameIdx) {
-		super(ScreenMode.TEACH_3PT_TOOL, String.format("TOOL: %d 3PT METHOD",
-				tFrameIdx + 1), r, tFrameIdx);
+		super(ScreenMode.TEACH_3PT_TOOL, loadHeader(r.getActiveRobot(),
+				tFrameIdx), r, tFrameIdx);
 	}
 
 	@Override

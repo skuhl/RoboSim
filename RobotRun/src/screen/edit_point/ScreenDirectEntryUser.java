@@ -11,11 +11,22 @@ import ui.DisplayLine;
 
 public class ScreenDirectEntryUser extends ST_ScreenPointEntry {
 	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param r
+	 * @param idx
+	 * @return
+	 */
+	private static String loadHeader(RoboticArm r, int idx) {
+		return String.format("USER: %s DIRECT", r.userLabel(idx));
+	}
+	
 	private int frameIdx;
 	
 	public ScreenDirectEntryUser(RobotRun r, int frameIdx) {
-		super(ScreenMode.DIRECT_ENTRY_USER, String.format("USER: %d DIRECT",
-				frameIdx + 1), r);
+		super(ScreenMode.DIRECT_ENTRY_USER, loadHeader(r.getActiveRobot(),
+				frameIdx), r);
 		this.frameIdx = frameIdx;
 		loadWorkingText();
 	}

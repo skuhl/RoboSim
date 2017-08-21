@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import core.RobotRun;
 import frame.ToolFrame;
 import geom.Point;
-import geom.RMatrix;
 import global.DataManagement;
 import global.Fields;
 import processing.core.PGraphics;
@@ -16,9 +15,20 @@ import ui.DisplayLine;
 
 public class ScreenTeach6Pt extends ST_ScreenTeachPoints {
 	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param r
+	 * @param idx
+	 * @return
+	 */
+	private static String loadHeader(RoboticArm r, int idx) {
+		return String.format("TOOL: %s 6PT METHOD", r.toolLabel(idx));
+	}
+	
 	public ScreenTeach6Pt(RobotRun r, int tFrameIdx) {
-		super(ScreenMode.TEACH_6PT, String.format("TOOL: %d 6PT METHOD",
-				tFrameIdx + 1), r, tFrameIdx);
+		super(ScreenMode.TEACH_6PT, loadHeader(r.getActiveRobot(), tFrameIdx),
+				r, tFrameIdx);
 	}
 
 	@Override

@@ -15,9 +15,20 @@ import ui.DisplayLine;
 
 public class ScreenTeach4Pt extends ST_ScreenTeachPoints {
 	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param r
+	 * @param idx
+	 * @return
+	 */
+	private static String loadHeader(RoboticArm r, int idx) {
+		return String.format("USER: %s 4PT METHOD", r.userLabel(idx));
+	}
+	
 	public ScreenTeach4Pt(RobotRun r, int uFrameIdx) {
-		super(ScreenMode.TEACH_4PT, String.format("USER: %d 4PT METHOD",
-				uFrameIdx + 1), r, uFrameIdx);
+		super(ScreenMode.TEACH_4PT, loadHeader(r.getActiveRobot(), uFrameIdx),
+				r, uFrameIdx);
 	}
 
 	@Override

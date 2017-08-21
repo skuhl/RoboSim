@@ -2364,6 +2364,27 @@ public class RoboticArm {
 	}
 	
 	/**
+	 * TODO comment this
+	 * 
+	 * @param idx
+	 * @return
+	 */
+	public String toolLabel(int idx) {
+		ToolFrame tFrame = getToolFrame(idx);
+		
+		if (tFrame != null) {
+			if (tFrame.getName().length() > 0) {
+				// Include the frame's name and the given index
+				return String.format("%s (%d)", tFrame.getName(), idx + 1);
+			}
+			
+			return Integer.toString(idx);
+		}
+		
+		return null;
+	}
+	
+	/**
 	 * Reverts the active program's undo states that have the same group ID as
 	 * the undo state on the top of the program undo stack.
 	 */
@@ -2673,6 +2694,27 @@ public class RoboticArm {
 		}
 		
 		updateOBBs();
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param idx
+	 * @return
+	 */
+	public String userLabel(int idx) {
+		UserFrame uFrame = getUserFrame(idx);
+		
+		if (uFrame != null) {
+			if (uFrame.getName().length() > 0) {
+				// Include the frame's name and the given index
+				return String.format("%s (%d)", uFrame.getName(), idx + 1);
+			}
+			
+			return Integer.toString(idx);
+		}
+		
+		return null;
 	}
 	
 	/**

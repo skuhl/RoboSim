@@ -6,11 +6,22 @@ import screen.ScreenMode;
 
 public class ScreenUserFrameDetail extends ST_ScreenOptionsMenu {
 	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param r
+	 * @param idx
+	 * @return
+	 */
+	private static String loadHeader(RoboticArm r, int idx) {
+		return String.format("USER: %s DETAIL", r.userLabel(idx));
+	}
+	
 	private int frameIdx;
 	
 	public ScreenUserFrameDetail(RobotRun r, int frameIdx) {
-		super(ScreenMode.UFRAME_DETAIL, String.format("USER: %d DETAIL",
-				frameIdx + 1), r);
+		super(ScreenMode.UFRAME_DETAIL, loadHeader(r.getActiveRobot(),
+				frameIdx), r);
 		this.frameIdx = frameIdx;
 	}
 	
