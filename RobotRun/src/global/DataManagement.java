@@ -11,7 +11,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Set;
 
 import camera.RobotCamera;
 import core.RobotRun;
@@ -815,7 +814,7 @@ public abstract class DataManagement {
 		return new Point(position, orientation, angles);
 	}
 
-	private static Program loadProgram(RoboticArm robot, DataInputStream in) throws IOException {
+	protected static Program loadProgram(RoboticArm robot, DataInputStream in) throws IOException {
 		// Read flag byte
 		byte flag = in.readByte();
 
@@ -872,45 +871,28 @@ public abstract class DataManagement {
 		} else {
 			int filesRead = 0;
 			File[] progFiles = progDir.listFiles();
+			Program[] programs = new Program[progFiles.length];
+			Thread[] loadThreads = new Thread[progFiles.length];
 			
-			// Load in each program from there respective files
-			for (File src : progFiles) {
+			for (int idx = 0; idx < progFiles.length; ++idx) {
+				LoadFile loader = new LoadFile(robot, programs, idx,
+						progFiles[idx]);
+				/* Initialize each thread to load a program from a specified
+				 * file */
+				loadThreads[idx] = new Thread(loader);
+				loadThreads[idx].start();
+			}
+			
+			for (int idx = 0; idx < loadThreads.length; ++idx) {
 				try {
-					FileInputStream in = new FileInputStream(src);
-					DataInputStream dataIn = new DataInputStream(in);
-					
-					robot.addProgram( loadProgram(robot, dataIn) );
-					
-					dataIn.close();
-					in.close();
+					/* Wait for each thread to finish and add the program once
+					 * the thread has completed */
+					loadThreads[idx].join();
+					robot.addProgram(programs[idx]);
 					++filesRead;
 					
-				} catch (FileNotFoundException FNFEx) {
-					// Could not locate src
-					System.err.printf("%s does not exist!\n", src.getName());
-					FNFEx.printStackTrace();
-
-				} catch (EOFException EOFEx) {
-					// Reached the end of src unexpectedly
-					System.err.printf("End of file, %s, was reached unexpectedly!\n",
-							src.getName());
-					EOFEx.printStackTrace();
-
-				} catch (IOException IOEx) {
-					// An error occurred with reading from src
-					System.err.printf("%s is corrupt!\n", src.getName());
-					IOEx.printStackTrace();
-					
-				} catch (ClassCastException CCEx) {
-					/* An error occurred with casting between objects while loading a
-					 * program's instructions */
-					System.err.printf("%s is corrupt!\n", src.getName());
-					CCEx.printStackTrace();
-					
-				} catch (NegativeArraySizeException NASEx) {
-					// Issue with loading program points
-					System.err.printf("%s is corrupt!\n", src.getName());
-					NASEx.printStackTrace();
+				} catch (InterruptedException IEx) {
+					IEx.printStackTrace();
 				}
 			}
 			
@@ -1934,7 +1916,8 @@ public abstract class DataManagement {
 		}
 	}
 
-	private static void saveProgram(Program p, DataOutputStream out) throws IOException {
+	protected static void saveProgram(Program p, DataOutputStream out)
+			throws IOException {
 
 		if (p == null) {
 			// Indicates a null value is saved
@@ -1981,32 +1964,27 @@ public abstract class DataManagement {
 			System.err.printf("Successfully created %s.\n", destDir.getName());
 		}
 		
-		/* Save each program in a separate file under the given robot's program
+		/* Save each program in a separate file within the given robot's program
 		 * directory */
-		for (int idx = 0; idx < robot.numOfPrograms(); ++idx) {
+		Thread[] saveThreads = new Thread[robot.numOfPrograms()];
+		
+		for (int idx = 0; idx < saveThreads.length; ++idx) {
 			Program p = robot.getProgram(idx);
 			File dest = new File( String.format("%s/%s.bin", destDirPath,
 					p.getName()) );
-			
+			/* Initialize each save thread with given program and file
+			 * destination */
+			saveThreads[idx] = new Thread(new SaveFile(p, dest));
+			saveThreads[idx].start();
+		}
+		
+		// Wait for each thread to finish
+		for (int idx = 0; idx < saveThreads.length; ++idx) {
 			try {
-				if (!dest.exists()) {
-					// Create the file if it does not exist
-					dest.createNewFile();
-				}
+				saveThreads[idx].join();
 				
-				FileOutputStream out = new FileOutputStream(dest);
-				DataOutputStream dataOut = new DataOutputStream(out);
-				
-				saveProgram(robot.getProgram(idx), dataOut);
-
-				dataOut.close();
-				out.close();
-
-			} catch (IOException IOEx) {
-				// An error occurred with writing to dest
-				System.err.printf("%s is corrupt!\n", dest.getName());
-				IOEx.printStackTrace();
-				return 2;
+			} catch (InterruptedException IEx) {
+				IEx.printStackTrace();
 			}
 		}
 		

@@ -34,7 +34,7 @@ public abstract class Screen {
 		
 		header = loadHeader();
 		contents = new MenuScroll("cont", 8, 10, 20);
-		options = new MenuScroll("opt", 3, 10, 180);
+		options = new MenuScroll("opt", 3, 10, 199);
 		labels = new String[5];
 	}
 	
@@ -56,7 +56,7 @@ public abstract class Screen {
 		
 		this.header = header;
 		contents = new MenuScroll("cont", 8, 10, 20);
-		options = new MenuScroll("opt", 3, 10, 180);
+		options = new MenuScroll("opt", 3, 10, 199);
 		labels = new String[5];
 	}
 	
