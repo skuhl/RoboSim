@@ -28,7 +28,7 @@ public class ScreenTeach6Pt extends ST_ScreenTeachPoints {
 	
 	public ScreenTeach6Pt(RobotRun r, int tFrameIdx) {
 		super(ScreenMode.TEACH_6PT, loadHeader(r.getActiveRobot(), tFrameIdx),
-				r, tFrameIdx);
+				r, 4, 10, 20, 6, 10, 80, tFrameIdx);
 	}
 
 	@Override

@@ -38,6 +38,18 @@ public abstract class Screen {
 		labels = new String[5];
 	}
 	
+	public Screen(ScreenMode m, RobotRun r, int cMax, int cX, int cY, int oMax,
+			int oX, int oY) {
+		
+		mode = m;
+		robotRun = r;
+		
+		header = loadHeader();
+		contents = new MenuScroll("cont", cMax, cX, cY);
+		options = new MenuScroll("opt", oMax, oX, oY);
+		labels = new String[5];
+	}
+	
 	public Screen(ScreenMode m, String header, RobotRun r) {
 		mode = m;
 		robotRun = r;
@@ -45,6 +57,18 @@ public abstract class Screen {
 		this.header = header;
 		contents = new MenuScroll("cont", 8, 10, 20);
 		options = new MenuScroll("opt", 3, 10, 180);
+		labels = new String[5];
+	}
+	
+	public Screen(ScreenMode m, String header, RobotRun r, int cMax, int cX,
+			int cY, int oMax, int oX, int oY) {
+		
+		mode = m;
+		robotRun = r;
+		
+		this.header = header;
+		contents = new MenuScroll("cont", cMax, cX, cY);
+		options = new MenuScroll("opt", oMax, oX, oY);
 		labels = new String[5];
 	}
 	

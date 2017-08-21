@@ -28,7 +28,7 @@ public class ScreenTeach4Pt extends ST_ScreenTeachPoints {
 	
 	public ScreenTeach4Pt(RobotRun r, int uFrameIdx) {
 		super(ScreenMode.TEACH_4PT, loadHeader(r.getActiveRobot(), uFrameIdx),
-				r, uFrameIdx);
+				r, 4, 10, 20, 4, 10, 80, uFrameIdx);
 	}
 
 	@Override

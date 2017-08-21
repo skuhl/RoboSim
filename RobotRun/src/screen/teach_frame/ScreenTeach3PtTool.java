@@ -28,7 +28,7 @@ public class ScreenTeach3PtTool extends ST_ScreenTeachPoints {
 	
 	public ScreenTeach3PtTool(RobotRun r, int tFrameIdx) {
 		super(ScreenMode.TEACH_3PT_TOOL, loadHeader(r.getActiveRobot(),
-				tFrameIdx), r, tFrameIdx);
+				tFrameIdx), r, 4, 10, 20, 6, 10, 80, tFrameIdx);
 	}
 
 	@Override

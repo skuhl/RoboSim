@@ -90,11 +90,25 @@ public abstract class ST_ScreenTeachPoints extends Screen {
 		super(m, r);
 		this.frameIdx = frameIdx;
 	}
-
+	
+	public ST_ScreenTeachPoints(ScreenMode m, RobotRun r, int cMax, int cX,
+			int cY, int oMax, int oX, int oY, int frameIdx) {
+		
+		super(m, r, cMax, cX, cY, oMax, oX, oY);
+		this.frameIdx = frameIdx;
+	}
+	
 	public ST_ScreenTeachPoints(ScreenMode m, String header, RobotRun r,
 			int frameIdx) {
 		
 		super(m, header, r);
+		this.frameIdx = frameIdx;
+	}
+	
+	public ST_ScreenTeachPoints(ScreenMode m, String header, RobotRun r,
+			int cMax, int cX, int cY, int oMax, int oX, int oY, int frameIdx) {
+		
+		super(m, header, r, cMax, cX, cY, oMax, oX, oY);
 		this.frameIdx = frameIdx;
 	}
 	

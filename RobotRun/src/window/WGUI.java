@@ -1441,15 +1441,6 @@ public class WGUI implements ControlListener {
 		
 		MenuScroll contents = screen.getContents();
 		MenuScroll options = screen.getOptions();
-
-		if (contents.size() == 0) {
-			options.setLocation(10, 20);
-			options.setMaxDisplay(8);
-
-		} else {
-			options.setLocation(10, 199);
-			options.setMaxDisplay(3);
-		}
 		
 		boolean[] lnSelectState = null;
 		
