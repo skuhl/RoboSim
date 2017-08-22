@@ -1,6 +1,7 @@
 package screen.content_disp;
 
 import core.RobotRun;
+import global.Fields;
 import robot.RoboticArm;
 import screen.ScreenMode;
 
@@ -43,6 +44,9 @@ public class ScreenNavPrograms extends ST_ScreenListContents {
 		
 		if (r.numOfPrograms() < RoboticArm.PROG_NUM) {
 			robotRun.nextScreen(ScreenMode.PROG_CREATE);
+			
+		} else {
+			Fields.setMessage("This robot has already reached its capacityy for programs");
 		}
 	}
 
@@ -51,6 +55,9 @@ public class ScreenNavPrograms extends ST_ScreenListContents {
 		if (robotRun.getActiveRobot().numOfPrograms() > 0) {
 			robotRun.setActiveProgIdx(contents.getCurrentItemIdx());
 			robotRun.nextScreen(ScreenMode.PROG_RENAME);
+			
+		} else {
+			Fields.setMessage("This robot has already reached its capacityy for programs");
 		}
 	}
 	
@@ -84,18 +91,16 @@ public class ScreenNavPrograms extends ST_ScreenListContents {
 
 	@Override
 	protected void loadLabels() {
-		// F2, F3
 		labels[0] = "[Create]";
 		if (robotRun.getActiveRobot().numOfPrograms() > 0) {
 			labels[1] = "[Rename]";
 			labels[2] = "[Delete]";
 			labels[3] = "[Copy]";
-			labels[4] = "";
 		} else {
 			labels[1] = "";
 			labels[2] = "";
 			labels[3] = "";
-			labels[4] = "";
 		}
+		labels[4] = "";
 	}
 }

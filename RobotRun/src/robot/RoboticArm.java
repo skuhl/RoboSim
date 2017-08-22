@@ -2380,7 +2380,7 @@ public class RoboticArm {
 				return String.format("%s (%d)", tFrame.getName(), idx + 1);
 			}
 			
-			return Integer.toString(idx);
+			return Integer.toString(idx + 1);
 		}
 		
 		return null;
@@ -2718,7 +2718,7 @@ public class RoboticArm {
 				return String.format("%s (%d)", uFrame.getName(), idx + 1);
 			}
 			
-			return Integer.toString(idx);
+			return Integer.toString(idx + 1);
 		}
 		
 		return null;
