@@ -33,6 +33,7 @@ import expression.OperandRegister;
 import expression.Operator;
 import expression.PointMath;
 import expression.RobotPoint;
+import frame.RFrame;
 import frame.ToolFrame;
 import frame.UserFrame;
 import geom.CameraObject;
@@ -666,7 +667,18 @@ public abstract class DataManagement {
 		} else if(instType == 3) {
 			// Read data for a FrameInstruction object
 			boolean isCommented = in.readBoolean();
-			inst = new FrameInstruction( in.readInt(), in.readInt() );
+			int frameType = in.readInt();
+			int frameIdx = in.readInt();
+			RFrame frameRef;
+			
+			if (frameType == Fields.FTYPE_USER) {
+				frameRef = robot.getUserFrame(frameIdx);
+				
+			} else {
+				frameRef = robot.getToolFrame(frameIdx);
+			}
+			
+			inst = new FrameInstruction(frameType, frameIdx, frameRef);
 			inst.setIsCommented(isCommented);
 
 		} else if(instType == 4) {

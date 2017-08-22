@@ -2572,7 +2572,7 @@ public class RobotRun extends PApplet {
 	public void newFrameInstruction(int fType) {
 		RoboticArm r = getActiveRobot();
 		Program p = getActiveProg();
-		FrameInstruction f = new FrameInstruction(fType, -1);
+		FrameInstruction f = new FrameInstruction(fType, -1, null);
 
 		if (getActiveInstIdx() != p.getNumOfInst()) {
 			r.replaceInstAt(p, getActiveInstIdx(), f);

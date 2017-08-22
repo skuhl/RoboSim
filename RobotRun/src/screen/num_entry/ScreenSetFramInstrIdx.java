@@ -1,6 +1,7 @@
 package screen.num_entry;
 
 import core.RobotRun;
+import frame.RFrame;
 import global.Fields;
 import programming.FrameInstruction;
 import robot.RoboticArm;
@@ -21,7 +22,16 @@ public class ScreenSetFramInstrIdx extends ST_ScreenNumEntry {
 			if (frameIdx >= -1 && frameIdx < Fields.FRAME_NUM) {
 				FrameInstruction fInst = (FrameInstruction) r.getInstToEdit(robotRun.getActiveProg(), 
 						robotRun.getActiveInstIdx());
-				fInst.setReg(frameIdx);
+				RFrame frameRef;
+				
+				if (fInst.getFrameType() == Fields.FTYPE_USER) {
+					frameRef = r.getUserFrame(frameIdx);
+					
+				} else {
+					frameRef = r.getToolFrame(frameIdx);
+				}
+				
+				fInst.setFrame(frameIdx, frameRef);
 				robotRun.lastScreen();
 				
 			} else {

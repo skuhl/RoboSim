@@ -13,7 +13,7 @@ import processing.core.PVector;
  * 
  * @author Joshua Hooker
  */
-public class UserFrame {
+public class UserFrame implements RFrame {
 	
 	/**
 	 * The name associated with this frame.
