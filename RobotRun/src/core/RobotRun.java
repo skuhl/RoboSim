@@ -2212,11 +2212,7 @@ public class RobotRun extends PApplet {
 					
 				} else if (keyCode == KeyEvent.VK_Z) {
 					// Scenario undo
-					if (UI != null) {
-						if (!UI.isPendantActive()) {
-							undoScenarioEdit();
-						}
-					}	
+					undoScenarioEdit();
 				}
 				
 			} else {
@@ -2329,7 +2325,9 @@ public class RobotRun extends PApplet {
 			WorldObject selectedWO = UI.getSelectedWO();
 			
 			// Manipulate the selected world object
-			if (selectedWO != null && selectedWO == mouseOverWO) {
+			if (UI.canEditWorldObject() && selectedWO != null &&
+					selectedWO == mouseOverWO) {
+				
 				PVector camOrien = camera.getOrientation();
 				
 				pushMatrix();
@@ -2509,7 +2507,7 @@ public class RobotRun extends PApplet {
 						// Deselect the currently selected world object
 						UI.setSelectedWO(null);
 						
-					} else {
+					} else if (UI.canEditWorldObject()) {
 						UI.setSelectedWO(collision);
 					}
 				}

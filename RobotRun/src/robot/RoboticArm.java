@@ -438,7 +438,7 @@ public class RoboticArm {
 	 * @param axes
 	 *            The axes of the Coordinate System representing as a rotation
 	 *            quanternion
-	 * @returning The point, pt, in terms of the given coordinate system
+	 * @return		The point, pt, in terms of the given coordinate system
 	 */
 	public Point applyFrame(Point pt, PVector origin, RQuaternion axes) {
 		PVector position = RMath.vToFrame(pt.position, origin, axes);

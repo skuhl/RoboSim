@@ -924,6 +924,16 @@ public class WGUI implements ControlListener {
 	}
 	
 	/**
+	 * TODO comment this
+	 * 
+	 * @return
+	 */
+	public boolean canEditWorldObject() {
+		return menu == null || menu == WindowTab.EDIT ||
+				menu == WindowTab.CAMERA;
+	}
+	
+	/**
 	 * Reinitializes all input fields (textfields, dropdown lists, etc.).
 	 */
 	public void clearAllInputFields() {
