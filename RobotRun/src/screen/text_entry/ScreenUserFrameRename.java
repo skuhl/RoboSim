@@ -30,7 +30,7 @@ public class ScreenUserFrameRename extends ST_ScreenTextEntry {
 		UserFrame selectedFrame = r.getUserFrame(frameIdx);
 		selectedFrame.setName(workingText.toString());
 		
-		DataManagement.saveRobotData(robotRun.getActiveRobot(), 1);
+		DataManagement.saveRobotData(robotRun.getActiveRobot(), 2);
 		robotRun.lastScreen();
 	}
 

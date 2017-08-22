@@ -537,6 +537,7 @@ public class RobotRun extends PApplet {
 		try {
 			if (isShift()) {
 				nextScreen(ScreenMode.ACTIVE_FRAMES);
+				
 			} else {
 				// Update the coordinate frame
 				coordFrameTransition();
@@ -1985,15 +1986,18 @@ public class RobotRun extends PApplet {
 		
 		if (activeRID == 0) {
 			return ROBOTS.get(new Integer(1));
-			
-		} else {
-			return ROBOTS.get(new Integer(0));
 		}
+		
+		return ROBOTS.get(new Integer(0));
 	}
 
 	/**
 	 * Returns the first line in the current list of contents that the
 	 * instruction matching the given index appears on.
+	 * 
+	 * @param instrMenu
+	 * @param instrIdx
+	 * @return
 	 */
 	public int getInstrLine(MenuScroll instrMenu, int instrIdx) {
 		ArrayList<DisplayLine> instr = instrMenu.copyContents();
@@ -2313,6 +2317,7 @@ public class RobotRun extends PApplet {
 		}		
 	}
 	
+	@Override
 	public void mouseDragged(MouseEvent e) {
 		
 		if (mDragWinResize) {

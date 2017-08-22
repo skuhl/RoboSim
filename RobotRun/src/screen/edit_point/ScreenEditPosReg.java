@@ -24,7 +24,7 @@ public class ScreenEditPosReg extends ST_ScreenPointEntry {
 		if (pt != null) {
 			// Position was successfully pulled form the contents menu
 			pReg.point = pt;
-			DataManagement.saveRobotData(r, 3);
+			DataManagement.saveRobotData(r, 4);
 			robotRun.lastScreen();
 			
 		}

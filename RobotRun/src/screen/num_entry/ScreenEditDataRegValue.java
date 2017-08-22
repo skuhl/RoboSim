@@ -28,7 +28,7 @@ public class ScreenEditDataRegValue extends ST_ScreenNumEntry {
 			if (dReg != null) {
 				// Save inputed value
 				dReg.value = f;
-				DataManagement.saveRobotData(robotRun.getActiveRobot(), 3);
+				DataManagement.saveRobotData(robotRun.getActiveRobot(), 4);
 				robotRun.lastScreen();
 				
 			} else {

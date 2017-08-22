@@ -7,7 +7,7 @@ import screen.ScreenMode;
 public class ScreenSelectFrameInstrType extends ST_ScreenOptionsMenu {
 
 	public ScreenSelectFrameInstrType(RobotRun r) {
-		super(ScreenMode.SELECT_FRAME_INSTR_TYPE, r);
+		super(ScreenMode.SELECT_FRAME_INSTR_TYPE, r, 0, 10, 20, 3, 10, 20);
 	}
 
 	@Override
@@ -20,12 +20,12 @@ public class ScreenSelectFrameInstrType extends ST_ScreenOptionsMenu {
 
 		robotRun.switchScreen(ScreenMode.SET_FRAME_INSTR_IDX, true);
 	}
-
+		
 	@Override
 	protected String loadHeader() {
 		return "SELECT FRAME INSTRUCTION TYPE";
 	}
-
+	
 	@Override
 	protected void loadOptions() {
 		options.addLine("1. TFRAME_NUM = ...");

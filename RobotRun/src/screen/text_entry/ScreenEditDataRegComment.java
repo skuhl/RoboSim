@@ -21,7 +21,7 @@ public class ScreenEditDataRegComment extends ST_ScreenTextEntry {
 			}
 			// Save the given comment to the selected register
 			r.getDReg(robotRun.getLastScreen().getContentIdx()).comment = workingText.toString();
-			DataManagement.saveRobotData(r, 3);
+			DataManagement.saveRobotData(r, 4);
 			workingText = new StringBuilder();
 			robotRun.lastScreen();
 		}

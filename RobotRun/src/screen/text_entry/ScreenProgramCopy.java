@@ -31,10 +31,10 @@ public class ScreenProgramCopy extends ST_ScreenTextEntry {
 				if (withSameName == null) {
 					Program newProg = prog.clone();
 					newProg.setName(workingText.toString());
-					int new_prog = robotRun.getActiveRobot().addProgram(newProg);
+					int new_prog = r.addProgram(newProg);
 					robotRun.setActiveProgIdx(new_prog);
 					robotRun.setActiveInstIdx(0);
-					DataManagement.saveRobotData(robotRun.getActiveRobot(), 1);
+					DataManagement.saveProgram(r.RID, newProg);
 					robotRun.lastScreen();
 					
 				} else {

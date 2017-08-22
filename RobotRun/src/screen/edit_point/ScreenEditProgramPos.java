@@ -25,8 +25,9 @@ public class ScreenEditProgramPos extends ST_ScreenPointEntry {
 
 		if (pt != null) {
 			// Update the position of the active motion instruction
-			robotRun.getActiveProg().setPosition(pMInst.getPosIdx(), pt);
-			DataManagement.saveRobotData(r, 1);
+			Program p = robotRun.getActiveProg();
+			p.setPosition(pMInst.getPosIdx(), pt);
+			DataManagement.saveProgram(r.RID, p);
 			robotRun.lastScreen();
 			
 		}

@@ -6,7 +6,7 @@ import screen.ScreenMode;
 public class ScreenSelectContStmt extends ST_ScreenOptionsMenu {
 
 	public ScreenSelectContStmt(RobotRun r) {
-		super(ScreenMode.SELECT_COND_STMT, r);
+		super(ScreenMode.SELECT_COND_STMT, r, 0, 10, 20, 4, 10, 20);
 	}
 	
 	@Override
@@ -37,5 +37,4 @@ public class ScreenSelectContStmt extends ST_ScreenOptionsMenu {
 		options.addLine("2. IF (...)");
 		options.addLine("3. SELECT Stmt");
 	}
-
 }

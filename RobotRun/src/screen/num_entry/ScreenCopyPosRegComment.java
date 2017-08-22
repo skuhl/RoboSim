@@ -23,7 +23,7 @@ public class ScreenCopyPosRegComment extends ST_ScreenNumEntry {
 			regIdx = Integer.parseInt(workingText.toString()) - 1;
 			robotRun.getActiveRobot().getPReg(regIdx).comment =
 					robotRun.getActiveRobot().getPReg(itemIdx).comment;
-			DataManagement.saveRobotData(robotRun.getActiveRobot(), 3);
+			DataManagement.saveRobotData(robotRun.getActiveRobot(), 4);
 			robotRun.lastScreen();
 
 		} catch (NumberFormatException MFEx) {

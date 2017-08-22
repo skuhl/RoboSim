@@ -29,8 +29,7 @@ public class ScreenProgramCreate extends ST_ScreenTextEntry {
 				int new_prog = r.addProgram(new Program(workingText.toString()));
 				robotRun.setActiveProgIdx(new_prog);
 				robotRun.setActiveInstIdx(0);
-	
-				DataManagement.saveRobotData(robotRun.getActiveRobot(), 1);
+				
 				robotRun.switchScreen(ScreenMode.NAV_PROG_INSTR, false);
 				
 			} else {

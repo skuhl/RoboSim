@@ -257,6 +257,47 @@ public abstract class DataManagement {
 		}
 	}
 	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param RID
+	 * @param p
+	 * @return
+	 */
+	public static int saveProgram(int RID, Program p) {
+		String dirPath = String.format("%srobot%d/programs", tmpDirPath, RID);
+		File destDir = new File(dirPath);
+		// Create the robot's programs directory if it does not exist
+		if (!destDir.exists()) {
+			destDir.mkdir();
+		}
+		
+		File progFile = new File(String.format("%s/%s.bin", dirPath,
+				p.getName()));
+		
+		try {
+			// Create the program save file if it does not exist
+			if (!progFile.exists()) {
+				progFile.createNewFile();
+			}
+			
+			FileOutputStream out = new FileOutputStream(progFile);
+			DataOutputStream dataOut = new DataOutputStream(out);
+			
+			saveProgram(p, dataOut);
+			
+			dataOut.close();
+			out.close();
+			
+		} catch (IOException IOEx) {
+			System.err.println("An error occured while saving %s\n");
+			IOEx.printStackTrace();
+			return 1;
+		}
+		
+		return 0;
+	}
+	
 	public static int saveRobotData(RoboticArm robot, int dataFlag) {
 		validateTmpDir();
 		File destDir = new File( String.format("%srobot%d/", tmpDirPath, robot.RID) );

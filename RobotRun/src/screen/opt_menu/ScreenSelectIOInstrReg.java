@@ -7,7 +7,7 @@ import screen.ScreenState;
 public class ScreenSelectIOInstrReg extends ST_ScreenOptionsMenu {
 
 	public ScreenSelectIOInstrReg(RobotRun r) {
-		super(ScreenMode.SELECT_IO_INSTR_REG, r);
+		super(ScreenMode.SELECT_IO_INSTR_REG, r, 0, 10, 20, 7, 10, 20);
 		// Restrict column index to the second column
 		options.setColumnIdx(1);
 	}
@@ -51,5 +51,4 @@ public class ScreenSelectIOInstrReg extends ST_ScreenOptionsMenu {
 	protected void loadVars(ScreenState s) {
 		setScreenIndices(0, 1, 0, 0, 0);
 	}
-
 }

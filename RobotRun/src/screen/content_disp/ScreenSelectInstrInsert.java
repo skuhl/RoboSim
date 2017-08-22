@@ -1,10 +1,10 @@
-package screen.opt_menu;
+package screen.content_disp;
 
 import core.RobotRun;
 import robot.RoboticArm;
 import screen.ScreenMode;
 
-public class ScreenSelectInstrInsert extends ST_ScreenOptionsMenu {
+public class ScreenSelectInstrInsert extends ST_ScreenListContents {
 
 	public ScreenSelectInstrInsert(RobotRun r) {
 		super(ScreenMode.SELECT_INSTR_INSERT, r);
@@ -12,7 +12,7 @@ public class ScreenSelectInstrInsert extends ST_ScreenOptionsMenu {
 
 	@Override
 	public void actionEntr() {
-		switch (options.getLineIdx()) {
+		switch (contents.getLineIdx()) {
 		case 0: // I/O
 			robotRun.nextScreen(ScreenMode.SELECT_IO_INSTR_REG);
 			break;
@@ -31,7 +31,7 @@ public class ScreenSelectInstrInsert extends ST_ScreenOptionsMenu {
 		case 5: // Call
 			robotRun.newCallInstruction();
 			robotRun.editIdx = robotRun.getActiveRobot().RID;
-			robotRun.switchScreen(ScreenMode.SET_CALL_PROG, false);
+			robotRun.switchScreen(ScreenMode.SET_CALL_PROG, true);
 			break;
 		case 6: // RobotCall
 			robotRun.newRobotCallInstruction();
@@ -39,7 +39,7 @@ public class ScreenSelectInstrInsert extends ST_ScreenOptionsMenu {
 			
 			if (inactive.numOfPrograms() > 0) {
 				robotRun.editIdx = robotRun.getInactiveRobot().RID;
-				robotRun.switchScreen(ScreenMode.SET_CALL_PROG, false);
+				robotRun.switchScreen(ScreenMode.SET_CALL_PROG, true);
 				
 			} else {
 				// No programs exist in the inactive robot
@@ -47,28 +47,27 @@ public class ScreenSelectInstrInsert extends ST_ScreenOptionsMenu {
 			}
 		}
 	}
-
+	
 	@Override
-	protected String loadHeader() {
-		return robotRun.getActiveProg().getName();
-	}
-
-	@Override
-	protected void loadOptions() {
-		options.addLine("1. I/O");
-		options.addLine("2. Frames");
-		options.addLine("3. Registers");
-		options.addLine("4. IF/SELECT");
-		options.addLine("5. JMP/LBL");
-		options.addLine("6. CALL");
+	protected void loadContents() {
+		contents.addLine("1. I/O");
+		contents.addLine("2. Frames");
+		contents.addLine("3. Registers");
+		contents.addLine("4. IF/SELECT");
+		contents.addLine("5. JMP/LBL");
+		contents.addLine("6. CALL");
 		
 		/*
 		 * Only allow the user to add robot call instructions when the
 		 * second robot is in the application
 		 */
 		if (robotRun.isSecondRobotUsed()) {
-			options.addLine("7. RCALL");
+			contents.addLine("7. RCALL");
 		}
 	}
 
+	@Override
+	protected String loadHeader() {
+		return robotRun.getActiveProg().getName();
+	}
 }

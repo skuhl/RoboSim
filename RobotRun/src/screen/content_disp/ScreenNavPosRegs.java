@@ -78,7 +78,7 @@ public class ScreenNavPosRegs extends ST_ScreenListContents {
 				// Set the position type of the selected position register
 				PositionRegister toEdit = robotRun.getActiveRobot().getPReg(itemIdx);
 				toEdit.isCartesian = !toEdit.isCartesian;
-				DataManagement.saveRobotData(robotRun.getActiveRobot(), 3);
+				DataManagement.saveRobotData(robotRun.getActiveRobot(), 4);
 			}
 		}
 	}
@@ -125,7 +125,7 @@ public class ScreenNavPosRegs extends ST_ScreenListContents {
 			// Save the Robot's current position and joint angles
 			pReg.point = robotRun.getActiveRobot().getToolTipNative();
 			pReg.isCartesian = true;
-			DataManagement.saveRobotData(r, 3);
+			DataManagement.saveRobotData(r, 4);
 		}
 	}
 	
