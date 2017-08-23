@@ -2,7 +2,7 @@ package screen.text_entry;
 
 import core.RobotRun;
 import frame.UserFrame;
-import global.DataManagement;
+import io.DataManagement;
 import robot.RoboticArm;
 import screen.ScreenMode;
 

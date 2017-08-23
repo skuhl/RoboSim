@@ -1,4 +1,4 @@
-package global;
+package io;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -50,6 +50,7 @@ import geom.RQuaternion;
 import geom.RShape;
 import geom.Scenario;
 import geom.WorldObject;
+import global.Fields;
 import processing.core.PVector;
 import programming.CallInstruction;
 import programming.CamMoveToObject;
@@ -214,17 +215,24 @@ public abstract class DataManagement {
 		scenarioDirPath = appRef.sketchPath(tmpDirPath + "scenarios\\");
 	}
 	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param appRef
+	 */
 	public static void loadState(RobotRun appRef) {
-		File activeFile = new File(scenarioDirPath + "activeScenario.bin");
+		// Run threads to load each robot's data
+		Thread loadRobot0 = new Thread(new LoadRobotData(appRef.getRobot(0),
+				tmpDirPath));
+		Thread loadRobot1 = new Thread(new LoadRobotData(appRef.getRobot(1),
+				tmpDirPath));
 		
-		if (activeFile.exists()) {
-			// Remove the old active scenario file
-			activeFile.delete();
-		}
+		loadRobot0.start();
+		loadRobot1.start();
 		
 		loadScenarioBytes(appRef, scenarioDirPath);
 		
-		activeFile = new File(tmpDirPath + "activeScenario.bin");
+		File activeFile = new File(tmpDirPath + "activeScenario.bin");
 		
 		try {
 			if (activeFile.exists()) {
@@ -245,12 +253,34 @@ public abstract class DataManagement {
 			IOEx.printStackTrace();
 		}
 		
-		loadRobotData(appRef.getRobot(0));
-		loadRobotData(appRef.getRobot(1));
 		loadCameraData(appRef);
 		
+		// Wait for the robot data threads to finish
+		Fields.waitForThread(loadRobot0);
+		Fields.waitForThread(loadRobot1);
+		
+		/* Run a thread for each program of each robot to update references for
+		 * certain instructions */
+		int totalThreads = appRef.getRobot(0).numOfPrograms() +
+				appRef.getRobot(1).numOfPrograms();
+		Thread[] robotPostProc = new Thread[totalThreads]; 
+		int tdx = 0;
+		
 		for (int rdx = 0; rdx < 2; ++rdx) {
-			robotPostProcessing(appRef.getRobot(rdx), appRef);
+			RoboticArm r = appRef.getRobot(rdx);
+			
+			for (int pdx = 0; pdx < r.numOfPrograms(); ++pdx) {
+				RobotPostProcessing threadLogic = new RobotPostProcessing(appRef,
+						r, pdx);
+				robotPostProc[tdx] = new Thread(threadLogic);
+				robotPostProc[tdx].start();
+				++tdx;
+			}
+		}
+		
+		// Wait for all the threads to finish
+		for (Thread t : robotPostProc) {
+			Fields.waitForThread(t);
 		}
 	}
 	
@@ -660,84 +690,7 @@ public abstract class DataManagement {
 		return list;
 	}
 	
-	private static int loadFrameBytes(RoboticArm robot, String srcPath) {
-		int idx = -1;
-		File src = new File(srcPath);
-		
-		try {
-			FileInputStream in = new FileInputStream(src);
-			DataInputStream dataIn = new DataInputStream(in);
-
-			// Load Tool Frames
-			int size = Math.max(0, Math.min(dataIn.readInt(), 10));
-			
-			for(idx = 0; idx < size; idx += 1) {
-				loadTFrameData(robot.getToolFrame(idx), dataIn);
-			}
-
-			// Load User Frames
-			size = Math.max(0, Math.min(dataIn.readInt(), 10));
-
-			for(idx = 0; idx < size; idx += 1) {
-				loadUFrameData(robot.getUserFrame(idx), dataIn);
-			}
-
-			dataIn.close();
-			in.close();
-			return 0;
-
-		} catch (Exception FNFEx) {
-			System.err.printf("Current frame load method failed\n",
-					src.getName());
-			return loadFrameBytesOldest(robot, srcPath);
-		}
-	}
 	
-	private static int loadFrameBytesOldest(RoboticArm robot, String srcPath) {
-		int idx = -1;
-		File src = new File(srcPath);
-		
-		try {
-			FileInputStream in = new FileInputStream(src);
-			DataInputStream dataIn = new DataInputStream(in);
-
-			// Load Tool Frames
-			int size = Math.max(0, Math.min(dataIn.readInt(), 10));
-			
-			for(idx = 0; idx < size; idx += 1) {
-				loadTFrameDataOldest(robot.getToolFrame(idx), dataIn);
-			}
-
-			// Load User Frames
-			size = Math.max(0, Math.min(dataIn.readInt(), 10));
-
-			for(idx = 0; idx < size; idx += 1) {
-				loadUFrameDataOldest(robot.getUserFrame(idx), dataIn);
-			}
-
-			dataIn.close();
-			in.close();
-			return 0;
-
-		} catch (FileNotFoundException FNFEx) {
-			// Could not find src
-			System.err.printf("%s does not exist!\n", src.getName());
-			FNFEx.printStackTrace();
-			return 1;
-
-		} catch (EOFException EOFEx) {
-			// Reached the end of src unexpectedly
-			System.err.printf("End of file, %s, was reached unexpectedly!\n", src.getName());
-			EOFEx.printStackTrace();
-			return 3;
-
-		} catch (IOException IOEx) {
-			// Error with reading from src
-			System.err.printf("%s is corrupt!\n", src.getName());
-			IOEx.printStackTrace();
-			return 2;
-		}
-	}
 	
 	private static Instruction loadInstruction(RoboticArm robot, DataInputStream in)
 			throws IOException {
@@ -903,7 +856,9 @@ public abstract class DataManagement {
 		return inst;
 	}
 	
-	private static Integer loadInteger(DataInputStream in) throws IOException {
+	protected static Integer loadInteger(DataInputStream in)
+			throws IOException {
+		
 		// Read byte flag
 		byte flag = in.readByte();
 
@@ -915,42 +870,9 @@ public abstract class DataManagement {
 		return in.readInt();
 	}
 
-	private static void loadMacros(RoboticArm r, String filePath) {	
-		try {
-			File destDir = new File(filePath);
-			FileInputStream in = new FileInputStream(destDir);
-			DataInputStream dataIn = new DataInputStream(in);
-			
-			if (!destDir.exists()) {
-				destDir.mkdirs();
-			}
-			
-			int numMacros = dataIn.readInt();
-			
-			for(int i = 0; i < numMacros; i += 1) {
-				boolean isManual = dataIn.readBoolean();
-				String progName = dataIn.readUTF();
-				int keyNum = dataIn.readInt();
-				
-				Program p = r.getProgram(progName);
-				Macro m = new Macro(isManual, r, p, keyNum);
-				
-				r.getMacroList().add(m);
-				
-				if(!isManual && keyNum != -1) {
-					r.getMacroKeyBinds()[keyNum] = m;
-				}
-			}
-			
-			dataIn.close();
-			in.close();
-		}
-		catch (Exception e) {
-			System.err.println("Unable to load macros for robot " + r.RID + "!");
-		}
-	}
+	
 
-	private static Point loadPoint(DataInputStream in) throws IOException {
+	protected static Point loadPoint(DataInputStream in) throws IOException {
 		// Read flag byte
 		byte val = in.readByte();
 
@@ -968,7 +890,9 @@ public abstract class DataManagement {
 		return new Point(position, orientation, angles);
 	}
 
-	protected static Program loadProgram(RoboticArm robot, DataInputStream in) throws IOException {
+	protected static Program loadProgram(RoboticArm robot, DataInputStream in)
+			throws IOException {
+		
 		// Read flag byte
 		byte flag = in.readByte();
 
@@ -1123,99 +1047,6 @@ public abstract class DataManagement {
 		v.z = in.readFloat();
 		return v;
 	}
-	
-	private static int loadRegisterBytes(RoboticArm robot, String srcPath) {
-		File src = new File(srcPath);
-		
-		try {
-			FileInputStream in = new FileInputStream(src);
-			DataInputStream dataIn = new DataInputStream(in);
-
-			int size = Math.max(0, Math.min(dataIn.readInt(), Fields.DPREG_NUM));
-
-			// Load the Register entries
-			while(size-- > 0) {
-				// Each entry is saved after its respective index in REG
-				int reg = dataIn.readInt();
-
-				Float v = dataIn.readFloat();
-				// Null values are saved as NaN
-				if(Float.isNaN(v)) { v = null; }
-
-				String c = dataIn.readUTF();
-				// Null comments are saved as ""
-				if(c.equals("")) { c = null; }
-				
-				DataRegister dReg = robot.getDReg(reg);
-				
-				if (dReg != null) {
-					dReg.value = v;
-					dReg.comment = c;
-				}
-			}
-
-			size = Math.max(0, Math.min(dataIn.readInt(), Fields.DPREG_NUM));
-
-			// Load the Position Register entries
-			while(size-- > 0) {
-				// Each entry is saved after its respective index in POS_REG
-				int idx = dataIn.readInt();
-
-				Point p = loadPoint(dataIn);
-				String c = dataIn.readUTF();
-				// Null comments are stored as ""
-				if(c == "") { c = null; }
-				boolean isCartesian = dataIn.readBoolean();
-				
-				PositionRegister pReg = robot.getPReg(idx);
-				
-				if (pReg != null) {
-					pReg.point = p;
-					pReg.comment = c;
-					pReg.isCartesian = isCartesian;
-				}
-			}
-
-			dataIn.close();
-			in.close();
-			return 0;
-
-		} catch (FileNotFoundException FNFEx) {
-			// Could not be located src
-			System.err.printf("%s does not exist!\n", src.getName());
-			FNFEx.printStackTrace();
-			return 1;
-
-		} catch (EOFException EOFEx) {
-			// Unexpectedly reached the end of src
-			System.err.printf("End of file, %s, was reached unexpectedly!\n", src.getName());
-			EOFEx.printStackTrace();
-			return 3;
-
-		} catch (IOException IOEx) {
-			// Error occrued while reading from src
-			System.err.printf("%s is corrupt!\n", src.getName());
-			IOEx.printStackTrace();
-			return 2;
-		}
-	}
-
-	private static int loadRobotData(RoboticArm robot) {
-		File srcDir = new File( String.format("%srobot%d/", tmpDirPath, robot.RID) );
-		
-		if (!srcDir.exists() || !srcDir.isDirectory()) {
-			// No such directory exists
-			return 1;	
-		}
-		
-		// Load the Robot's programs, frames, and registers from their respective files
-		loadProgramBytes(robot);
-		loadFrameBytes(robot, String.format("%s/frames.bin", srcDir.getAbsolutePath()));
-		loadRegisterBytes(robot, String.format("%s/registers.bin", srcDir.getAbsolutePath()));
-		loadMacros(robot, String.format("%s/macros.bin", srcDir.getAbsolutePath()));
-		
-		return 0;
-	}
 
 	private static RQuaternion loadRQuaternion(DataInputStream in) throws IOException {
 		// Read flag byte
@@ -1314,7 +1145,10 @@ public abstract class DataManagement {
 		for (int idx = 0; idx < loadThreads.length; ++idx) {
 			try {
 				loadThreads[idx].join();
-				appRef.addScenario(loadedScenarios[idx]);
+				
+				if (loadedScenarios[idx] != null) {
+					appRef.addScenario(loadedScenarios[idx]);
+				}
 				
 			} catch (InterruptedException IEx) {
 				IEx.printStackTrace();
@@ -1372,7 +1206,7 @@ public abstract class DataManagement {
 		return shape;
 	}
 	
-	private static void loadTFrameData(ToolFrame tFrame, DataInputStream in)
+	protected static void loadTFrameData(ToolFrame tFrame, DataInputStream in)
 			throws IOException {
 		
 		byte type = in.readByte();
@@ -1393,8 +1227,8 @@ public abstract class DataManagement {
 		}
 	}
 	
-	private static void loadTFrameDataOldest(ToolFrame tFrame, DataInputStream in)
-			throws IOException {
+	protected static void loadTFrameDataOldest(ToolFrame tFrame,
+			DataInputStream in) throws IOException {
 		
 		byte type = in.readByte();
 
@@ -1415,7 +1249,7 @@ public abstract class DataManagement {
 		tFrame.setOrienDirect(loadRQuaternion(in));
 	}
 	
-	private static void loadUFrameData(UserFrame uFrame, DataInputStream in)
+	protected static void loadUFrameData(UserFrame uFrame, DataInputStream in)
 			throws IOException {
 		
 		byte type = in.readByte();
@@ -1436,8 +1270,8 @@ public abstract class DataManagement {
 		}
 	}
 	
-	private static void loadUFrameDataOldest(UserFrame uFrame, DataInputStream in)
-			throws IOException {
+	protected static void loadUFrameDataOldest(UserFrame uFrame,
+			DataInputStream in) throws IOException {
 		
 		byte type = in.readByte();
 

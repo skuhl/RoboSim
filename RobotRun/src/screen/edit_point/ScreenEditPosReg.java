@@ -2,7 +2,7 @@ package screen.edit_point;
 
 import core.RobotRun;
 import geom.Point;
-import global.DataManagement;
+import io.DataManagement;
 import regs.PositionRegister;
 import regs.Register;
 import robot.RoboticArm;

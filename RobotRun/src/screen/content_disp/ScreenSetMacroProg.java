@@ -1,7 +1,7 @@
 package screen.content_disp;
 
 import core.RobotRun;
-import global.DataManagement;
+import io.DataManagement;
 import programming.Program;
 import robot.RoboticArm;
 import screen.ScreenMode;

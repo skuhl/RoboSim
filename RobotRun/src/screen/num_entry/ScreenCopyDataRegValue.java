@@ -1,7 +1,7 @@
 package screen.num_entry;
 
 import core.RobotRun;
-import global.DataManagement;
+import io.DataManagement;
 import regs.Register;
 import robot.RoboticArm;
 import screen.ScreenMode;

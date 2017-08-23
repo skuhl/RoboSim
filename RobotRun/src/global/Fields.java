@@ -915,5 +915,18 @@ public abstract class Fields {
 		);
 		
 	}
-
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param t
+	 */
+	public static void waitForThread(Thread t) {
+		try {
+			t.join();
+			
+		} catch (InterruptedException IEx) {
+			IEx.printStackTrace();
+		}
+	}
 }

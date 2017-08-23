@@ -2,8 +2,8 @@ package screen.edit_point;
 
 import core.RobotRun;
 import geom.Point;
-import global.DataManagement;
 import global.Fields;
+import io.DataManagement;
 import programming.PosMotionInst;
 import programming.Program;
 import robot.RoboticArm;

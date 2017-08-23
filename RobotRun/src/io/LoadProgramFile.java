@@ -1,4 +1,4 @@
-package global;
+package io;
 
 import java.io.DataInputStream;
 import java.io.EOFException;
