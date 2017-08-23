@@ -120,8 +120,10 @@ public abstract class DataManagement {
 		}
 	}
 	
-	public static void exportProgsToTxt(RoboticArm r, String directory) {
-		File destDir = new File(directory);
+	public static void exportProgsToTxt(RoboticArm r) {
+		String destDirPath = String.format("%s/robot%d/out", tmpDirPath,
+				r.RID);
+		File destDir = new File(destDirPath);
 		
 		if (!destDir.exists()) {
 			destDir.mkdir();
@@ -129,7 +131,7 @@ public abstract class DataManagement {
 		
 		for(int i = 0; i < r.numOfPrograms(); i += 1) {
 			Program p = r.getProgram(i);
-			File textfile = new File(directory + "/" + p.getName() + ".txt");
+			File textfile = new File(destDirPath + "/" + p.getName() + ".txt");
 			
 			try {
 				PrintWriter out = new PrintWriter(textfile);
@@ -194,10 +196,6 @@ public abstract class DataManagement {
 		}
 		
 		return fileNames;
-	}
-	
-	public static String getTmpDirPath() {
-		return tmpDirPath;
 	}
 	
 	/**

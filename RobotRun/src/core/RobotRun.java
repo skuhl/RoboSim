@@ -657,11 +657,8 @@ public class RobotRun extends PApplet {
 		
 		for (Integer rid : rids) {
 			// Export each robot's programs to their respective directories
-			String destDir = String.format("%s/robot%d/out",
-					DataManagement.getTmpDirPath(), rid);
-			DataManagement.exportProgsToTxt(getRobot(rid), destDir);
-		}
-		
+			DataManagement.exportProgsToTxt(getRobot(rid));
+		}	
 	}
 	
 	/**
