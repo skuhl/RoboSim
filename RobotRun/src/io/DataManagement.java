@@ -352,44 +352,17 @@ public abstract class DataManagement {
 		return 0;
 	}
 	
-	public static int saveRobotData(RoboticArm robot, int dataFlag) {
+	/**
+	 * TODO comment this
+	 * 
+	 * @param robot
+	 * @param dataFlag
+	 */
+	public static void saveRobotData(RoboticArm robot, int dataFlag) {
 		validateTmpDir();
-		File destDir = new File( String.format("%srobot%d/", tmpDirPath, robot.RID) );
-		
-		// Initialize and possibly create the robot directory
-		if (!destDir.exists()) {
-			destDir.mkdir();
-		}
-		
-		if ((dataFlag & 0x1) != 0) {
-			File oldSaveFile = new File(String.format("%s/programs.bin",
-					destDir.getAbsolutePath()));
-			
-			if (oldSaveFile.exists()) {
-				// Remove old program save file
-				oldSaveFile.delete();
-			}
-			
-			// Save the robot's programs
-			saveProgramBytes(robot, String.format("%s/programs", destDir.getAbsolutePath()));
-		}
-		
-		if ((dataFlag & 0x2) != 0) {
-			// Save the robot's frames
-			saveFrameBytes(robot, String.format("%s/frames.bin", destDir.getAbsolutePath()));
-		}
-		
-		if ((dataFlag & 0x4) != 0) {
-			// Save the robot's registers
-			saveRegisterBytes(robot, String.format("%s/registers.bin", destDir.getAbsolutePath()));
-		}
-		
-		if ((dataFlag & 0x8) != 0) {
-			// Save the robot's registers
-			saveMacros(robot, String.format("%s/macros.bin", destDir.getAbsolutePath()));
-		}
-		
-		return 0;
+		// Save the data for the given robot
+		SaveRobotData process = new SaveRobotData(robot, tmpDirPath, dataFlag);
+		process.run();
 	}
 	
 	public static void saveScenario(Scenario s) {
@@ -449,8 +422,21 @@ public abstract class DataManagement {
 		}
 	}
 	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param appRef
+	 */
 	public static void saveState(RobotRun appRef) {
 		validateTmpDir();
+		// Run threads for saving each robot's data
+		Thread saveRobot0 = new Thread(new SaveRobotData(appRef.getRobot(0),
+				tmpDirPath, 15));
+		Thread saveRobot1 = new Thread(new SaveRobotData(appRef.getRobot(1),
+				tmpDirPath, 15));
+		saveRobot0.start();
+		saveRobot1.start();
+		
 		saveScenarioBytes(appRef, scenarioDirPath);
 		
 		Scenario active = appRef.getActiveScenario();
@@ -480,9 +466,11 @@ public abstract class DataManagement {
 			}
 		}
 		
-		saveRobotData(appRef.getRobot(0), 15);
-		saveRobotData(appRef.getRobot(1), 15);
 		saveCameraData(appRef, appRef.getRobotCamera());
+		
+		// Wait for the robot threads to finish
+		Fields.waitForThread(saveRobot0);
+		Fields.waitForThread(saveRobot1);
 	}
 	
 	private static double[][] load2DDoubleArray(DataInputStream in) throws IOException {
@@ -1569,53 +1557,6 @@ public abstract class DataManagement {
 			}
 		}
 	}
-
-	private static int saveFrameBytes(RoboticArm robot, String destPath) {
-		File dest = new File(destPath);
-
-		try {
-			// Create dest if it does not already exist
-			if(!dest.exists()) {
-				try {
-					dest.createNewFile();
-					
-				} catch (IOException IOEx) {
-					IOEx.printStackTrace();
-				}
-			}
-
-			FileOutputStream out = new FileOutputStream(dest);
-			DataOutputStream dataOut = new DataOutputStream(out);
-
-			// Save Tool Frames
-			dataOut.writeInt(Fields.FRAME_NUM);
-			for (int idx = 0; idx < Fields.FRAME_NUM; ++idx) {
-				saveToolFrame(robot.getToolFrame(idx), dataOut);
-			}
-			
-			// Save User Frames
-			dataOut.writeInt(Fields.FRAME_NUM);
-			for (int idx = 0; idx < Fields.FRAME_NUM; ++idx) {
-				saveUserFrame(robot.getUserFrame(idx), dataOut);
-			}
-
-			dataOut.close();
-			out.close();
-			return 0;
-
-		} catch (FileNotFoundException FNFEx) {
-			// Could not find dest
-			System.err.printf("%s does not exist!\n", dest.getName());
-			FNFEx.printStackTrace();
-			return 1;
-
-		} catch (IOException IOEx) {
-			// Error with writing to dest
-			System.err.printf("%s is corrupt!\n", dest.getName());
-			IOEx.printStackTrace();
-			return 2;
-		}
-	}
 	
 	private static void saveInstruction(Instruction inst, DataOutputStream out)
 			throws IOException {
@@ -1804,52 +1745,9 @@ public abstract class DataManagement {
 			out.writeInt(i);
 		}
 	}
-	
-	private static void saveMacros(RoboticArm r, String filePath) {
-		File destDir = new File(filePath);
-		
-		try {		
-			// Create dest if it does not already exist
-			if(!destDir.exists()) {      
-				try {
-					destDir.createNewFile();
-					System.err.printf("Successfully created %s.\n", destDir.getName());
-				} catch (IOException IOEx) {
-					System.err.printf("Could not create %s ...\n", destDir.getName());
-					IOEx.printStackTrace();
-					return;
-				}
-			}
-						
-			FileOutputStream out = new FileOutputStream(destDir);
-			DataOutputStream dataOut = new DataOutputStream(out);
-			
-			dataOut.writeInt(r.getMacroList().size());
-			
-			for (Macro m: r.getMacroList()) {
-				Program p = m.getProg();
-				
-				dataOut.writeBoolean(m.isManual());
-				
-				if (p == null) {
-					dataOut.writeUTF("");
-					
-				} else {
-					dataOut.writeUTF(p.getName());
-				}
-				
-				dataOut.writeInt(m.getKeyNum());
-			}
-			
-			dataOut.close();
-			out.close();
-		} 
-		catch (Exception e) {
-			System.err.println("Unable to save macros for robot " + r.RID + "!");
-		}
-	}
 
-	private static void savePoint(Point p, DataOutputStream out) throws IOException {
+	protected static void savePoint(Point p, DataOutputStream out)
+			throws IOException {
 
 		if (p == null) {
 			// Indicate a null value is saved
@@ -1899,49 +1797,6 @@ public abstract class DataManagement {
 		}
 	}
 
-	private static int saveProgramBytes(RoboticArm robot, String destDirPath) {
-		File destDir = new File(destDirPath);
-		
-		if (destDir.exists() && destDir.isFile()) {
-			// Verify the destination directory
-			destDir.delete();
-			destDir.mkdir();
-			System.err.printf("Successfully created %s.\n", destDir.getName());
-			return 1;
-			
-		// Create dest if it does not already exist
-		} else if (!destDir.exists()) {
-			destDir.mkdir();
-			System.err.printf("Successfully created %s.\n", destDir.getName());
-		}
-		
-		/* Save each program in a separate file within the given robot's program
-		 * directory */
-		Thread[] saveThreads = new Thread[robot.numOfPrograms()];
-		
-		for (int idx = 0; idx < saveThreads.length; ++idx) {
-			Program p = robot.getProgram(idx);
-			File dest = new File( String.format("%s/%s.bin", destDirPath,
-					p.getName()) );
-			/* Initialize each save thread with given program and file
-			 * destination */
-			saveThreads[idx] = new Thread(new SaveProgramFile(p, dest));
-			saveThreads[idx].start();
-		}
-		
-		// Wait for each thread to finish
-		for (int idx = 0; idx < saveThreads.length; ++idx) {
-			try {
-				saveThreads[idx].join();
-				
-			} catch (InterruptedException IEx) {
-				IEx.printStackTrace();
-			}
-		}
-		
-		return 0;
-	}
-
 	private static void savePVector(PVector p, DataOutputStream out) throws IOException {
 
 		if (p == null) {
@@ -1958,96 +1813,7 @@ public abstract class DataManagement {
 		}
 	}
 	
-	private static int saveRegisterBytes(RoboticArm robot, String destPath) {
-		File dest = new File(destPath);
-		
-		try {
-			// Create dest if it does not already exist
-			if (!dest.exists()) {
-				dest.createNewFile();
-			}
-
-			FileOutputStream out = new FileOutputStream(dest);
-			DataOutputStream dataOut = new DataOutputStream(out);
-
-			int numOfREntries = 0,
-				numOfPREntries = 0;
-
-			ArrayList<Integer> initializedR = new ArrayList<>(),
-					initializedPR = new ArrayList<>();
-
-			// Count the number of initialized entries and save their indices
-			for(int idx = 0; idx < Fields.DPREG_NUM; ++idx) {
-				DataRegister dReg = robot.getDReg(idx);
-				PositionRegister pReg = robot.getPReg(idx);
-				
-				if (dReg.value != null || dReg.comment != null) {
-					initializedR.add(idx);
-					++numOfREntries;
-				}
-
-				if (pReg.point != null || pReg.comment != null) {
-					initializedPR.add(idx);
-					++numOfPREntries;
-				}
-			}
-
-			dataOut.writeInt(numOfREntries);
-			// Save the Register entries
-			for(Integer idx : initializedR) {
-				DataRegister dReg = robot.getDReg(idx);
-				dataOut.writeInt(idx);
-
-				if (dReg.value == null) {
-					// save for null Float value
-					dataOut.writeFloat(Float.NaN);
-					
-				} else {
-					dataOut.writeFloat(dReg.value);
-				}
-
-				if (dReg.comment == null) {
-					dataOut.writeUTF("");
-					
-				} else {
-					dataOut.writeUTF(dReg.comment);
-				}
-			}
-
-			dataOut.writeInt(numOfPREntries);
-			// Save the Position Register entries
-			for(Integer idx : initializedPR) {
-				PositionRegister pReg = robot.getPReg(idx);
-				dataOut.writeInt(idx);
-				savePoint(pReg.point, dataOut);
-
-				if (pReg.comment == null) {
-					dataOut.writeUTF("");
-					
-				} else {
-					dataOut.writeUTF(pReg.comment);
-				}
-
-				dataOut.writeBoolean(pReg.isCartesian);
-			}
-
-			dataOut.close();
-			out.close();
-			return 0;
-
-		} catch (FileNotFoundException FNFEx) {
-			// Could not be located dest
-			System.err.printf("%s does not exist!\n", dest.getName());
-			FNFEx.printStackTrace();
-			return 1;
-
-		} catch (IOException IOEx) {
-			// Error occured while reading from dest
-			System.err.printf("%s is corrupt!\n", dest.getName());
-			IOEx.printStackTrace();
-			return 2;
-		}
-	}
+	
 
 	private static void saveRQuaternion(RQuaternion q, DataOutputStream out) throws IOException {
 		if (q == null) {
@@ -2167,18 +1933,16 @@ public abstract class DataManagement {
 		}
 	}
 	
-	private static void saveToolFrame(ToolFrame tFrame, DataOutputStream out)
+	protected static void saveToolFrame(ToolFrame tFrame, DataOutputStream out)
 			throws IOException {
 
 		// Save a flag to indicate what kind of frame was saved
 		if (tFrame == null) {
 			out.writeByte(0);
 			return;
-
-		} else {
-			out.writeByte(1);
 		}
 		
+		out.writeByte(1);
 		// Write the name of the string
 		out.writeUTF(tFrame.getName());
 		// Write Tool frame TCP offset
@@ -2196,18 +1960,16 @@ public abstract class DataManagement {
 
 	}
 	
-	private static void saveUserFrame(UserFrame f, DataOutputStream out)
+	protected static void saveUserFrame(UserFrame f, DataOutputStream out)
 			throws IOException {
 
 		// Save a flag to indicate what kind of frame was saved
 		if (f == null) {
 			out.writeByte(0);
 			return;
-
-		} else {
-			out.writeByte(1);
 		}
 		
+		out.writeByte(1);
 		// Write the name of the string
 		out.writeUTF(f.getName());
 		// Write User frame origin
