@@ -6,33 +6,15 @@ import global.RMath;
  * as its parent Coordinate System.
  */
 public class Fixture extends WorldObject {
-
+	
 	/**
-	 * Creates a fixture with the given name and shape.
+	 * TODO comment this
+	 * 
+	 * @param name
+	 * @param form
 	 */
-	public Fixture(String n, ComplexShape model) {
-		super(n, model);
-	}
-
-	/**
-	 * Create a cube object with the given colors and dimension
-	 */
-	public Fixture(String n, int fill, int strokeVal, float edgeLen) {
-		super(n, new RBox(fill, strokeVal, edgeLen));
-	}
-
-	/**
-	 * Creates a cylinder object with the given colors and dimensions.
-	 */
-	public Fixture(String n, int fill, int strokeVal, float rad, float hgt) {
-		super(n, new RCylinder(fill, strokeVal, rad, hgt));
-	}
-
-	/**
-	 * Create a box object with the given colors and dimensions
-	 */
-	public Fixture(String n, int fill, int strokeVal, float len, float hgt, float wdh) {
-		super(n, new RBox(fill, strokeVal, len, hgt, wdh));
+	public Fixture(String name, RShape form) {
+		super(name, form);
 	}
 
 	/**
@@ -45,6 +27,12 @@ public class Fixture extends WorldObject {
 	@Override
 	public Fixture clone() {
 		return new Fixture(getName(), getModel().clone(),
+				localOrientation.clone());
+	}
+	
+	@Override
+	public Fixture clone(String name) {
+		return new Fixture(name, getModel().clone(),
 				localOrientation.clone());
 	}
 

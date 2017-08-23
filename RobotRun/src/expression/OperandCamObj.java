@@ -11,18 +11,18 @@ public class OperandCamObj extends Operand<CameraObject> implements BoolMath {
 	private static Pointer<Scenario> scenarioRef;
 	
 	/**
-	 * TODO comment this
+	 * Sets the reference the robot camera for camera operand objects.
 	 * 
-	 * @param ref
+	 * @param ref	A reference to the application's robot camera
 	 */
 	public static void setCamRef(RobotCamera ref) {
 		camRef = ref;
 	}
 	
 	/**
-	 * TODO comment this
+	 * Sets the reference to the active scenario for camera operand objects.
 	 * 
-	 * @param ref
+	 * @param ref	A reference to the application's active scenario
 	 */
 	public static void setScenarioRef(Pointer<Scenario> ref) {
 		scenarioRef = ref;

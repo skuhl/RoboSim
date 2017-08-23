@@ -1,7 +1,7 @@
 package screen.text_entry;
 
 import core.RobotRun;
-import global.DataManagement;
+import io.DataManagement;
 import robot.RoboticArm;
 import screen.ScreenMode;
 
@@ -20,7 +20,7 @@ public class ScreenEditPosRegComment extends ST_ScreenTextEntry {
 			}
 			// Save the inputed comment to the selected register
 			r.getPReg(robotRun.getLastScreen().getContentIdx()).comment = workingText.toString();
-			DataManagement.saveRobotData(r, 3);
+			DataManagement.saveRobotData(r, 4);
 			workingText = new StringBuilder();
 			robotRun.lastScreen();
 		}

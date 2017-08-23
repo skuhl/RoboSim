@@ -1,7 +1,7 @@
 package screen.num_entry;
 
 import core.RobotRun;
-import global.DataManagement;
+import io.DataManagement;
 import regs.PositionRegister;
 import regs.Register;
 import robot.RoboticArm;
@@ -32,7 +32,7 @@ public class ScreenCopyPosRegPoint extends ST_ScreenNumEntry {
 			}
 			
 			dest.isCartesian = src.isCartesian;
-			DataManagement.saveRobotData(robotRun.getActiveRobot(), 3);
+			DataManagement.saveRobotData(robotRun.getActiveRobot(), 4);
 			robotRun.lastScreen();
 
 		} catch (NumberFormatException MFEx) {

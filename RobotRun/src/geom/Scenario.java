@@ -12,6 +12,12 @@ import global.Fields;
  * @author Joshua Hooker
  */
 public class Scenario implements Iterable<WorldObject>, Cloneable {
+	
+	/**
+	 * The maximum number of objects allowed in a single scenario.
+	 */
+	public static final int MAX_SIZE = 30;
+	
 	private boolean gravity;
 	private String name;
 	
@@ -30,58 +36,39 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 	}
 
 	/**
-	 * Add the given world object to the scenario. Though, if the name of
-	 * the given world object does not only contain letter and number
-	 * characters, then the object is not added to either list.
+	 * Add the given world object to the scenario if the scenario is not null
+	 * and the given reference is not null.
 	 * 
-	 * @param newObject  The object to be added to either the Part or Fixture
-	 *                   list
-	 * @returning        Whether the object was added to a list or not
+	 * @param newObject  The object to add to this scenario
+	 * @returning        0	the object was added successfully,
+	 * 					 1	the object is a null reference,
+	 * 					 2	the scenario is full
 	 */
-	public boolean addWorldObject(WorldObject newObject) {
-		if (newObject == null || objList.contains(newObject)) {
-			// Ignore nulls and duplicates
-			if (newObject == null) {
-				Fields.debug("New Object is null");
-				
-			} else {
-				Fields.debug("New Object is: " + newObject.getName());
-			}
-
-			return false;
+	public int addWorldObject(WorldObject newObject) {
+		
+		if (newObject == null) {
+			return 1;
+			
+		} else if (isFull()) {
+			return 2;
 		}
-
-		String originName = newObject.getName();
-
-		if (originName.length() > 16) {
-			// Base name length caps at 16 characters
-			newObject.setName( originName.substring(0, 16) );
-			originName = newObject.getName();
-		}
-
-		if (Pattern.matches("[a-zA-Z0-9]+", originName)) {
-
-			if (findObjectWithName(originName, objList) != null) {
-				// Keep names unique
-				newObject.setName( addSuffixForDuplicateName(originName, objList) );
-			}
-
-			objList.add(newObject);
-			return true;
-		}
-
-		return false;
+		
+		objList.add(newObject);
+		return 0;
 	}
 	
 	/**
-	 * Only adds the given world objects that are non-null and do
-	 * not already exist in the scenario.
+	 * Attempts to add all the given objects to the scenario.
 	 * 
 	 * @param newObjs  The world objects to add to the scenario
 	 */
 	public void addWorldObjects(WorldObject... newObjs) {
 
 		for (WorldObject obj : newObjs) {
+			if (isFull()) {
+				break;
+			}
+			
 			addWorldObject(obj);
 		}
 	}
@@ -128,12 +115,25 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 
 		return copy;
 	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param name
+	 * @return
+	 */
+	public WorldObject findWOWithName(String name) {
+		for (WorldObject wo : objList) {
+			if (wo.getName().equals(name)) {
+				return wo;
+			}
+		}
+		
+		// No match found
+		return null;
+	}
 
 	public String getName() { return name; }
-
-	public ArrayList<WorldObject> getObjectList() {
-		return objList;
-	}
 
 	/**
 	 * Return the world object that corresponds to the given index in
@@ -154,6 +154,17 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 
 	public boolean isGravity() {
 		return gravity;
+	}
+	
+	/**
+	 * Has the scenario's number of parts and fixtures reached the maximum size
+	 * defined for scenarios?
+	 * 
+	 * @return	The scenario has reached the maximum number of objects allowed
+	 * 			for a scenario
+	 */
+	public boolean isFull() {
+		return objList.size() >= MAX_SIZE;
 	}
 
 	@Override
@@ -245,13 +256,42 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 
 	@Override
 	public String toString() { return name; }
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param name
+	 * @return
+	 */
+	public int validateWOName(String name) {
+		// Names only consist of letters and numbers
+		if (name == null || !Pattern.matches("[a-zA-Z0-9]+", name)) {
+			// Invalid characters
+			return 1;
+		}
+		
+		if (name.length() > 16) {
+			// Name is too long
+			return 2;
+		}
+
+		for (WorldObject wo : objList) {
+			if (wo.getName().equals(name)) {
+				// Duplicate name
+				return 3;
+			}
+		}
+
+		return 0;
+	}
+	
 	/**
 	 * Adds a number suffix to the given name, so that the name is unique amonst the names of all the other world
 	 * objects in the given list. So, if the given name is 'block' and objects with names 'block', 'block1', and
 	 * 'block2' exist in wldObjList, then the new name will be 'block3'.
 	 * 
 	 * @param originName  The origin name of the new world object
-	 * @param eldObjList  The list of world objects, of wixh to check names
+	 * @param wldObjList  The list of world objects, of wixh to check names
 	 * @returning         A unique name amongst the names of the existing world objects in the given list, that
 	 *                    contains the original name as a prefix
 	 */
@@ -280,21 +320,22 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 					} else {
 						suffixes.add(insertIdx, suffix);
 					}
-				}
+				}	
 			}
 		}
+		
 		// Determine the minimum suffix value
 		int suffix = 0;
-
+		
 		if (suffixes.size() == 1 && suffixes.get(0) == 0) {
-			// If the only stirng with a suffix has a suffix of '0'
+			// If the only string with a suffix has a suffix of '0'
 			suffix = 1;
 
-		} else if (suffixes.size() >= 2) {
+		} else if (suffixes.size() >= 2 && suffixes.get(0) == 0) {
 			int idx = 0;
 
 			while ((idx + 1) < suffixes.size()) {
-				// Find the first occurance of a gap between to adjacent suffix values (if any)
+				// Find the first occurrence of a gap between to adjacent suffix values (if any)
 				if ((suffixes.get(idx + 1) - suffixes.get(idx)) > 1) {
 					break;
 				}
@@ -304,6 +345,7 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 
 			suffix = suffixes.get(idx) + 1;
 		}
+		
 		// Concatenate the origin name with the new suffix
 		return String.format("%s%d", originName, suffix);
 	}

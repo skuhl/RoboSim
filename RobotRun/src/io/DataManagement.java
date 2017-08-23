@@ -1,4 +1,4 @@
-package global;
+package io;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -33,6 +33,7 @@ import expression.OperandRegister;
 import expression.Operator;
 import expression.PointMath;
 import expression.RobotPoint;
+import frame.RFrame;
 import frame.ToolFrame;
 import frame.UserFrame;
 import geom.CameraObject;
@@ -49,6 +50,7 @@ import geom.RQuaternion;
 import geom.RShape;
 import geom.Scenario;
 import geom.WorldObject;
+import global.Fields;
 import processing.core.PVector;
 import programming.CallInstruction;
 import programming.CamMoveToObject;
@@ -119,6 +121,12 @@ public abstract class DataManagement {
 	}
 	
 	public static void exportProgsToTxt(RoboticArm r, String directory) {
+		File destDir = new File(directory);
+		
+		if (!destDir.exists()) {
+			destDir.mkdir();
+		}
+		
 		for(int i = 0; i < r.numOfPrograms(); i += 1) {
 			Program p = r.getProgram(i);
 			File textfile = new File(directory + "/" + p.getName() + ".txt");
@@ -188,43 +196,162 @@ public abstract class DataManagement {
 		return fileNames;
 	}
 	
-	// Must be called when RobotRun starts!!!!
-	public static void initialize(RobotRun process) {
-		dataDirPath = process.sketchPath("data\\");
-		errDirPath = process.sketchPath("err\\");
-		tmpDirPath = process.sketchPath("tmp\\");
-		scenarioDirPath = process.sketchPath(tmpDirPath + "scenarios\\");
-	}
-	
-	public static void loadState(RobotRun process) {
-		loadScenarioBytes(process, scenarioDirPath);
-		loadRobotData(process.getRobot(0));
-		loadRobotData(process.getRobot(1));
-		loadCameraData(process);
-		
-		for (int rdx = 0; rdx < 2; ++rdx) {
-			robotPostProcessing(process.getRobot(rdx), process);
-		}
+	public static String getTmpDirPath() {
+		return tmpDirPath;
 	}
 	
 	/**
-	 * Removes the save file for the scenario with the given name.
+	 * TODO comment this
 	 * 
-	 * @param name	The name of the scenario, of which to remove the back file
+	 * NOTE: This MUST be called in RobotRun.setup()!!!!
+	 * 
+	 * @see RobotRun#setup()
+	 * @param appRef
 	 */
-	public static void removeScenario(String name) {
+	public static void initialize(RobotRun appRef) {
+		dataDirPath = appRef.sketchPath("data\\");
+		errDirPath = appRef.sketchPath("err\\");
+		tmpDirPath = appRef.sketchPath("tmp\\");
+		scenarioDirPath = appRef.sketchPath(tmpDirPath + "scenarios\\");
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param appRef
+	 */
+	public static void loadState(RobotRun appRef) {
+		// Run threads to load each robot's data
+		Thread loadRobot0 = new Thread(new LoadRobotData(appRef.getRobot(0),
+				tmpDirPath));
+		Thread loadRobot1 = new Thread(new LoadRobotData(appRef.getRobot(1),
+				tmpDirPath));
 		
-		File f = new File(DataManagement.scenarioDirPath + name + ".bin");
+		loadRobot0.start();
+		loadRobot1.start();
+		
+		loadScenarioBytes(appRef, scenarioDirPath);
+		
+		File activeFile = new File(tmpDirPath + "activeScenario.bin");
 		
 		try {
-			if (f.exists() && f.isFile()) {
-				f.delete();
+			if (activeFile.exists()) {
+				FileInputStream in = new FileInputStream(activeFile);
+				DataInputStream dataIn = new DataInputStream(in);
+				
+				// Read the name of the active scenario
+				String activeName = dataIn.readUTF();
+				appRef.setActiveScenario(activeName);
+				
+				dataIn.close();
+				in.close();
+			}
+		
+		} catch (IOException IOEx) {
+			System.err.println("The active scenario file is corrupt!");
+			// An error occurred with loading a scenario from a file
+			IOEx.printStackTrace();
+		}
+		
+		loadCameraData(appRef);
+		
+		// Wait for the robot data threads to finish
+		Fields.waitForThread(loadRobot0);
+		Fields.waitForThread(loadRobot1);
+		
+		/* Run a thread for each program of each robot to update references for
+		 * certain instructions */
+		int totalThreads = appRef.getRobot(0).numOfPrograms() +
+				appRef.getRobot(1).numOfPrograms();
+		Thread[] robotPostProc = new Thread[totalThreads]; 
+		int tdx = 0;
+		
+		for (int rdx = 0; rdx < 2; ++rdx) {
+			RoboticArm r = appRef.getRobot(rdx);
+			
+			for (int pdx = 0; pdx < r.numOfPrograms(); ++pdx) {
+				RobotPostProcessing threadLogic = new RobotPostProcessing(appRef,
+						r, pdx);
+				robotPostProc[tdx] = new Thread(threadLogic);
+				robotPostProc[tdx].start();
+				++tdx;
+			}
+		}
+		
+		// Wait for all the threads to finish
+		for (Thread t : robotPostProc) {
+			Fields.waitForThread(t);
+		}
+	}
+	
+	public static int removeProgramFile(int RID, Program p) {
+		validateTmpDir();
+		
+		File file = new File(String.format("%srobot%d/programs/%s.bin",
+				tmpDirPath, RID, p.getName()));
+		
+		if (!file.exists()) {
+			return 2;
+		}
+		
+		// Attempt to delete the file
+		boolean ret = file.delete();
+		return (ret) ? 0 : 1;
+	}
+	
+	public static int removeScenarioFile(Scenario s) {
+		validateTmpDir();
+		
+		File file = new File(scenarioDirPath + s.getName() + ".bin");
+		
+		if (!file.exists()) {
+			return 2;
+		}
+		
+		// Attempt to delete the file
+		boolean ret = file.delete();
+		return (ret) ? 0 : 1;
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param RID
+	 * @param p
+	 * @return
+	 */
+	public static int saveProgram(int RID, Program p) {
+		String dirPath = String.format("%srobot%d/programs", tmpDirPath, RID);
+		File destDir = new File(dirPath);
+		// Create the robot's programs directory if it does not exist
+		if (!destDir.exists()) {
+			destDir.mkdir();
+		}
+		
+		File progFile = new File(String.format("%s/%s.bin", dirPath,
+				p.getName()));
+		
+		try {
+			// Create the program save file if it does not exist
+			if (!progFile.exists()) {
+				progFile.createNewFile();
 			}
 			
-		} catch (SecurityException SEx) {
-			// Issue with file permissions
-			SEx.printStackTrace();
+			FileOutputStream out = new FileOutputStream(progFile);
+			DataOutputStream dataOut = new DataOutputStream(out);
+			
+			saveProgram(p, dataOut);
+			
+			dataOut.close();
+			out.close();
+			
+		} catch (IOException IOEx) {
+			System.err.println("An error occured while saving %s\n");
+			IOEx.printStackTrace();
+			return 1;
 		}
+		
+		return 0;
 	}
 	
 	public static int saveRobotData(RoboticArm robot, int dataFlag) {
@@ -237,9 +364,16 @@ public abstract class DataManagement {
 		}
 		
 		if ((dataFlag & 0x1) != 0) {
+			File oldSaveFile = new File(String.format("%s/programs.bin",
+					destDir.getAbsolutePath()));
+			
+			if (oldSaveFile.exists()) {
+				// Remove old program save file
+				oldSaveFile.delete();
+			}
+			
 			// Save the robot's programs
-			saveProgramBytes(robot, String.format("%s/programs.bin", destDir.getAbsolutePath()));
-			exportProgsToTxt(robot, destDir.getAbsolutePath());
+			saveProgramBytes(robot, String.format("%s/programs", destDir.getAbsolutePath()));
 		}
 		
 		if ((dataFlag & 0x2) != 0) {
@@ -260,21 +394,97 @@ public abstract class DataManagement {
 		return 0;
 	}
 	
-	public static void saveScenarios(RobotRun process) {
+	public static void saveScenario(Scenario s) {
 		validateTmpDir();
 		
-		Scenario as = process.getActiveScenario();
-		saveScenarioBytes(process.getScenarios(), (as == null) ? null : as.getName(),
-				scenarioDirPath);
+		File dest = new File(scenarioDirPath + s.getName() + ".bin");
+		
+		try {
+			if (!dest.exists()) {
+				dest.createNewFile();
+			}
+			
+			FileOutputStream out = new FileOutputStream(dest);
+			DataOutputStream dataOut = new DataOutputStream(out);
+			// Save the scenario data
+			saveScenario(s, dataOut);
+			
+			dataOut.close();
+			out.close();
+			
+		} catch (IOException IOEx) {
+			// Issue with writing or opening a file
+			System.err.printf("Error with file %s.\n", dest.getName());
+			IOEx.printStackTrace();
+		}
 	}
 	
-	public static void saveState(RobotRun process) {
+	public static void saveScenarios(RobotRun appRef) {
 		validateTmpDir();
-		saveScenarioBytes(process.getScenarios(), (process.getActiveScenario() == null) ?
-				null : process.getActiveScenario().getName(), scenarioDirPath);
-		saveRobotData(process.getRobot(0), 15);
-		saveRobotData(process.getRobot(1), 15);
-		saveCameraData(process, process.getRobotCamera());
+		saveScenarioBytes(appRef, scenarioDirPath);
+		
+		Scenario active = appRef.getActiveScenario();
+		
+		if (active != null) {
+			// Save the name of the active scenario
+			File scenarioFile = new File(tmpDirPath + "activeScenario.bin");
+			
+			try {
+				if (!scenarioFile.exists()) {
+					scenarioFile.createNewFile();
+				}
+				
+				FileOutputStream out = new FileOutputStream(scenarioFile);
+				DataOutputStream dataOut = new DataOutputStream(out);
+				
+				dataOut.writeUTF(active.getName());
+				
+				dataOut.close();
+				out.close();
+				
+			} catch (IOException IOEx) {
+				// Issue with writing or opening a file
+				System.err.printf("Error with file %s.\n",
+						scenarioFile.getName());
+				IOEx.printStackTrace();
+			}
+		}
+	}
+	
+	public static void saveState(RobotRun appRef) {
+		validateTmpDir();
+		saveScenarioBytes(appRef, scenarioDirPath);
+		
+		Scenario active = appRef.getActiveScenario();
+		
+		if (active != null) {
+			// Save the name of the active scenario
+			File scenarioFile = new File(tmpDirPath + "activeScenario.bin");
+			
+			try {
+				if (!scenarioFile.exists()) {
+					scenarioFile.createNewFile();
+				}
+				
+				FileOutputStream out = new FileOutputStream(scenarioFile);
+				DataOutputStream dataOut = new DataOutputStream(out);
+				
+				dataOut.writeUTF(active.getName());
+				
+				dataOut.close();
+				out.close();
+				
+			} catch (IOException IOEx) {
+				// Issue with writing or opening a file
+				System.err.printf("Error with file %s.\n",
+						scenarioFile.getName());
+				IOEx.printStackTrace();
+			}
+		}
+		
+		saveRobotData(appRef.getRobot(0), 15);
+		saveRobotData(appRef.getRobot(1), 15);
+		saveCameraData(appRef, appRef.getRobotCamera());
 	}
 	
 	private static double[][] load2DDoubleArray(DataInputStream in) throws IOException {
@@ -480,84 +690,7 @@ public abstract class DataManagement {
 		return list;
 	}
 	
-	private static int loadFrameBytes(RoboticArm robot, String srcPath) {
-		int idx = -1;
-		File src = new File(srcPath);
-		
-		try {
-			FileInputStream in = new FileInputStream(src);
-			DataInputStream dataIn = new DataInputStream(in);
-
-			// Load Tool Frames
-			int size = Math.max(0, Math.min(dataIn.readInt(), 10));
-			
-			for(idx = 0; idx < size; idx += 1) {
-				loadTFrameData(robot.getToolFrame(idx), dataIn);
-			}
-
-			// Load User Frames
-			size = Math.max(0, Math.min(dataIn.readInt(), 10));
-
-			for(idx = 0; idx < size; idx += 1) {
-				loadUFrameData(robot.getUserFrame(idx), dataIn);
-			}
-
-			dataIn.close();
-			in.close();
-			return 0;
-
-		} catch (Exception FNFEx) {
-			System.err.printf("Current frame load method failed\n",
-					src.getName());
-			return loadFrameBytesOldest(robot, srcPath);
-		}
-	}
 	
-	private static int loadFrameBytesOldest(RoboticArm robot, String srcPath) {
-		int idx = -1;
-		File src = new File(srcPath);
-		
-		try {
-			FileInputStream in = new FileInputStream(src);
-			DataInputStream dataIn = new DataInputStream(in);
-
-			// Load Tool Frames
-			int size = Math.max(0, Math.min(dataIn.readInt(), 10));
-			
-			for(idx = 0; idx < size; idx += 1) {
-				loadTFrameDataOldest(robot.getToolFrame(idx), dataIn);
-			}
-
-			// Load User Frames
-			size = Math.max(0, Math.min(dataIn.readInt(), 10));
-
-			for(idx = 0; idx < size; idx += 1) {
-				loadUFrameDataOldest(robot.getUserFrame(idx), dataIn);
-			}
-
-			dataIn.close();
-			in.close();
-			return 0;
-
-		} catch (FileNotFoundException FNFEx) {
-			// Could not find src
-			System.err.printf("%s does not exist!\n", src.getName());
-			FNFEx.printStackTrace();
-			return 1;
-
-		} catch (EOFException EOFEx) {
-			// Reached the end of src unexpectedly
-			System.err.printf("End of file, %s, was reached unexpectedly!\n", src.getName());
-			EOFEx.printStackTrace();
-			return 3;
-
-		} catch (IOException IOEx) {
-			// Error with reading from src
-			System.err.printf("%s is corrupt!\n", src.getName());
-			IOEx.printStackTrace();
-			return 2;
-		}
-	}
 	
 	private static Instruction loadInstruction(RoboticArm robot, DataInputStream in)
 			throws IOException {
@@ -588,7 +721,18 @@ public abstract class DataManagement {
 		} else if(instType == 3) {
 			// Read data for a FrameInstruction object
 			boolean isCommented = in.readBoolean();
-			inst = new FrameInstruction( in.readInt(), in.readInt() );
+			int frameType = in.readInt();
+			int frameIdx = in.readInt();
+			RFrame frameRef;
+			
+			if (frameType == Fields.FTYPE_USER) {
+				frameRef = robot.getUserFrame(frameIdx);
+				
+			} else {
+				frameRef = robot.getToolFrame(frameIdx);
+			}
+			
+			inst = new FrameInstruction(frameType, frameIdx, frameRef);
 			inst.setIsCommented(isCommented);
 
 		} else if(instType == 4) {
@@ -712,7 +856,9 @@ public abstract class DataManagement {
 		return inst;
 	}
 	
-	private static Integer loadInteger(DataInputStream in) throws IOException {
+	protected static Integer loadInteger(DataInputStream in)
+			throws IOException {
+		
 		// Read byte flag
 		byte flag = in.readByte();
 
@@ -724,42 +870,9 @@ public abstract class DataManagement {
 		return in.readInt();
 	}
 
-	private static void loadMacros(RoboticArm r, String filePath) {	
-		try {
-			File destDir = new File(filePath);
-			FileInputStream in = new FileInputStream(destDir);
-			DataInputStream dataIn = new DataInputStream(in);
-			
-			if (!destDir.exists()) {
-				destDir.mkdirs();
-			}
-			
-			int numMacros = dataIn.readInt();
-			
-			for(int i = 0; i < numMacros; i += 1) {
-				boolean isManual = dataIn.readBoolean();
-				String progName = dataIn.readUTF();
-				int keyNum = dataIn.readInt();
-				
-				Program p = r.getProgram(progName);
-				Macro m = new Macro(isManual, r, p, keyNum);
-				
-				r.getMacroList().add(m);
-				
-				if(!isManual && keyNum != -1) {
-					r.getMacroKeyBinds()[keyNum] = m;
-				}
-			}
-			
-			dataIn.close();
-			in.close();
-		}
-		catch (Exception e) {
-			System.err.println("Unable to load macros for robot " + r.RID + "!");
-		}
-	}
+	
 
-	private static Point loadPoint(DataInputStream in) throws IOException {
+	protected static Point loadPoint(DataInputStream in) throws IOException {
 		// Read flag byte
 		byte val = in.readByte();
 
@@ -777,7 +890,9 @@ public abstract class DataManagement {
 		return new Point(position, orientation, angles);
 	}
 
-	private static Program loadProgram(RoboticArm robot, DataInputStream in) throws IOException {
+	protected static Program loadProgram(RoboticArm robot, DataInputStream in)
+			throws IOException {
+		
 		// Read flag byte
 		byte flag = in.readByte();
 
@@ -805,7 +920,7 @@ public abstract class DataManagement {
 		} while (true);
 
 		// Read the number of instructions stored for this program
-		int numOfInst = Math.max(0, Math.min(in.readInt(), 500));
+		int numOfInst = Math.max(0, Math.min(in.readInt(), Program.MAX_SIZE));
 
 		while(numOfInst-- > 0) {
 			// Read in each instruction
@@ -815,15 +930,63 @@ public abstract class DataManagement {
 
 		return prog;
 	}
+	
+	private static int loadProgramBytes(RoboticArm robot) {
+		
+		File progDir = new File(tmpDirPath + String.format("robot%d/", robot.RID)
+				+ "programs");
+		File progFile = new File(tmpDirPath + String.format("robot%d/programs.bin",
+				robot.RID));
+		
+		if (!progDir.exists() || !progDir.isDirectory()) {
+			if (progFile.exists() && progFile.isFile()) {
+				// Load programs from programs.bin if it exists
+				loadProgramBytesOldest(robot, progFile.getPath());
+			}
+			
+			return -1;
+			
+		} else {
+			int filesRead = 0;
+			File[] progFiles = progDir.listFiles();
+			Program[] programs = new Program[progFiles.length];
+			Thread[] loadThreads = new Thread[progFiles.length];
+			
+			for (int idx = 0; idx < progFiles.length; ++idx) {
+				LoadProgramFile loader = new LoadProgramFile(robot, programs, idx,
+						progFiles[idx]);
+				/* Initialize each thread to load a program from a specified
+				 * file */
+				loadThreads[idx] = new Thread(loader);
+				loadThreads[idx].start();
+			}
+			
+			for (int idx = 0; idx < loadThreads.length; ++idx) {
+				try {
+					/* Wait for each thread to finish and add the program once
+					 * the thread has completed */
+					loadThreads[idx].join();
+					robot.addProgram(programs[idx]);
+					++filesRead;
+					
+				} catch (InterruptedException IEx) {
+					IEx.printStackTrace();
+				}
+			}
+			
+			return filesRead;
+		}
+	}
 
-	private static int loadProgramBytes(RoboticArm robot, String srcPath) {
+	private static int loadProgramBytesOldest(RoboticArm robot, String srcPath) {
 		File src = new File(srcPath);
 
 		try {
 			FileInputStream in = new FileInputStream(src);
 			DataInputStream dataIn = new DataInputStream(in);
 			// Read the number of programs stored in src
-			int size = Math.max(0, Math.min(dataIn.readInt(), 200));
+			int size = Math.max(0, Math.min(dataIn.readInt(),
+					RoboticArm.PROG_NUM));
 			
 			while(size-- > 0) {
 				// Read each program from src
@@ -884,99 +1047,6 @@ public abstract class DataManagement {
 		v.z = in.readFloat();
 		return v;
 	}
-	
-	private static int loadRegisterBytes(RoboticArm robot, String srcPath) {
-		File src = new File(srcPath);
-		
-		try {
-			FileInputStream in = new FileInputStream(src);
-			DataInputStream dataIn = new DataInputStream(in);
-
-			int size = Math.max(0, Math.min(dataIn.readInt(), Fields.DPREG_NUM));
-
-			// Load the Register entries
-			while(size-- > 0) {
-				// Each entry is saved after its respective index in REG
-				int reg = dataIn.readInt();
-
-				Float v = dataIn.readFloat();
-				// Null values are saved as NaN
-				if(Float.isNaN(v)) { v = null; }
-
-				String c = dataIn.readUTF();
-				// Null comments are saved as ""
-				if(c.equals("")) { c = null; }
-				
-				DataRegister dReg = robot.getDReg(reg);
-				
-				if (dReg != null) {
-					dReg.value = v;
-					dReg.comment = c;
-				}
-			}
-
-			size = Math.max(0, Math.min(dataIn.readInt(), Fields.DPREG_NUM));
-
-			// Load the Position Register entries
-			while(size-- > 0) {
-				// Each entry is saved after its respective index in POS_REG
-				int idx = dataIn.readInt();
-
-				Point p = loadPoint(dataIn);
-				String c = dataIn.readUTF();
-				// Null comments are stored as ""
-				if(c == "") { c = null; }
-				boolean isCartesian = dataIn.readBoolean();
-				
-				PositionRegister pReg = robot.getPReg(idx);
-				
-				if (pReg != null) {
-					pReg.point = p;
-					pReg.comment = c;
-					pReg.isCartesian = isCartesian;
-				}
-			}
-
-			dataIn.close();
-			in.close();
-			return 0;
-
-		} catch (FileNotFoundException FNFEx) {
-			// Could not be located src
-			System.err.printf("%s does not exist!\n", src.getName());
-			FNFEx.printStackTrace();
-			return 1;
-
-		} catch (EOFException EOFEx) {
-			// Unexpectedly reached the end of src
-			System.err.printf("End of file, %s, was reached unexpectedly!\n", src.getName());
-			EOFEx.printStackTrace();
-			return 3;
-
-		} catch (IOException IOEx) {
-			// Error occrued while reading from src
-			System.err.printf("%s is corrupt!\n", src.getName());
-			IOEx.printStackTrace();
-			return 2;
-		}
-	}
-
-	private static int loadRobotData(RoboticArm robot) {
-		File srcDir = new File( String.format("%srobot%d/", tmpDirPath, robot.RID) );
-		
-		if (!srcDir.exists() || !srcDir.isDirectory()) {
-			// No such directory exists
-			return 1;	
-		}
-		
-		// Load the Robot's programs, frames, and registers from their respective files
-		loadProgramBytes(robot, String.format("%s/programs.bin", srcDir.getAbsolutePath()));
-		loadFrameBytes(robot, String.format("%s/frames.bin", srcDir.getAbsolutePath()));
-		loadRegisterBytes(robot, String.format("%s/registers.bin", srcDir.getAbsolutePath()));
-		loadMacros(robot, String.format("%s/macros.bin", srcDir.getAbsolutePath()));
-		
-		return 0;
-	}
 
 	private static RQuaternion loadRQuaternion(DataInputStream in) throws IOException {
 		// Read flag byte
@@ -995,7 +1065,7 @@ public abstract class DataManagement {
 		return new RQuaternion(w, x, y, z);
 	}
 	
-	private static Scenario loadScenario(DataInputStream in, RobotRun app) throws IOException, NullPointerException {
+	protected static Scenario loadScenario(DataInputStream in, RobotRun app) throws IOException, NullPointerException {
 		// Read flag byte
 		byte flag = in.readByte();
 
@@ -1022,6 +1092,7 @@ public abstract class DataManagement {
 				if (loadedObject.obj instanceof Fixture) {
 					// Save an extra reference of each fixture
 					fixtures.add((Fixture)loadedObject.obj);
+					
 				} else if(loadedObject.referenceName != null) {
 					// Save any part with a defined reference
 					partsWithReferences.add(loadedObject);
@@ -1048,7 +1119,7 @@ public abstract class DataManagement {
 		return s;
 	}
 	
-	private static int loadScenarioBytes(RobotRun process, String srcPath) {
+	private static int loadScenarioBytes(RobotRun appRef, String srcPath) {
 		File src = new File(srcPath);
 		
 		if (!src.exists() || !src.isDirectory()) {
@@ -1057,58 +1128,31 @@ public abstract class DataManagement {
 		}
 		
 		File[] scenarioFiles = src.listFiles();
-		File activeFile = null;
+		int maxScenarios = Math.min(scenarioFiles.length, Fields.SCENARIO_NUM);
 		
-		ArrayList<Scenario> scenarioList = process.getScenarios();
+		Scenario[] loadedScenarios = new Scenario[maxScenarios];
+		Thread[] loadThreads = new Thread[maxScenarios];
 		
-		// Load each scenario from their respective files
-		for (File scenarioFile : scenarioFiles) {
-			try {
-				activeFile = scenarioFile;
-				FileInputStream in = new FileInputStream(activeFile);
-				DataInputStream dataIn = new DataInputStream(in);
-				
-				Scenario s = loadScenario(dataIn, process);
-				
-				if (s != null) {
-					scenarioList.add(s);
-				}
-				
-				dataIn.close();
-				in.close();
-			
-			} catch (FileNotFoundException FNFEx) {
-				System.err.printf("File %s does not exist in \\tmp\\scenarios.\n",
-						activeFile.getName());
-				FNFEx.printStackTrace();
-				
-			} catch (IOException IOEx) {
-				System.err.printf("File, %s, in \\tmp\\scenarios is corrupt!\n",
-						activeFile.getName());
-				IOEx.printStackTrace();
-			}
+		// Define a thread for each scenario file
+		for (int idx = 0; idx < maxScenarios; ++idx) {
+			loadThreads[idx] = new Thread(new LoadScenarioFile(appRef,
+					loadedScenarios, idx, scenarioFiles[idx]));
+			loadThreads[idx].start();
 		}
 		
-		activeFile = new File(src.getAbsolutePath() + "/activeScenario.bin");
-		
-		try {
-			
-			if (activeFile.exists()) {
-				FileInputStream in = new FileInputStream(activeFile);
-				DataInputStream dataIn = new DataInputStream(in);
+		/* Wait for all load threads to finish and add each scenario to the
+		 * applications list of scenarios */
+		for (int idx = 0; idx < loadThreads.length; ++idx) {
+			try {
+				loadThreads[idx].join();
 				
-				// Read the name of the active scenario
-				String activeName = dataIn.readUTF();
-				process.setActiveScenario(activeName);
+				if (loadedScenarios[idx] != null) {
+					appRef.addScenario(loadedScenarios[idx]);
+				}
 				
-				dataIn.close();
-				in.close();
+			} catch (InterruptedException IEx) {
+				IEx.printStackTrace();
 			}
-		
-		} catch (IOException IOEx) {
-			System.err.println("The active scenario file is corrupt!");
-			// An error occurred with loading a scenario from a file
-			IOEx.printStackTrace();
 		}
 		
 		return 0;
@@ -1162,7 +1206,7 @@ public abstract class DataManagement {
 		return shape;
 	}
 	
-	private static void loadTFrameData(ToolFrame tFrame, DataInputStream in)
+	protected static void loadTFrameData(ToolFrame tFrame, DataInputStream in)
 			throws IOException {
 		
 		byte type = in.readByte();
@@ -1183,8 +1227,8 @@ public abstract class DataManagement {
 		}
 	}
 	
-	private static void loadTFrameDataOldest(ToolFrame tFrame, DataInputStream in)
-			throws IOException {
+	protected static void loadTFrameDataOldest(ToolFrame tFrame,
+			DataInputStream in) throws IOException {
 		
 		byte type = in.readByte();
 
@@ -1205,7 +1249,7 @@ public abstract class DataManagement {
 		tFrame.setOrienDirect(loadRQuaternion(in));
 	}
 	
-	private static void loadUFrameData(UserFrame uFrame, DataInputStream in)
+	protected static void loadUFrameData(UserFrame uFrame, DataInputStream in)
 			throws IOException {
 		
 		byte type = in.readByte();
@@ -1226,8 +1270,8 @@ public abstract class DataManagement {
 		}
 	}
 	
-	private static void loadUFrameDataOldest(UserFrame uFrame, DataInputStream in)
-			throws IOException {
+	protected static void loadUFrameDataOldest(UserFrame uFrame,
+			DataInputStream in) throws IOException {
 		
 		byte type = in.readByte();
 
@@ -1293,9 +1337,7 @@ public abstract class DataManagement {
 		return wldObjFields;
 	}
 	
-	private static void robotPostProcessing(RoboticArm robot, RobotRun process) {
-		ArrayList<Scenario> scenes = process.getScenarios();
-		
+	private static void robotPostProcessing(RoboticArm robot, RobotRun appRef) {
 		/**
 		 * Loop through all programs and update call instructions, so that they
 		 * reference the correct target program.
@@ -1309,7 +1351,7 @@ public abstract class DataManagement {
 				if (inst instanceof CallInstruction) {
 					// Update a top call instruction
 					CallInstruction cInst = (CallInstruction)inst;
-					RoboticArm tgtDevice = process.getRobot(cInst.getLoadedID());
+					RoboticArm tgtDevice = appRef.getRobot(cInst.getLoadedID());
 					String tgtName = cInst.getLoadedName();
 					
 					cInst.setTgtDevice(tgtDevice);
@@ -1352,12 +1394,8 @@ public abstract class DataManagement {
 				} else if (inst instanceof CamMoveToObject) {
 					// Update a camera motion instruction
 					CamMoveToObject cMInst = (CamMoveToObject)inst;
-					
-					for (Scenario s : scenes) {
-						if (s.getName().equals(cMInst.getLoadedSceneName())) {
-							cMInst.setScene(s);
-						}
-					}
+					Scenario scene = appRef.getScenario(cMInst.getLoadedSceneName());
+					cMInst.setScene(scene);
 				}
 			}
 		}
@@ -1831,7 +1869,8 @@ public abstract class DataManagement {
 		}
 	}
 
-	private static void saveProgram(Program p, DataOutputStream out) throws IOException {
+	protected static void saveProgram(Program p, DataOutputStream out)
+			throws IOException {
 
 		if (p == null) {
 			// Indicates a null value is saved
@@ -1862,48 +1901,47 @@ public abstract class DataManagement {
 		}
 	}
 
-	private static int saveProgramBytes(RoboticArm robot, String destPath) {
-		File dest = new File(destPath);
+	private static int saveProgramBytes(RoboticArm robot, String destDirPath) {
+		File destDir = new File(destDirPath);
 		
-		try {
-			// Create dest if it does not already exist
-			if(!dest.exists()) {      
-				try {
-					dest.createNewFile();
-					System.err.printf("Successfully created %s.\n", dest.getName());
-				} catch (IOException IOEx) {
-					System.err.printf("Could not create %s ...\n", dest.getName());
-					IOEx.printStackTrace();
-					return 1;
-				}
-			} 
-
-			FileOutputStream out = new FileOutputStream(dest);
-			DataOutputStream dataOut = new DataOutputStream(out);
-			// Save the number of programs
-			dataOut.writeInt(robot.numOfPrograms());
-
-			for(int idx = 0; idx < robot.numOfPrograms(); ++idx) {
-				// Save each program
-				saveProgram(robot.getProgram(idx), dataOut);
-			}
-
-			dataOut.close();
-			out.close();
-			return 0;
-
-		} catch (FileNotFoundException FNFEx) {
-			// Could not locate dest
-			System.err.printf("%s does not exist!\n", dest.getName());
-			FNFEx.printStackTrace();
+		if (destDir.exists() && destDir.isFile()) {
+			// Verify the destination directory
+			destDir.delete();
+			destDir.mkdir();
+			System.err.printf("Successfully created %s.\n", destDir.getName());
 			return 1;
-
-		} catch (IOException IOEx) {
-			// An error occurred with writing to dest
-			System.err.printf("%s is corrupt!\n", dest.getName());
-			IOEx.printStackTrace();
-			return 2;
+			
+		// Create dest if it does not already exist
+		} else if (!destDir.exists()) {
+			destDir.mkdir();
+			System.err.printf("Successfully created %s.\n", destDir.getName());
 		}
+		
+		/* Save each program in a separate file within the given robot's program
+		 * directory */
+		Thread[] saveThreads = new Thread[robot.numOfPrograms()];
+		
+		for (int idx = 0; idx < saveThreads.length; ++idx) {
+			Program p = robot.getProgram(idx);
+			File dest = new File( String.format("%s/%s.bin", destDirPath,
+					p.getName()) );
+			/* Initialize each save thread with given program and file
+			 * destination */
+			saveThreads[idx] = new Thread(new SaveProgramFile(p, dest));
+			saveThreads[idx].start();
+		}
+		
+		// Wait for each thread to finish
+		for (int idx = 0; idx < saveThreads.length; ++idx) {
+			try {
+				saveThreads[idx].join();
+				
+			} catch (InterruptedException IEx) {
+				IEx.printStackTrace();
+			}
+		}
+		
+		return 0;
 	}
 
 	private static void savePVector(PVector p, DataOutputStream out) throws IOException {
@@ -2029,7 +2067,7 @@ public abstract class DataManagement {
 		}
 	}
 	
-	private static void saveScenario(Scenario s, DataOutputStream out) throws IOException {
+	protected static void saveScenario(Scenario s, DataOutputStream out) throws IOException {
 
 		if (s == null) {
 			// Indicate the value saved is null
@@ -2050,67 +2088,34 @@ public abstract class DataManagement {
 		}
 	}
 	
-	private static int saveScenarioBytes(ArrayList<Scenario> scenarios,
-			String ASName, String destPath) {
-		File dest = new File(destPath);
+	private static int saveScenarioBytes(RobotRun appRef, String destPath) {
+		File destDir = new File(destPath);
 		
-		if (!dest.exists()) {
-			dest.mkdir();
+		if (!destDir.exists()) {
+			destDir.mkdir();
 			
-		} else if (dest.exists() && !dest.isDirectory()) {
+		} else if (destDir.exists() && !destDir.isDirectory()) {
 			// File must be a directory
 			return 1;
 		}
 		
-		File scenarioFile = null;
-		
-		if (ASName != null) {
-			// Save the name of the active scenario
-			scenarioFile = new File(dest.getAbsolutePath() + "/activeScenario.bin");
-			
-			try {
-				if (!scenarioFile.exists()) {
-					scenarioFile.createNewFile();
-				}
-				
-				FileOutputStream out = new FileOutputStream(scenarioFile);
-				DataOutputStream dataOut = new DataOutputStream(out);
-				
-				dataOut.writeUTF(ASName);
-				
-				dataOut.close();
-				out.close();
-				
-			} catch (IOException IOEx) {
-				// Issue with writing or opening a file
-				System.err.printf("Error with file %s.\n", scenarioFile.getName());
-				IOEx.printStackTrace();
-				return 2;
-			}
+		Thread[] saveThreads = new Thread[appRef.getNumOfScenarios()];
+		// Define a thread for each scenario to be saved
+		for (int idx = 0; idx < saveThreads.length; ++idx) {
+			Scenario s = appRef.getScenario(idx);
+			File dest = new File(destDir.getAbsolutePath() + "/" + s.getName()
+							+ ".bin");
+			saveThreads[idx] = new Thread(new SaveScenarioFile(s, dest));
+			saveThreads[idx].start();
 		}
 		
-		for (Scenario s : scenarios) {
+		// Wait for all threads to finish
+		for (Thread t : saveThreads) {
 			try {
-				// Save each scenario in a separate file
-				scenarioFile = new File(dest.getAbsolutePath() + "/" + s.getName() + ".bin");
+				t.join();
 				
-				if (!scenarioFile.exists()) {
-					scenarioFile.createNewFile();
-				}
-				
-				FileOutputStream out = new FileOutputStream(scenarioFile);
-				DataOutputStream dataOut = new DataOutputStream(out);
-				// Save the scenario data
-				saveScenario(s, dataOut);
-				
-				dataOut.close();
-				out.close();
-				
-			} catch (IOException IOEx) {
-				// Issue with writing or opening a file
-				System.err.printf("Error with file %s.\n", scenarioFile.getName());
-				IOEx.printStackTrace();
-				return 2;
+			} catch (InterruptedException IEx) {
+				IEx.printStackTrace();
 			}
 		}
 		

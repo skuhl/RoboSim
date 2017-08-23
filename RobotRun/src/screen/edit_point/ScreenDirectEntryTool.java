@@ -2,8 +2,8 @@ package screen.edit_point;
 
 import core.RobotRun;
 import frame.ToolFrame;
-import global.DataManagement;
 import global.RMath;
+import io.DataManagement;
 import processing.core.PVector;
 import robot.RoboticArm;
 import screen.ScreenMode;
@@ -11,11 +11,22 @@ import ui.DisplayLine;
 
 public class ScreenDirectEntryTool extends ST_ScreenPointEntry {
 	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param r
+	 * @param idx
+	 * @return
+	 */
+	private static String loadHeader(RoboticArm r, int idx) {
+		return String.format("TOOL: %s DIRECT", r.toolLabel(idx));
+	}
+	
 	private int frameIdx;
 	
 	public ScreenDirectEntryTool(RobotRun r, int frameIdx) {
-		super(ScreenMode.DIRECT_ENTRY_TOOL, String.format("TOOL: %d DIRECT",
-				frameIdx + 1), r);
+		super(ScreenMode.DIRECT_ENTRY_TOOL, loadHeader(r.getActiveRobot(),
+				frameIdx), r);
 		this.frameIdx = frameIdx;
 		loadWorkingText();
 	}

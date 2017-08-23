@@ -1,7 +1,7 @@
 package screen.num_entry;
 
 import core.RobotRun;
-import global.DataManagement;
+import io.DataManagement;
 import regs.Register;
 import robot.RoboticArm;
 import screen.ScreenMode;
@@ -22,7 +22,7 @@ public class ScreenCopyDataRegValue extends ST_ScreenNumEntry {
 			// register at the specified index
 			regIdx = Integer.parseInt(workingText.toString()) - 1;
 			robotRun.getActiveRobot().getDReg(regIdx).value = robotRun.getActiveRobot().getDReg(itemIdx).value;
-			DataManagement.saveRobotData(robotRun.getActiveRobot(), 3);
+			DataManagement.saveRobotData(robotRun.getActiveRobot(), 4);
 			robotRun.lastScreen();
 
 		} catch (NumberFormatException MFEx) {

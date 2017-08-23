@@ -34,7 +34,19 @@ public abstract class Screen {
 		
 		header = loadHeader();
 		contents = new MenuScroll("cont", 8, 10, 20);
-		options = new MenuScroll("opt", 3, 10, 180);
+		options = new MenuScroll("opt", 3, 10, 199);
+		labels = new String[5];
+	}
+	
+	public Screen(ScreenMode m, RobotRun r, int cMax, int cX, int cY, int oMax,
+			int oX, int oY) {
+		
+		mode = m;
+		robotRun = r;
+		
+		header = loadHeader();
+		contents = new MenuScroll("cont", cMax, cX, cY);
+		options = new MenuScroll("opt", oMax, oX, oY);
 		labels = new String[5];
 	}
 	
@@ -44,7 +56,19 @@ public abstract class Screen {
 		
 		this.header = header;
 		contents = new MenuScroll("cont", 8, 10, 20);
-		options = new MenuScroll("opt", 3, 10, 180);
+		options = new MenuScroll("opt", 3, 10, 199);
+		labels = new String[5];
+	}
+	
+	public Screen(ScreenMode m, String header, RobotRun r, int cMax, int cX,
+			int cY, int oMax, int oX, int oY) {
+		
+		mode = m;
+		robotRun = r;
+		
+		this.header = header;
+		contents = new MenuScroll("cont", cMax, cX, cY);
+		options = new MenuScroll("opt", oMax, oX, oY);
 		labels = new String[5];
 	}
 	
@@ -195,25 +219,18 @@ public abstract class Screen {
 			// Display Tool frames
 			for (int idx = 0; idx < Fields.FRAME_NUM; idx += 1) {
 				// Display each frame on its own line
-				String[] strArray = r.getToolFrame(idx).toLineStringArray();
-				String line = String.format("%-4s %s", String.format("%d)",
-						idx + 1), strArray[0]);
-				
-				lines.add(new DisplayLine(idx, 0, line));
-				lines.add(new DisplayLine(idx, 38, String.format("%s",
-						strArray[1])));
+				DisplayLine line = new DisplayLine(idx, 0,
+						String.format("TOOL %s", r.toolLabel(idx)));
+				lines.add(line);
 			}
 
 		} else {
 			// Display User frames
 			for (int idx = 0; idx < Fields.FRAME_NUM; idx += 1) {
 				// Display each frame on its own line
-				String[] strArray = r.getUserFrame(idx).toLineStringArray();
-				String line = String.format("%-4s %s", String.format("%d)",
-						idx + 1), strArray[0]);
-				
-				lines.add(new DisplayLine(idx, 0, line));
-				lines.add(new DisplayLine(idx, 38, String.format("%s", strArray[1])));
+				DisplayLine line = new DisplayLine(idx, 0,
+						String.format("USER %s", r.userLabel(idx)));
+				lines.add(line);
 			}
 		}
 		
@@ -304,7 +321,7 @@ public abstract class Screen {
 			instruct_list.add(line);
 		}
 		
-		if (includeEND) {
+		if (includeEND && p.getNumOfInst() < Program.MAX_SIZE) {
 			DisplayLine endl = new DisplayLine(size);
 			endl.add("[End]");
 	
@@ -469,6 +486,8 @@ public abstract class Screen {
 		
 		printScreenInfo();
 	}
+	
+	
 
 	protected abstract void loadContents();
 

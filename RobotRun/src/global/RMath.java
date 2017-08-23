@@ -81,27 +81,6 @@ public abstract class RMath {
 	}
 	
 	/**
-	 * TODO comment this
-	 * 
-	 * @param x
-	 * @param y
-	 * @return
-	 */
-	public static double atan2Rounded(double x, double y) {
-		
-		/**
-		if (x < 0.0 && x >= -0.00001f) {
-			x *= -1;
-		}
-		
-		if (y < 0.0 && y >= -0.00001f) {
-			y *= -1;
-		}
-		/**/
-		return Math.atan2(x, y);
-	}
-	
-	/**
 	 * Calculate the Jacobian matrix for the robotic arm for a given set of
 	 * joint rotational values using a 1 DEGREE offset for each joint rotation
 	 * value. Each cell of the resulting matrix will describe the linear
@@ -673,9 +652,9 @@ public abstract class RMath {
 					m.getEntry(2, 2)*m.getEntry(2, 2)
 					);
 			
-			x = (float) atan2Rounded(m.getEntry(2, 1) / -c2, m.getEntry(2, 2) / c2);
-			y = (float) atan2Rounded(s2, c2);
-			z = (float) atan2Rounded(m.getEntry(1, 0) / -c2, m.getEntry(0, 0) / c2);
+			x = (float) Math.atan2(m.getEntry(2, 1) / -c2, m.getEntry(2, 2) / c2);
+			y = (float) Math.atan2(s2, c2);
+			z = (float) Math.atan2(m.getEntry(1, 0) / -c2, m.getEntry(0, 0) / c2);
 			
 		} else {
 			// Set z rotation to some value
@@ -683,21 +662,21 @@ public abstract class RMath {
 			
 			if (RMath.sign(s2) == 1) {
 				y = -PConstants.PI / 2;
-				x = (float) atan2Rounded(m.getEntry(1, 2), m.getEntry(1, 1)) + z;
+				x = (float) Math.atan2(m.getEntry(1, 2), m.getEntry(1, 1)) + z;
 				
 			} else {
 				y = PConstants.PI / 2;
-				x = (float) atan2Rounded(m.getEntry(1, 2), m.getEntry(1, 1)) - z;
+				x = (float) Math.atan2(m.getEntry(1, 2), m.getEntry(1, 1)) - z;
 			}
 		}
 		
 		/**/
-		x = (float) atan2Rounded(-m.getEntry(2, 1), m.getEntry(2, 2));
-		y = (float) atan2Rounded(m.getEntry(2, 0), Math.sqrt(
+		x = (float) Math.atan2(-m.getEntry(2, 1), m.getEntry(2, 2));
+		y = (float) Math.atan2(m.getEntry(2, 0), Math.sqrt(
 				m.getEntry(2, 1)*m.getEntry(2, 1) +
 				m.getEntry(2, 2)*m.getEntry(2, 2)
 				));
-		z = (float) atan2Rounded(-m.getEntry(1, 0), m.getEntry(0, 0));
+		z = (float) Math.atan2(-m.getEntry(1, 0), m.getEntry(0, 0));
 		
 		/**/
 		

@@ -5,8 +5,8 @@ import java.util.ArrayList;
 import core.RobotRun;
 import frame.UserFrame;
 import geom.Point;
-import global.DataManagement;
 import global.Fields;
+import io.DataManagement;
 import processing.core.PGraphics;
 import processing.core.PVector;
 import robot.RoboticArm;
@@ -15,9 +15,20 @@ import ui.DisplayLine;
 
 public class ScreenTeach4Pt extends ST_ScreenTeachPoints {
 	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param r
+	 * @param idx
+	 * @return
+	 */
+	private static String loadHeader(RoboticArm r, int idx) {
+		return String.format("USER: %s 4PT METHOD", r.userLabel(idx));
+	}
+	
 	public ScreenTeach4Pt(RobotRun r, int uFrameIdx) {
-		super(ScreenMode.TEACH_4PT, String.format("USER: %d 4PT METHOD",
-				uFrameIdx + 1), r, uFrameIdx);
+		super(ScreenMode.TEACH_4PT, loadHeader(r.getActiveRobot(), uFrameIdx),
+				r, 4, 10, 20, 4, 10, 80, uFrameIdx);
 	}
 
 	@Override

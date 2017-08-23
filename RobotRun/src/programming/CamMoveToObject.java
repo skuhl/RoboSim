@@ -10,9 +10,10 @@ import robot.RoboticArm;
 
 
 /**
- * TODO general comments
+ * A motion instruction designed to move the robot to a specific position with
+ * respect to the world object associated with this motion instruction.
  * 
- * @author Vincent Drucktes
+ * @author Vincent Druckte
  */
 public class CamMoveToObject extends MotionInstruction {
 	

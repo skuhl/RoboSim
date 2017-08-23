@@ -8,6 +8,7 @@ import programming.Program;
 import programming.SelectStatement;
 import robot.RoboticArm;
 import screen.ScreenMode;
+import screen.ScreenState;
 
 public class ScreenSetCallProg extends ST_ScreenOptionsMenu {
 
@@ -40,6 +41,11 @@ public class ScreenSetCallProg extends ST_ScreenOptionsMenu {
 
 		robotRun.lastScreen();
 	}
+	
+	@Override
+	protected void loadContents() {
+		contents.setLines(loadInstructions(robotRun.getActiveProg(), true));
+	}
 
 	@Override
 	protected String loadHeader() {
@@ -65,5 +71,10 @@ public class ScreenSetCallProg extends ST_ScreenOptionsMenu {
 					
 		// List the robot's program names
 		options.setLines(loadPrograms(cInst.getTgtDevice()));
+	}
+	
+	@Override
+	protected void loadVars(ScreenState s) {
+		setScreenIndices(s.conLnIdx, s.conColIdx, s.conRenIdx, 0, 0);
 	}
 }

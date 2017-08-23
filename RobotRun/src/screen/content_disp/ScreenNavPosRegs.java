@@ -4,9 +4,9 @@ import core.RobotRun;
 import enums.CoordFrame;
 import frame.UserFrame;
 import geom.Point;
-import global.DataManagement;
 import global.Fields;
 import global.RMath;
+import io.DataManagement;
 import regs.PositionRegister;
 import robot.RoboticArm;
 import screen.ScreenMode;
@@ -78,7 +78,7 @@ public class ScreenNavPosRegs extends ST_ScreenListContents {
 				// Set the position type of the selected position register
 				PositionRegister toEdit = robotRun.getActiveRobot().getPReg(itemIdx);
 				toEdit.isCartesian = !toEdit.isCartesian;
-				DataManagement.saveRobotData(robotRun.getActiveRobot(), 3);
+				DataManagement.saveRobotData(robotRun.getActiveRobot(), 4);
 			}
 		}
 	}
@@ -106,6 +106,7 @@ public class ScreenNavPosRegs extends ST_ScreenListContents {
 					}
 
 					r.updateMotion(pt);
+					
 				} else {
 					r.updateMotion(pt.angles);
 				}
@@ -124,7 +125,7 @@ public class ScreenNavPosRegs extends ST_ScreenListContents {
 			// Save the Robot's current position and joint angles
 			pReg.point = robotRun.getActiveRobot().getToolTipNative();
 			pReg.isCartesian = true;
-			DataManagement.saveRobotData(r, 3);
+			DataManagement.saveRobotData(r, 4);
 		}
 	}
 	

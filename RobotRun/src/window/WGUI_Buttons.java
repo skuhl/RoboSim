@@ -31,6 +31,7 @@ public interface WGUI_Buttons {
 	public static final String Data = "button_data";
 	public static final String Edit = "button_edit";
 	public static final String Enter= "button_enter";
+	public static final String ExportProgs = "button_exportProgs";
 	public static final String F1 = "button_F1";
 	public static final String F2 = "button_F2";
 	public static final String F3 = "button_F3";
@@ -72,7 +73,7 @@ public interface WGUI_Buttons {
 	public static final String ObjClearFields = "button_objClearFields";
 	public static final String ObjConfirmDims = "button_objConfirmDims";
 	public static final String ObjCreate = "button_objCreate";
-	public static final String ObjDelete = "button_objDelete";
+	public static final String ObjConfirmMgmt = "button_objConfirmMgmt";
 	public static final String ObjMoveToCur  = "button_objMoveToCur";
 	public static final String ObjMoveToDefault = "button_objMoveToDefault";
 	public static final String ObjResetDefault = "button_objResetDefault";

@@ -13,7 +13,7 @@ import processing.core.PVector;
  * 
  * @author Joshua Hooker
  */
-public class UserFrame {
+public class UserFrame implements RFrame {
 	
 	/**
 	 * The name associated with this frame.
@@ -424,12 +424,12 @@ public class UserFrame {
 		 * to the world frame */
 		PVector wpr = RMath.nQuatToWEuler(orienOffset);
 
-		values[0] = DebugFloatFormat.format(displayOrigin.x);
-		values[1] = DebugFloatFormat.format(displayOrigin.y);
-		values[2] = DebugFloatFormat.format( displayOrigin.z);
-		values[3] = DebugFloatFormat.format(wpr.x);
-		values[4] = DebugFloatFormat.format(wpr.y);
-		values[5] = DebugFloatFormat.format(wpr.z);
+		values[0] = "X: " + DebugFloatFormat.format(displayOrigin.x);
+		values[1] = "Y: " + DebugFloatFormat.format(displayOrigin.y);
+		values[2] = "Z: " + DebugFloatFormat.format(displayOrigin.z);
+		values[3] = "W: " + DebugFloatFormat.format(wpr.x);
+		values[4] = "P: " + DebugFloatFormat.format(wpr.y);
+		values[5] = "R: " + DebugFloatFormat.format(wpr.z);
 
 		return values;
 	}

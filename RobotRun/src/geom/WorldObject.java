@@ -36,6 +36,14 @@ public abstract class WorldObject implements Cloneable {
 	public abstract WorldObject clone();
 	
 	/**
+	 * Creates an independent replica of this object with the given name.
+	 * 
+	 * @param name	The name for the copied object
+	 * @return		The copy of this object
+	 */
+	public abstract WorldObject clone(String name);
+	
+	/**
 	 * Calculates the point of collision between this world object and the
 	 * given ray that is closest to the ray. If no collision exists, then null
 	 * is returned.
@@ -94,15 +102,16 @@ public abstract class WorldObject implements Cloneable {
 				float t = -E / G;
 				
 				if (t >= 0) {
+					float[] dimArray = dims.array();
 					PVector ptOnRay = PVector.add(rayOrigin, PVector.mult(rayDirect, t));
 					float[] ptOnRayArray = new float[] { ptOnRay.x, ptOnRay.y, ptOnRay.z };
 					int dimToCheck0 = (planeAxis + 1) % 3;
 					int dimToCheck1 = (dimToCheck0 + 1) % 3;
 					
-					if (ptOnRayArray[dimToCheck0] >= -dims.array()[dimToCheck0] &&
-						ptOnRayArray[dimToCheck0] <= dims.array()[dimToCheck0] &&
-						ptOnRayArray[dimToCheck1] >= -dims.array()[dimToCheck1] &&
-						ptOnRayArray[dimToCheck1] <= dims.array()[dimToCheck1]) {
+					if (ptOnRayArray[dimToCheck0] >= -dimArray[dimToCheck0] &&
+						ptOnRayArray[dimToCheck0] <= dimArray[dimToCheck0] &&
+						ptOnRayArray[dimToCheck1] >= -dimArray[dimToCheck1] &&
+						ptOnRayArray[dimToCheck1] <= dimArray[dimToCheck1]) {
 						
 						// Collision exists
 						return PVector.add(ray.getOrigin(),  PVector.mult(ray.getDirection(), t));
@@ -144,7 +153,7 @@ public abstract class WorldObject implements Cloneable {
 			if (this instanceof Part)  {
 				// Use bounding-box dimensions instead
 				fields = new String[4];
-				PVector dims = ((Part)this).getOBBDims();
+				PVector dims = model.getDims();
 
 				fields[0] = "S: " + DebugFloatFormat.format(model.getDim(DimType.SCALE));
 				fields[1] = "L: " + DebugFloatFormat.format(dims.x);

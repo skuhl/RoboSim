@@ -40,6 +40,11 @@ import ui.DisplayLine;
 public class RoboticArm {
 	
 	/**
+	 * The maximum number of programs allowed for a single robotic arm.
+	 */
+	public static final int PROG_NUM = 100;
+	
+	/**
 	 * Defines the conversion between the robot's maximum rotation speed and
 	 * its maximum linear motion speed.
 	 */
@@ -365,8 +370,12 @@ public class RoboticArm {
 	 */
 	public void addAt(Program p, int idx, Instruction inst, boolean group) {
 		if (p != null && inst != null && idx >= 0 && idx <= p.getNumOfInst()) {
-			p.addInstAt(idx, inst);
-			pushUndoState(InstUndoType.INSERTED, p, idx, p.get(idx), group);
+			int insertIdx = p.addInstAt(idx, inst);
+			
+			if (insertIdx != -1) {
+				pushUndoState(InstUndoType.INSERTED, p, idx, p.get(idx),
+						group);
+			}
 		}
 	}
 	
@@ -380,18 +389,26 @@ public class RoboticArm {
 	 * 				undo states
 	 */
 	public void addInstAtEnd(Program p, Instruction inst, boolean group) {
-		int idx = p.getNumOfInst();
-		addAt(p, idx, inst, group);
+		if (p != null) {
+			int idx = p.getNumOfInst();
+			addAt(p, idx, inst, group);
+		}
 	}
 
 	/**
 	 * Adds the given program to this Robot's list of programs.
 	 * 
 	 * @param p	The program to add to the Robot
+	 * @return	-1		the given program is null,
+	 * 			-2		this robot has already reached its program capacity,
+	 * 			>= 0	the index of the newly inserted program
 	 */
 	public int addProgram(Program p) {
 		if (p == null) {
 			return -1;
+			
+		} else if (PROGRAM.size() >= PROG_NUM) {
+			return -2;
 			
 		} else {
 			int idx = 0;
@@ -421,7 +438,7 @@ public class RoboticArm {
 	 * @param axes
 	 *            The axes of the Coordinate System representing as a rotation
 	 *            quanternion
-	 * @returning The point, pt, in terms of the given coordinate system
+	 * @return		The point, pt, in terms of the given coordinate system
 	 */
 	public Point applyFrame(Point pt, PVector origin, RQuaternion axes) {
 		PVector position = RMath.vToFrame(pt.position, origin, axes);
@@ -576,7 +593,15 @@ public class RoboticArm {
 		PVector closestCollPt = null;
 		
 		for (RSegment seg : SEGMENT) {
-			closestCollPt = seg.closestCollision(ray);
+			PVector collPt = seg.closestCollision(ray);
+			
+			if (collPt != null && (closestCollPt == null ||
+					PVector.dist(ray.getOrigin(), collPt) <
+					PVector.dist(ray.getOrigin(), closestCollPt))) {
+				
+				// Find the closest collision to the ray origin
+				closestCollPt = collPt;
+			}
 		}
 		
 		EndEffector activeEE = getActiveEE();
@@ -918,6 +943,22 @@ public class RoboticArm {
 	 */
 	public int getActiveEEIdx() {
 		return activeEEIdx;
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @return
+	 */
+	public String getActiveEEName() {
+		EndEffector ee = this.getActiveEE();
+		
+		if (ee != null) {
+			return ee.getName();
+			
+		}
+		
+		return null;
 	}
 	
 	/**
@@ -1837,6 +1878,7 @@ public class RoboticArm {
 
 				if ((options & Fields.CLEAR_POSITION) == Fields.CLEAR_POSITION) {
 					m.setPosIdx(-1);
+					
 				} else if ((options & Fields.NEW_POSITION) == Fields.NEW_POSITION) {
 					/*
 					 * Copy the current instruction's position to a new local
@@ -1872,10 +1914,13 @@ public class RoboticArm {
 		}
 
 		/* Perform forward/ reverse insertion. */
-		for (int i = 0; i < toInsert.size(); i += 1) {
+		for (int i = 0; p.getNumOfInst() < Program.MAX_SIZE &&
+				i < toInsert.size(); i += 1) {
+			
 			Instruction instr;
 			if ((options & Fields.PASTE_REVERSE) == Fields.PASTE_REVERSE) {
 				instr = pasteList.get(pasteList.size() - 1 - i);
+				
 			} else {
 				instr = pasteList.get(i);
 			}
@@ -2204,7 +2249,7 @@ public class RoboticArm {
 					pMInst.getUFrameIdx() != activeUserIdx) {
 				
 				// Incorrect active frames for this motion instruction
-				LinearInterpolation liMotion = new LinearInterpolation();
+				StaticLinearInterpolation liMotion = new StaticLinearInterpolation();
 				liMotion.setFault(true);
 				motion = liMotion;
 				Fields.setMessage("Invalid active frames for %s", mInst);
@@ -2214,7 +2259,7 @@ public class RoboticArm {
 				// No point defined for given motion instruction
 				String error = getErrorMessage(pMInst, prog, false);
 				Fields.setMessage(error);
-				LinearInterpolation liMotion = new LinearInterpolation();
+				StaticLinearInterpolation liMotion = new StaticLinearInterpolation();
 				liMotion.setFault(true);
 				motion = liMotion;
 				return 2;
@@ -2243,7 +2288,7 @@ public class RoboticArm {
 					} else {
 						// Invalid motion instruction
 						nextPt = null;
-						LinearInterpolation liMotion = new LinearInterpolation();
+						StaticLinearInterpolation liMotion = new StaticLinearInterpolation();
 						liMotion.setFault(true);
 						motion = liMotion;
 						return 3;
@@ -2268,7 +2313,7 @@ public class RoboticArm {
 				
 			} else {
 				// Invalid motion type
-				LinearInterpolation liMotion = new LinearInterpolation();
+				StaticLinearInterpolation liMotion = new StaticLinearInterpolation();
 				liMotion.setFault(true);
 				motion = liMotion;
 				return 4;
@@ -2294,7 +2339,7 @@ public class RoboticArm {
 					} else {
 						// Invalid motion instruction
 						nextPt = null;
-						LinearInterpolation liMotion = new LinearInterpolation();
+						StaticLinearInterpolation liMotion = new StaticLinearInterpolation();
 						liMotion.setFault(true);
 						motion = liMotion;
 						return 3;
@@ -2318,6 +2363,27 @@ public class RoboticArm {
 	@Override
 	public String toString() {
 		return String.format("R%d", RID);
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param idx
+	 * @return
+	 */
+	public String toolLabel(int idx) {
+		ToolFrame tFrame = getToolFrame(idx);
+		
+		if (tFrame != null) {
+			if (tFrame.getName().length() > 0) {
+				// Include the frame's name and the given index
+				return String.format("%s (%d)", tFrame.getName(), idx + 1);
+			}
+			
+			return Integer.toString(idx + 1);
+		}
+		
+		return null;
 	}
 	
 	/**
@@ -2514,13 +2580,19 @@ public class RoboticArm {
 	/**
 	 * Redefines this robot's motion as rotational interpolation where the
 	 * target orientation is defined by the given joint angles and the speed is
-	 * defined by this robot's current live speed.
+	 * defined by this robot's live speed.
 	 *  
 	 * @param jointAngles	The six joint angles defining the robot's target
 	 * 						orientation
 	 */
 	public void updateMotion(float[] jointAngles) {
-		updateMotion(jointAngles, liveSpeed / 100f);
+		if (motion instanceof JointInterpolation) {
+			((JointInterpolation)motion).setupRotationalInterpolation(this,
+					jointAngles);
+			
+		} else {
+			motion = new JointInterpolation(this, jointAngles);
+		}
 	}
 	
 	/**
@@ -2546,13 +2618,12 @@ public class RoboticArm {
 	/**
 	 * Redefines this robot's motion as linear interpolation where target
 	 * position and orientation of the robot's tool tip are defined by the
-	 * given point. The motion speed is defined by the robot's current
-	 * liveSpeed value.
+	 * given point. The motion speed is linked to the robot's livespeed.
 	 * 
 	 * @param tgt	The target point for the robot's tool tip
 	 */
 	public void updateMotion(Point tgt) {
-		updateMotion(tgt, liveSpeed / 100f);
+		motion = new DynamicLinearInterpolation(getToolTipNative(), tgt);
 	}
 	
 	/**
@@ -2566,11 +2637,11 @@ public class RoboticArm {
 	public void updateMotion(Point tgt, float speed) {
 		Point start = getToolTipNative();
 		
-		if (!(motion instanceof LinearInterpolation)) {
-			motion = new LinearInterpolation();
+		if (!(motion instanceof StaticLinearInterpolation)) {
+			motion = new StaticLinearInterpolation();
 		}
 		
-		((LinearInterpolation) motion).beginNewLinearMotion(start, tgt,
+		((StaticLinearInterpolation) motion).beginNewLinearMotion(start, tgt,
 				speed * motorSpeed);
 	}
 	
@@ -2588,11 +2659,11 @@ public class RoboticArm {
 	public void updateMotion(Point tgt, Point inter, float speed) {
 		Point start = getToolTipNative();
 		
-		if (!(motion instanceof LinearInterpolation)) {
-			motion = new LinearInterpolation();
+		if (!(motion instanceof StaticLinearInterpolation)) {
+			motion = new StaticLinearInterpolation();
 		}
 		
-		((LinearInterpolation) motion).beginNewCircularMotion(start, inter, tgt,
+		((StaticLinearInterpolation) motion).beginNewCircularMotion(start, inter, tgt,
 				speed * motorSpeed);
 	}
 	
@@ -2612,11 +2683,11 @@ public class RoboticArm {
 	public void updateMotion(Point tgt, Point next, float speed, float p) {
 		Point start = getToolTipNative();
 		
-		if (!(motion instanceof LinearInterpolation)) {
-			motion = new LinearInterpolation();
+		if (!(motion instanceof StaticLinearInterpolation)) {
+			motion = new StaticLinearInterpolation();
 		}
 		
-		((LinearInterpolation) motion).beginNewContinuousMotion(start, tgt, next, p,
+		((StaticLinearInterpolation) motion).beginNewContinuousMotion(start, tgt, next, p,
 				speed * motorSpeed);
 	}
 
@@ -2630,6 +2701,27 @@ public class RoboticArm {
 		}
 		
 		updateOBBs();
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param idx
+	 * @return
+	 */
+	public String userLabel(int idx) {
+		UserFrame uFrame = getUserFrame(idx);
+		
+		if (uFrame != null) {
+			if (uFrame.getName().length() > 0) {
+				// Include the frame's name and the given index
+				return String.format("%s (%d)", uFrame.getName(), idx + 1);
+			}
+			
+			return Integer.toString(idx + 1);
+		}
+		
+		return null;
 	}
 	
 	/**

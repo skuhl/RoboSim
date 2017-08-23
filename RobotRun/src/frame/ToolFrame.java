@@ -13,7 +13,7 @@ import processing.core.PVector;
  * 
  * @author Joshua Hooker
  */
-public class ToolFrame {
+public class ToolFrame implements RFrame {
 	
 	/**
 	 * The name associated with this frame.
@@ -353,12 +353,14 @@ public class ToolFrame {
 	}
 	
 	/**
-	 * Updates the TCP and orientation offset of this frame based off the teach
-	 * points associated with this frame.
+	 * Updates the TCP and orientation offset of this frame based off the
+	 * teach points associated with this frame.
 	 * 
-	 * @return	If the frame was taught successfully with the six point method
+	 * @param RP	TODO
+	 * @return		f the frame was taught successfully with the six
+	 * point method
 	 */
-	public boolean teach6Pt() {
+	public boolean teach6Pt(Point RP) {
 		if (is6PtComplete()) {
 			Point pt0 = getTeactPt(0);
 			Point pt1 = getTeactPt(1);
@@ -377,12 +379,14 @@ public class ToolFrame {
 			RMatrix axesOffsets = Fields.createAxesFromThreePoints(pt3.position,
 					pt4.position, pt5.position);
 			
+			RQuaternion axesQuat = RMath.matrixToQuat(axesOffsets);
+			
 			if (tcp != null && axesOffsets != null) {
 				PVector TCPVec = new PVector((float)tcp[0], (float)tcp[1],
 						(float)tcp[2]);
 				// Set the frame offsets
 				setTCPOffset(TCPVec);
-				setOrienOffset( RMath.matrixToQuat(axesOffsets) );
+				setOrienOffset( RP.orientation.conjugate().mult(axesQuat) );
 				return true;
 			}
 		}
@@ -444,12 +448,12 @@ public class ToolFrame {
 		 * to the world frame */
 		PVector wpr = RMath.nQuatToWEuler(orienOffset);
 
-		values[0] = DebugFloatFormat.format(displayOffset.x);
-		values[1] = DebugFloatFormat.format(displayOffset.y);
-		values[2] = DebugFloatFormat.format(displayOffset.z);
-		values[3] = DebugFloatFormat.format(wpr.x);
-		values[4] = DebugFloatFormat.format(wpr.y);
-		values[5] = DebugFloatFormat.format(wpr.z);
+		values[0] = "X: " + DebugFloatFormat.format(displayOffset.x);
+		values[1] = "Y: " + DebugFloatFormat.format(displayOffset.y);
+		values[2] = "Z: " + DebugFloatFormat.format(displayOffset.z);
+		values[3] = "W: " + DebugFloatFormat.format(wpr.x);
+		values[4] = "P: " + DebugFloatFormat.format(wpr.y);
+		values[5] = "R: " + DebugFloatFormat.format(wpr.z);
 
 		return values;
 	}

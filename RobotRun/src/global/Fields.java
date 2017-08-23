@@ -58,6 +58,11 @@ public abstract class Fields {
 	public static final int FRAME_NUM = 10;
 	
 	/**
+	 * The maximum number of scenarios used by the software at one time.
+	 */
+	public static final int SCENARIO_NUM = 60;
+	
+	/**
 	 * The tool frame type of a motion instruction
 	 */
 	public static final int FTYPE_TOOL = 0;
@@ -150,6 +155,7 @@ public abstract class Fields {
 			CLEAR_POSITION = 0b10,
 			NEW_POSITION = 0b100,
 			REVERSE_MOTION = 0b1000;
+	
 	/**
 	 * A dimension pertaining to the pendant or pendant screen UI elements.
 	 */
@@ -909,5 +915,18 @@ public abstract class Fields {
 		);
 		
 	}
-
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param t
+	 */
+	public static void waitForThread(Thread t) {
+		try {
+			t.join();
+			
+		} catch (InterruptedException IEx) {
+			IEx.printStackTrace();
+		}
+	}
 }

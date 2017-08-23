@@ -1,8 +1,10 @@
 package screen.text_entry;
 
 import core.RobotRun;
-import global.DataManagement;
+import global.Fields;
+import io.DataManagement;
 import programming.Program;
+import robot.RoboticArm;
 import screen.ScreenMode;
 
 public class ScreenProgramCopy extends ST_ScreenTextEntry {
@@ -18,19 +20,34 @@ public class ScreenProgramCopy extends ST_ScreenTextEntry {
 				// Remove insert character
 				workingText.deleteCharAt(workingText.length() - 1);
 			}
-
+			
+			String name = workingText.toString();
 			Program prog = robotRun.getActiveProg();
 
 			if (prog != null) {
-				Program newProg = prog.clone();
-				newProg.setName(workingText.toString());
-				int new_prog = robotRun.getActiveRobot().addProgram(newProg);
-				robotRun.setActiveProgIdx(new_prog);
-				robotRun.setActiveInstIdx(0);
-				DataManagement.saveRobotData(robotRun.getActiveRobot(), 1);
+				RoboticArm r = robotRun.getActiveRobot();
+				Program withSameName = r.getProgram(name);
+				
+				if (withSameName == null) {
+					Program newProg = prog.clone();
+					newProg.setName(workingText.toString());
+					int new_prog = r.addProgram(newProg);
+					robotRun.setActiveProgIdx(new_prog);
+					robotRun.setActiveInstIdx(0);
+					DataManagement.saveProgram(r.RID, newProg);
+					robotRun.lastScreen();
+					
+				} else {
+					Fields.setMessage("A program with the name %s already exists",
+							name);
+				}
+				
+			} else {
+				Fields.debug("No program is selected to copy!");
 			}
-
-			robotRun.lastScreen();
+			
+		} else {
+			Fields.setMessage("The program's name cannot be empty");
 		}
 	}
 

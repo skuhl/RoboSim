@@ -93,11 +93,14 @@ public class RobotCamera {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Generates a ray, which represents the position of a mouse click on the
+	 * camera snapshot image mapped to the robot camera view perspective, in
+	 * the world frame.
 	 * 
-	 * @param posX
-	 * @param posY
-	 * @return
+	 * @param posX	The mouse position along the image's x axis
+	 * @param posY	The mouse position along the image's y axis
+	 * @return		The ray representing the mouse click in the world
+	 * 				coordinate system
 	 */
 	public RRay camPosToWldRay(int posX, int posY) {
 		
@@ -334,7 +337,7 @@ public class RobotCamera {
 		ArrayList<CameraObject> objList = new ArrayList<CameraObject>();
 		if(scene == null) return objList;
 		
-		for(WorldObject o : scene.getObjectList()) {
+		for(WorldObject o : scene) {
 			if(o instanceof Part) {
 				float imageQuality = getObjectImageQuality(o);
 				if(isPointInFrame(((Part)o).getCenter()) && imageQuality >= sensitivity) {
@@ -649,6 +652,7 @@ public class RobotCamera {
 		PGraphics img = appRef.createGraphics(width, height, RobotRun.P3D);
 		
 		img.beginDraw();
+		img.resetMatrix();
 		img.perspective((camFOV/camAspectRatio)*RobotRun.DEG_TO_RAD, camAspectRatio, camClipNear, camClipFar);
 		
 		float light = 10 + 245 * brightness * exposure;
@@ -660,7 +664,7 @@ public class RobotCamera {
 		img.rotateY(cOrien.y);
 		img.rotateZ(cOrien.z);
 		
-		img.translate(-cPos.x + width / 2f, -cPos.y + width / 2f,  -cPos.z);
+		img.translate(-cPos.x, -cPos.y, -cPos.z);
 		
 		Scenario active = appRef.getActiveScenario();
 		if(active != null) {
@@ -677,7 +681,7 @@ public class RobotCamera {
 		
 		appRef.getActiveRobot().draw(img, false, AxesDisplay.NONE);
 		
-		img.translate(cPos.x - width / 2f, cPos.y - height / 2f,  cPos.z);
+		img.translate(cPos.x, cPos.y,  cPos.z);
 		
 		img.noStroke();
 		img.fill(img.color(255, 255, 255, (int)(240f*Math.max(0, Math.log10(brightness*exposure)))));

@@ -5,8 +5,8 @@ import java.util.ArrayList;
 import core.RobotRun;
 import frame.ToolFrame;
 import geom.Point;
-import global.DataManagement;
 import global.Fields;
+import io.DataManagement;
 import processing.core.PGraphics;
 import processing.core.PVector;
 import robot.RoboticArm;
@@ -15,9 +15,20 @@ import ui.DisplayLine;
 
 public class ScreenTeach6Pt extends ST_ScreenTeachPoints {
 	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param r
+	 * @param idx
+	 * @return
+	 */
+	private static String loadHeader(RoboticArm r, int idx) {
+		return String.format("TOOL: %s 6PT METHOD", r.toolLabel(idx));
+	}
+	
 	public ScreenTeach6Pt(RobotRun r, int tFrameIdx) {
-		super(ScreenMode.TEACH_6PT, String.format("TOOL: %d 6PT METHOD",
-				tFrameIdx + 1), r, tFrameIdx);
+		super(ScreenMode.TEACH_6PT, loadHeader(r.getActiveRobot(), tFrameIdx),
+				r, 4, 10, 20, 6, 10, 80, tFrameIdx);
 	}
 
 	@Override
@@ -25,7 +36,8 @@ public class ScreenTeach6Pt extends ST_ScreenTeachPoints {
 		RoboticArm r = robotRun.getActiveRobot();
 		ToolFrame teachFrame = r.getToolFrame(frameIdx);
 		
-		boolean success = teachFrame.teach6Pt();
+		Point RP = r.getFacePlatePoint();
+		boolean success = teachFrame.teach6Pt(RP);
 		
 		if (success) {
 			// Set the updated frame

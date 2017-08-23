@@ -13,11 +13,12 @@ import processing.core.PVector;
 /**
  * Defines the robot's target position and orientation motion, which uses
  * linear interpolation to move from the robot's current position and
- * orientation to the target position and orientation.
+ * orientation to the target position and orientation. This motion has a fixed
+ * speed.
  * 
  * @author Joshua Hooker
  */
-public class LinearInterpolation extends LinearMotion {
+public class StaticLinearInterpolation extends LinearMotion {
 	
 	private float distBtwPts;
 	
@@ -33,7 +34,7 @@ public class LinearInterpolation extends LinearMotion {
 	/**
 	 * Initializes intermediate positions.
 	 */
-	public LinearInterpolation() {
+	public StaticLinearInterpolation() {
 		super();
 		interpolatePts = new ArrayList<>();
 		distBtwPts = 0f;

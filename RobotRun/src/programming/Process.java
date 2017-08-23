@@ -8,7 +8,7 @@ import enums.ExecType;
  * 
  * @author Joshua Hooker
  */
-public class ProgExecution implements Cloneable {
+public class Process implements Cloneable {
 	
 	private int curIdx;
 	private int nextIdx;
@@ -20,7 +20,7 @@ public class ProgExecution implements Cloneable {
 	/**
 	 * Initializes all the fields. Not a valid execution state!
 	 */
-	public ProgExecution() {
+	public Process() {
 		rid = -1;
 		prog = null;
 		type = ExecType.EXEC_FULL;
@@ -39,7 +39,7 @@ public class ProgExecution implements Cloneable {
 	 * @param curIdx
 	 * @param nextIdx
 	 */
-	private ProgExecution(int rid, Program prog, ExecType type, ExecState state,
+	public Process(int rid, Program prog, ExecType type, ExecState state,
 			int curIdx, int nextIdx) {
 		
 		this.prog = prog;
@@ -50,8 +50,8 @@ public class ProgExecution implements Cloneable {
 	}
 	
 	@Override
-	public ProgExecution clone() {
-		return new ProgExecution(rid, prog, type, state, curIdx, nextIdx);
+	public Process clone() {
+		return new Process(rid, prog, type, state, curIdx, nextIdx);
 	}	
 	
 	public int getCurIdx() {
@@ -78,44 +78,8 @@ public class ProgExecution implements Cloneable {
 		return type;
 	}
 	
-	/**
-	 * Stop program execution
-	 */
-	public void halt() {
-		state = ExecState.EXEC_DONE;
-	}
-	
-	/**
-	 * @return	Has the program finished execution
-	 */
-	public boolean isDone() {
-		return state == ExecState.EXEC_DONE || state == ExecState.EXEC_FAULT;
-	}
-	
-	/**
-	 * @return	Is program execution only running a single instruction
-	 */
-	public boolean isSingleExec() {
-		return type == ExecType.EXEC_SINGLE || type == ExecType.EXEC_BWD;
-	}
-	
 	public void setCurIdx(int idx) {
 		curIdx = idx;
-	}
-	
-	public void setExec(int rid, ExecType type, Program prog, int curIdx) {
-		this.rid = rid;
-		this.type = type;
-		this.state = ExecState.EXEC_START;
-		this.prog = prog;
-		this.curIdx = curIdx;
-		
-		if (type == ExecType.EXEC_BWD) {
-			nextIdx = curIdx;
-			
-		} else {
-			nextIdx = curIdx + 1;
-		}
 	}
 	
 	public void setNextIdx(int idx) {
@@ -126,12 +90,26 @@ public class ProgExecution implements Cloneable {
 		this.prog = prog;
 	}
 	
+	public void setRID(int rid) {
+		this.rid = rid;
+	}
+	
 	public void setState(ExecState newState) {
 		state = newState;
 	}
 	
 	public void setType(ExecType type) {
 		this.type = type;
-		this.state = ExecState.EXEC_START;
+	}
+	
+	@Override
+	public String toString() {
+		if (prog == null) {
+			return String.format("type=%s rid=%d prog=n/a cur=%d state=%s next=%d",
+					type, rid, curIdx, state, nextIdx);
+		}
+		
+		return String.format("type=%s rid=%d prog=%s cur=%d state=%s next=%d",
+				type, rid, prog.getName(), curIdx, state, nextIdx);
 	}
 }

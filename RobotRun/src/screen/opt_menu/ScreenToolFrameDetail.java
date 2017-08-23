@@ -6,11 +6,22 @@ import screen.ScreenMode;
 
 public class ScreenToolFrameDetail extends ST_ScreenOptionsMenu {
 	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param r
+	 * @param idx
+	 * @return
+	 */
+	private static String loadHeader(RoboticArm r, int idx) {
+		return String.format("TOOL: %s DETAIL", r.toolLabel(idx));
+	}
+	
 	private int frameIdx;
 	
 	public ScreenToolFrameDetail(RobotRun r, int frameIdx) {
-		super(ScreenMode.TFRAME_DETAIL, String.format("TOOL: %d DETAIL",
-				frameIdx + 1), r);
+		super(ScreenMode.TFRAME_DETAIL, loadHeader(r.getActiveRobot(),
+				frameIdx), r);
 		this.frameIdx = frameIdx;
 	}
 	

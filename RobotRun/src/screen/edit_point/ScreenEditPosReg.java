@@ -2,7 +2,7 @@ package screen.edit_point;
 
 import core.RobotRun;
 import geom.Point;
-import global.DataManagement;
+import io.DataManagement;
 import regs.PositionRegister;
 import regs.Register;
 import robot.RoboticArm;
@@ -24,7 +24,7 @@ public class ScreenEditPosReg extends ST_ScreenPointEntry {
 		if (pt != null) {
 			// Position was successfully pulled form the contents menu
 			pReg.point = pt;
-			DataManagement.saveRobotData(r, 3);
+			DataManagement.saveRobotData(r, 4);
 			robotRun.lastScreen();
 			
 		}

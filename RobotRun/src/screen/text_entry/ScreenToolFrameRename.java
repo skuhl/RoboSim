@@ -2,7 +2,7 @@ package screen.text_entry;
 
 import core.RobotRun;
 import frame.ToolFrame;
-import global.DataManagement;
+import io.DataManagement;
 import robot.RoboticArm;
 import screen.ScreenMode;
 
@@ -30,7 +30,7 @@ public class ScreenToolFrameRename extends ST_ScreenTextEntry {
 		ToolFrame selectedFrame = r.getToolFrame(frameIdx);
 		selectedFrame.setName(workingText.toString());
 		
-		DataManagement.saveRobotData(robotRun.getActiveRobot(), 1);
+		DataManagement.saveRobotData(robotRun.getActiveRobot(), 2);
 		robotRun.lastScreen();
 	}
 

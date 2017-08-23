@@ -13,6 +13,12 @@ import processing.core.PConstants;
 public class JointInterpolation extends JointMotion {
 	
 	/**
+	 * Is the speed of the this motion directly linked to live speed of the
+	 * robot?
+	 */
+	private boolean linkToRobotSpd;
+	
+	/**
 	 *  The overall speed modifier for the rotational interpolation.
 	 */
 	private float speed;
@@ -23,13 +29,25 @@ public class JointInterpolation extends JointMotion {
 	private final float[] TGT_ANGLES;
 	
 	/**
+	 * TODO comment this
+	 * 
+	 * @param robot
+	 * @param tgtAngles
+	 */
+	public JointInterpolation(RoboticArm robot, float[] tgtAngles) {
+		TGT_ANGLES = new float[6];
+		setupRotationalInterpolation(robot, tgtAngles);
+	}
+	
+	/**
 	 * Sets the target joint angles and joint motion directions for the
 	 * rotational interpolation. In addition, the speed modifiers for each of
-	 * the roobt's segments is updated in such a way, that each joint will
+	 * the robot's segments is updated in such a way, that each joint will
 	 * finish interpolation at the same time.
 	 * 
 	 * @param robot		The robot. for which this motion is defined
 	 * @param tgtAngles	The target joint angles, to which to interpolate
+	 * @param speed		The initial speed of motion
 	 */
 	public JointInterpolation(RoboticArm robot, float[] tgtAngles, float speed) {
 		TGT_ANGLES = new float[6];
@@ -41,6 +59,11 @@ public class JointInterpolation extends JointMotion {
 		// Count how many joints are still in motion
 		int ret = 0;
 		
+		if (linkToRobotSpd) {
+			// Update the speed of motion
+			speed = robot.getLiveSpeed() / 100f;
+		}
+		
 		for(int jdx = 0; jdx < 6; ++jdx) {
 			RSegWithJoint seg = robot.getSegment(jdx);
 			
@@ -51,7 +74,7 @@ public class JointInterpolation extends JointMotion {
 				
 				if (deltaAngle > 0.000009f && distToDest >= deltaAngle) {
 					++ret;
-					/* Move the joint based on the roobt's liveSpeed, the
+					/* Move the joint based on the defined speed of motion, the
 					 * direction of motion and the segment's speed modifier */
 					float newRotation = RMath.mod2PI(seg.getJointRotation()
 							+ JOINT_MOTION[jdx] * deltaAngle);
@@ -62,14 +85,59 @@ public class JointInterpolation extends JointMotion {
 					if (distToDest > 0.000009f) {
 						// Destination too close to move at current speed
 						seg.setJointRotation(TGT_ANGLES[jdx]);
+						
+					} else {
+						JOINT_MOTION[jdx] = 0;
 					}
-					
-					JOINT_MOTION[jdx] = 0;
 				}
 			}
 		}
 		
 		return ret;
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @return
+	 */
+	public boolean isSpdLinkedToRobot() {
+		return linkToRobotSpd;
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param linkSpd
+	 */
+	public void linkToRobotSpd(boolean linkSpd) {
+		linkToRobotSpd = linkSpd;
+	}
+	
+	/**
+	 * TODO comment this
+	 * @param robot
+	 * @param tgtAngles
+	 * @param speed
+	 */
+	public void setupRotationalInterpolation(RoboticArm robot,
+			float[] tgtAngles, float speed) {
+		
+		this.speed = speed;
+		linkToRobotSpd = false;
+		setup(robot, tgtAngles);
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param robot
+	 * @param tgtAngles
+	 */
+	public void setupRotationalInterpolation(RoboticArm robot, float[] tgtAngles) {
+		speed = robot.getLiveSpeed() / 100f;
+		linkToRobotSpd = true;
+		setup(robot, tgtAngles);
 	}
 	
 	/**
@@ -81,11 +149,7 @@ public class JointInterpolation extends JointMotion {
 	 * @param robot		The robot. for which this motion is defined
 	 * @param tgtAngles	The target joint angles, to which to interpolate
 	 */
-	public void setupRotationalInterpolation(RoboticArm robot,
-			float[] tgtAngles, float speed) {
-		
-		this.speed = speed;
-		
+	private void setup(RoboticArm robot, float[] tgtAngles) {
 		float[] minDist = new float[6];
 		float maxMinDist = Float.MIN_VALUE;
 		

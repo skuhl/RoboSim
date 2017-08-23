@@ -11,6 +11,12 @@ public abstract class ST_ScreenOptionsMenu extends Screen {
 		super(m, r);
 	}
 	
+	public ST_ScreenOptionsMenu(ScreenMode m, RobotRun r, int cMax, int cX,
+			int cY, int oMax, int oX, int oY) {
+		
+		super(m, r, cMax, cX, cY, oMax, oX, oY);
+	}
+	
 	public ST_ScreenOptionsMenu(ScreenMode m, String header,
 			RobotRun r) {
 		

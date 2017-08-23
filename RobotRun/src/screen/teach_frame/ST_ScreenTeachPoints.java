@@ -2,8 +2,8 @@ package screen.teach_frame;
 
 import core.RobotRun;
 import geom.Point;
-import global.DataManagement;
 import global.Fields;
+import io.DataManagement;
 import processing.core.PGraphics;
 import robot.RoboticArm;
 import screen.Screen;
@@ -90,11 +90,25 @@ public abstract class ST_ScreenTeachPoints extends Screen {
 		super(m, r);
 		this.frameIdx = frameIdx;
 	}
-
+	
+	public ST_ScreenTeachPoints(ScreenMode m, RobotRun r, int cMax, int cX,
+			int cY, int oMax, int oX, int oY, int frameIdx) {
+		
+		super(m, r, cMax, cX, cY, oMax, oX, oY);
+		this.frameIdx = frameIdx;
+	}
+	
 	public ST_ScreenTeachPoints(ScreenMode m, String header, RobotRun r,
 			int frameIdx) {
 		
 		super(m, header, r);
+		this.frameIdx = frameIdx;
+	}
+	
+	public ST_ScreenTeachPoints(ScreenMode m, String header, RobotRun r,
+			int cMax, int cX, int cY, int oMax, int oX, int oY, int frameIdx) {
+		
+		super(m, header, r, cMax, cX, cY, oMax, oX, oY);
 		this.frameIdx = frameIdx;
 	}
 	
@@ -138,6 +152,7 @@ public abstract class ST_ScreenTeachPoints extends Screen {
 					// Move to the point's position and orientation
 					robotRun.getActiveRobot().updateMotion(tgt);
 				}
+				
 			} else {
 				if (tgt != null && tgt.angles != null) {
 					// Move to the point's joint angles
@@ -187,9 +202,12 @@ public abstract class ST_ScreenTeachPoints extends Screen {
 	public abstract boolean readyToTeach();
 	
 	/**
-	 * TODO comment this
+	 * Returns the point taught to the associated frame for the teaching method
+	 * associated with this screen. The mapping between indices and points
+	 * varies depending the teaching method and frame type, however, the
+	 * maximum range of indices is 0 to 6, inclusive.
 	 * 
-	 * @param idx
+	 * @param idx	The index of the teach point to get
 	 */
 	protected abstract Point getTeachPoint(int idx);
 	
@@ -209,10 +227,11 @@ public abstract class ST_ScreenTeachPoints extends Screen {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Sets the teach point associated with the given index, if the given index
+	 * is valid. See getTeachPoint() method. 
 	 * 
-	 * @param pt
-	 * @param idx
+	 * @param pt	The new teach point
+	 * @param idx	The index associated with the teach point
 	 */
 	protected abstract void setTeachPoint(Point pt, int idx);
 }
