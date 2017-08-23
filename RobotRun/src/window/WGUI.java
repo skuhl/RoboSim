@@ -776,7 +776,7 @@ public class WGUI implements ControlListener {
 		addButton(WGUI_Buttons.ObjSetDefault, "Update Default", editWOPos, fieldWidthMed, sButtonHeight, Fields.small);
 		addButton(WGUI_Buttons.ObjMoveToDefault, "Move to Default", editWOPos, fieldWidthMed, sButtonHeight, Fields.small);
 
-		addButton(WGUI_Buttons.ObjResetDefault, "Restore Defaults", editWOPos, lLblWidth, sButtonHeight, Fields.small);
+		addButton(WGUI_Buttons.ObjResetDefault, "Restore Defaults", editWO, lLblWidth, sButtonHeight, Fields.small);
 		
 		addButton(WGUI_Buttons.ObjConfirmDims, "Confirm", editWODim, mButtonWidth, sButtonHeight, Fields.small);
 		
@@ -3741,19 +3741,23 @@ public class WGUI implements ControlListener {
 	 */
 	private void updateEditWindowContentPositions() {
 		WorldObject wo = getSelectedWO();
-		getButton(WGUI_Buttons.ObjClearFields).hide();
-		
 		// Object list dropdown and label
 		int[] relPos = new int[] { winMargin, winMargin };
-		ControllerInterface<?> c = getTextArea("WOEditLbl").setPosition(relPos[0], relPos[1]),
-				c0 = null;
+		ControllerInterface<?> c = getTextArea("WOEditLbl").setPosition(relPos[0], relPos[1]);
+		ControllerInterface<?> c0 = null;
+		
 		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
 		getDropdown("WO").setPosition(relPos[0], relPos[1]);
-		// Edit tab radio buttons
 		
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		c = getButton(WGUI_Buttons.ObjResetDefault).setPosition(relPos[0], relPos[1]);
+		
+		// Edit tab radio buttons
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
 		MyRadioButton rb = getRadioButton("EditTab");
 		c = rb.setPosition(relPos[0], relPos[1]);
+		
+		getButton(WGUI_Buttons.ObjClearFields).hide();
 		
 		if (wo == null) {
 			editWOPos.hide();
@@ -3900,19 +3904,11 @@ public class WGUI implements ControlListener {
 	
 					// Move to default button
 					relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-					c0 = getButton(WGUI_Buttons.ObjMoveToDefault).setPosition(relPos[0], relPos[1]).show();
-	
-					// Restore Defaults button
-					relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-					c = getButton(WGUI_Buttons.ObjResetDefault).setPosition(relPos[0], relPos[1]).show();
+					c = getButton(WGUI_Buttons.ObjMoveToDefault).setPosition(relPos[0], relPos[1]).show();
 	
 				} else {
 					getButton(WGUI_Buttons.ObjSetDefault).hide();
 					getButton(WGUI_Buttons.ObjMoveToDefault).hide();
-	
-					// Restore Defaults button
-					relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-					c = getButton(WGUI_Buttons.ObjResetDefault).setPosition(relPos[0], relPos[1]).show();
 				}
 				
 			} else if (val == 1f) {
