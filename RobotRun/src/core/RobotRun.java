@@ -171,6 +171,17 @@ public class RobotRun extends PApplet {
 	private WGUI UI;
 	
 	/**
+	 * TODO comment this
+	 * 
+	 * @param s
+	 */
+	public void addScenario(Scenario s) {
+		if (SCENARIOS.size() < Fields.SCENARIO_NUM) {
+			SCENARIOS.add(s);
+		}
+	}
+	
+	/**
 	 * Applies the given camera to the matrix stack. assuming that the current
 	 * matrix is that of the camera face, the inverse of the camera's
 	 * orientation and position are applied to return to the world coordinate
@@ -1609,11 +1620,10 @@ public class RobotRun extends PApplet {
 	public void button_scenarioConfirm() {
 		try {
 			Fields.resetMessage();
-			int ret = UI.updateScenarios(SCENARIOS);
+			int ret = UI.updateScenarios();
 	
 			if (ret > 0) {
 				activeScenario.set( UI.getSelectedScenario() );
-				DataManagement.saveScenarios(this);
 	
 			} else if (ret == 0) {
 				DataManagement.saveScenarios(this);
@@ -2034,6 +2044,15 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
+	 * TODO comment this
+	 * 
+	 * @return
+	 */
+	public int getNumOfScenarios() {
+		return SCENARIOS.size();
+	}
+	
+	/**
 	 * Copies the current rotation on the top matrix of Processing's matrix
 	 * stack to a 3x3 floating-point array.
 	 * 
@@ -2076,8 +2095,34 @@ public class RobotRun extends PApplet {
 		return robotTrace;
 	}
 	
-	public ArrayList<Scenario> getScenarios() {
-		return SCENARIOS;
+	/**
+	 * TODO comment this
+	 * 
+	 * @param idx
+	 * @return
+	 */
+	public Scenario getScenario(int idx) {
+		if (idx >= 0 && idx < SCENARIOS.size()) {
+			return SCENARIOS.get(idx);
+		}
+		
+		return null;
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param tgtName
+	 * @return
+	 */
+	public Scenario getScenario(String tgtName) {
+		for (Scenario s : SCENARIOS) {
+			if (s.getName().equals(tgtName)) {
+				return s;
+			}
+		}
+		
+		return null;
 	}
 
 	public WGUI getUI() {

@@ -15,7 +15,7 @@ import robot.RoboticArm;
  * 
  * @author Joshua Hooker
  */
-public class LoadFile implements Runnable {
+public class LoadProgramFile implements Runnable {
 	private RoboticArm robotRef;
 	private Program[] listRef;
 	private int idx;
@@ -29,7 +29,7 @@ public class LoadFile implements Runnable {
 	 * @param idx
 	 * @param src
 	 */
-	public LoadFile(RoboticArm robotRef, Program[] listRef, int idx,
+	public LoadProgramFile(RoboticArm robotRef, Program[] listRef, int idx,
 			File src) {
 		
 		this.robotRef = robotRef;

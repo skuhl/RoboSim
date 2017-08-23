@@ -240,42 +240,6 @@ public class WGUI implements ControlListener {
 	}
 	
 	/**
-	 * Determine if the given string is a valid name to give to a scenario. A
-	 * scenario name must consist only of letters and numbers, be unique
-	 * amongst all scenarios, and be of length less than or equal to 26. If
-	 * the given name is not a valid name, then null is returned. However, in
-	 * the case when the name is too long, then the name is trimmed first,
-	 * before verifying that the other two criteria hold for the trimmed name. 
-	 * 
-	 * @param name			The string to verify as a scenario name
-	 * @param scenarios	The current list of scenarios in the application
-	 * @return				The string (or a trimmed version) if the name is
-	 * 					valid, null otherwise
-	 */
-	private static String validScenarioName(String name, ArrayList<Scenario> scenarios) {
-		// Names only consist of letters and numbers
-		if (Pattern.matches("[a-zA-Z0-9]+", name)) {
-
-			if (name.length() > 16) {
-				// Names have a max length of 16 characters
-				name = name.substring(0, 16);
-			}
-
-			for (Scenario s : scenarios) {
-				if (s.getName().equals(name)) {
-					// Duplicate name
-					return null;
-				}
-			}
-
-			return name;
-		}
-
-		// Invalid characters
-		return null;
-	}
-	
-	/**
 	 * A reference to the application, in which the UI resides.
 	 */
 	private final RobotRun app;
@@ -1853,11 +1817,9 @@ public class WGUI implements ControlListener {
 		dropdown = getDropdown("Scenario");
 		dropdown.clear();
 
-		ArrayList<Scenario> scenarios = app.getScenarios();
-
-		for (int idx = 0; idx < scenarios.size(); ++idx) {
+		for (int idx = 0; idx < app.getNumOfScenarios(); ++idx) {
 			// Load all scenario indices
-			Scenario s = scenarios.get(idx);
+			Scenario s = app.getScenario(idx);
 			dropdown.addItem(s.getName(), s);
 			dropdown2.addItem(s.getName(), s);
 		}
@@ -1882,7 +1844,6 @@ public class WGUI implements ControlListener {
 	 * The return value describes the result of the scenario list
 	 * modification. A negative value indicates that an error occurred.
 	 * 
-	 * @param scenarios	The current list of scenarios
 	 * @return				 0	An existing scenario is successfully renamed,
 	 * 					 1	A new scenario is successfully added to the
 	 * 					 	list of scenarios,
@@ -1894,22 +1855,23 @@ public class WGUI implements ControlListener {
 	 * 					-5	The maximum number of allowed scenarios already
 	 * 						exists
 	 */
-	public int updateScenarios(ArrayList<Scenario> scenarios) {
+	public int updateScenarios() {
 		float val = getRadioButton("ScenarioOpt").getValue();
 		MyDropdownList scenarioList = getDropdown("Scenario");
 
 		if (val == 2f) {
 			// Rename a scenario
-			String newName = validScenarioName(getTextField("SInput").getText(), scenarios);
+			String newName = validScenarioName(getTextField("SInput").getText());
 
 			if (newName != null) {
 				Scenario selected = (Scenario) scenarioList.getSelectedItem();
 
 				if (selected != null) {
-					// Remove the backup for the old file
-					DataManagement.removeScenario(selected.getName());
+					// Remove the original file
+					DataManagement.removeScenarioFile(selected);
+					// Update the name of the scenario and save to a new file
 					selected.setName(newName);
-
+					DataManagement.saveScenario(selected);
 					updateListContents();
 					scenarioList.setItem(selected);
 					return 0;
@@ -1929,14 +1891,13 @@ public class WGUI implements ControlListener {
 
 		} else {
 			
-			if (app.getScenarios().size() < Fields.SCENARIO_NUM) {
+			if (app.getNumOfScenarios() < Fields.SCENARIO_NUM) {
 				// Create a scenario
-				String name = validScenarioName(getTextField("SInput").getText(),
-						scenarios);
+				String name = validScenarioName(getTextField("SInput").getText());
 	
 				if (name != null) {
 					Scenario newScenario = new Scenario(name);
-					scenarios.add(newScenario);
+					app.addScenario(newScenario);
 	
 					updateListContents();
 					scenarioList.setItem(newScenario);
@@ -4230,6 +4191,43 @@ public class WGUI implements ControlListener {
 		if(!getButton(WGUI_Buttons.CamToggleActive).isOn()) {
 			windowTabs.removeItem("CAMERA");
 		}
+	}
+	
+	/**
+	 * Determine if the given string is a valid name to give to a scenario. A
+	 * scenario name must consist only of letters and numbers, be unique
+	 * amongst all scenarios, and be of length less than or equal to 26. If
+	 * the given name is not a valid name, then null is returned. However, in
+	 * the case when the name is too long, then the name is trimmed first,
+	 * before verifying that the other two criteria hold for the trimmed name. 
+	 * 
+	 * @param name	The string to verify as a scenario name
+	 * @return		The string (or a trimmed version) if the name is
+	 * 					valid, null otherwise
+	 */
+	private String validScenarioName(String name) {
+		// Names only consist of letters and numbers
+		if (Pattern.matches("[a-zA-Z0-9]+", name)) {
+
+			if (name.length() > 16) {
+				// Names have a max length of 16 characters
+				name = name.substring(0, 16);
+			}
+
+			for (int idx = 0; idx < app.getNumOfScenarios(); ++idx) {
+				Scenario s = app.getScenario(idx);
+				
+				if (s.getName().equals(name)) {
+					// Duplicate name
+					return null;
+				}
+			}
+
+			return name;
+		}
+
+		// Invalid characters
+		return null;
 	}
 	
 	/**

@@ -29,12 +29,11 @@ public class ScreenProgramRename extends ST_ScreenTextEntry {
 				Program withSameName = r.getProgram(name);
 				
 				if (withSameName == null) {
-					String prevName = prog.getName();
+					// Update the program's save file and rename the program
+					DataManagement.removeProgramFile(r.RID, prog);
 					prog.setName(name);
-					r.reorderPrograms();
-					
-					DataManagement.removeProgram(r.RID, prevName);
 					DataManagement.saveProgram(r.RID, prog);
+					r.reorderPrograms();
 					robotRun.lastScreen();
 					
 				} else {

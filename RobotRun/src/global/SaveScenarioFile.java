@@ -5,26 +5,26 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-import programming.Program;
+import geom.Scenario;
 
 /**
  * TODO general comments
  * 
  * @author Joshua Hooker
  */
-public class SaveFile implements Runnable {
+public class SaveScenarioFile implements Runnable {
 	
-	private Program progRef;
+	private Scenario scenario;
 	private File dest;
 	
 	/**
 	 * TODO comment this
 	 * 
-	 * @param progRef
+	 * @param scenario
 	 * @param dest
 	 */
-	public SaveFile(Program progRef, File dest) {
-		this.progRef = progRef;
+	public SaveScenarioFile(Scenario scenario, File dest) {
+		this.scenario = scenario;
 		this.dest = dest;
 	}
 	
@@ -32,21 +32,20 @@ public class SaveFile implements Runnable {
 	public void run() {
 		try {
 			if (!dest.exists()) {
-				// Create the file if it does not exist
 				dest.createNewFile();
 			}
 			
 			FileOutputStream out = new FileOutputStream(dest);
 			DataOutputStream dataOut = new DataOutputStream(out);
+			// Save the scenario data
+			DataManagement.saveScenario(scenario, dataOut);
 			
-			DataManagement.saveProgram(progRef, dataOut);
-
 			dataOut.close();
 			out.close();
-
+			
 		} catch (IOException IOEx) {
-			// An error occurred with writing to dest
-			System.err.printf("%s is corrupt!\n", dest.getName());;
+			// Issue with writing or opening a file
+			System.err.printf("Error with file %s.\n", dest.getName());
 		}
 	}
 
