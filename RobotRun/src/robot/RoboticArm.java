@@ -42,7 +42,7 @@ public class RoboticArm {
 	/**
 	 * The maximum number of programs allowed for a single robotic arm.
 	 */
-	public static final int PROG_NUM = 100;
+	public static final int PROG_NUM = 80;
 	
 	/**
 	 * Defines the conversion between the robot's maximum rotation speed and
@@ -393,6 +393,22 @@ public class RoboticArm {
 			int idx = p.getNumOfInst();
 			addAt(p, idx, inst, group);
 		}
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param p
+	 * @return
+	 */
+	public Macro addMacro(Program p) {
+		if (macros.size() < PROGRAM.size()) {
+			Macro m = new Macro(this, p);
+			macros.add(m);
+			return m;
+		}
+		
+		return null;
 	}
 
 	/**
@@ -1343,10 +1359,25 @@ public class RoboticArm {
 		return liveSpeed;
 	}
 	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param keyNum
+	 * @return
+	 */
+	public Macro getKeyBind(int keyNum) {
+		if (keyNum >= 0 && keyNum < macroKeyBinds.length) {
+			return macroKeyBinds[keyNum];
+		}
+		
+		return null;
+	}
+	
 	public Macro getMacro(int idx) {
 		return macros.get(idx);
 	}
-
+	
+	/** TODO REMOVE These methods
 	public Macro[] getMacroKeyBinds() {
 		return macroKeyBinds;
 	}
@@ -1354,7 +1385,7 @@ public class RoboticArm {
 	public ArrayList<Macro> getMacroList() {
 		return macros;
 	}
-	
+	/**/
 	/**
 	 * Returns a copy of the primary position of the given position motion
 	 * instruction.
@@ -1821,6 +1852,15 @@ public class RoboticArm {
 	}
 	
 	/**
+	 * TODO comment this
+	 * 
+	 * @return
+	 */
+	public int numOfMacros() {
+		return macros.size();
+	}
+	
+	/**
 	 * Returns the number of programs associated with the Robot.
 	 */
 	public int numOfPrograms() {
@@ -2073,6 +2113,25 @@ public class RoboticArm {
 	}
 	
 	/**
+	 * TODO comment this
+	 * 
+	 * @param idx
+	 * @return
+	 */
+	public boolean rmMacro(int idx) {
+		if (idx >= 0 && idx < macros.size()) {
+			Macro m = macros.remove(idx);
+			// Remove the respective key binding if it exists
+			int keyNum = m.getKeyNum();
+			if (keyNum >= 0 && keyNum < macroKeyBinds.length) {
+				macroKeyBinds[keyNum] = null;
+			}
+		}
+		
+		return false;
+	}
+	
+	/**
 	 * Removes the given program from this robot's list of programs, if it
 	 * exists.
 	 * 
@@ -2199,12 +2258,44 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * Updates this robot's macro key-binding set.
+	 * TODO comment this
 	 * 
-	 * @param usrKeyBinds	The new set of macro key-binding for this robot
+	 * @param keyNum
+	 * @param macro
+	 * @return
 	 */
-	public void setMacroBindings(Macro[] usrKeyBinds) {
-		macroKeyBinds = usrKeyBinds;
+	public boolean setKeyBinding(int keyNum, Macro macro) {
+		if (keyNum >= 0 && keyNum < macroKeyBinds.length) {
+			macroKeyBinds[keyNum] = macro;
+			
+			if (macro != null) {
+				macro.setKeyNum(keyNum);
+			}
+			
+			return true;
+		}
+		
+		return false;
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param mdx
+	 * @param isManual
+	 */
+	public void setMacroType(int mdx, boolean isManual) {
+		Macro m = this.getMacro(mdx);
+		
+		if (m != null) {
+			boolean wasManual = m.isManual();
+			m.setManual(isManual);
+			// Update key binding
+			if (!wasManual && m.isManual()) {
+				setKeyBinding(m.getKeyNum(), null);
+				m.setKeyNum(-1);
+			}
+		}
 	}
 	
 	/**

@@ -214,13 +214,9 @@ public class LoadRobotData implements Runnable {
 				int keyNum = dataIn.readInt();
 				
 				Program p = robotRef.getProgram(progName);
-				Macro m = new Macro(isManual, robotRef, p, keyNum);
-				
-				robotRef.getMacroList().add(m);
-				
-				if(!isManual && keyNum != -1) {
-					robotRef.getMacroKeyBinds()[keyNum] = m;
-				}
+				Macro m = robotRef.addMacro(p);
+				m.setManual(isManual);
+				robotRef.setKeyBinding(keyNum, m);
 			}
 			
 			dataIn.close();

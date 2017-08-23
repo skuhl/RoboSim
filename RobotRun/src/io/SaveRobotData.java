@@ -188,9 +188,10 @@ public class SaveRobotData implements Runnable {
 			FileOutputStream out = new FileOutputStream(destDir);
 			DataOutputStream dataOut = new DataOutputStream(out);
 			
-			dataOut.writeInt(robotRef.getMacroList().size());
+			dataOut.writeInt(robotRef.numOfMacros());
 			
-			for (Macro m: robotRef.getMacroList()) {
+			for (int idx = 0; idx < robotRef.numOfMacros(); ++idx) {
+				Macro m = robotRef.getMacro(idx);
 				Program p = m.getProg();
 				
 				dataOut.writeBoolean(m.isManual());
@@ -217,7 +218,6 @@ public class SaveRobotData implements Runnable {
 	/**
 	 * TODO comment this
 	 * 
-	 * @param robot
 	 * @param destPath
 	 * @return
 	 */

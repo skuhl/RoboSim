@@ -17,10 +17,10 @@ public class ScreenCreateMacro extends ST_ScreenListContents {
 	public void actionEntr() {
 		RoboticArm r = robotRun.getActiveRobot();
 		Program p = r.getProgram(contents.getLineIdx());
-		r.getMacroList().add(new Macro(r, p));
+		r.addMacro(p);
 		DataManagement.saveRobotData(r, 8);
 		
-		robotRun.getLastScreen().setContentIdx(r.getMacroList().size() - 1);
+		robotRun.getLastScreen().setContentIdx(r.numOfMacros() - 1);
 		robotRun.switchScreen(ScreenMode.SET_MACRO_TYPE, false);
 	}
 

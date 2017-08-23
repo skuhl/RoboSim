@@ -21,13 +21,6 @@ public class Macro {
 		prog = p;
 		keyNum = -1;
 	}
-
-	public void clearNum() {
-		if(keyNum != -1) {
-			robot.getMacroKeyBinds()[keyNum] = null;
-			keyNum = -1;
-		}
-	}
 	
 	public int getKeyNum() { return keyNum; }
 	public Program getProg() { return prog; }
@@ -35,16 +28,8 @@ public class Macro {
 	public boolean isManual() { return manual; }
 	
 	public void setManual(boolean b) { manual = b; }
-	public Macro setNum(int n) {
-		if(n <= 6 && n >= 0 && robot.getMacroKeyBinds()[n] == null) {
-			clearNum();
-			robot.getMacroKeyBinds()[n] = this;
-			keyNum = n;
-
-			return this;
-		}
-
-		return null;
+	public void setKeyNum(int n) {
+		keyNum = n;
 	}
 	
 	public void setProg(Program p) { prog = p; }

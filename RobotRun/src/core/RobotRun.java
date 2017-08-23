@@ -16,6 +16,7 @@ import enums.WindowTab;
 import expression.Operand;
 import expression.OperandCamObj;
 import expression.Operator;
+import frame.ToolFrame;
 import frame.UserFrame;
 import geom.ComplexShape;
 import geom.Fixture;
@@ -23,6 +24,7 @@ import geom.MyPShape;
 import geom.Part;
 import geom.Point;
 import geom.RMatrix;
+import geom.RQuaternion;
 import geom.RRay;
 import geom.RShape;
 import geom.Scenario;
@@ -48,6 +50,7 @@ import programming.PosMotionInst;
 import programming.Program;
 import programming.RegisterStatement;
 import programming.SelectStatement;
+import regs.DataRegister;
 import regs.PositionRegister;
 import regs.Register;
 import robot.RTrace;
@@ -764,8 +767,10 @@ public class RobotRun extends PApplet {
 	public void button_funct() {
 		try {
 			if (isShift()) {
-				if (getActiveRobot().getMacroKeyBinds()[6] != null) {
-					execute(getActiveRobot().getMacroKeyBinds()[6]);
+				Macro keyBind = getActiveRobot().getKeyBind(6);
+				
+				if (keyBind != null) {
+					execute(keyBind);
 				}
 			}
 			
@@ -1102,8 +1107,10 @@ public class RobotRun extends PApplet {
 	 */
 	public void button_mvmu() {
 		try {
-			if (getActiveRobot().getMacroKeyBinds()[2] != null && isShift()) {
-				execute(getActiveRobot().getMacroKeyBinds()[2]);
+			Macro keyBind = getActiveRobot().getKeyBind(2);
+			
+			if (keyBind != null) {
+				execute(keyBind);
 			}
 			
 		} catch (Exception Ex) {
@@ -1548,8 +1555,10 @@ public class RobotRun extends PApplet {
 	 */
 	public void button_posn() {
 		try {
-			if (getActiveRobot().getMacroKeyBinds()[5] != null && isShift()) {
-				execute(getActiveRobot().getMacroKeyBinds()[5]);
+			Macro keyBind = getActiveRobot().getKeyBind(5);
+			
+			if (keyBind != null) {
+				execute(keyBind);
 			}
 			
 		} catch (Exception Ex) {
@@ -1666,8 +1675,10 @@ public class RobotRun extends PApplet {
 	 */
 	public void button_setup() {
 		try {
-			if (getActiveRobot().getMacroKeyBinds()[3] != null && isShift()) {
-				execute(getActiveRobot().getMacroKeyBinds()[3]);
+			Macro keyBind = getActiveRobot().getKeyBind(3);
+			
+			if (keyBind != null) {
+				execute(keyBind);
 			}
 			
 		} catch (Exception Ex) {
@@ -1752,8 +1763,10 @@ public class RobotRun extends PApplet {
 	 */
 	public void button_status() {
 		try {
-			if (getActiveRobot().getMacroKeyBinds()[4] != null && isShift()) {
-				execute(getActiveRobot().getMacroKeyBinds()[4]);
+			Macro keyBind = getActiveRobot().getKeyBind(4);
+			
+			if (keyBind != null) {
+				execute(keyBind);
 			}
 			
 		} catch (Exception Ex) {
@@ -1787,8 +1800,10 @@ public class RobotRun extends PApplet {
 	 */
 	public void button_tool1() {
 		try {
-			if (getActiveRobot().getMacroKeyBinds()[0] != null && isShift()) {
-				execute(getActiveRobot().getMacroKeyBinds()[0]);
+			Macro keyBind = getActiveRobot().getKeyBind(0);
+			
+			if (keyBind != null) {
+				execute(keyBind);
 			}
 			
 		} catch (Exception Ex) {
@@ -1805,8 +1820,10 @@ public class RobotRun extends PApplet {
 	 */
 	public void button_tool2() {
 		try {
-			if (getActiveRobot().getMacroKeyBinds()[1] != null && isShift()) {
-				execute(getActiveRobot().getMacroKeyBinds()[1]);
+			Macro keyBind = getActiveRobot().getKeyBind(1);
+			
+			if (keyBind != null) {
+				execute(keyBind);
 			}
 			
 		} catch (Exception Ex) {
@@ -3158,41 +3175,108 @@ public class RobotRun extends PApplet {
 			throw NPEx;
 		}
 		
-		/**
-		RMatrix rx = RMath.formRMat(new PVector(1f, 0f, 0f), 135f * DEG_TO_RAD);
-		RMatrix ry = RMath.formRMat(new PVector(0f, 1f, 0f), 135f * DEG_TO_RAD);
-		RMatrix rz = RMath.formRMat(new PVector(0f, 0f, 1f), 135f * DEG_TO_RAD);
-		
-		Fields.debug("%s\n%s\n%s\n", rx, ry, rz);
+		RoboticArm r0 = ROBOTS.get(0);
+		RoboticArm r1 = ROBOTS.get(1);
 		
 		/**
-		pushMatrix();
-		resetMatrix();
+		Fields.debug("REGISTERS");
 		
-		translate(-15f, 5f, 13f);
-		rotateX(0.125f);
+		for (int idx = 0; idx < Fields.DPREG_NUM; ++idx) {
+			DataRegister dReg = r0.getDReg(idx);
+			dReg.comment = String.format("R0DREG%010d", idx);
+			dReg.value = new Float(idx);
+			
+			PositionRegister pReg = r0.getPReg(idx);
+			pReg.comment = String.format("R0PREG%010d", idx);
+			pReg.isCartesian = (idx % 2) == 0;
+			pReg.point = r0.getDefaultPoint();
+			
+			dReg = r1.getDReg(idx);
+			dReg.comment = String.format("R1DREG%010d", idx);
+			dReg.value = new Float(idx);
+			
+			pReg = r1.getPReg(idx);
+			pReg.comment = String.format("R1PREG%010d", idx);
+			pReg.isCartesian = (idx % 2) == 0;
+			pReg.point = r1.getDefaultPoint();
+		}
 		
-		PVector pos = new PVector(
-			screenX(1f, 1f, 1f),
-			screenY(1f, 1f, 1f),
-			screenZ(1f, 1f, 1f)
-		);
+		/**
+		Fields.debug("FRAMES");
 		
-		System.out.printf("%s\n", pos);
+		for (int idx = 0; idx < Fields.FRAME_NUM; ++idx) {
+			ToolFrame tFrame = r0.getToolFrame(idx);
+			tFrame.setName(String.format("R0TOOL%010d", idx));
+			tFrame.setTeachPt(r0.getDefaultPoint(), 0);
+			tFrame.setTeachPt(r0.getDefaultPoint(), 1);
+			tFrame.setTeachPt(r0.getDefaultPoint(), 2);
+			tFrame.setTeachPt(r0.getDefaultPoint(), 3);
+			tFrame.setTeachPt(r0.getDefaultPoint(), 4);
+			tFrame.setTeachPt(r0.getDefaultPoint(), 5);
+			tFrame.setTCPDirect(new PVector(0f, 0f, 0f));
+			tFrame.setOrienDirect(new RQuaternion());
+			
+			UserFrame uFrame = r0.getUserFrame(idx);
+			uFrame.setName(String.format("R0USER%010d", idx));
+			uFrame.setTeachPt(r0.getDefaultPoint(), 0);
+			uFrame.setTeachPt(r0.getDefaultPoint(), 1);
+			uFrame.setTeachPt(r0.getDefaultPoint(), 2);
+			uFrame.setTeachPt(r0.getDefaultPoint(), 3);
+			uFrame.setOriginDirect(new PVector(0f, 0f, 0f));
+			uFrame.setOrienDirect(new RQuaternion());
+			
+			tFrame = r1.getToolFrame(idx);
+			tFrame.setName(String.format("R1TOOL%010d", idx));
+			tFrame.setTeachPt(r1.getDefaultPoint(), 0);
+			tFrame.setTeachPt(r1.getDefaultPoint(), 1);
+			tFrame.setTeachPt(r1.getDefaultPoint(), 2);
+			tFrame.setTeachPt(r1.getDefaultPoint(), 3);
+			tFrame.setTeachPt(r1.getDefaultPoint(), 4);
+			tFrame.setTeachPt(r1.getDefaultPoint(), 5);
+			tFrame.setTCPDirect(new PVector(0f, 0f, 0f));
+			tFrame.setOrienDirect(new RQuaternion());
+			
+			uFrame = r1.getUserFrame(idx);
+			uFrame.setName(String.format("R1USER%010d", idx));
+			uFrame.setTeachPt(r1.getDefaultPoint(), 0);
+			uFrame.setTeachPt(r1.getDefaultPoint(), 1);
+			uFrame.setTeachPt(r1.getDefaultPoint(), 2);
+			uFrame.setTeachPt(r1.getDefaultPoint(), 3);
+			uFrame.setOriginDirect(new PVector(0f, 0f, 0f));
+			uFrame.setOrienDirect(new RQuaternion());
+		}
 		
-		ortho();
+		/**
+		Fields.debug("PROGRAMS");
 		
-		pos = new PVector(
-			screenX(1f, 1f, 1f),
-			screenY(1f, 1f, 1f),
-			screenZ(1f, 1f, 1f)
-		);
+		for (int idx = 1; idx < RoboticArm.PROG_NUM; ++idx) {
+			Program origin = r0.getProgram(0);
+			Program copy = origin.clone();
+			copy.setName(origin.getName() + Integer.toString(idx));
+			r0.addProgram(copy);
+			
+			origin = r1.getProgram(0);
+			copy = origin.clone();
+			copy.setName(origin.getName() + Integer.toString(idx));
+			r1.addProgram(copy);
+		}
 		
-		System.out.printf("%s\n", pos);
+		/**
+		Fields.debug("MACROS");
 		
-		popMatrix();
+		
+		/**
+		Fields.debug("SCENARIOS");
+		
+		for (int idx = 1; idx < Fields.SCENARIO_NUM; ++idx) {
+			Scenario origin = SCENARIOS.get(0);
+			Scenario copy = (Scenario) origin.clone();
+			copy.setName(origin.getName() + Integer.toString(idx));
+			addScenario(copy);
+		}
 		
 		/**/
+		Fields.debug("END");
 	}
 	
 	/**

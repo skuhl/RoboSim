@@ -21,7 +21,7 @@ public class Program implements Iterable<InstElement> {
 	public static final int MAX_UNDO_SIZE;
 	
 	static {
-		MAX_SIZE = 1000;
+		MAX_SIZE = 800;
 		MAX_UNDO_SIZE = 50;
 	}
 	
