@@ -402,7 +402,7 @@ public class RoboticArm {
 	 * @return
 	 */
 	public Macro addMacro(Program p) {
-		if (macros.size() < PROGRAM.size()) {
+		if (!atMacroCapacity()) {
 			Macro m = new Macro(this, p);
 			macros.add(m);
 			return m;
@@ -462,6 +462,15 @@ public class RoboticArm {
 		
 		// If inverse kinematics fails use the old angles
 		return new Point(position, orientation, pt.angles);
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @return
+	 */
+	public boolean atMacroCapacity() {
+		return macros.size() >= PROGRAM.size();
 	}
 	
 	/**

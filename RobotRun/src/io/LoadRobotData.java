@@ -208,7 +208,9 @@ public class LoadRobotData implements Runnable {
 			
 			int numMacros = dataIn.readInt();
 			
-			for(int i = 0; i < numMacros; i += 1) {
+			for (int i = 0; i < numMacros && !robotRef.atMacroCapacity();
+					i += 1) {
+				
 				boolean isManual = dataIn.readBoolean();
 				String progName = dataIn.readUTF();
 				int keyNum = dataIn.readInt();

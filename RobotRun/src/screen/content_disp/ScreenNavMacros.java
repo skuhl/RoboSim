@@ -1,6 +1,7 @@
 package screen.content_disp;
 
 import core.RobotRun;
+import global.Fields;
 import robot.RoboticArm;
 import screen.ScreenMode;
 
@@ -15,7 +16,14 @@ public class ScreenNavMacros extends ST_ScreenListContents {
 
 	@Override
 	public void actionF1() {
-		robotRun.nextScreen(ScreenMode.CREATE_MACRO);
+		RoboticArm r = robotRun.getActiveRobot();
+		
+		if (!r.atMacroCapacity()) {
+			robotRun.nextScreen(ScreenMode.CREATE_MACRO);
+			
+		} else {
+			Fields.setMessage("No more macros can be defined at this time");
+		}
 	}
 
 	@Override
