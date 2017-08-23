@@ -375,7 +375,7 @@ public class RobotRun extends PApplet {
 	public void button_camSnapPreview() {
 		if (rCamera != null) {
 			UI.updateCameraCurrent();
-			UI.updateCameraListContents();
+			//UI.updateCameraListContents();
 			UI.updateUIContentPositions();
 		}
 	}
@@ -400,7 +400,7 @@ public class RobotRun extends PApplet {
 		try {
 			if (rCamera != null) {
 				UI.updateCameraCurrent();
-				UI.updateCameraListContents();
+				//UI.updateCameraListContents();
 				UI.updateUIContentPositions();
 				Fields.resetMessage();
 			}
@@ -3100,6 +3100,7 @@ public class RobotRun extends PApplet {
 			
 		};
 		
+		DataManagement.initialize(this);
 		RegisteredModels.loadModelDefs(this);
 		
 		// create font and text display background
@@ -3128,8 +3129,6 @@ public class RobotRun extends PApplet {
 		
 		// load model and save data
 		try {
-			DataManagement.initialize(this);
-			
 			RoboticArm r = new RoboticArm(0, new PVector(200, Fields.FLOOR_Y,
 					200), robotTrace);
 			ROBOTS.put(r.RID, r);
