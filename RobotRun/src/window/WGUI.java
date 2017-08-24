@@ -760,7 +760,7 @@ public class WGUI implements ControlListener {
 		addTextarea("WOTgtSLbl", "Target:", editWOMgmt, lLblWidth, fieldHeight, Fields.medium);
 		
 		addTextarea("WORenameLbl", "New name:", editWOMgmt, lLblWidth, fieldHeight, Fields.medium);
-		addTextfield("WORename", editWOMgmt, fieldWidthSm, fieldHeight, Fields.medium, app.getKeyCodeMap());
+		addTextfield("WORename", editWOMgmt, WGUI.fieldWidthMed, fieldHeight, Fields.medium, app.getKeyCodeMap());
 		
 		addButton(WGUI_Buttons.ObjConfirmMgmt, "Confirm", editWOMgmt, mButtonWidth, sButtonHeight, Fields.small);
 
@@ -4152,6 +4152,7 @@ public class WGUI implements ControlListener {
 	 */
 	private void updateView(WindowTab newView) {
 		menu = newView;
+		setSelectedWO(null);
 
 		// Update active robot if necessary
 		if (menu == WindowTab.ROBOT1) {

@@ -2382,10 +2382,11 @@ public class RobotRun extends PApplet {
 			mDragY += (mouseY - pmouseY);
 		
 		} else {
+			boolean isCtrlDown = keyCodeMap.isKeyDown(KeyEvent.VK_CONTROL);
 			WorldObject selectedWO = UI.getSelectedWO();
 			
 			// Manipulate the selected world object
-			if (UI.canEditWorldObject() && selectedWO != null &&
+			if (isCtrlDown && selectedWO != null &&
 					selectedWO == mouseOverWO) {
 				
 				PVector camOrien = camera.getOrientation();
