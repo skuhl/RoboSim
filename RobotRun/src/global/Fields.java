@@ -519,7 +519,6 @@ public abstract class Fields {
 	 */
 	public static void debug(String out) {
 		if (DEBUG) {
-			System.err.println("HERE");
 			System.out.println(out);
 		}
 	}
@@ -532,7 +531,6 @@ public abstract class Fields {
 	 */
 	public static void debug(String format, Object... args) {
 		if (DEBUG) {
-			System.err.println("THERE");
 			System.out.printf(format, args);
 		}
 	}

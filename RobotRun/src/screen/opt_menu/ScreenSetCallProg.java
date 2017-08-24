@@ -70,7 +70,6 @@ public class ScreenSetCallProg extends ST_ScreenOptionsMenu {
 		}
 					
 		// List the robot's program names
-		System.out.printf("RID: %s\n", cInst.getTgtDevice());
 		options.setLines(loadPrograms(cInst.getTgtDevice()));
 	}
 	
