@@ -99,6 +99,46 @@ public class WGUI implements ControlListener {
 										  "EDIT", "SCENARIO", "CAMERA", "MISC" };
 	
 	/**
+	 * Updates the dimensions of the given shape, so that all its dimensions
+	 * are within their respective bounds.
+	 * 
+	 * @param shape	The shape of which to update the dimensions
+	 */
+	private static void clampDims(RShape shape) {
+		
+		if (shape instanceof RBox) {
+			// Clamp the dimensions of a box
+			DimType dim = DimType.LENGTH;
+			shape.setDim(RMath.clamp(shape.getDim(dim), shape.getDimLBound(dim),
+					shape.getDimUBound(dim)), dim);
+			
+			dim = DimType.HEIGHT;
+			shape.setDim(RMath.clamp(shape.getDim(dim), shape.getDimLBound(dim),
+					shape.getDimUBound(dim)), dim);
+			
+			dim = DimType.WIDTH;
+			shape.setDim(RMath.clamp(shape.getDim(dim), shape.getDimLBound(dim),
+					shape.getDimUBound(dim)), dim);
+			
+		} else if (shape instanceof RCylinder) {
+			// Clamp the dimensions of a cylinder
+			DimType dim = DimType.RADIUS;
+			shape.setDim(RMath.clamp(shape.getDim(dim), shape.getDimLBound(dim),
+					shape.getDimUBound(dim)), dim);
+			
+			dim = DimType.HEIGHT;
+			shape.setDim(RMath.clamp(shape.getDim(dim), shape.getDimLBound(dim),
+					shape.getDimUBound(dim)), dim);
+			
+		} else if (shape instanceof ComplexShape) {
+			// Clamp the dimensions of a complex shape
+			DimType dim = DimType.SCALE;
+			shape.setDim(RMath.clamp(shape.getDim(dim), shape.getDimLBound(dim),
+					shape.getDimUBound(dim)), dim);
+		}
+	}
+	
+	/**
 	 * Calculates an absolute position based off the relative position specified
 	 * by the given parameters. The x position is calculated with the alignment,
 	 * alignX, with respect to the controller refX, with the offset specified by
@@ -215,11 +255,44 @@ public class WGUI implements ControlListener {
 	/**
 	 * Only update the group visibility if it does not
 	 * match the given visibility flag.
+	 * 
+	 * @param g				
+	 * @param setVisible	
 	 */
 	private static void setGroupVisible(Group g, boolean setVisible) {
 		if (g.isVisible() != setVisible) {
 			g.setVisible(setVisible);
 		}
+	}
+	
+	/**
+	 * Validates the given value with the given shape's bound for the specified
+	 * dimension. If val is within the bounds for the dimension, then the
+	 * shape's dimensions is updated, otherwise an error message is displayed
+	 * in the UI.
+	 * 
+	 * @param s		The shape for which to validate the given value and update
+	 * 				if the value is valid
+	 * @param dim	The dimension with which the given value is associated
+	 * @param val	The given value for the specified dimension of the given
+	 * 				shape
+	 * @return		Whether or not the specified dimension of the given shape
+	 * 				is updated to the given value
+	 */
+	private static boolean updateDim(RShape s, DimType dim, float val) {
+		float lbound = s.getDimLBound(dim);
+		float ubound = s.getDimUBound(dim);
+		
+		if (val < lbound || val > ubound) {
+			Fields.setMessage("The shape's %s must be within the range %4.5f and %4.5f",
+					dim.name().toLowerCase(), lbound, ubound);
+			return false;
+			
+		}
+		
+		// Update the dimension
+		s.setDim(val, dim);
+		return true;
 	}
 	
 	/**
@@ -1288,9 +1361,9 @@ public class WGUI implements ControlListener {
 		if (wldObj instanceof WorldObject) {
 			return (WorldObject)wldObj;
 			
-		} else {
-			return null;
 		}
+		
+		return null;
 	}
 	
 	/**
@@ -1305,9 +1378,9 @@ public class WGUI implements ControlListener {
 		if (val instanceof Scenario) {
 			return (Scenario)val;
 
-		} else {
-			return null;
 		}
+		
+		return null;
 	}
 
 	/**
@@ -1319,9 +1392,9 @@ public class WGUI implements ControlListener {
 		if (wldObj instanceof WorldObject) {
 			return (WorldObject)wldObj;
 			
-		} else {
-			return null;
 		}
+		
+		return null;
 	}
 
 	/*
@@ -1488,7 +1561,7 @@ public class WGUI implements ControlListener {
 		try {
 			Button b = getButton(name);
 			// Verify the button is a switch
-			if (b != null & b.isSwitch()) {
+			if (b != null && b.isSwitch()) {
 				// Set the switch state to the given state value
 				if (b.isOn() && !state) {
 					b.setOff();
@@ -1878,13 +1951,12 @@ public class WGUI implements ControlListener {
 					scenarioList.setItem(selected);
 					return 0;
 
-				} else {
-					return -3;
 				}
-
-			} else {
-				return -4;
+				
+				return -3;	
 			}
+			
+			return -4;
 
 		} else if (val == 1f) {
 			// Set a scenario
@@ -1905,13 +1977,12 @@ public class WGUI implements ControlListener {
 					scenarioList.setItem(newScenario);
 					return 2;
 	
-				} else {
-					return -1;
 				}
 				
-			} else {
-				return -5;
+				return -1;
 			}
+			
+			return -5;
 		}
 	}
 
@@ -1983,15 +2054,15 @@ public class WGUI implements ControlListener {
 	 * 						orientation
 	 * @return				The undo state for the given world object
 	 */
-	public WOUndoState updateWOCurrent(WorldObject selectWO) {
+	public WOUndoState updateWOCurrent(WorldObject selectedWO) {
 		
 		try {
 			boolean edited = false;
-			WOUndoState undoState = new WOUndoCurrent(selectWO);
+			WOUndoState undoState = new WOUndoCurrent(selectedWO);
 			
 			// Convert origin position into the World Frame
-			PVector oPosition = RMath.vToWorld( selectWO.getLocalCenter() );
-			PVector oWPR = RMath.nRMatToWEuler( selectWO.getLocalOrientation() );
+			PVector oPosition = RMath.vToWorld( selectedWO.getLocalCenter() );
+			PVector oWPR = RMath.nRMatToWEuler( selectedWO.getLocalOrientation() );
 			Float[] inputValues = getCurrentWOValues();
 			// Update position and orientation
 			if (inputValues[0] != null) {
@@ -2028,8 +2099,8 @@ public class WGUI implements ControlListener {
 			PVector position = RMath.vFromWorld( oPosition );
 			RMatrix orientation = RMath.wEulerToNRMat(oWPR);
 			// Update the Objects position and orientation
-			selectWO.setLocalCenter(position);
-			selectWO.setLocalOrientation(orientation);
+			selectedWO.setLocalCenter(position);
+			selectedWO.setLocalOrientation(orientation);
 			
 			if (edited) {
 				return undoState;
@@ -2179,11 +2250,9 @@ public class WGUI implements ControlListener {
 	 * 
 	 * @param selectedWO
 	 * @param parent
-	 * @param scenarioList
 	 * @return
 	 */
-	public String updateWOMgmt(WorldObject selectedWO, Scenario parent,
-			ArrayList<Scenario> scenarioList) {
+	public String updateWOMgmt(WorldObject selectedWO, Scenario parent) {
 		
 		float mgmtOpt = getRadioButton("WOMgmt").getValue();
 		
@@ -2193,25 +2262,24 @@ public class WGUI implements ControlListener {
 			
 			if (tgt.isFull()) {
 				return "The target scenario has already reached its capacity";
+			}
+			
+			String newName = getTextField("WORename").getText();
+			int ret = tgt.validateWOName(newName);
+			
+			if (ret == 1) {
+				return "The world object's name must be made of letters and numbers";
+				
+			} else if (ret == 2) {
+				return "The world object's name must not exceed 16 characters";
+				
+			} else if (ret == 3) {
+				return "A world object with the given name already exists";
 				
 			} else {
-				String newName = getTextField("WORename").getText();
-				int ret = tgt.validateWOName(newName);
-				
-				if (ret == 1) {
-					return "The world object's name must be made of letters and numbers";
-					
-				} else if (ret == 2) {
-					return "The world object's name must not exceed 16 characters";
-					
-				} else if (ret == 3) {
-					return "A world object with the given name already exists";
-					
-				} else {
-					WorldObject copyWO = selectedWO.clone(newName);
-					tgt.addWorldObject(copyWO);
-					return null;
-				}
+				WorldObject copyWO = selectedWO.clone(newName);
+				tgt.addWorldObject(copyWO);
+				return null;
 			}
 			
 		} else if (mgmtOpt == 1f) {
@@ -2219,28 +2287,27 @@ public class WGUI implements ControlListener {
 			Scenario tgt = (Scenario)getDropdown("WOTgtScenario").getSelectedItem();
 			
 			if (tgt.isFull()) {
-				return "The target scenario has already reached its capacity";
+				return "The target scenario has already reached its capacity";	
+			}
+			
+			String newName = getTextField("WORename").getText();
+			int ret = tgt.validateWOName(newName);
+			
+			if (ret == 1) {
+				return "The world object's name must be made of letters and numbers";
+				
+			} else if (ret == 2) {
+				return "The world object's name must not exceed 16 characters";
+				
+			} else if (ret == 3) {
+				return "A world object with the given name already exists";
 				
 			} else {
-				String newName = getTextField("WORename").getText();
-				int ret = tgt.validateWOName(newName);
-				
-				if (ret == 1) {
-					return "The world object's name must be made of letters and numbers";
-					
-				} else if (ret == 2) {
-					return "The world object's name must not exceed 16 characters";
-					
-				} else if (ret == 3) {
-					return "A world object with the given name already exists";
-					
-				} else {
-					parent.removeWorldObject(selectedWO);
-					selectedWO.setName(newName);
-					tgt.addWorldObject(selectedWO);
-					setSelectedWO(null);
-					return null;
-				}
+				parent.removeWorldObject(selectedWO);
+				selectedWO.setName(newName);
+				tgt.addWorldObject(selectedWO);
+				setSelectedWO(null);
+				return null;
 			}
 			
 		} else if (mgmtOpt == 2f) {
@@ -2773,47 +2840,6 @@ public class WGUI implements ControlListener {
 		
 		return t;
 	}
-	
-	/**
-	 * Updates the dimensions of the given shape, so that all its dimensions
-	 * are within their respective bounds.
-	 * 
-	 * @param shape	The shape of which to update the dimensions
-	 */
-	private void clampDims(RShape shape) {
-		
-		if (shape instanceof RBox) {
-			// Clamp the dimensions of a box
-			DimType dim = DimType.LENGTH;
-			shape.setDim(RMath.clamp(shape.getDim(dim), shape.getDimLBound(dim),
-					shape.getDimUBound(dim)), dim);
-			
-			dim = DimType.HEIGHT;
-			shape.setDim(RMath.clamp(shape.getDim(dim), shape.getDimLBound(dim),
-					shape.getDimUBound(dim)), dim);
-			
-			dim = DimType.WIDTH;
-			shape.setDim(RMath.clamp(shape.getDim(dim), shape.getDimLBound(dim),
-					shape.getDimUBound(dim)), dim);
-			
-		} else if (shape instanceof RCylinder) {
-			// Clamp the dimensions of a cylinder
-			DimType dim = DimType.RADIUS;
-			shape.setDim(RMath.clamp(shape.getDim(dim), shape.getDimLBound(dim),
-					shape.getDimUBound(dim)), dim);
-			
-			dim = DimType.HEIGHT;
-			shape.setDim(RMath.clamp(shape.getDim(dim), shape.getDimLBound(dim),
-					shape.getDimUBound(dim)), dim);
-			
-		} else if (shape instanceof ComplexShape) {
-			// Clamp the dimensions of a complex shape
-			DimType dim = DimType.SCALE;
-			shape.setDim(RMath.clamp(shape.getDim(dim), shape.getDimLBound(dim),
-					shape.getDimUBound(dim)), dim);
-		}
-		
-	}
 
 	/**
 	 * Updates the window's default position and orientation text labels with
@@ -2876,8 +2902,12 @@ public class WGUI implements ControlListener {
 
 			
 
-		} catch (NumberFormatException NFEx) {}
-		catch (NullPointerException NPEx) {}
+		} catch (NumberFormatException NFEx) {
+			// Some dimension input values were not numbers
+			
+		} catch (NullPointerException NPEx) {
+			// Some dimensions input values were undefined
+		}
 		
 		return dimensions;
 	}
@@ -2976,8 +3006,12 @@ public class WGUI implements ControlListener {
 				dimensions[1] = Float.parseFloat(hgtField);
 			}
 
-		} catch (NumberFormatException NFEx) {}
-		catch (NullPointerException NPEx) {}
+		} catch (NumberFormatException NFEx) {
+			// Some dimension input fields were not numbers
+			
+		} catch (NullPointerException NPEx) {
+			// Some dimension input fields were undefined
+		}
 		
 		return dimensions;
 	}
@@ -3069,8 +3103,12 @@ public class WGUI implements ControlListener {
 				dimensions[0] = Float.parseFloat(sclField);
 			}
 
-		} catch (NumberFormatException NFEx) {}
-		catch (NullPointerException NPEx) {}
+		} catch (NumberFormatException NFEx) {
+			// Some dimension input fields were not numbers
+			
+		} catch (NullPointerException NPEx) {
+			// Some dimension fields were undefined
+		}
 		
 		return dimensions;
 	}
@@ -3358,7 +3396,7 @@ public class WGUI implements ControlListener {
 		
 		// Z label and fields
 		relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		c0 = getTextArea("CZLbl").setPosition(relPos[0], relPos[1]);;
+		c0 = getTextArea("CZLbl").setPosition(relPos[0], relPos[1]);
 
 		relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distLblToFieldX, 0);
 		c = getTextField("CZCur").setPosition(relPos[0], relPos[1]);
@@ -3540,48 +3578,18 @@ public class WGUI implements ControlListener {
 		.show();
 	}
 	
-
-
 	/**
-	 * Validates the given value with the given shape's bound for the specified
-	 * dimension. If val is within the bounds for the dimension, then the
-	 * shape's dimensions is updated, otherwise an error message is displayed
-	 * in the UI.
-	 * 
-	 * @param s		The shape for which to validate the given value and update
-	 * 				if the value is valid
-	 * @param dim	The dimension with which the given value is associated
-	 * @param val	The given value for the specified dimension of the given
-	 * 				shape
-	 * @return		Whether or not the specified dimension of the given shape
-	 * 				is updated to the given value
-	 */
-	private boolean updateDim(RShape s, DimType dim, float val) {
-		float lbound = s.getDimLBound(dim);
-		float ubound = s.getDimUBound(dim);
-		
-		if (val < lbound || val > ubound) {
-			Fields.setMessage("The shape's %s must be within the range %4.5f and %4.5f",
-					dim.name().toLowerCase(), lbound, ubound);
-			return false;
-			
-		} else {
-			// Update the dimension
-			s.setDim(val, dim);
-			return true;
-		}
-	}
-
-	
-	/**
-	 * Updates positions of all the visible dimension text areas and fields. The given x and y positions are used to
-	 * place the first text area and field pair and updated through the process of updating the positions of the rest
-	 * of the visible text areas and fields. Then the x and y position of the last visible text area and field is returned
-	 * in the form a 2-element integer array.
+	 * Updates positions of all the visible dimension text areas and fields.
+	 * The given x and y positions are used to place the first text area and
+	 * field pair and updated through the process of updating the positions of
+	 * the rest of the visible text areas and fields. Then the x and y position
+	 * of the last visible text area and field is returned in the form a
+	 * 2-element integer array.
 	 * 
 	 * @param initialXPos  The x position of the first text area-field pair
 	 * @param initialYPos  The y position of the first text area-field pair
-	 * @returning          The x and y position of the last visible text area  in a 2-element integer array
+	 * @return			   The x and y position of the last visible text area
+	 * 					   in a 2-element integer array
 	 */
 	private int[] updateDimLblAndFieldPositions(int initialXPos, int initialYPos) {
 		int[] relPos = new int[] { initialXPos, initialYPos };
@@ -3798,7 +3806,7 @@ public class WGUI implements ControlListener {
 	
 				// Z label and fields
 				relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
-				c = getTextArea("ZLbl").setPosition(relPos[0], relPos[1]);;
+				c = getTextArea("ZLbl").setPosition(relPos[0], relPos[1]);
 	
 				relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
 				c0 = getTextField("ZCur").setPosition(relPos[0], relPos[1]);
@@ -3900,7 +3908,7 @@ public class WGUI implements ControlListener {
 				relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
 				c = getSlider("WOFillB").setPosition(relPos[0], relPos[1]);
 	
-				if (wo != null && wo.getModel() instanceof ComplexShape) {
+				if (wo.getModel() instanceof ComplexShape) {
 					// No stroke color for Model Shapes
 					getTextArea("WOOutlineLbl").hide();
 					getSlider("WOOutlineR").hide();

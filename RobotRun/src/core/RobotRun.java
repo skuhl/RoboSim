@@ -1387,10 +1387,9 @@ public class RobotRun extends PApplet {
 	 */
 	public void button_objConfirmMgmt() {
 		try {
-			Scenario activeScenario = getActiveScenario();
+			Scenario s = getActiveScenario();
 			WorldObject selectedWO = UI.getSelectedWO();
-			String msg = UI.updateWOMgmt(selectedWO, activeScenario,
-					SCENARIOS);
+			String msg = UI.updateWOMgmt(selectedWO, s);
 			
 			if (msg != null) {
 				Fields.setMessage(msg);

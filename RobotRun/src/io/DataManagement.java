@@ -2,7 +2,6 @@ package io;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -60,7 +59,6 @@ import programming.IfStatement;
 import programming.Instruction;
 import programming.JumpInstruction;
 import programming.LabelInstruction;
-import programming.Macro;
 import programming.PosMotionInst;
 import programming.Program;
 import programming.RegisterStatement;
@@ -552,8 +550,10 @@ public abstract class DataManagement {
 		}
 	}
 	
-	private static CameraObject loadCameraObject(DataInputStream in, RobotRun app) throws IOException, NullPointerException {
-		WorldObject o = loadWorldObject(in, app).obj;
+	private static CameraObject loadCameraObject(DataInputStream in, RobotRun app)
+			throws IOException, NullPointerException {
+		
+		WorldObject o = loadWorldObject(in).obj;
 		float imageQuality = in.readFloat();
 		float lighting = in.readFloat();		
 		
@@ -927,106 +927,6 @@ public abstract class DataManagement {
 
 		return prog;
 	}
-	
-	private static int loadProgramBytes(RoboticArm robot) {
-		
-		File progDir = new File(tmpDirPath + String.format("robot%d/", robot.RID)
-				+ "programs");
-		File progFile = new File(tmpDirPath + String.format("robot%d/programs.bin",
-				robot.RID));
-		
-		if (!progDir.exists() || !progDir.isDirectory()) {
-			if (progFile.exists() && progFile.isFile()) {
-				// Load programs from programs.bin if it exists
-				loadProgramBytesOldest(robot, progFile.getPath());
-			}
-			
-			return -1;
-			
-		} else {
-			int filesRead = 0;
-			File[] progFiles = progDir.listFiles();
-			Program[] programs = new Program[progFiles.length];
-			Thread[] loadThreads = new Thread[progFiles.length];
-			
-			for (int idx = 0; idx < progFiles.length; ++idx) {
-				LoadProgramFile loader = new LoadProgramFile(robot, programs, idx,
-						progFiles[idx]);
-				/* Initialize each thread to load a program from a specified
-				 * file */
-				loadThreads[idx] = new Thread(loader);
-				loadThreads[idx].start();
-			}
-			
-			for (int idx = 0; idx < loadThreads.length; ++idx) {
-				try {
-					/* Wait for each thread to finish and add the program once
-					 * the thread has completed */
-					loadThreads[idx].join();
-					robot.addProgram(programs[idx]);
-					++filesRead;
-					
-				} catch (InterruptedException IEx) {
-					IEx.printStackTrace();
-				}
-			}
-			
-			return filesRead;
-		}
-	}
-
-	private static int loadProgramBytesOldest(RoboticArm robot, String srcPath) {
-		File src = new File(srcPath);
-
-		try {
-			FileInputStream in = new FileInputStream(src);
-			DataInputStream dataIn = new DataInputStream(in);
-			// Read the number of programs stored in src
-			int size = Math.max(0, Math.min(dataIn.readInt(),
-					RoboticArm.PROG_NUM));
-			
-			while(size-- > 0) {
-				// Read each program from src
-				robot.addProgram( loadProgram(robot, dataIn) );
-			}
-
-			dataIn.close();
-			in.close();
-			
-			return 0;
-
-		} catch (FileNotFoundException FNFEx) {
-			// Could not locate src
-			System.err.printf("%s does not exist!\n", src.getName());
-			FNFEx.printStackTrace();
-			return 1;
-
-		} catch (EOFException EOFEx) {
-			// Reached the end of src unexpectedly
-			System.err.printf("End of file, %s, was reached unexpectedly!\n", src.getName());
-			EOFEx.printStackTrace();
-			return 2;
-
-		} catch (IOException IOEx) {
-			// An error occurred with reading from src
-			System.err.printf("%s is corrupt!\n", src.getName());
-			IOEx.printStackTrace();
-			return 3;
-			
-		} catch (ClassCastException CCEx) {
-			/* An error occurred with casting between objects while loading a
-			 * program's instructions */
-			System.err.printf("%s is corrupt!\n", src.getName());
-			CCEx.printStackTrace();
-			return 4;
-			
-		} catch (NegativeArraySizeException NASEx) {
-			// Issue with loading program points
-			System.err.printf("%s is corrupt!\n", src.getName());
-			NASEx.printStackTrace();
-			return 5;
-		}
-	}
 
 	private static PVector loadPVector(DataInputStream in) throws IOException {
 		// Read flag byte
@@ -1062,7 +962,9 @@ public abstract class DataManagement {
 		return new RQuaternion(w, x, y, z);
 	}
 	
-	protected static Scenario loadScenario(DataInputStream in, RobotRun app) throws IOException, NullPointerException {
+	protected static Scenario loadScenario(DataInputStream in)
+			throws IOException, NullPointerException {
+		
 		// Read flag byte
 		byte flag = in.readByte();
 
@@ -1083,7 +985,7 @@ public abstract class DataManagement {
 		// Read all the world objects contained in the scenario
 		while (size-- > 0) {
 			try {
-				LoadedObject loadedObject = loadWorldObject(in, app);
+				LoadedObject loadedObject = loadWorldObject(in);
 				s.addWorldObject(loadedObject.obj);
 				
 				if (loadedObject.obj instanceof Fixture) {
@@ -1155,7 +1057,7 @@ public abstract class DataManagement {
 		return 0;
 	}
 
-	private static RShape loadShape(DataInputStream in, RobotRun app) throws IOException,
+	private static RShape loadShape(DataInputStream in) throws IOException,
 			NullPointerException, RuntimeException {
 		
 		// Read flag byte
@@ -1291,7 +1193,9 @@ public abstract class DataManagement {
 		uFrame.setTeachPt(loadPoint(in), 3);
 	}
 
-	private static LoadedObject loadWorldObject(DataInputStream in, RobotRun app) throws IOException, NullPointerException {
+	private static LoadedObject loadWorldObject(DataInputStream in)
+			throws IOException, NullPointerException {
+		
 		// Load the flag byte
 		byte flag = in.readByte();
 		LoadedObject wldObjFields = null;
@@ -1299,7 +1203,7 @@ public abstract class DataManagement {
 		if (flag != 0) {
 			// Load the name and shape of the object
 			String name = in.readUTF();
-			RShape form = loadShape(in, app);
+			RShape form = loadShape(in);
 			// Load the object's local orientation
 			PVector center = loadPVector(in);
 			RMatrix orientationAxes = new RMatrix( load2DDoubleArray(in) );
@@ -1332,70 +1236,6 @@ public abstract class DataManagement {
 		}
 
 		return wldObjFields;
-	}
-	
-	private static void robotPostProcessing(RoboticArm robot, RobotRun appRef) {
-		/**
-		 * Loop through all programs and update call instructions, so that they
-		 * reference the correct target program.
-		 */
-		for (int pdx = 0; pdx < robot.numOfPrograms(); ++pdx) {
-			Program p = robot.getProgram(pdx);
-			
-			for (int idx = 0; idx < p.getNumOfInst(); ++idx) {
-				Instruction inst = p.getInstAt(idx);
-				
-				if (inst instanceof CallInstruction) {
-					// Update a top call instruction
-					CallInstruction cInst = (CallInstruction)inst;
-					RoboticArm tgtDevice = appRef.getRobot(cInst.getLoadedID());
-					String tgtName = cInst.getLoadedName();
-					
-					cInst.setTgtDevice(tgtDevice);
-					if (tgtDevice != null && tgtName != null) {
-						Program tgt = tgtDevice.getProgram(cInst.getLoadedName());
-						cInst.setProg(tgt);
-					}
-					
-				} else if (inst instanceof SelectStatement) {
-					// Update call instructions in a select statement
-					SelectStatement stmt = (SelectStatement)inst;
-					ArrayList<Instruction> instList = stmt.getInstrs();
-					
-					for (Instruction caseInst : instList) {
-						
-						if (caseInst instanceof CallInstruction) {
-							CallInstruction cInst = (CallInstruction)caseInst;
-							
-							if (cInst.getTgtDevice() != null && cInst.getLoadedName() != null) {
-								Program tgt = cInst.getTgtDevice().getProgram(cInst.getLoadedName());
-								cInst.setProg(tgt);
-							}
-						}
-					}
-					
-				} else if (inst instanceof IfStatement) {
-					// Update call instructions in a if statement
-					IfStatement stmt = (IfStatement)inst;
-					Instruction subInst = stmt.getInstr();
-					
-					if (subInst instanceof CallInstruction) {
-						CallInstruction cInst = (CallInstruction)subInst;
-						
-						if (cInst.getTgtDevice() != null && cInst.getLoadedName() != null) {
-							Program tgt = cInst.getTgtDevice().getProgram(cInst.getLoadedName());
-							cInst.setProg(tgt);
-						}
-					}
-					
-				} else if (inst instanceof CamMoveToObject) {
-					// Update a camera motion instruction
-					CamMoveToObject cMInst = (CamMoveToObject)inst;
-					Scenario scene = appRef.getScenario(cMInst.getLoadedSceneName());
-					cMInst.setScene(scene);
-				}
-			}
-		}
 	}
 	
 	private static void save2DDoubleArray(double[][] list, DataOutputStream out) throws IOException {
