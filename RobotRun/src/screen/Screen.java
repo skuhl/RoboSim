@@ -497,6 +497,41 @@ public abstract class Screen {
 		
 		return mode.toString();
 	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param robot
+	 */
+	protected void callProgNextScreen(RoboticArm robot) {	
+		if (robot.numOfPrograms() <= 0) {
+			// The target robot has no programs
+			Fields.setMessage("No programs are available for this robot");
+			
+		} else {
+			robotRun.editIdx = robot.RID;
+			robotRun.nextScreen(ScreenMode.SET_CALL_PROG);
+		}
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param robot
+	 * @param ignoreActiveScreen
+	 */
+	protected void callProgSwitchScreen(RoboticArm robot,
+			boolean ignoreActiveScreen) {
+		
+		if (robot.numOfPrograms() <= 0) {
+			// The target robot has no programs
+			Fields.setMessage("No programs are available for this robot");
+			
+		} else {
+			robotRun.editIdx = robot.RID;
+			robotRun.switchScreen(ScreenMode.SET_CALL_PROG, ignoreActiveScreen);
+		}
+	}
 
 	protected abstract void loadContents();
 

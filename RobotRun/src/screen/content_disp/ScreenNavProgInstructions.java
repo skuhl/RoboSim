@@ -581,14 +581,16 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 			robotRun.nextScreen(ScreenMode.SET_JUMP_TGT);
 		} 
 		else if (ins instanceof CallInstruction) {
-			if (((CallInstruction) ins).getTgtDevice() != null) {
-				robotRun.editIdx = ((CallInstruction) ins).getTgtDevice().RID;
-
+			CallInstruction cInst = (CallInstruction)ins;
+			RoboticArm tgt = cInst.getTgtDevice();
+			
+			if (tgt == null) {
+				Fields.setMessage("This call instruction is corrupt");
+				
 			} else {
-				robotRun.editIdx = -1;
+				callProgNextScreen(tgt);
 			}
-
-			robotRun.nextScreen(ScreenMode.SET_CALL_PROG);
+			
 		} else if (ins instanceof IfStatement) {
 			IfStatement stmt = (IfStatement) ins;
 			
@@ -611,8 +613,10 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 				} else if (sdx == 6) {
 					if (stmt.getInstr() instanceof JumpInstruction) {
 						robotRun.nextScreen(ScreenMode.SET_JUMP_TGT);
+						
 					} else if (stmt.getInstr() instanceof CallInstruction) {
-						robotRun.nextScreen(ScreenMode.SET_CALL_PROG);
+						RoboticArm tgt = ((CallInstruction)stmt.getInstr()).getTgtDevice();
+						callProgNextScreen(tgt);
 					}
 				} 
 			} else if (stmt.getExpr() instanceof Expression) {
@@ -626,7 +630,8 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 					if (stmt.getInstr() instanceof JumpInstruction) {
 						robotRun.nextScreen(ScreenMode.SET_JUMP_TGT);
 					} else if (stmt.getInstr() instanceof CallInstruction) {
-						robotRun.nextScreen(ScreenMode.SET_CALL_PROG);
+						RoboticArm tgt = ((CallInstruction)stmt.getInstr()).getTgtDevice();
+						callProgNextScreen(tgt);
 					}
 				} 
 			}
@@ -648,7 +653,8 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 				if (toExec instanceof JumpInstruction) {
 					robotRun.nextScreen(ScreenMode.SET_JUMP_TGT);
 				} else if (toExec instanceof CallInstruction) {
-					robotRun.nextScreen(ScreenMode.SET_CALL_PROG);
+					RoboticArm tgt = ((CallInstruction)toExec).getTgtDevice();
+					callProgNextScreen(tgt);
 				}
 			}
 		} else if (ins instanceof RegisterStatement) {

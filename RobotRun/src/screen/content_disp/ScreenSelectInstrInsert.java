@@ -30,16 +30,14 @@ public class ScreenSelectInstrInsert extends ST_ScreenListContents {
 			break;
 		case 5: // Call
 			robotRun.newCallInstruction();
-			robotRun.editIdx = robotRun.getActiveRobot().RID;
-			robotRun.switchScreen(ScreenMode.SET_CALL_PROG, true);
+			callProgSwitchScreen(robotRun.getActiveRobot(), true);
 			break;
 		case 6: // RobotCall
 			robotRun.newRobotCallInstruction();
 			RoboticArm inactive = robotRun.getInactiveRobot();
 			
 			if (inactive.numOfPrograms() > 0) {
-				robotRun.editIdx = robotRun.getInactiveRobot().RID;
-				robotRun.switchScreen(ScreenMode.SET_CALL_PROG, true);
+				callProgSwitchScreen(inactive, true);
 				
 			} else {
 				// No programs exist in the inactive robot

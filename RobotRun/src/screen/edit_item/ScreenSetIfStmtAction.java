@@ -24,14 +24,14 @@ public class ScreenSetIfStmtAction extends ST_ScreenEditItem {
 			robotRun.switchScreen(ScreenMode.SET_JUMP_TGT, false);
 		} else if (options.getLineIdx() == 1) {
 			stmt.setInstr(new CallInstruction(r));
-			robotRun.editIdx = r.RID;
-			robotRun.switchScreen(ScreenMode.SET_CALL_PROG, false);
+			callProgSwitchScreen(r, false);
 		} else {
 			RoboticArm inactive = robotRun.getInactiveRobot();
 			stmt.setInstr(new CallInstruction(inactive));
 			
 			if (inactive.numOfPrograms() > 0) {
 				robotRun.switchScreen(ScreenMode.SET_CALL_PROG, false);
+				
 			} else {
 				// No programs from which to choose
 				robotRun.lastScreen();
