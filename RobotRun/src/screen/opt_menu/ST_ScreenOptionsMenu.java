@@ -23,6 +23,12 @@ public abstract class ST_ScreenOptionsMenu extends Screen {
 		super(m, header, r);
 	}
 	
+	public ST_ScreenOptionsMenu(ScreenMode m, String header, RobotRun r,
+			int cMax, int cX, int cY, int oMax, int oX, int oY) {
+		
+		super(m, header, r, cMax, cX, cY, oMax, oX, oY);
+	}
+	
 	@Override
 	public void actionArrowDn() {
 		options.moveDown(false);

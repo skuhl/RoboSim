@@ -21,7 +21,7 @@ public class ScreenUserFrameDetail extends ST_ScreenOptionsMenu {
 	
 	public ScreenUserFrameDetail(RobotRun r, int frameIdx) {
 		super(ScreenMode.UFRAME_DETAIL, loadHeader(r.getActiveRobot(),
-				frameIdx), r);
+				frameIdx), r, 2, 10, 20, 3, 10, 80);
 		this.frameIdx = frameIdx;
 	}
 	
