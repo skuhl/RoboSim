@@ -43,16 +43,10 @@ public class LoadScenarioFile implements Runnable {
 			try {
 				FileInputStream in = new FileInputStream(src);
 				DataInputStream dataIn = new DataInputStream(in);
-
+				/* Store the loaded scenario at the defined index in the
+				 * list of scenarios */
 				Scenario s = DataManagement.loadScenario(dataIn, appRef);
-
-				if (s != null) {
-					/*
-					 * Store the loaded scenario at the defined index in the
-					 * list of scenarios
-					 */
-					scenarioList[idx] = s;
-				}
+				scenarioList[idx] = s;
 
 				dataIn.close();
 				in.close();

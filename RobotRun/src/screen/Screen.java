@@ -489,7 +489,14 @@ public abstract class Screen {
 		printScreenInfo();
 	}
 	
-	
+	@Override
+	public String toString() {
+		if (this.mode == null) {
+			return "UNKNOWN";
+		}
+		
+		return mode.toString();
+	}
 
 	protected abstract void loadContents();
 

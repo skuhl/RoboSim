@@ -89,7 +89,10 @@ public class LoadRobotData implements Runnable {
 		 * has completed */
 		for (int idx = 0; idx < loadThreads.length; ++idx) {
 			Fields.waitForThread(loadThreads[idx]);
-			robotRef.addProgram(programs[idx]);
+			
+			if (programs[idx] != null) {
+				robotRef.addProgram(programs[idx]);
+			}
 		}
 		
 		// Load the robot's macros after its programs have been initialized
