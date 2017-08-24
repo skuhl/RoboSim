@@ -58,9 +58,15 @@ public abstract class Fields {
 	public static final int FRAME_NUM = 10;
 	
 	/**
+	 * The maximum file size (in bytes) allowed for imported models of world
+	 * objects.
+	 */
+	public static final int MODEL_FILE_SIZE = 400000;
+	
+	/**
 	 * The maximum number of scenarios used by the software at one time.
 	 */
-	public static final int SCENARIO_NUM = 40;
+	public static final int SCENARIO_NUM = 30;
 	
 	/**
 	 * The tool frame type of a motion instruction

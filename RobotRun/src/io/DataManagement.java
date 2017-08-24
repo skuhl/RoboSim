@@ -190,7 +190,9 @@ public abstract class DataManagement {
 		for (File file : dataFiles) {
 			String name = file.getName();
 			// Check file extension and type
-			if (file.isFile() && (name.endsWith(".stl") || name.endsWith(".STL"))) {
+			if (file.isFile() && file.length() < Fields.MODEL_FILE_SIZE &&
+					(name.endsWith(".stl") || name.endsWith(".STL"))) {
+				
 				fileNames.add(name);
 			}
 		}
@@ -431,20 +433,24 @@ public abstract class DataManagement {
 		validateTmpDir();
 		// Run threads for saving each robot's data
 		Thread saveRobot0 = new Thread(new SaveRobotData(appRef.getRobot(0),
-				tmpDirPath, 15));
+				tmpDirPath, 14));
 		Thread saveRobot1 = new Thread(new SaveRobotData(appRef.getRobot(1),
-				tmpDirPath, 15));
+				tmpDirPath, 14));
 		saveRobot0.start();
 		saveRobot1.start();
 		
-		saveScenarioBytes(appRef, scenarioDirPath);
+		Program activeProg = appRef.getActiveProg();
+		if (activeProg != null) {
+			saveProgram(appRef.getActiveRobot().RID, activeProg);
+		}
 		
-		Scenario active = appRef.getActiveScenario();
-		
-		if (active != null) {
-			// Save the name of the active scenario
-			File scenarioFile = new File(tmpDirPath + "activeScenario.bin");
+		Scenario activeScenario = appRef.getActiveScenario();
+		File scenarioFile = new File(tmpDirPath + "activeScenario.bin");
+		if (activeScenario != null) {
 			
+			saveScenario(activeScenario);
+			
+			// Save the name of the active scenario
 			try {
 				if (!scenarioFile.exists()) {
 					scenarioFile.createNewFile();
@@ -453,7 +459,7 @@ public abstract class DataManagement {
 				FileOutputStream out = new FileOutputStream(scenarioFile);
 				DataOutputStream dataOut = new DataOutputStream(out);
 				
-				dataOut.writeUTF(active.getName());
+				dataOut.writeUTF(activeScenario.getName());
 				
 				dataOut.close();
 				out.close();
@@ -464,6 +470,11 @@ public abstract class DataManagement {
 						scenarioFile.getName());
 				IOEx.printStackTrace();
 			}
+			
+		} else if (scenarioFile.exists()) {
+			/* Remove the active scenario file when the active scenario is
+			 * null */
+			scenarioFile.delete();
 		}
 		
 		saveCameraData(appRef, appRef.getRobotCamera());

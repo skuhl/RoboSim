@@ -284,7 +284,7 @@ public class RobotRun extends PApplet {
 			throw Ex;
 		}
 	}
-	
+
 	/**
 	 * Pendant RIGHT button
 	 * 
@@ -1629,7 +1629,7 @@ public class RobotRun extends PApplet {
 			int ret = UI.updateScenarios();
 	
 			if (ret > 0) {
-				activeScenario.set( UI.getSelectedScenario() );
+				setActiveScenario( UI.getSelectedScenario() );
 	
 			} else if (ret == 0) {
 				DataManagement.saveScenarios(this);
@@ -1949,7 +1949,7 @@ public class RobotRun extends PApplet {
 		screens.getActiveScreen().getContents().setColumnIdx(0);
 		
 		procExec.setProcRID(m.getRobot().RID);
-		procExec.setProg(m.getProg());
+		setActiveProg(m.getProg());
 		procExec.progExec(false);
 	}
 	
@@ -2973,11 +2973,21 @@ public class RobotRun extends PApplet {
 	
 	/**
 	 * Sets the given program as the active program and clears the process call
-	 * stack.
+	 * stack. The previous active program is saved to its respective save file
+	 * before the new program is set as active.
+	 * 
+	 * NOTE: use this method whenever setting the active program, DO NOT simply
+	 * use progExec.setProg()!
 	 * 
 	 * @param p	The program to set as active
 	 */
 	public void setActiveProg(Program p) {
+		Program activeProg = getActiveProg();
+		
+		if (activeProg != null) {
+			DataManagement.saveProgram(getActiveRobot().RID, activeProg);
+		}
+		
 		procExec.setProg(p);
 	}
 
@@ -2993,11 +3003,14 @@ public class RobotRun extends PApplet {
 		
 		if (p != null || progIdx == -1) {
 			// Set the active program
-			procExec.setProg(p);
+			setActiveProg(p);
+			return true;
 		}
 		
-		return p != null;
+		return false;
 	}
+	
+	
 	
 	/**
 	 * Sets the scenario with the given name as the active scenario in the
@@ -3011,12 +3024,7 @@ public class RobotRun extends PApplet {
 
 		for (Scenario s : SCENARIOS) {
 			if (s.getName().equals(name)) {
-				activeScenario.set(s);
-				
-				if (UI != null) {
-					UI.setSelectedWO(null);
-				}
-				
+				setActiveScenario(s);
 				return true;
 			}
 		}
@@ -3267,9 +3275,18 @@ public class RobotRun extends PApplet {
 		
 		/**
 		Fields.debug("SCENARIOS");
+		Scenario origin = SCENARIOS.get(0);
+		WorldObject wo = origin.getWorldObject(0);
+		String prefix = wo.getName().substring(0,
+				wo.getName().length() - 1);
+		
+		for (int idx = 1; idx < Scenario.MAX_SIZE; ++idx) {
+			WorldObject copy = wo.clone();
+			copy.setName(prefix + Integer.toString(idx));
+			origin.addWorldObject(copy);
+		}
 		
 		for (int idx = 1; idx < Fields.SCENARIO_NUM; ++idx) {
-			Scenario origin = SCENARIOS.get(0);
 			Scenario copy = (Scenario) origin.clone();
 			copy.setName(origin.getName() + Integer.toString(idx));
 			addScenario(copy);
@@ -3347,16 +3364,16 @@ public class RobotRun extends PApplet {
 	 * Revert the most recent change to the active scenario.
 	 */
 	public void undoScenarioEdit() {
-		Scenario activeScenario = getActiveScenario();
+		Scenario s = getActiveScenario();
 		
-		if (activeScenario != null && !SCENARIO_UNDO.empty()) {
+		if (s != null && !SCENARIO_UNDO.empty()) {
 			SCENARIO_UNDO.pop().undo();
 			UI.updateListContents();
 			
 			WorldObject wo = UI.getSelectedWO();
 			
 			if (wo != null) {
-				UI.updateEditWindowFields(wo, activeScenario);
+				UI.updateEditWindowFields(wo, s);
 				
 				if (wo instanceof Fixture) {
 					for (WorldObject wldObj : getActiveScenario()) {
@@ -4061,6 +4078,28 @@ public class RobotRun extends PApplet {
 		
 		popStyle();
 		popMatrix();
+	}
+	
+	/**
+	 * Sets the active scenario of the application, while saving the currently
+	 * active scenario to its respective file.
+	 * 
+	 * NOTE: use this method whenever setting the active scenario, DO NOT
+	 * simply use activeScenario.set()!
+	 * 
+	 * @param s	The new active scenario
+	 */
+	private void setActiveScenario(Scenario s) {
+		if (UI != null) {
+			UI.setSelectedWO(null);
+		}
+		// Save the active scenario before setting the new active scenario
+		Scenario active = getActiveScenario();
+		if (active != null) {
+			DataManagement.saveScenario(active);
+		}
+		
+		activeScenario.set(s);
 	}
 
 	/**

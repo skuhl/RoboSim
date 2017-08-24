@@ -251,7 +251,12 @@ public class MenuScroll {
 	}
 	
 	public MenuScroll setLines(ArrayList<DisplayLine> l) {
-		lines = l;
+		if (l == null) {
+			lines.clear();
+			
+		} else {
+			lines = l;
+		}
 		
 		return this;
 	}

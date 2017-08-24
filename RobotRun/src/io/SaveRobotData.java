@@ -50,13 +50,15 @@ public class SaveRobotData implements Runnable {
 			destDir.mkdir();
 		}
 		
-		final boolean savePrograms = (dataFlag & 0x1) != 0;
+		// Remove programs.bin file and validate the programs directory
+		File oldSaveFile = new File(String.format("%s/programs.bin",
+				destDir.getAbsolutePath()));
+		
+		final boolean savePrograms = oldSaveFile.exists() ||
+				((dataFlag & 0x1) != 0);
 		Thread[] progThreads;
 		
 		if (savePrograms) {
-			// Remove programs.bin file and validate the programs directory
-			File oldSaveFile = new File(String.format("%s/programs.bin",
-					destDir.getAbsolutePath()));
 			File progDir = new File(String.format("%s/programs",
 					destDir.getAbsolutePath()));
 			

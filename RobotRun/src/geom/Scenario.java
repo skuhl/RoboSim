@@ -16,7 +16,7 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 	/**
 	 * The maximum number of objects allowed in a single scenario.
 	 */
-	public static final int MAX_SIZE = 30;
+	public static final int MAX_SIZE = 20;
 	
 	private boolean gravity;
 	private String name;
