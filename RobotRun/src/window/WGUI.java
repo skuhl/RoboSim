@@ -885,6 +885,8 @@ public class WGUI implements ControlListener {
 
 		addDropdown("WO", editWO, ldropItemWidth, dropItemHeight, 4,
 				Fields.small, Fields.ITYPE_PERMENANT);
+		
+		getDropdown("CamObjects").setValue(-1);
 	}
 	
 	/**
@@ -1671,7 +1673,7 @@ public class WGUI implements ControlListener {
 			}
 			
 			if(d.getItems().size() == 0) {
-				d.setValue(0);
+				d.setValue(-1);
 			}
 			
 			d.setSize(ldropItemWidth, dropItemHeight * (app.getRobotCamera().getTaughtObjects().size() + 1));

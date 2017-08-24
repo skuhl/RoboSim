@@ -1,8 +1,8 @@
 package screen.edit_item;
 
 import core.RobotRun;
-import expression.BooleanBinaryExpression;
 import expression.BoolMath;
+import expression.BooleanBinaryExpression;
 import expression.Expression;
 import expression.ExpressionElement;
 import expression.FloatMath;

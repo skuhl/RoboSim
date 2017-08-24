@@ -1,7 +1,7 @@
 package geom;
 
-import global.Fields;
 import global.DebugFloatFormat;
+import global.Fields;
 import global.RMath;
 import processing.core.PGraphics;
 import processing.core.PVector;
