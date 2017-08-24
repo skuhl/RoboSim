@@ -242,6 +242,8 @@ public class RobotCamera {
 		float dimY = Math.abs(wid*objAxisX.dot(upVect)) + Math.abs(hgt*objAxisY.dot(upVect)) + Math.abs(len*objAxisZ.dot(upVect));
 		float dimZ = Math.abs(wid*objAxisX.dot(lookVect)) + Math.abs(hgt*objAxisY.dot(lookVect)) + Math.abs(len*objAxisZ.dot(lookVect));
 		
+		System.out.println("apparent XYZ: " + dimensions.toString());
+		
 		return new PVector(dimX, dimY, dimZ);
 	}
 	
@@ -573,10 +575,14 @@ public class RobotCamera {
 			teachObj = new CameraObject(appRef, (Part)obj, quality, brightness*exposure);
 		}
 		
-		
 		if(teachObj != null) {
 			RMatrix objOrient = teachObj.getOrientation();
 			RMatrix viewOrient = objOrient.transpose().multiply(camOrient.toMatrix());
+			//System.out.println("Teaching object...");
+			//System.out.println("Object-world orient:\n" + objOrient.toString());
+			//System.out.println("Cam-world orient:\n" + camOrient.toMatrix().toString());
+			//System.out.println("Result:\n" + viewOrient.toString());
+			
 			teachObj.setLocalOrientation(viewOrient);
 			
 			for(int i = 0; i < taughtObjects.size(); i += 1) {

@@ -78,33 +78,39 @@ public class CameraObject extends Part {
 			PGraphics img = appRef.createGraphics(WGUI.imageWidth, WGUI.imageHeight, RobotRun.P3D);
 			float[][] rMat = m.getDataF();
 			
-			PVector dimensions = this.getModel().getDims();
-			float len = dimensions.z;
-			float wid = dimensions.x;
-			float hgt = dimensions.y;
+			PVector dim = this.getModel().getDims();
+			
+			RMatrix mat = this.getOrientation();
+			PVector alignX = new PVector(Math.abs(mat.getEntryF(0, 0)*dim.x), 
+										 Math.abs(mat.getEntryF(1, 0)*dim.y), 
+										 Math.abs(mat.getEntryF(2, 0)*dim.z));
+			PVector alignY = new PVector(Math.abs(mat.getEntryF(0, 1)*dim.x), 
+										 Math.abs(mat.getEntryF(1, 1)*dim.y), 
+										 Math.abs(mat.getEntryF(2, 1)*dim.z));
+			PVector alignZ = new PVector(Math.abs(mat.getEntryF(0, 2)*dim.x), 
+										 Math.abs(mat.getEntryF(1, 2)*dim.y), 
+										 Math.abs(mat.getEntryF(2, 2)*dim.z));
+			
+			float dimX = alignX.x + alignX.y + alignX.z;
+			float dimY = alignY.x + alignY.y + alignY.z;
+			float dimZ = alignZ.x + alignZ.y + alignZ.z;
+			
+			//System.out.println("Object dimensions: " + dim.toString());
+			//System.out.println("Apparent dimensions: " + dimX + ", " + dimY + ", " + dimZ);
+			//System.out.println(mat.toString());
 			
 			img.beginDraw();
 			img.ortho();
 			img.background(255);
-			img.stroke(0);
-			img.translate(WGUI.imageWidth/2, WGUI.imageHeight/2, len + 20);
+
+			img.translate(WGUI.imageWidth/2, WGUI.imageHeight/2, -dimZ - 20);
+			
 			img.applyMatrix(
 					rMat[0][0], rMat[1][0], rMat[2][0], 0,
 					rMat[0][1], rMat[1][1], rMat[2][1], 0,
 					rMat[0][2], rMat[1][2], rMat[2][2], 0,
 					0, 0, 0, 1
 			);
-			
-			RMatrix mat = this.getOrientation();
-			PVector objAxisX = new PVector(mat.getEntryF(0, 0), mat.getEntryF(0, 1), mat.getEntryF(0, 2));
-			PVector objAxisY = new PVector(mat.getEntryF(1, 0), mat.getEntryF(1, 1), mat.getEntryF(1, 2));
-			PVector objAxisZ = new PVector(mat.getEntryF(2, 0), mat.getEntryF(2, 1), mat.getEntryF(2, 2));
-			
-			PVector ltVect = new PVector(1, 0, 0);
-			PVector upVect = new PVector(0, 1, 0);
-			
-			float dimX = Math.abs(wid*objAxisX.dot(ltVect)) + Math.abs(hgt*objAxisY.dot(ltVect)) + Math.abs(len*objAxisZ.dot(ltVect));
-			float dimY = Math.abs(wid*objAxisX.dot(upVect)) + Math.abs(hgt*objAxisY.dot(upVect)) + Math.abs(len*objAxisZ.dot(upVect));
 			
 			float light = 20 + 235 * light_value;
 			img.directionalLight(light, light, light, 0, 0, 1);
@@ -114,7 +120,6 @@ public class CameraObject extends Part {
 			img.scale((float)Math.min(200f/dimX, 150f/dimY));
 			this.getModel().draw(img);
 			img.resetMatrix();
-			img.translate(-WGUI.imageWidth/2, -WGUI.imageHeight/2, -len - 20);
 						
 			for(CamSelectArea a: selectAreas) {
 				CamSelectView v = a.getView(m);
