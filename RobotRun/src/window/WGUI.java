@@ -58,10 +58,11 @@ import ui.MySlider;
 import ui.MyTextfield;
 import ui.UIInputElement;
 import undo.PartUndoDefault;
-import undo.PartUndoFixRef;
+import undo.PartUndoParent;
 import undo.WOUndoCurrent;
 import undo.WOUndoDelete;
 import undo.WOUndoDim;
+import undo.WOUndoInsert;
 import undo.WOUndoState;
 
 public class WGUI implements ControlListener {
@@ -1075,13 +1076,14 @@ public class WGUI implements ControlListener {
 					/* Set the reference of the Part to the currently active
 					 * fixture */
 					Part p = (Part)selectedWO;
-					Fixture refFixture = (Fixture)getDropdown("Fixture").getSelectedItem();
-
-					if (p.getFixtureRef() != refFixture) {
+					Fixture newParent = (Fixture)getDropdown("Fixture").getSelectedItem();
+					
+					if (p.getParent() != newParent) {
 						/* Update the scenario undo stack for the part's
 						 * fixture reference change */
-						app.updateScenarioUndo(new PartUndoFixRef(p));
-						p.setFixtureRef(refFixture);
+						int groupNum = (app.getScenarioUndoGID() + 1) % 2;
+						app.updateScenarioUndo(new PartUndoParent(groupNum, p));
+						Fields.setWODependency(newParent, p);
 					}
 				}
 
@@ -1391,7 +1393,6 @@ public class WGUI implements ControlListener {
 
 		if (wldObj instanceof WorldObject) {
 			return (WorldObject)wldObj;
-			
 		}
 		
 		return null;
@@ -1826,7 +1827,7 @@ public class WGUI implements ControlListener {
 			Part p = (Part)selected;
 			fillDefWithDef(p);
 			
-			Fixture ref = p.getFixtureRef();
+			Fixture ref = p.getParent();
 			ddl.setItem(ref);
 
 		} else {
@@ -2058,7 +2059,8 @@ public class WGUI implements ControlListener {
 		
 		try {
 			boolean edited = false;
-			WOUndoState undoState = new WOUndoCurrent(selectedWO);
+			int groupNum = (app.getScenarioUndoGID() + 1) % 2;
+			WOUndoState undoState = new WOUndoCurrent(groupNum, selectedWO);
 			
 			// Convert origin position into the World Frame
 			PVector oPosition = RMath.vToWorld( selectedWO.getLocalCenter() );
@@ -2099,8 +2101,7 @@ public class WGUI implements ControlListener {
 			PVector position = RMath.vFromWorld( oPosition );
 			RMatrix orientation = RMath.wEulerToNRMat(oWPR);
 			// Update the Objects position and orientation
-			selectedWO.setLocalCenter(position);
-			selectedWO.setLocalOrientation(orientation);
+			selectedWO.setLocalCoordinates(position, orientation);
 			
 			if (edited) {
 				return undoState;
@@ -2123,7 +2124,8 @@ public class WGUI implements ControlListener {
 	 */
 	public WOUndoState updateWODefault(Part selectedPart) {
 		boolean edited = false;
-		WOUndoState undoState = new PartUndoDefault(selectedPart);
+		int groupNum = (app.getScenarioUndoGID() + 1) % 2;
+		WOUndoState undoState = new PartUndoDefault(groupNum, selectedPart);
 		
 		// Pull the object's current position and orientation
 		PVector defaultPos = RMath.vToWorld( selectedPart.getDefaultCenter() );
@@ -2187,7 +2189,8 @@ public class WGUI implements ControlListener {
 	 */
 	public WOUndoState updateWODims(WorldObject selectedWO) {
 		boolean dimChanged = false;
-		WOUndoState undoState = new WOUndoDim(selectedWO);
+		int groupNum = (app.getScenarioUndoGID() + 1) % 2;
+		WOUndoState undoState = new WOUndoDim(groupNum, selectedWO);
 		RShape s = selectedWO.getModel();
 
 		if (s instanceof RBox) {
@@ -2277,8 +2280,14 @@ public class WGUI implements ControlListener {
 				return "A world object with the given name already exists";
 				
 			} else {
+				/* Add a copy of the selected world object to the target
+				 * scenario */
+				int groupNum = (app.getScenarioUndoGID() + 1) % 2;
 				WorldObject copyWO = selectedWO.clone(newName);
+				app.updateScenarioUndo(new WOUndoInsert(groupNum, copyWO, parent));
+				
 				tgt.addWorldObject(copyWO);
+				DataManagement.saveScenario(tgt);
 				return null;
 			}
 			
@@ -2303,17 +2312,65 @@ public class WGUI implements ControlListener {
 				return "A world object with the given name already exists";
 				
 			} else {
+				int groupNum = (app.getScenarioUndoGID() + 1) % 2;
+				
+				if (selectedWO instanceof Fixture) {
+					/* Check the scenario for any parts that refer to the fixture
+					 * that will be removed and add undo states for the part's
+					 * fixture reference */
+					Fixture fixture = (Fixture) selectedWO;
+					
+					for (WorldObject wo : parent) {
+						if (wo instanceof Part) {
+							Part p = (Part)wo;
+							
+							if (p.getParent() == fixture) {
+								app.updateScenarioUndo(new PartUndoParent(groupNum,
+										p, fixture));
+							}
+						}
+					}
+				}
+				// Remove the selected world object from its parent scenario
+				app.updateScenarioUndo(new WOUndoDelete(groupNum, selectedWO,
+						parent));
 				parent.removeWorldObject(selectedWO);
-				selectedWO.setName(newName);
+				
+				// Add a copy of the selected world object to the target scenario
+				WorldObject newWO = selectedWO.clone(newName);
+				app.updateScenarioUndo(new WOUndoInsert(groupNum, newWO, parent));
 				tgt.addWorldObject(selectedWO);
 				setSelectedWO(null);
+				
+				DataManagement.saveScenario(tgt);
 				return null;
 			}
 			
 		} else if (mgmtOpt == 2f) {
-			// Remove the given world object from the given scenario	
-			parent.removeWorldObject( selectedWO );
-			app.updateScenarioUndo(new WOUndoDelete(selectedWO, parent));
+			int groupNum = (app.getScenarioUndoGID() + 1) % 2;
+			
+			if (selectedWO instanceof Fixture) {
+				/* Check the scenario for any parts that refer to the fixture
+				 * that will be removed and add undo states for the part's
+				 * fixture reference */
+				Fixture fixture = (Fixture) selectedWO;
+				
+				for (WorldObject wo : parent) {
+					if (wo instanceof Part) {
+						Part p = (Part)wo;
+						
+						if (p.getParent() == fixture) {
+							app.updateScenarioUndo(new PartUndoParent(groupNum,
+									p, fixture));
+						}
+					}
+				}
+			}
+			
+			app.updateScenarioUndo(new WOUndoDelete(groupNum, selectedWO,
+					parent));
+			// Remove the given world object from the given scenario
+			parent.removeWorldObject(selectedWO);
 			setSelectedWO(null);
 			return null;
 		}

@@ -2,33 +2,36 @@ package programming;
 
 import enums.InstUndoType;
 
+/**
+ * TODO general comments
+ * 
+ * @author Joshua Hooker
+ */
 public class InstUndoState {
 	private InstElement elemRef;
-	private int groupID;
-	
+	private int groupNum;
 	private int idx;
-	
 	private Program parent;
 	private InstUndoType type;
 	
-	public InstUndoState(InstUndoType type, int groupID, Program parent,
+	public InstUndoState(InstUndoType type, int groupNum, Program parent,
 			int idx, InstElement ref) {
 		
 		this.type = type;
-		this.groupID = groupID;
+		this.groupNum = groupNum;
 		this.parent = parent;
 		this.idx = idx;
 		this.elemRef = ref;
 		
 	}
 	
-	public int getGID() {
-		return groupID;
+	public int groupNum() {
+		return groupNum;
 	}
 	
 	@Override
 	public String toString() {
-		return String.format("%s %d %s %d %s %d", type.name(), groupID,
+		return String.format("%s %d %s %d %s %d", type.name(), groupNum,
 				parent.getName(), idx, elemRef.getInst().getClass(),
 				elemRef.getID());
 	}

@@ -2497,12 +2497,12 @@ public class RoboticArm {
 			undoState.undo();
 			
 			// Chain undo states with the same group
-			int gid = undoState.getGID();
+			int groupNum = undoState.groupNum();
 			
 			while (!PROG_UNDO.isEmpty()) {
 				undoState = PROG_UNDO.peek();
 				
-				if (undoState.getGID() != gid) {
+				if (undoState.groupNum() != groupNum) {
 					break;
 				}
 				
@@ -2983,24 +2983,27 @@ public class RoboticArm {
 			PROG_UNDO.remove(0);
 		}
 		
-		// Determine the group ID of the undo state
-		int gid;
+		// Determine the group number of the undo state
+		int groupNum;
 		
 		if (PROG_UNDO.isEmpty()) {
-			gid = 0;
+			groupNum = 0;
 			
 		} else {
 			InstUndoState top = PROG_UNDO.peek();
 			
-			if ((top.getGID() == 1 && group) || (top.getGID() == 0 && !group)) {
-				gid = 1;
+			if ((top.groupNum() == 1 && group) || (top.groupNum() == 0 &&
+					!group)) {
+				
+				groupNum = 1;
 				
 			} else {
-				gid = 0;
+				groupNum = 0;
 			}
 		}
 		
-		InstUndoState undoState = new InstUndoState(type, gid, prog, idx, inst);
+		InstUndoState undoState = new InstUndoState(type, groupNum, prog, idx,
+				inst);
 		PROG_UNDO.push(undoState);
 		/* TEST CODE *
 		Fields.debug("%s\n", undoState);

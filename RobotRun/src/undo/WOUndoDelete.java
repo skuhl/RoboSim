@@ -15,8 +15,8 @@ public class WOUndoDelete extends WOUndoState {
 	 */
 	private Scenario parent;
 	
-	public WOUndoDelete(WorldObject wo, Scenario parent) {
-		super(wo);
+	public WOUndoDelete(int groupNum, WorldObject wo, Scenario parent) {
+		super(groupNum, wo);
 		this.parent = parent;
 	}
 	

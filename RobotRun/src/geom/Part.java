@@ -8,6 +8,8 @@ import processing.core.PVector;
 /**
  * Defines a world object, which has a shape, a bounding box and a reference to a fixture.
  * The bounding box holds the local coordinate system of the object.
+ * 
+ * @author Joshua Hooker
  */
 public class Part extends WorldObject {
 	
@@ -23,7 +25,7 @@ public class Part extends WorldObject {
 	
 	protected CoordinateSystem defaultOrientation;
 	private BoundingBox absOBB;
-	private Fixture reference;
+	private Fixture parent;
 	
 	/**
 	 * TODO comment this
@@ -55,29 +57,25 @@ public class Part extends WorldObject {
 	 * default orientation and fixture reference.
 	 */
 	public Part(String n, RShape s, PVector OBBDims, CoordinateSystem local,
-			CoordinateSystem def, Fixture fixRef) {
+			CoordinateSystem def) {
 		
 		super(n, s, local);
 		absOBB = new BoundingBox(OBBDims.x, OBBDims.y, OBBDims.z);
 		defaultOrientation = def;
-		setFixtureRef(fixRef);
 		updateOBBDims();
+		updateAbsoluteOrientation();
 	}
 
 	@Override
 	public Part clone() {
-		// The new object's reference still points to the same fixture!
 		return new Part(getName(), getModel().clone(), getOBBDims().copy(),
-				localOrientation.clone(), defaultOrientation.clone(),
-				reference);
+				localOrientation.clone(), defaultOrientation.clone());
 	}
 	
 	@Override
 	public WorldObject clone(String name) {
-		// The new object's reference still points to the same fixture!
 		return new Part(name, getModel().clone(), getOBBDims().copy(),
-				localOrientation.clone(), defaultOrientation.clone(),
-				reference);
+				localOrientation.clone(), defaultOrientation.clone());
 	}
 
 	/**
@@ -142,7 +140,9 @@ public class Part extends WorldObject {
 		return defaultOrientation.getAxes();
 	}
 	
-	public Fixture getFixtureRef() { return reference; }
+	public Fixture getParent() {
+		return parent;
+	}
 	
 	/**
 	 * Get the dimensions of the part's bounding-box
@@ -166,12 +166,22 @@ public class Part extends WorldObject {
 		return absOBB.getOrientationAxes();
 	}
 	
+	/**
+	 * TODO comment this
+	 */
+	public void removeParent() {
+		if (parent != null) {
+			Fixture parentRef = parent;
+			parentRef.removeDependent(this);
+		}
+	}
+	
 	@Override
 	public void rotateAroundAxis(PVector axis, float angle) {
 		
-		if (reference != null) {
+		if (parent != null) {
 			// rotate with respect to the part's fixture reference
-			RMatrix refRMat = reference.getLocalOrientation();
+			RMatrix refRMat = parent.getLocalOrientation();
 			axis = RMath.rotateVector(axis, refRMat);
 		}
 		
@@ -201,9 +211,11 @@ public class Part extends WorldObject {
 	/**
 	 * Set the fixture reference of this part and
 	 * update its absolute orientation.
+	 * 
+	 * @param newParent
 	 */
-	public void setFixtureRef(Fixture refFixture) {
-		reference = refFixture;
+	protected void setParent(Fixture newParent) {
+		parent = newParent;
 		updateAbsoluteOrientation();
 	}
 	
@@ -211,6 +223,12 @@ public class Part extends WorldObject {
 	public void setLocalCenter(PVector newCenter) {
 		super.setLocalCenter(newCenter);
 		updateAbsoluteOrientation();
+	}
+	
+	@Override
+	public void setLocalCoordinates(PVector newCenter, RMatrix newAxes) {
+		super.setLocalCoordinates(newCenter, newAxes);
+		this.updateAbsoluteOrientation();
 	}
 
 	@Override
@@ -237,9 +255,9 @@ public class Part extends WorldObject {
 	public void translate(float dx, float dy, float dz) {
 		PVector delta = new PVector(dx, dy, dz);
 		
-		if (reference != null) {
+		if (parent != null) {
 			// translate with respect to the part's fixture reference
-			RMatrix refRMat = reference.getLocalOrientation();
+			RMatrix refRMat = parent.getLocalOrientation();
 			delta = RMath.rotateVector(delta, refRMat);
 		}
 		
@@ -256,9 +274,9 @@ public class Part extends WorldObject {
 		PVector origin = localOrientation.getOrigin().copy();
 		RMatrix rMat = localOrientation.getAxes().copy();
 		
-		if (reference != null) {
-			PVector RefOrigin = reference.getLocalCenter();
-			RMatrix refRMat = reference.getLocalOrientation();
+		if (parent != null) {
+			PVector RefOrigin = parent.getLocalCenter();
+			RMatrix refRMat = parent.getLocalOrientation();
 			
 			origin = RMath.rotateVector(origin, refRMat.getInverse());
 			origin.add(RefOrigin);

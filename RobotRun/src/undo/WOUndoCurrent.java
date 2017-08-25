@@ -17,16 +17,18 @@ public class WOUndoCurrent extends WOUndoState {
 	 */
 	private CoordinateSystem prevCoord;
 	
-	public WOUndoCurrent(WorldObject ref) {
-		super(ref);
+	public WOUndoCurrent(int groupNum, WorldObject ref) {
+		super(groupNum, ref);
 		
 		PVector defPosition = ref.getLocalCenter().copy();
 		RMatrix defOrientation = ref.getLocalOrientation().copy();
 		prevCoord = new CoordinateSystem(defPosition, defOrientation);
 	}
 	
-	public WOUndoCurrent(WorldObject ref, CoordinateSystem prevCoord) {
-		super(ref);
+	public WOUndoCurrent(int groupNum, WorldObject ref,
+			CoordinateSystem prevCoord) {
+		
+		super(groupNum, ref);
 		this.prevCoord = prevCoord;
 	}
 	
@@ -34,7 +36,6 @@ public class WOUndoCurrent extends WOUndoState {
 	public void undo() {
 		/* Reset the position and orientation of the world object to the
 		 * previous coordinate state */
-		woRef.setLocalCenter(prevCoord.getOrigin());
-		woRef.setLocalOrientation(prevCoord.getAxes());
+		woRef.setLocalCoordinates(prevCoord.getOrigin(), prevCoord.getAxes());
 	}
 }

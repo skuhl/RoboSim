@@ -8,6 +8,8 @@ import processing.core.PVector;
 
 /**
  * Any object in the World other than the Robot.
+ * 
+ * @author Joshua Hooker
  */
 public abstract class WorldObject implements Cloneable {
 	protected CoordinateSystem localOrientation;
@@ -216,13 +218,34 @@ public abstract class WorldObject implements Cloneable {
 		RMatrix rotation = RMath.formRMat(axis, theta);
 		RMatrix orientation = localOrientation.getAxes();
 		
-		localOrientation.setAxes( rotation.multiply(orientation) );
+		setLocalOrientation(rotation.multiply(orientation));
 	}
-
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param newCenter
+	 */
 	public void setLocalCenter(PVector newCenter) {
 		localOrientation.setOrigin(newCenter);
 	}
 	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param newCenter
+	 * @param newAxes
+	 */
+	public void setLocalCoordinates(PVector newCenter, RMatrix newAxes) {
+		localOrientation.setOrigin(newCenter);
+		localOrientation.setAxes(newAxes);
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param newAxes
+	 */
 	public void setLocalOrientation(RMatrix newAxes) {
 		localOrientation.setAxes(newAxes);
 	}

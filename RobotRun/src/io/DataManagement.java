@@ -1010,7 +1010,7 @@ public abstract class DataManagement {
 		for (LoadedObject lPart : partsWithReferences) {
 			for (Fixture f : fixtures) {
 				if (lPart.referenceName.equals(f.getName())) {
-					((Part)lPart.obj).setFixtureRef(f);
+					f.addDependent((Part)lPart.obj);
 				}
 			}
 		}
@@ -1208,18 +1208,21 @@ public abstract class DataManagement {
 			PVector center = loadPVector(in);
 			RMatrix orientationAxes = new RMatrix( load2DDoubleArray(in) );
 			
-			CoordinateSystem localOrientation = new CoordinateSystem(center, orientationAxes);
+			CoordinateSystem localOrientation = new CoordinateSystem(center,
+					orientationAxes);
 
 			if (flag == 1) {
 				center = loadPVector(in);
 				orientationAxes = new RMatrix( load2DDoubleArray(in) );
 				
-				CoordinateSystem defaultOrientation = new CoordinateSystem(center, orientationAxes);
+				CoordinateSystem defaultOrientation = new CoordinateSystem(center,
+						orientationAxes);
 				
 				// Load the part's bounding-box and fixture reference name
 				PVector OBBDims = loadPVector(in);
 				String refName = in.readUTF();
-				Part p = new Part(name, form, OBBDims, localOrientation, defaultOrientation, null);
+				Part p = new Part(name, form, OBBDims, localOrientation,
+						defaultOrientation);
 
 				if (refName.equals("")) {
 					// A part object
@@ -1231,7 +1234,8 @@ public abstract class DataManagement {
 
 			} else if (flag == 2) {
 				// A fixture object
-				wldObjFields = new LoadedObject(new Fixture(name, form, localOrientation));
+				wldObjFields = new LoadedObject(new Fixture(name, form,
+						localOrientation));
 			} 
 		}
 
@@ -1869,9 +1873,9 @@ public abstract class DataManagement {
 				
 				savePVector(part.getOBBDims(), out);
 
-				if (part.getFixtureRef() != null) {
+				if (part.getParent() != null) {
 					// Save the name of the part's fixture reference
-					refName = part.getFixtureRef().getName();
+					refName = part.getParent().getName();
 				}
 
 				out.writeUTF(refName);

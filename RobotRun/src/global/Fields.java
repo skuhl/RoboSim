@@ -6,6 +6,8 @@ import org.apache.commons.math3.linear.RealVector;
 import org.apache.commons.math3.linear.SingularValueDecomposition;
 
 import geom.CoordinateSystem;
+import geom.Fixture;
+import geom.Part;
 import geom.RMatrix;
 import processing.core.PApplet;
 import processing.core.PConstants;
@@ -852,6 +854,20 @@ public abstract class Fields {
 	 */
 	public static void setMessage(String format, Object... args) {
 		msgSystem.setMessage( String.format(format, args) );
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param parent
+	 * @param dependent
+	 */
+	public static void setWODependency(Fixture parent, Part dependent) {
+		dependent.removeParent();
+		
+		if (parent != null) {
+			parent.addDependent(dependent);
+		}
 	}
 	
 	/**

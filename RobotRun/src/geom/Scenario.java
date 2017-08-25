@@ -1,6 +1,7 @@
 package geom;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.regex.Pattern;
 
@@ -40,7 +41,7 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 	 * and the given reference is not null.
 	 * 
 	 * @param newObject  The object to add to this scenario
-	 * @returning        0	the object was added successfully,
+	 * @return			 0	the object was added successfully,
 	 * 					 1	the object is a null reference,
 	 * 					 2	the scenario is full
 	 */
@@ -76,25 +77,26 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 	@Override
 	public Object clone() {
 		Scenario copy = new Scenario(name);
-		ArrayList<Fixture> fixtures = new ArrayList<>();
+		HashMap<String, Fixture> nameToFixtureMap = new HashMap<>();
 		ArrayList<Part> parts = new ArrayList<>();
-
-
+		ArrayList<String> parentNames = new ArrayList<>();
+		
 		for (WorldObject obj : this) {
 			try {
 				// Add copies of all the objects in this scenario
-				WorldObject newObj = (WorldObject)obj.clone();
+				WorldObject newObj = obj.clone();
 				copy.addWorldObject(newObj);
 				
 				// Keep track of all fixtures and parts with non-null references
 				if (newObj instanceof Fixture) {
-					fixtures.add( (Fixture)newObj );
+					nameToFixtureMap.put(newObj.getName(), (Fixture)newObj);
 	
 				} else if (newObj instanceof Part) {
 					Part p = (Part)newObj;
 	
-					if (p.getFixtureRef() != null) {
+					if (p.getParent() != null) {
 						parts.add( (Part)newObj );
+						parentNames.add(p.getParent().getName());
 					}
 				}
 			
@@ -102,14 +104,13 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 		}
 
 		// Update fixture references of new parts
-		for (Part p : parts) {
-			String refName = p.getFixtureRef().getName();
-			p.setFixtureRef(null);
-
-			for (Fixture f : fixtures) {
-				if (f.getName().equals( refName )) {
-					p.setFixtureRef(f);
-				}
+		for (int idx = 0; idx < parts.size(); ++idx) {
+			Part p = parts.get(idx);
+			String parentName = parentNames.get(idx);
+			Fixture parent = nameToFixtureMap.get(parentName);
+			
+			if (parent != null) {
+				parent.addDependent(p);
 			}
 		}
 
@@ -176,11 +177,11 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 	 * Delete the given world object from the correct object
 	 * list, if it exists in the list.
 	 * 
-	 * @returning  0 if the object was removed succesfully,
-	 *             1 if the object did not exist in the scenario,
-	 *             2 if the object was a Fixture that was removed
-	 *                from the scenario and was referenced by at
-	 *                least one Part in the scenario
+	 * @return  0 if the object was removed successfully,
+	 *          1 if the object did not exist in the scenario,
+	 *          2 if the object was a Fixture that was removed
+	 *             from the scenario and was referenced by at
+	 *             least one Part in the scenario
 	 */
 	public int removeWorldObject(WorldObject toRemove) {
 		if (toRemove == null) {
@@ -190,20 +191,21 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 		int ret;
 		// Remove a fixture from the list
 		boolean removed = objList.remove(toRemove);
-
 		ret = (removed) ? 0 : 1;
 
-		if (removed && toRemove instanceof Fixture) {
-			// Remove the reference from all Part objects associated with this fixture
-			for (WorldObject obj : objList) {
-
-				if (obj instanceof Part) {
-					Part part = (Part)obj;
-
-					if (part.getFixtureRef() == toRemove) {
-						part.setFixtureRef(null);
-						ret = 2;
-					}
+		if (removed) {
+			if (toRemove instanceof Fixture) {
+				/* Remove the reference from all Part objects associated with this
+				 * fixture */
+				((Fixture)toRemove).clearDependents();
+				
+			} else {
+				// Remove parent reference
+				Part p = (Part) toRemove;
+				Fixture parent = p.getParent();
+				
+				if (parent != null) {
+					parent.removeDependent(p);
 				}
 			}
 		}
@@ -256,6 +258,23 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 
 	@Override
 	public String toString() { return name; }
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param fixture
+	 */
+	public void updateDependencies(Fixture fixture) {
+		for (WorldObject wo : objList) {
+			if (wo instanceof Part) {
+				Part p = (Part)wo;
+				
+				if (p.getParent() == fixture) {
+					p.updateAbsoluteOrientation();
+				}
+			}
+		}
+	}
 	
 	/**
 	 * TODO comment this

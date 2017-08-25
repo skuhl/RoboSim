@@ -20,8 +20,8 @@ public class WOUndoDim extends WOUndoState {
 	 */
 	private Object[] dims;
 	
-	public WOUndoDim(WorldObject ref) {
-		super(ref);
+	public WOUndoDim(int groupNum, WorldObject ref) {
+		super(groupNum, ref);
 		// Sets the dims list based on the world object's shape
 		RShape form = ref.getModel();
 		

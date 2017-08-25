@@ -16,7 +16,6 @@ import enums.WindowTab;
 import expression.Operand;
 import expression.OperandCamObj;
 import expression.Operator;
-import frame.ToolFrame;
 import frame.UserFrame;
 import geom.ComplexShape;
 import geom.Fixture;
@@ -24,7 +23,6 @@ import geom.MyPShape;
 import geom.Part;
 import geom.Point;
 import geom.RMatrix;
-import geom.RQuaternion;
 import geom.RRay;
 import geom.RShape;
 import geom.Scenario;
@@ -50,7 +48,6 @@ import programming.PosMotionInst;
 import programming.Program;
 import programming.RegisterStatement;
 import programming.SelectStatement;
-import regs.DataRegister;
 import regs.PositionRegister;
 import regs.Register;
 import robot.RTrace;
@@ -69,7 +66,12 @@ import ui.DisplayLine;
 import ui.KeyCodeMap;
 import ui.MenuScroll;
 import ui.RecordScreen;
+import undo.PartUndoDefault;
+import undo.PartUndoParent;
 import undo.WOUndoCurrent;
+import undo.WOUndoDelete;
+import undo.WOUndoDim;
+import undo.WOUndoInsert;
 import undo.WOUndoState;
 import window.WGUI;
 import window.WGUI_Buttons;
@@ -1488,7 +1490,8 @@ public class RobotRun extends PApplet {
 			for (WorldObject wo : getActiveScenario()) {
 				// Only applies to parts
 				if (wo instanceof Part) {
-					updateScenarioUndo(new WOUndoCurrent(wo));
+					int groupNum = (getScenarioUndoGID() + 1) % 2;
+					updateScenarioUndo(new WOUndoCurrent(groupNum, wo));
 					
 					Part p = (Part) wo;
 					p.setLocalCenter(p.getDefaultCenter());
@@ -2139,6 +2142,19 @@ public class RobotRun extends PApplet {
 		
 		return null;
 	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @return
+	 */
+	public int getScenarioUndoGID() {
+		if (SCENARIO_UNDO.isEmpty()) {
+			return -1;
+		}
+		
+		return SCENARIO_UNDO.peek().getGroupNum();
+	}
 
 	public WGUI getUI() {
 		return UI;
@@ -2402,7 +2418,8 @@ public class RobotRun extends PApplet {
 				
 				if (!mouseDragWO && (mouseButton == CENTER || mouseButton == RIGHT)) {
 					// Save the selected world object's current state
-					updateScenarioUndo(new WOUndoCurrent(selectedWO));
+					int groupNum = (getScenarioUndoGID() + 1) % 2;
+					updateScenarioUndo(new WOUndoCurrent(groupNum, selectedWO));
 				}
 				
 				mouseDragWO = true;
@@ -2447,7 +2464,7 @@ public class RobotRun extends PApplet {
 						if (wldObj instanceof Part) {
 							Part p = (Part)wldObj;
 	
-							if (p.getFixtureRef() == selectedWO) {
+							if (p.getParent() == selectedWO) {
 								p.updateAbsoluteOrientation();
 							}
 						}
@@ -3361,35 +3378,37 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Revert the most recent change to the active scenario.
+	 * Revert the most recent changes to the active scenario.
 	 */
 	public void undoScenarioEdit() {
 		Scenario s = getActiveScenario();
 		
 		if (s != null && !SCENARIO_UNDO.empty()) {
-			SCENARIO_UNDO.pop().undo();
-			UI.updateListContents();
+			// Trigger all adjacent undo states with the same group number
+			WOUndoState undoState = SCENARIO_UNDO.pop();
+			int groupNum = undoState.getGroupNum();
+			undoState.undo();
 			
+			while (!SCENARIO_UNDO.isEmpty()) {
+				undoState = SCENARIO_UNDO.peek();
+				
+				if (undoState.getGroupNum() != groupNum) {
+					break;
+				}
+				
+				undoState.undo();
+				SCENARIO_UNDO.pop();
+			}
+			
+			// Update the world object dropdown list
+			UI.updateListContents();
 			WorldObject wo = UI.getSelectedWO();
 			
 			if (wo != null) {
+				// Update the input fields for the selected world object
 				UI.updateEditWindowFields(wo, s);
-				
-				if (wo instanceof Fixture) {
-					for (WorldObject wldObj : getActiveScenario()) {
-						if (wldObj instanceof Part) {
-							Part p = (Part)wldObj;
-
-							if (p.getFixtureRef() == wo) {
-								p.updateAbsoluteOrientation();
-							}
-						}
-					}
-				}
 			}
 			
-			/* Since objects are copied onto the undo stack, the robot may be
-			 * reference the wrong copy of an undone object. */
 			getActiveRobot().releaseHeldObject();
 		}
 	}
@@ -3657,7 +3676,7 @@ public class RobotRun extends PApplet {
 						
 						RMatrix curTip = getActiveRobot().getFaceplateTMat(getActiveRobot().getJointAngles());
 						RMatrix invMat = getActiveRobot().getLastTipTMatrix().getInverse();
-						Fixture refFixture = p.getFixtureRef();
+						Fixture refFixture = p.getParent();
 						
 						pushMatrix();
 						resetMatrix();
@@ -3679,7 +3698,7 @@ public class RobotRun extends PApplet {
 					
 					
 					if (getActiveScenario().isGravity() && getActiveRobot().isHeld(p) &&
-							p != selected && p.getFixtureRef() == null &&
+							p != selected && p.getParent() == null &&
 							p.getLocalCenter().y < Fields.FLOOR_Y) {
 						
 						// Apply gravity
@@ -3987,8 +4006,8 @@ public class RobotRun extends PApplet {
 			if (selectedWO instanceof Part) {
 				Part p = (Part) selectedWO;
 				// Convert the values into the World Coordinate System
-				position = RMath.vToWorld( p.getDefaultCenter() );
-				wpr = RMath.nRMatToWEuler( p.getDefaultOrientation() );
+				position = RMath.vToWorld( p.getCenter() );
+				wpr = RMath.nRMatToWEuler( p.getOrientation() );
 				
 				// Create a set of uniform Strings
 				lines = Fields.toLineStringArray(position, wpr);
@@ -4100,6 +4119,7 @@ public class RobotRun extends PApplet {
 		}
 		
 		activeScenario.set(s);
+		SCENARIO_UNDO.clear();
 	}
 
 	/**
