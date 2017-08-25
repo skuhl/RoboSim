@@ -188,9 +188,9 @@ public abstract class DataManagement {
 		
 		for (File file : dataFiles) {
 			String name = file.getName();
-			// Check file extension and type
-			if (file.isFile() && (name.endsWith(".stl") ||
-					name.endsWith(".STL"))) {
+			// Check file extension and type and size
+			if (file.isFile() && file.length() < Fields.MODEL_FILE_SIZE &&
+					(name.endsWith(".stl") || name.endsWith(".STL"))) {
 				
 				fileNames.add(name);
 			}
