@@ -54,10 +54,12 @@ public class ScreenSetExpressionArg extends ST_ScreenEditItem {
 			robotRun.opEdit = expr.setOperand(robotRun.editIdx, operand);
 			robotRun.switchScreen(ScreenMode.INPUT_IOREG_IDX, false);
 		} else if(options.getCurrentItemIdx() == 4) {
+			// set arg to camera object match
 			operand = new OperandCamObj();
 			robotRun.opEdit = expr.setOperand(robotRun.editIdx, operand);
 			robotRun.switchScreen(ScreenMode.SET_OBJ_OPERAND_TGT, false);
 		} else if(options.getCurrentItemIdx() == 5) {
+			// set arg to boolean constant
 			operand = new OperandBool();
 			robotRun.opEdit = expr.setOperand(robotRun.editIdx, operand);
 			robotRun.switchScreen(ScreenMode.SET_BOOL_CONST, false);
@@ -133,7 +135,9 @@ public class ScreenSetExpressionArg extends ST_ScreenEditItem {
 				}
 			}
 			
-			options.addLine(9, "(...)");
+			if(expr.getDepth() < 4) {
+				options.addLine(9, "(...)");
+			}
 		}
 	}
 	

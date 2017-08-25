@@ -7,11 +7,13 @@ import global.Fields;
 
 public class Expression extends Operand<Object> {
 	private ArrayList<ExpressionElement> elementList;
+	private int depth;
 
 	public Expression() {
 		super(null, Operand.SUBEXP);
 		elementList = new ArrayList<>();
 		elementList.add(new OperandGeneric());
+		depth = 0;
 	}
 
 	public Expression(ArrayList<ExpressionElement> e) {
@@ -117,6 +119,10 @@ public class Expression extends Operand<Object> {
 		return len;
 	}
 	
+	public int getDepth() {
+		return depth;
+	}
+	
 	public Operand<?> getOperand(int idx) {
 		if(elementList.get(idx) instanceof Operand<?>)
 			return (Operand<?>)elementList.get(idx);
@@ -219,10 +225,16 @@ public class Expression extends Operand<Object> {
 		}
 	}
 
+	public void setDepth(int d) {
+		depth = d;
+	}
+	
 	public Operand<?> setOperand(int idx, Operand<?> o) {
-		if(idx >= 0 && idx < elementList.size() &&
-				elementList.get(idx) instanceof Operand<?>) {
-			
+		if(idx >= 0 && idx < elementList.size() && elementList.get(idx) instanceof Operand<?>) {
+			if(o instanceof Expression) {
+				((Expression) o).setDepth(depth + 1);
+			}
+						
 			elementList.set(idx, o);
 			return (Operand<?>)elementList.get(idx);
 		}
