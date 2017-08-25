@@ -9,7 +9,7 @@ import enums.InstUndoType;
 import frame.ToolFrame;
 import frame.UserFrame;
 import geom.BoundingBox;
-import geom.MyPShape;
+import geom.Model;
 import geom.Part;
 import geom.Point;
 import geom.RMatrix;
@@ -183,11 +183,16 @@ public class RoboticArm {
 	 * 
 	 * @param rid				The ID of this robot, which must be unique
 	 * 							amongst all robots
+	 * @param segmentModels		The set of segment models for the robotic arm
+	 * @param endEffectors		The set of end effector models for the robotic
+	 * 							arm
 	 * @param basePos			The position of the robot's base segment
 	 * @param robotTrace		A reference to the trace in the robotRun
 	 * 							application
 	 */
-	public RoboticArm(int rid, PVector basePos, RTrace robotTrace) {
+	public RoboticArm(int rid, Model[] segmentModels, Model[] endEffectorModels,
+			PVector basePos, RTrace robotTrace) {
+		
 		RID = rid;
 		liveSpeed = 10;
 		BASE_POSITION = basePos;
@@ -210,7 +215,6 @@ public class RoboticArm {
 		
 		// Define the robot's segments
 		SEGMENT = new RSegWithJoint[6];
-		PShape[] segmentModels = loadJointModels();
 		
 		SEGMENT[0] = new RSegWithJoint(
 			segmentModels[0],
@@ -272,7 +276,6 @@ public class RoboticArm {
 		
 		//Define the robot's end effectors
 		EE_LIST = new EndEffector[6];
-		PShape[] endEffectorModels = loadEEModels();
 		
 		EE_LIST[0] = new EndEffector(endEffectorModels[0], new BoundingBox[0],
 				new BoundingBox[0], 0, "FACEPLATE");
@@ -2930,39 +2933,6 @@ public class RoboticArm {
 		}
 		
 		return toolTip;
-	}
-	
-	private PShape[] loadEEModels() {
-		PShape[] eeModels = new PShape[7];
-		
-		// Load end effector models
-		eeModels[0] = MyPShape.loadSTLModel("robot/EE/FACEPLATE.STL", Fields.ROBOT_GREY);
-		eeModels[1] = MyPShape.loadSTLModel("robot/EE/SUCTION.stl", Fields.EE_DEFAULT);
-		eeModels[2] = MyPShape.loadSTLModel("robot/EE/GRIPPER.stl", Fields.EE_DEFAULT);
-		eeModels[3] = MyPShape.loadSTLModel("robot/EE/PINCER.stl", Fields.ROBOT_YELLOW);
-		eeModels[4] = MyPShape.loadSTLModel("robot/EE/POINTER.stl", Fields.EE_DEFAULT);
-		eeModels[5] = MyPShape.loadSTLModel("robot/EE/GLUE_GUN.stl", Fields.EE_DEFAULT);
-		eeModels[6] = MyPShape.loadSTLModel("robot/EE/WIELDER.stl", Fields.EE_DEFAULT);
-		
-		return eeModels;
-	}
-	
-	/**
-	 * Loads 3D meshes for the individual robot joints from model files.
-	 * 
-	 * @return An array containing the joint model meshes
-	 */
-	private PShape[] loadJointModels() {
-		PShape[] segModels = new PShape[6];
-		
-		segModels[0] = MyPShape.loadSTLModel("robot/ROBOT_BASE.STL", Fields.ROBOT_YELLOW);
-		segModels[1] = MyPShape.loadSTLModel("robot/ROBOT_SEGMENT_1.STL", Fields.ROBOT_GREY);
-		segModels[2] = MyPShape.loadSTLModel("robot/ROBOT_SEGMENT_2.STL", Fields.ROBOT_YELLOW);
-		segModels[3] = MyPShape.loadSTLModel("robot/ROBOT_SEGMENT_3.STL", Fields.ROBOT_GREY);
-		segModels[4] = MyPShape.loadSTLModel("robot/ROBOT_SEGMENT_4.STL", Fields.ROBOT_GREY);
-		segModels[5] = MyPShape.loadSTLModel("robot/ROBOT_SEGMENT_5.STL", Fields.ROBOT_YELLOW);
-		
-		return segModels;
 	}
 	
 	/**

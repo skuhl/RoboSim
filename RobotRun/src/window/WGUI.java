@@ -25,6 +25,7 @@ import geom.CameraObject;
 import geom.ComplexShape;
 import geom.DimType;
 import geom.Fixture;
+import geom.Model;
 import geom.Part;
 import geom.RBox;
 import geom.RCylinder;
@@ -1856,7 +1857,7 @@ public class WGUI implements ControlListener {
 	 */
 	public void updateListContents() {
 		MyDropdownList dropdown = getDropdown("DimDdl0");
-		ArrayList<String> files = DataManagement.getDataFileNames();
+		ArrayList<String> files = DataManagement.getModelFilenames();
 
 		if (files != null) {
 			dropdown.clear();
@@ -4345,6 +4346,7 @@ public class WGUI implements ControlListener {
 			// Validate the dimensions for a complex shape
 			Float[] complexDims = getModelDimensions();
 			String file = getShapeSourceFile();
+			Model model = Fields.getModel(file);
 			
 			if (complexDims[0] == null) {
 				return "A complex shape's scale must be a positive real number";
@@ -4353,7 +4355,7 @@ public class WGUI implements ControlListener {
 				return "A model file must be selected for a complex shape";
 				
 			} else {
-				return new ComplexShape(file, fill, complexDims[0]);
+				return new ComplexShape(model, fill, complexDims[0]);
 			}
 		}
 		

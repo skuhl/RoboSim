@@ -14,20 +14,21 @@ public class ComplexShape extends RShape {
 	
 	private PVector centerOffset, baseDims;
 	private float mdlScale = 1f;
-	private PShape mesh;	
-	private String srcFilePath;
+	private Model mesh;
 
 	/**
 	 * Create a complex model from the soruce .stl file of the
 	 * given name, filename, stored in the '/RobotRun/data/'
 	 * with the given fill color.
 	 * 
+	 * @param model	
+	 * @param fill	
 	 * @throws IllegalArgumentException	If the given model's base dimensions
 	 * 									are outside the range of a world
 	 * 									object's dimensions
 	 */
-	public ComplexShape(String filename, int fill) {
-		this(filename, fill, 1f);
+	public ComplexShape(Model model, int fill) {
+		this(model, fill, 1f);
 	}
 
 	/**
@@ -35,17 +36,19 @@ public class ComplexShape extends RShape {
 	 * given name, filename, stored in the '/RobotRun/data/'
 	 * with the given fill color and scale value.
 	 * 
+	 * @param model	
+	 * @param fill	
+	 * @param scale	
 	 * @throws IllegalArgumentException	If the given model's scaled dimensions
 	 * 									are outside the range of a world
 	 * 									object's dimensions
 	 */
-	public ComplexShape(String filename, int fill, float scale)
+	public ComplexShape(Model model, int fill, float scale)
 			throws IllegalArgumentException {
 		
 		super(fill, null);
 		
-		srcFilePath = filename;
-		mesh = MyPShape.loadSTLModel(filename, fill);
+		mesh = model;
 		
 		iniDimensions();
 		MIN_SCALE = 10f / RMath.min(baseDims.x, baseDims.y, baseDims.z);
@@ -54,8 +57,8 @@ public class ComplexShape extends RShape {
 		if ((MAX_SCALE - MIN_SCALE) < 0f) {
 			/* The model cannot be scaled to fit within the bounds of a world
 			 * object's dimensions */
-			String msg = String.format("%s\n%f - %f = %f\n", filename, MAX_SCALE,
-					MIN_SCALE, MAX_SCALE - MIN_SCALE);
+			String msg = String.format("%s\n%f - %f = %f\n", model.getFilename(),
+					MAX_SCALE, MIN_SCALE, MAX_SCALE - MIN_SCALE);
 			throw new IllegalArgumentException(msg);
 			
 		} else if (scale > MAX_SCALE || scale < MIN_SCALE) {
@@ -71,13 +74,15 @@ public class ComplexShape extends RShape {
 	
 	@Override
 	public ComplexShape clone() {
-		return new ComplexShape(srcFilePath, getFillValue(), mdlScale);
+		return new ComplexShape(mesh, getFillValue(), mdlScale);
 	}
 	
 	@Override
 	public void draw(PGraphics g) {
 		g.pushMatrix();
 		g.translate(centerOffset.x, centerOffset.y, centerOffset.z);
+		mesh.setFill(getFillValue());
+		g.scale(mdlScale);
 		g.shape(mesh);
 		g.popMatrix();
 	}
@@ -138,7 +143,9 @@ public class ComplexShape extends RShape {
 		return mesh;
 	}
 
-	public String getSourcePath() { return srcFilePath; }
+	public String getSourcePath() {
+		return mesh.getFilename();
+	}
 	
 	@Override
 	public void setDim(Float newVal, DimType dim) {
@@ -146,7 +153,6 @@ public class ComplexShape extends RShape {
 		case SCALE:
 			// Update the model's scale
 			centerOffset.mult(newVal / mdlScale);
-			mesh.scale(newVal / mdlScale);
 			mdlScale = newVal;
 			break;
 
@@ -158,7 +164,6 @@ public class ComplexShape extends RShape {
 	public void setFillValue(Integer newVal) {
 		if (newVal != null) {
 			super.setFillValue(newVal);
-			mesh.setFill((int)newVal);
 		}
 	}
 	

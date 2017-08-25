@@ -1,5 +1,7 @@
 package global;
 
+import java.util.HashMap;
+
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
@@ -7,6 +9,7 @@ import org.apache.commons.math3.linear.SingularValueDecomposition;
 
 import geom.CoordinateSystem;
 import geom.Fixture;
+import geom.Model;
 import geom.Part;
 import geom.RMatrix;
 import processing.core.PApplet;
@@ -58,12 +61,6 @@ public abstract class Fields {
 	 * The maximum number of tool or user frames associated with a robot.
 	 */
 	public static final int FRAME_NUM = 10;
-	
-	/**
-	 * The maximum file size (in bytes) allowed for imported models of world
-	 * objects.
-	 */
-	public static final int MODEL_FILE_SIZE = 400000;
 	
 	/**
 	 * The maximum number of scenarios used by the software at one time.
@@ -208,6 +205,8 @@ public abstract class Fields {
 	 */
 	public static final RMatrix WORLD_AXES_MAT;
 	
+	private static final HashMap<String, Model> nameToModelMap;
+	
 	/**
 	 * Initialize the static fields.
 	 */
@@ -276,6 +275,16 @@ public abstract class Fields {
 		bond = null;
 		
 		msgSystem = new MessageDisplay();
+		nameToModelMap = new HashMap<>();
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param model
+	 */
+	public static void addModel(Model model) {
+		nameToModelMap.put(model.getFilename(), model);
 	}
 	
 	/**
@@ -541,6 +550,7 @@ public abstract class Fields {
 	 * Draws the xyz coordinate axes of the given graphic object's current
 	 * coordinate system with the specified axis length and origin color.
 	 * 
+	 * @param g				
 	 * @param axesLength	The render length of the axes
 	 */
 	public static void drawAxes(PGraphics g, float axesLength) {
@@ -642,10 +652,10 @@ public abstract class Fields {
 		float[] bottomVertOffsets = new float[2 * (sides + 1)];
 		float halfHeight = height / 2f;
 		
-		g.beginShape(PApplet.TRIANGLE_STRIP);
+		g.beginShape(PConstants.TRIANGLE_STRIP);
 		// Draw the triangular sides of the pyramid
 		for (int side = 0; side <= sides; ++side) {
-			float theta = (side % sides) * PApplet.TWO_PI / sides;
+			float theta = (side % sides) * PConstants.TWO_PI / sides;
 			
 			int idx = 2 * side;
 			bottomVertOffsets[idx] = PApplet.cos(theta) * radius;
@@ -667,7 +677,7 @@ public abstract class Fields {
 					bottomVertOffsets[idx + 1]);
 		}
 		
-		g.endShape(PApplet.CLOSE);
+		g.endShape(PConstants.CLOSE);
 		
 		g.popMatrix();
 		
@@ -763,6 +773,16 @@ public abstract class Fields {
 		
 		/**/
 		
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param name
+	 * @return
+	 */
+	public static Model getModel(String name) {
+		return nameToModelMap.get(name);
 	}
 	
 	/**

@@ -40,6 +40,7 @@ import geom.ComplexShape;
 import geom.CoordinateSystem;
 import geom.DimType;
 import geom.Fixture;
+import geom.Model;
 import geom.Part;
 import geom.Point;
 import geom.RBox;
@@ -174,7 +175,7 @@ public abstract class DataManagement {
 	 * 
 	 * @return	A list of model files
 	 */
-	public static ArrayList<String> getDataFileNames() {
+	public static ArrayList<String> getModelFilenames() {
 		File data = new File(dataDirPath);
 		
 		if (!data.exists() || data.isFile()) {
@@ -188,8 +189,8 @@ public abstract class DataManagement {
 		for (File file : dataFiles) {
 			String name = file.getName();
 			// Check file extension and type
-			if (file.isFile() && file.length() < Fields.MODEL_FILE_SIZE &&
-					(name.endsWith(".stl") || name.endsWith(".STL"))) {
+			if (file.isFile() && (name.endsWith(".stl") ||
+					name.endsWith(".STL"))) {
 				
 				fileNames.add(name);
 			}
@@ -1034,8 +1035,8 @@ public abstract class DataManagement {
 		
 		// Define a thread for each scenario file
 		for (int idx = 0; idx < maxScenarios; ++idx) {
-			loadThreads[idx] = new Thread(new LoadScenarioFile(appRef,
-					loadedScenarios, idx, scenarioFiles[idx]));
+			loadThreads[idx] = new Thread(new LoadScenarioFile(loadedScenarios,
+					idx, scenarioFiles[idx]));
 			loadThreads[idx].start();
 		}
 		
@@ -1098,7 +1099,8 @@ public abstract class DataManagement {
 				}
 				
 				// Creates a complex shape from the srcPath located in RobotRun/data/
-				shape = new ComplexShape(srcPath, fill, scale);
+				Model model = Fields.getModel(srcPath);
+				shape = new ComplexShape(model, fill, scale);
 			}
 		}
 

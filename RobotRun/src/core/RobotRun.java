@@ -1,6 +1,7 @@
 package core;
 
 import java.awt.event.KeyEvent;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
@@ -19,21 +20,25 @@ import expression.Operator;
 import frame.UserFrame;
 import geom.ComplexShape;
 import geom.Fixture;
-import geom.MyPShape;
+import geom.Model;
 import geom.Part;
 import geom.Point;
 import geom.RMatrix;
 import geom.RRay;
 import geom.RShape;
 import geom.Scenario;
+import geom.Triangle;
 import geom.WorldObject;
 import global.Fields;
 import global.RMath;
 import io.DataManagement;
 import processing.core.PApplet;
+import processing.core.PConstants;
 import processing.core.PImage;
+import processing.core.PShape;
 import processing.core.PVector;
 import processing.event.MouseEvent;
+import processing.opengl.PGraphicsOpenGL;
 import programming.CallInstruction;
 import programming.FrameInstruction;
 import programming.IOInstruction;
@@ -66,12 +71,7 @@ import ui.DisplayLine;
 import ui.KeyCodeMap;
 import ui.MenuScroll;
 import ui.RecordScreen;
-import undo.PartUndoDefault;
-import undo.PartUndoParent;
 import undo.WOUndoCurrent;
-import undo.WOUndoDelete;
-import undo.WOUndoDim;
-import undo.WOUndoInsert;
 import undo.WOUndoState;
 import window.WGUI;
 import window.WGUI_Buttons;
@@ -2388,6 +2388,76 @@ public class RobotRun extends PApplet {
 		}		
 	}
 	
+	/**
+	 * Build a PShape object from the contents of the given .stl source file
+	 * stored in /RobotRun/data/.
+	 * 
+	 * @param filename	
+	 * @param fill		
+	 * @return			
+	 * @throws NullPointerException
+	 *             if the given filename does not pertain to a valid .stl file
+	 *             located in RobotRun/data/
+	 * @throws ClassCastException
+	 * 				if the application does not use processing's opengl
+	 * 				graphics library
+	 */
+	public Model loadSTLModel(String filename, int fill)
+			throws NullPointerException, ClassCastException {
+		
+		ArrayList<Triangle> triangles = new ArrayList<>();
+		byte[] data = loadBytes(filename);
+	
+		int n = 84; // skip header and number of triangles
+	
+		while (n < data.length) {
+			Triangle t = new Triangle();
+			for (int m = 0; m < 4; m++) {
+				byte[] bytesX = new byte[4];
+				bytesX[0] = data[n + 3];
+				bytesX[1] = data[n + 2];
+				bytesX[2] = data[n + 1];
+				bytesX[3] = data[n];
+				n += 4;
+				byte[] bytesY = new byte[4];
+				bytesY[0] = data[n + 3];
+				bytesY[1] = data[n + 2];
+				bytesY[2] = data[n + 1];
+				bytesY[3] = data[n];
+				n += 4;
+				byte[] bytesZ = new byte[4];
+				bytesZ[0] = data[n + 3];
+				bytesZ[1] = data[n + 2];
+				bytesZ[2] = data[n + 1];
+				bytesZ[3] = data[n];
+				n += 4;
+				t.components[m] = new PVector(
+						ByteBuffer.wrap(bytesX).getFloat(),
+						ByteBuffer.wrap(bytesY).getFloat(),
+						ByteBuffer.wrap(bytesZ).getFloat());
+			}
+			triangles.add(t);
+			n += 2; // skip meaningless "attribute byte count"
+		}
+		
+		Model mesh = new Model((PGraphicsOpenGL)getGraphics(),
+				PShape.GEOMETRY, filename);
+		mesh.beginShape(PConstants.TRIANGLES);
+		mesh.noStroke();
+		mesh.fill(fill);
+		
+		for (Triangle t : triangles) {
+			mesh.normal(t.components[0].x, t.components[0].y, t.components[0].z);
+			mesh.vertex(t.components[1].x, t.components[1].y, t.components[1].z);
+			mesh.vertex(t.components[2].x, t.components[2].y, t.components[2].z);
+			mesh.vertex(t.components[3].x, t.components[3].y, t.components[3].z);
+		}
+		
+		mesh.endShape();
+	
+		return mesh;
+	}
+	
 	@Override
 	public void mouseDragged(MouseEvent e) {
 		
@@ -3165,7 +3235,6 @@ public class RobotRun extends PApplet {
 		CallInstruction.setRobotRef(activeRobot);
 		OperandCamObj.setCamRef(rCamera);
 		OperandCamObj.setScenarioRef(activeScenario);
-		MyPShape.setAppRef(this);
 		
 		keyCodeMap = new KeyCodeMap();
 		procExec = new ProgramExecution();
@@ -3176,14 +3245,21 @@ public class RobotRun extends PApplet {
 		
 		background(255);
 		
+		// Load all .STL files into memory
+		ArrayList<String> modelFilenames = DataManagement.getModelFilenames();
+		
+		for (String filename : modelFilenames) {
+			Model model = this.loadSTLModel(filename, 0);
+			Fields.addModel(model);
+		}
+		
 		// load model and save data
 		try {
-			RoboticArm r = new RoboticArm(0, new PVector(200, Fields.FLOOR_Y,
-					200), robotTrace);
+			RoboticArm r = instantiateRobot(0, new PVector(200, Fields.FLOOR_Y,
+					200));
 			ROBOTS.put(r.RID, r);
 			
-			r = new RoboticArm(1, new PVector(200, Fields.FLOOR_Y, -750),
-					robotTrace);
+			r = instantiateRobot(1, new PVector(200, Fields.FLOOR_Y, -750));
 			ROBOTS.put(r.RID, r);
 
 			activeRobot.set( ROBOTS.get(0) );
@@ -3290,7 +3366,7 @@ public class RobotRun extends PApplet {
 		Fields.debug("MACROS");
 		
 		
-		/**
+		/**/
 		Fields.debug("SCENARIOS");
 		Scenario origin = SCENARIOS.get(0);
 		WorldObject wo = origin.getWorldObject(0);
@@ -3307,6 +3383,7 @@ public class RobotRun extends PApplet {
 			Scenario copy = (Scenario) origin.clone();
 			copy.setName(origin.getName() + Integer.toString(idx));
 			addScenario(copy);
+			DataManagement.saveScenario(copy);
 		}
 		
 		/**/
@@ -3600,6 +3677,58 @@ public class RobotRun extends PApplet {
 		}
 		
 		return collidedWith;
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param RID
+	 * @param basePos
+	 * @return
+	 */
+	private RoboticArm instantiateRobot(int RID, PVector basePos) {
+		Model[] segments = loadSegmentModels();
+		Model[] endEffectors = loadEEModels();
+		
+		return new RoboticArm(RID, segments, endEffectors, basePos, robotTrace);
+	}
+	
+	/**
+	 * Loads 3D meshes for the individual robot end effectors from model files.
+	 * 
+	 * @return An array containing the 7 end effector model meshes
+	 */
+	private Model[] loadEEModels() {
+		Model[] eeModels = new Model[7];
+		
+		// Load end effector models
+		eeModels[0] = loadSTLModel("robot/EE/FACEPLATE.STL", Fields.ROBOT_GREY);
+		eeModels[1] = loadSTLModel("robot/EE/SUCTION.stl", Fields.EE_DEFAULT);
+		eeModels[2] = loadSTLModel("robot/EE/GRIPPER.stl", Fields.EE_DEFAULT);
+		eeModels[3] = loadSTLModel("robot/EE/PINCER.stl", Fields.ROBOT_YELLOW);
+		eeModels[4] = loadSTLModel("robot/EE/POINTER.stl", Fields.EE_DEFAULT);
+		eeModels[5] = loadSTLModel("robot/EE/GLUE_GUN.stl", Fields.EE_DEFAULT);
+		eeModels[6] = loadSTLModel("robot/EE/WIELDER.stl", Fields.EE_DEFAULT);
+		
+		return eeModels;
+	}
+	
+	/**
+	 * Loads 3D meshes for the individual robot segments from model files.
+	 * 
+	 * @return An array containing the 6 robotic segment model meshes
+	 */
+	private Model[] loadSegmentModels() {
+		Model[] segModels = new Model[6];
+		
+		segModels[0] = loadSTLModel("robot/ROBOT_BASE.STL", Fields.ROBOT_YELLOW);
+		segModels[1] = loadSTLModel("robot/ROBOT_SEGMENT_1.STL", Fields.ROBOT_GREY);
+		segModels[2] = loadSTLModel("robot/ROBOT_SEGMENT_2.STL", Fields.ROBOT_YELLOW);
+		segModels[3] = loadSTLModel("robot/ROBOT_SEGMENT_3.STL", Fields.ROBOT_GREY);
+		segModels[4] = loadSTLModel("robot/ROBOT_SEGMENT_4.STL", Fields.ROBOT_GREY);
+		segModels[5] = loadSTLModel("robot/ROBOT_SEGMENT_5.STL", Fields.ROBOT_YELLOW);
+		
+		return segModels;
 	}
 	
 	/**

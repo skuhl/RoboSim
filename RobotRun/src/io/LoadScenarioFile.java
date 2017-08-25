@@ -16,7 +16,6 @@ import geom.Scenario;
  */
 public class LoadScenarioFile implements Runnable {
 
-	private RobotRun appRef;
 	private Scenario[] scenarioList;
 	private int idx;
 	private File src;
@@ -24,14 +23,12 @@ public class LoadScenarioFile implements Runnable {
 	/**
 	 * TODO comment this
 	 * 
-	 * @param appRef
 	 * @param scenarioList
 	 * @param idx
 	 * @param src
 	 */
-	public LoadScenarioFile(RobotRun appRef, Scenario[] scenarioList, int idx, File src) {
+	public LoadScenarioFile(Scenario[] scenarioList, int idx, File src) {
 
-		this.appRef = appRef;
 		this.scenarioList = scenarioList;
 		this.idx = idx;
 		this.src = src;
