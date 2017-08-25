@@ -1082,7 +1082,7 @@ public class WGUI implements ControlListener {
 						/* Update the scenario undo stack for the part's
 						 * fixture reference change */
 						int groupNum = (app.getScenarioUndoGID() + 1) % 2;
-						app.updateScenarioUndo(new PartUndoParent(groupNum, p));
+						app.pushWOUndoState(new PartUndoParent(groupNum, p));
 						Fields.setWODependency(newParent, p);
 					}
 				}
@@ -2284,7 +2284,7 @@ public class WGUI implements ControlListener {
 				 * scenario */
 				int groupNum = (app.getScenarioUndoGID() + 1) % 2;
 				WorldObject copyWO = selectedWO.clone(newName);
-				app.updateScenarioUndo(new WOUndoInsert(groupNum, copyWO, parent));
+				app.pushWOUndoState(new WOUndoInsert(groupNum, copyWO, parent));
 				
 				tgt.addWorldObject(copyWO);
 				DataManagement.saveScenario(tgt);
@@ -2325,20 +2325,20 @@ public class WGUI implements ControlListener {
 							Part p = (Part)wo;
 							
 							if (p.getParent() == fixture) {
-								app.updateScenarioUndo(new PartUndoParent(groupNum,
+								app.pushWOUndoState(new PartUndoParent(groupNum,
 										p, fixture));
 							}
 						}
 					}
 				}
 				// Remove the selected world object from its parent scenario
-				app.updateScenarioUndo(new WOUndoDelete(groupNum, selectedWO,
+				app.pushWOUndoState(new WOUndoDelete(groupNum, selectedWO,
 						parent));
 				parent.removeWorldObject(selectedWO);
 				
 				// Add a copy of the selected world object to the target scenario
 				WorldObject newWO = selectedWO.clone(newName);
-				app.updateScenarioUndo(new WOUndoInsert(groupNum, newWO, parent));
+				app.pushWOUndoState(new WOUndoInsert(groupNum, newWO, parent));
 				tgt.addWorldObject(selectedWO);
 				setSelectedWO(null);
 				
@@ -2360,14 +2360,14 @@ public class WGUI implements ControlListener {
 						Part p = (Part)wo;
 						
 						if (p.getParent() == fixture) {
-							app.updateScenarioUndo(new PartUndoParent(groupNum,
+							app.pushWOUndoState(new PartUndoParent(groupNum,
 									p, fixture));
 						}
 					}
 				}
 			}
 			
-			app.updateScenarioUndo(new WOUndoDelete(groupNum, selectedWO,
+			app.pushWOUndoState(new WOUndoDelete(groupNum, selectedWO,
 					parent));
 			// Remove the given world object from the given scenario
 			parent.removeWorldObject(selectedWO);

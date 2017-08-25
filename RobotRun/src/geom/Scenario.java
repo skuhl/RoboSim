@@ -262,23 +262,6 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 	/**
 	 * TODO comment this
 	 * 
-	 * @param fixture
-	 */
-	public void updateDependencies(Fixture fixture) {
-		for (WorldObject wo : objList) {
-			if (wo instanceof Part) {
-				Part p = (Part)wo;
-				
-				if (p.getParent() == fixture) {
-					p.updateAbsoluteOrientation();
-				}
-			}
-		}
-	}
-	
-	/**
-	 * TODO comment this
-	 * 
 	 * @param name
 	 * @return
 	 */

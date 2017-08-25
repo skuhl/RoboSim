@@ -1328,7 +1328,7 @@ public class RobotRun extends PApplet {
 					
 					if (undoState != null) {
 						// Save original world object onto the undo stack
-						updateScenarioUndo(undoState);
+						pushWOUndoState(undoState);
 					}
 				}
 				
@@ -1431,7 +1431,7 @@ public class RobotRun extends PApplet {
 						 * If the object was modified, then save the previous state
 						 * of the object
 						 */
-						updateScenarioUndo(undoState);
+						pushWOUndoState(undoState);
 					}
 					
 					DataManagement.saveScenarios(this);
@@ -1465,7 +1465,7 @@ public class RobotRun extends PApplet {
 	
 					if (undoState != null) {
 						// If the part was modified, then save its previous state
-						updateScenarioUndo(undoState);
+						pushWOUndoState(undoState);
 					}
 					
 					DataManagement.saveScenarios(this);
@@ -1491,7 +1491,7 @@ public class RobotRun extends PApplet {
 				// Only applies to parts
 				if (wo instanceof Part) {
 					int groupNum = (getScenarioUndoGID() + 1) % 2;
-					updateScenarioUndo(new WOUndoCurrent(groupNum, wo));
+					pushWOUndoState(new WOUndoCurrent(groupNum, wo));
 					
 					Part p = (Part) wo;
 					p.setLocalCenter(p.getDefaultCenter());
@@ -1522,7 +1522,7 @@ public class RobotRun extends PApplet {
 				
 				if (undoState != null) {
 					// If the part was modified, then save its previous state
-					updateScenarioUndo(undoState);
+					pushWOUndoState(undoState);
 				}
 			}
 			
@@ -2419,7 +2419,7 @@ public class RobotRun extends PApplet {
 				if (!mouseDragWO && (mouseButton == CENTER || mouseButton == RIGHT)) {
 					// Save the selected world object's current state
 					int groupNum = (getScenarioUndoGID() + 1) % 2;
-					updateScenarioUndo(new WOUndoCurrent(groupNum, selectedWO));
+					pushWOUndoState(new WOUndoCurrent(groupNum, selectedWO));
 				}
 				
 				mouseDragWO = true;
@@ -3500,7 +3500,7 @@ public class RobotRun extends PApplet {
 	 * 
 	 * @param undoState	The world object to save
 	 */
-	public void updateScenarioUndo(WOUndoState undoState) {
+	public void pushWOUndoState(WOUndoState undoState) {
 		if (undoState != null) {
 			// Only the latest 40 world object save states can be undone
 			if (SCENARIO_UNDO.size() >= 40) {
