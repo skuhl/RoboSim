@@ -3366,7 +3366,7 @@ public class RobotRun extends PApplet {
 		Fields.debug("MACROS");
 		
 		
-		/**/
+		/**
 		Fields.debug("SCENARIOS");
 		Scenario origin = SCENARIOS.get(0);
 		WorldObject wo = origin.getWorldObject(0);
@@ -3722,6 +3722,8 @@ public class RobotRun extends PApplet {
 		Model[] segModels = new Model[6];
 		
 		segModels[0] = loadSTLModel("robot/ROBOT_BASE.STL", Fields.ROBOT_YELLOW);
+		//segModels[0].rotateZ(PConstants.PI);
+		//segModels[0].rotateY(PConstants.HALF_PI);
 		segModels[1] = loadSTLModel("robot/ROBOT_SEGMENT_1.STL", Fields.ROBOT_GREY);
 		segModels[2] = loadSTLModel("robot/ROBOT_SEGMENT_2.STL", Fields.ROBOT_YELLOW);
 		segModels[3] = loadSTLModel("robot/ROBOT_SEGMENT_3.STL", Fields.ROBOT_GREY);
