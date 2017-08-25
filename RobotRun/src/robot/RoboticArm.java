@@ -701,12 +701,8 @@ public class RoboticArm {
 		// Base position
 		g.translate(BASE_POSITION.x, BASE_POSITION.y, BASE_POSITION.z);
 		
-		g.rotateZ(PConstants.PI);
-		g.rotateY(PConstants.HALF_PI);
 		// Base segment
 		g.shape(SEGMENT[0].MODEL_SET[0]);
-		g.rotateY(-PConstants.HALF_PI);
-		g.rotateZ(-PConstants.PI);
 		
 		// Translate for the first joint segment
 		g.translate(-50f, -163f, -350f);
@@ -716,12 +712,8 @@ public class RoboticArm {
 		g.rotateY(jointAngles[0]);
 		g.translate(150f, 0f, -150f);
 		
-		g.rotateX(PConstants.PI);
-		g.rotateY(PConstants.PI);
 		// First joint segment
 		g.shape(SEGMENT[1].MODEL_SET[0]);
-		g.rotateY(-PConstants.PI);
-		g.rotateX(-PConstants.PI);
 		
 		// Translate for the second joint segment
 		g.translate(-125f, -75f, 180f);
@@ -731,12 +723,8 @@ public class RoboticArm {
 		g.rotateZ(-jointAngles[1]);
 		g.translate(62f, 62f, 0f);
 		
-		g.rotateZ(PConstants.PI);
-		g.rotateY(PConstants.HALF_PI);
 		// Second joint segment
 		g.shape(SEGMENT[2].MODEL_SET[0]);
-		g.rotateY(-PConstants.HALF_PI);
-		g.rotateZ(-PConstants.PI);
 		
 		// Translate for the third joint segment
 		g.translate(10f, -605f, -200f);
@@ -746,10 +734,8 @@ public class RoboticArm {
 		g.rotateZ(-jointAngles[2]);
 		g.translate(75f, -45f, 0f);
 		
-		g.rotateY(-PConstants.HALF_PI);
 		// Third joint segment
 		g.shape(SEGMENT[3].MODEL_SET[0]);
-		g.rotateY(PConstants.HALF_PI);
 		
 		// Translate for the fourth joint segment
 		g.translate(-725f, 0f, 0f);
@@ -759,12 +745,8 @@ public class RoboticArm {
 		g.rotateX(jointAngles[3]);
 		g.translate(0f, -75f, -75f);
 		
-		g.rotateZ(-PConstants.HALF_PI);
-		g.rotateY(-PConstants.HALF_PI);
 		// Fourth joint segment
 		g.shape(SEGMENT[4].MODEL_SET[0]);
-		g.rotateY(PConstants.HALF_PI);
-		g.rotateZ(PConstants.HALF_PI);
 		
 		// Translation for the fifth joint segment
 		g.translate(120f, 20f, 25f);
@@ -773,11 +755,9 @@ public class RoboticArm {
 		// Fifth joint axis
 		g.rotateZ(-jointAngles[4]);
 		g.translate(55f, -55f, -50f);
-
-		g.rotateY(-PConstants.HALF_PI);
+		
 		// Fifth joint segment
 		g.shape(SEGMENT[5].MODEL_SET[0]);
-		g.rotateY(PConstants.HALF_PI);
 		
 		// Translation for the sixth joint segment
 		g.translate(-150f, 10f, 95f);

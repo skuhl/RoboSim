@@ -3722,13 +3722,21 @@ public class RobotRun extends PApplet {
 		Model[] segModels = new Model[6];
 		
 		segModels[0] = loadSTLModel("robot/ROBOT_BASE.STL", Fields.ROBOT_YELLOW);
-		//segModels[0].rotateZ(PConstants.PI);
-		//segModels[0].rotateY(PConstants.HALF_PI);
+		segModels[0].rotateY(PConstants.HALF_PI);
+		segModels[0].rotateZ(PConstants.PI);
 		segModels[1] = loadSTLModel("robot/ROBOT_SEGMENT_1.STL", Fields.ROBOT_GREY);
+		segModels[1].rotateY(PConstants.PI);
+		segModels[1].rotateX(PConstants.PI);
 		segModels[2] = loadSTLModel("robot/ROBOT_SEGMENT_2.STL", Fields.ROBOT_YELLOW);
+		segModels[2].rotateY(PConstants.HALF_PI);
+		segModels[2].rotateZ(PConstants.PI);
 		segModels[3] = loadSTLModel("robot/ROBOT_SEGMENT_3.STL", Fields.ROBOT_GREY);
+		segModels[3].rotateY(-PConstants.HALF_PI);
 		segModels[4] = loadSTLModel("robot/ROBOT_SEGMENT_4.STL", Fields.ROBOT_GREY);
+		segModels[4].rotateY(-PConstants.HALF_PI);
+		segModels[4].rotateZ(-PConstants.HALF_PI);
 		segModels[5] = loadSTLModel("robot/ROBOT_SEGMENT_5.STL", Fields.ROBOT_YELLOW);
+		segModels[5].rotateY(-PConstants.HALF_PI);
 		
 		return segModels;
 	}
