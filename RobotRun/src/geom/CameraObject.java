@@ -6,6 +6,7 @@ import camera.CamSelectArea;
 import camera.CamSelectView;
 import camera.RegisteredModels;
 import core.RobotRun;
+import global.RMath;
 import processing.core.PGraphics;
 import processing.core.PVector;
 import window.WGUI;
@@ -117,9 +118,12 @@ public class CameraObject extends Part {
 			img.ambientLight(light, light, light);
 			img.background(light);
 			
-			img.scale((float)Math.min(200f/dimX, 150f/dimY));
+			img.scale((float)Math.min(270f/dimX, 235f/dimY));
 			this.getModel().draw(img);
 			img.resetMatrix();
+			
+			PVector angles = RMath.matrixToEuler(mat);
+			img.rotateZ(angles.z);
 						
 			for(CamSelectArea a: selectAreas) {
 				CamSelectView v = a.getView(m);
