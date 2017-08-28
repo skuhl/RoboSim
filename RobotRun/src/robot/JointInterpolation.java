@@ -218,12 +218,6 @@ public class JointInterpolation extends JointMotion {
 			}
 		}
 		
-		for (int idx = 0; idx < minDist.length; ++idx) {
-			Fields.debug("Min[%d] = %f\n", idx, minDist[idx]);
-		}
-		
-		Fields.debug("Max = %f\n", maxMinDist);
-		
 		for(int jdx = 0; jdx < 6; jdx++) {
 			RSegWithJoint seg = robot.getSegment(jdx);
 			/* Update the speed modifier for the joint based off the ratio
