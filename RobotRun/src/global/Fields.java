@@ -104,9 +104,9 @@ public abstract class Fields {
 	public static final MessageDisplay msgSystem;
 	
 	/**
-	 * The maximum file size allowed for a .STL model file. 
+	 * The maximum file size (in bytes) allowed for a .STL model file. 
 	 */
-	public static final int MODEL_FILE_SIZE = 600000;
+	public static final int MODEL_FILE_SIZE = 11000000;
 	
 	/**
 	 * The circular motion type of a motion instruction.
