@@ -884,9 +884,24 @@ public class WGUI implements ControlListener {
 		addTextfield("CAspectCur", camera, fieldWidthSm, fieldHeight, Fields.medium, app.getKeyCodeMap());
 		
 		addSlider("CBright", "Brightness", camera, fieldWidthMed, fieldHeight,
-				0f, 10f, 1f, Fields.ITYPE_TRANSIENT, Fields.medium);
+				0f, 10f, 2, 10f / 1000f, 1f, Fields.medium,
+				Fields.ITYPE_TRANSIENT);
+		
 		addSlider("CExp", "Exposure", camera, fieldWidthMed, fieldHeight,
-				0.01f, 1f, 0.1f, Fields.ITYPE_TRANSIENT, Fields.medium);
+				0f, 1f, 2, 10f / 100f, 1f, Fields.medium,
+				Fields.ITYPE_TRANSIENT);
+		
+		/*
+		s.setColorValue(Fields.B_TEXT_C)
+		.setColorLabel(Fields.F_TEXT_C)
+		.setColorBackground(Fields.B_DEFAULT_C)
+		.setColorForeground(Fields.B_FG_C)
+		.setColorActive(Fields.B_ACTIVE_C)
+		.setRange(min, max)
+		.setDefaultValue(def)
+		.moveTo(parent)
+		.setSize(wdh, hgt);
+		 * */
 		
 		addButton(WGUI_Buttons.CamUpdate, "Update Camera", camera, fieldWidthMed, sButtonHeight, Fields.small);
 		addDropdown("CamObjects", camera, ldropItemWidth, dropItemHeight, 0,
@@ -2654,22 +2669,28 @@ public class WGUI implements ControlListener {
 	 * Adds a new slider with the given name, parent, dimensions, and input
 	 * type to the set of UI elements.
 	 * 
-	 * @param name		The name of the slider, which be unique amongst all
-	 * 					UI elements
-	 * @param lbl		The text to render for the slider's caption label
-	 * @param parent	The window group, to which this slider belongs
-	 * @param wdh		The width of the slider
-	 * @param hgt		The height of the slider
-	 * @param min		The minimum value of the slider
-	 * @param max		The maximum value of the slider
-	 * @param def		The initial value of the slider
-	 * @param inputType	How should this field by treated for input clear events
-	 * @param lblFont	The font for the slider's label
-	 * @return			A reference to the new slider
+	 * @param name				The name of the slider, which be unique amongst
+	 * 							all UI elements
+	 * @param lbl				The text to render for the slider's caption
+	 * 							label
+	 * @param parent			The window group, to which this slider belongs
+	 * @param wdh				The width of the slider
+	 * @param hgt				The height of the slider
+	 * @param min				The minimum value of the slider
+	 * @param max				The maximum value of the slider
+	 * @param percision			The digit precision of the slider's value
+	 * @param scrollSensitivity	A coefficient applied to the amount of change
+	 * 							in the slider's value induced by moving the
+	 * 							slider with the mouse wheel
+	 * @param def				The initial value of the slider
+	 * @param lblFont			The font for the slider's label
+	 * @param inputType			How should this field by treated for input clear
+	 * 							events
+	 * @return					A reference to the new slider
 	 */
 	private MySlider addSlider(String name, String lbl, Group parent, int wdh,
-			int hgt, float min, float max, float def, int inputType,
-			PFont lblFont) {
+			int hgt, float min, float max, int percision,
+			float scrollSensitivity, float def, PFont lblFont, int inputType) {
 		
 		MySlider s = new MySlider(manager, name, inputType);
 		
@@ -2679,6 +2700,8 @@ public class WGUI implements ControlListener {
 		.setColorForeground(Fields.B_FG_C)
 		.setColorActive(Fields.B_ACTIVE_C)
 		.setRange(min, max)
+		.setDecimalPrecision(percision)
+		.setScrollSensitivity(scrollSensitivity)
 		.setDefaultValue(def)
 		.moveTo(parent)
 		.setSize(wdh, hgt);
@@ -2703,7 +2726,7 @@ public class WGUI implements ControlListener {
 	 * @param percision			The digit precision of the slider's value
 	 * @param scrollSensitivity	A coefficient applied to the amount of change
 	 * 							in the slider's value induced by moving the
-	 * 							slider
+	 * 							slider with the mouse wheel
 	 * @param def				The initial value of the slider
 	 * @param valColor			The color of the slider's text label
 	 * @param actColor			The color of the slider bar, when the slider is
