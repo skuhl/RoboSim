@@ -48,7 +48,7 @@ import screen.select_lines.ST_ScreenLineSelect;
 import ui.DisplayLine;
 import ui.DropdownSearch;
 import ui.KeyCodeMap;
-import ui.KeyDownBehavior;
+import ui.TextfieldBehavior;
 import ui.KeyDownMgmt;
 import ui.MenuScroll;
 import ui.MyButton;
@@ -2914,9 +2914,9 @@ public class WGUI implements ControlListener {
 		.setColorBackground(Fields.F_BG_C)
 		.setColorForeground(Fields.F_FG_C)
 		.setSize(wdh, hgt)
-		.moveTo(parent)
-		.setBehavior(new KeyDownBehavior(keys));
+		.moveTo(parent);
 		
+		t.setBehavior(new TextfieldBehavior(t, keys));
 		t.getCaptionLabel().hide();
 		
 		return t;

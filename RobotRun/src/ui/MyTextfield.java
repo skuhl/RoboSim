@@ -45,7 +45,9 @@ public class MyTextfield extends Textfield implements UIInputElement {
 	
 	@Override
 	public void clearInput() {
-		setText("");
+		_myTextBuffer.delete(0, _myTextBuffer.length());
+		_myTextBufferIndex = 0;
+		textBufferRenderStart = 0;
 	}
 	
 	/**
@@ -129,9 +131,17 @@ public class MyTextfield extends Textfield implements UIInputElement {
 			// TODO tweek color
 			buffer.fill(55, 55, 255, 125);
 			// Draw highlighting over the text
-			int rectXBegin = getTextWidthFor(text.substring(0, selectionBegin));
-			int rectXEnd = getTextWidthFor(text.substring(0, selectionBegin));
-			buffer.rect(rectXBegin - dif, 0, rectXEnd - dif, getHeight());
+			int rectXBegin = getTextWidthFor(text.substring(
+					textBufferRenderStart, selectionBegin));
+			int rectXEnd = getTextWidthFor(text.substring(
+					textBufferRenderStart, selectionEnd));
+			
+			if (selectionBegin < selectionEnd) {
+				buffer.rect(rectXBegin, 0, rectXEnd - rectXBegin, getHeight());
+				
+			} else {
+				buffer.rect(rectXEnd, 0, rectXBegin - rectXEnd, getHeight());
+			}
 			
 			buffer.popStyle();
 		}
@@ -254,9 +264,6 @@ public class MyTextfield extends Textfield implements UIInputElement {
 				_myTextBufferIndex = mouseXToIdx();
 				clearSelection();
 				
-				Fields.debug("render=%d idx=%d\n", textBufferRenderStart,
-						_myTextBufferIndex);
-				
 			} catch (NullPointerException NPEx) {
 				/* An issue occurs with mapping the mouse click to a text
 				 * buffer index */
@@ -290,6 +297,22 @@ public class MyTextfield extends Textfield implements UIInputElement {
 		
 		if (this.isDragged && selectionEnd == -1) {
 			selectionEnd = mouseXToIdx();
+		}
+	}
+	
+	/**
+	 * TODO comment this
+	 */
+	protected void updateSelectionOnDrag() {
+		if (this.isDragged && this.selectionBegin != -1) {
+			int newIdx = mouseXToIdx();
+			
+			if (selectionEnd == -1 || (newIdx != selectionEnd &&
+					((newIdx < selectionEnd && newIdx > selectionBegin) ||
+					(newIdx > selectionEnd && newIdx < selectionBegin)))) {
+					
+				selectionEnd = newIdx;
+			}
 		}
 	}
 	
@@ -350,7 +373,7 @@ public class MyTextfield extends Textfield implements UIInputElement {
 					--idx;
 					break;
 				}
-					
+				
 				prevWidth = width;
 				++idx;
 			}
@@ -393,13 +416,30 @@ public class MyTextfield extends Textfield implements UIInputElement {
 	 * TODO comment this
 	 */
 	private void removeSelectedSegment() {
-		if (selectionBegin >= 0 && selectionEnd >= selectionBegin) {
-			_myTextBuffer.delete(selectionBegin, selectionEnd);
+		if (selectionBegin != -1 && selectionEnd != -1) {
+			int lowerBound, upperBound;
 			
-		} else if (selectionEnd >= 0 && selectionBegin >= selectionEnd) {
-			_myTextBuffer.delete(selectionEnd, selectionBegin);
+			if (selectionBegin <= selectionEnd) {
+				lowerBound = selectionBegin;
+				upperBound = selectionEnd;
+				
+			} else {
+				lowerBound = selectionEnd;
+				upperBound = selectionBegin;
+			}
+			
+			/* Update the cursor and render indices, if they fall within the
+			 * range of removed characters */ 
+			if (_myTextBufferIndex > lowerBound) {
+				_myTextBufferIndex = Math.max(0, lowerBound);
+				
+				if (textBufferRenderStart > _myTextBufferIndex) {
+					textBufferRenderStart = _myTextBufferIndex;
+				}
+			}
+			
+			_myTextBuffer.delete(lowerBound, upperBound);
+			clearSelection();
 		}
-		
-		clearSelection();
 	}
 }
