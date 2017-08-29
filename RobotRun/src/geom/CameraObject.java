@@ -118,7 +118,7 @@ public class CameraObject extends Part {
 			img.ambientLight(light, light, light);
 			img.background(light);
 			
-			img.scale((float)Math.min(WGUI.imageWidth - 5/dimX, WGUI.imageHeight - 5/dimY));
+			img.scale((float)Math.min((WGUI.imageWidth - 5)/dimX, (WGUI.imageHeight - 5)/dimY));
 			this.getModel().draw(img);
 			img.resetMatrix();
 			
