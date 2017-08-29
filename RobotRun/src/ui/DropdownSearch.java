@@ -101,13 +101,13 @@ public class DropdownSearch extends MyDropdownList {
 		// Sort items based off their edit distances
 		for (int cdx = 1; cdx < items.size(); ++cdx) {
 			Map<String, Object> curItem = items.get(cdx);
-			int curED = nameToED.get((String)curItem.get("name"));
+			int curED = nameToED.get(curItem.get("name"));
 			
 			int insertIdx = cdx;
 			
 			for (int idx = insertIdx - 1; idx >= 0; --idx) {
 				Map<String, Object> compareItem = items.get(idx);
-				int insertED = nameToED.get((String)compareItem.get("name"));
+				int insertED = nameToED.get(compareItem.get("name"));
 				
 				if (insertED < curED) {
 					break;

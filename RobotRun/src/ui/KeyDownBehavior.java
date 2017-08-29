@@ -58,7 +58,7 @@ public class KeyDownBehavior extends ControlBehavior {
 				
 				if (lastVal != null) {
 					// Insert key events
-					controller.append(lastVal.charValue());
+					controller.insert(lastVal.charValue());
 					
 				} else {
 					// Other key events

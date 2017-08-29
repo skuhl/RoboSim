@@ -23,7 +23,6 @@ public class MyButtonBar extends ButtonBar {
 	 * 
 	 * @return	The label of the active button
 	 */
-	@SuppressWarnings("unchecked")
 	public String getActButLbl() {
 		List<HashMap<?, ?>> items = getItems();
 		
@@ -48,9 +47,8 @@ public class MyButtonBar extends ButtonBar {
 	 * 
 	 * @param label	The label of the button to set as active
 	 */
-	@SuppressWarnings("unchecked")
 	public void setActiveButton(String label) {
-		List<HashMap<Object, Object>> items = (List<HashMap<Object, Object>>) getItems();
+		List<HashMap<Object, Object>> items = getItems();
 		
 		for (HashMap<Object, Object> item : items) {
 			String itemName = (String) item.get("name");
@@ -68,6 +66,7 @@ public class MyButtonBar extends ButtonBar {
 	
 	@Override
 	protected void onEndDrag() {
+		super.onEndDrag();
 		// Allow drag clicks
 		onClick();
 	}

@@ -1,9 +1,12 @@
 package ui;
 
+import com.sun.glass.events.KeyEvent;
+
 import controlP5.ControlFont;
 import controlP5.ControlP5;
 import controlP5.ControlWindow.Pointer;
 import controlP5.Textfield;
+import global.Fields;
 import processing.core.PGraphics;
 
 /**
@@ -16,20 +19,17 @@ import processing.core.PGraphics;
 public class MyTextfield extends Textfield implements UIInputElement {
 	
 	private PGraphics buffer;
+	private int textBufferRenderStart;
 	private int inputType;
+	private int selectionBegin;
+	private int selectionEnd;
 	
 	public MyTextfield(ControlP5 theControlP5, String theName, int inputType) {
 		super(theControlP5, theName);
+		textBufferRenderStart = 0;
 		this.inputType = inputType;
-	}
-	
-	/**
-	 * Append the given character to end of the textfield's input.
-	 * 
-	 * @param c	The character to append
-	 */
-	public void append(Character c) {
-		setText( getText() + Character.toString(c) );
+		selectionBegin = -1;
+		selectionEnd = -1;
 	}
 	
 	/**
@@ -38,7 +38,8 @@ public class MyTextfield extends Textfield implements UIInputElement {
 	 */
 	public void backspace() {
 		if (_myTextBuffer.length() > 0 && _myTextBufferIndex > 0) {
-			_myTextBuffer.deleteCharAt( --_myTextBufferIndex );
+			cursorLeft();
+			_myTextBuffer.deleteCharAt(_myTextBufferIndex);
 		}
 	}
 	
@@ -53,7 +54,14 @@ public class MyTextfield extends Textfield implements UIInputElement {
 	public void cursorLeft() {
 		if (_myTextBufferIndex > 0) {
 			_myTextBufferIndex = Math.max(0, _myTextBufferIndex - 1);
+			
+			if (_myTextBufferIndex < textBufferRenderStart) {
+				// Update the render start index
+				textBufferRenderStart = _myTextBufferIndex;
+			}
 		}
+
+		clearSelection();
 	}
 	
 	/**
@@ -63,7 +71,17 @@ public class MyTextfield extends Textfield implements UIInputElement {
 		if (_myTextBufferIndex < _myTextBuffer.length()) {
 			_myTextBufferIndex = Math.min(_myTextBuffer.length(),
 					_myTextBufferIndex + 1);
+			
+			String text = passCheck(getText());
+			int widthDiff = getTextWidthFor(text.substring(
+					textBufferRenderStart, _myTextBufferIndex));
+			
+			if (getWidth() <= widthDiff) {
+				++textBufferRenderStart;
+			}
 		}
+		
+		clearSelection();
 	}
 	
 	/**
@@ -77,9 +95,70 @@ public class MyTextfield extends Textfield implements UIInputElement {
 				_myTextBuffer.deleteCharAt( _myTextBufferIndex );
 				
 			} else if (_myTextBufferIndex > 0) {
-				_myTextBuffer.deleteCharAt( --_myTextBufferIndex );
+				_myTextBuffer.deleteCharAt(_myTextBufferIndex);
+				cursorLeft();
 			}
 		}
+	}
+	
+	@Override
+	public void draw(PGraphics theGraphics) {
+		theGraphics.pushStyle();
+		theGraphics.fill(color.getBackground());
+		theGraphics.pushMatrix();
+		theGraphics.translate(x(position) , y(position));
+		theGraphics.rect(0, 0, getWidth(), getHeight());
+		theGraphics.noStroke();
+
+		theGraphics.fill(_myColorCursor);
+		theGraphics.pushMatrix();
+		theGraphics.pushStyle();
+
+		buffer.beginDraw();
+		buffer.background(0, 0);
+		final String text = passCheck(getText());
+		final int dif = getTextWidthFor(text.substring(0, textBufferRenderStart));
+		final int _myTextBufferIndexPosition = getTextWidthFor(text.substring(
+				textBufferRenderStart, _myTextBufferIndex));
+		_myValueLabel.setText(text);
+		_myValueLabel.draw(buffer, -dif, 0, this);
+		buffer.noStroke();
+		
+		if (selectionBegin != -1 && selectionEnd != -1) {
+			buffer.pushStyle();
+			// TODO tweek color
+			buffer.fill(55, 55, 255, 125);
+			// Draw highlighting over the text
+			int rectXBegin = getTextWidthFor(text.substring(0, selectionBegin));
+			int rectXEnd = getTextWidthFor(text.substring(0, selectionBegin));
+			buffer.rect(rectXBegin - dif, 0, rectXEnd - dif, getHeight());
+			
+			buffer.popStyle();
+		}
+		
+		
+		if ( isTexfieldActive ) {
+			if ( !cp5.papplet.keyPressed ) {
+				buffer.fill( _myColorCursor , (float)Math.abs( Math.sin( cp5.papplet.frameCount * 0.05f )) * 255 );
+			} else {
+				buffer.fill( _myColorCursor );
+			}
+			buffer.rect( Math.max( 1 , Math.min( _myTextBufferIndexPosition , _myValueLabel.getWidth( ) - 3 ) ) , 0 , 1 , getHeight( ) );
+		}
+		buffer.endDraw( );
+		theGraphics.image( buffer , 0 , 0 );
+
+		theGraphics.popStyle( );
+		theGraphics.popMatrix( );
+
+		theGraphics.fill( isTexfieldActive ? color.getActive( ) : color.getForeground( ) );
+		theGraphics.rect( 0 , 0 , getWidth( ) , 1 );
+		theGraphics.rect( 0 , getHeight( ) - 1 , getWidth( ) , 1 );
+		theGraphics.rect( -1 , 0 , 1 , getHeight( ) );
+		theGraphics.rect( getWidth( ) , 0 , 1 , getHeight( ) );
+		_myCaptionLabel.draw( theGraphics , 0 , 0 , this );
+		theGraphics.popMatrix( );
+		theGraphics.popStyle( );
 	}
 	
 	@Override
@@ -87,23 +166,61 @@ public class MyTextfield extends Textfield implements UIInputElement {
 		return inputType;
 	}
 	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param c
+	 */
+	public void insert(Character c) {
+		_myTextBuffer.insert(_myTextBufferIndex, c.charValue());
+		cursorRight();
+	}
+	
 	@Override
 	public void keyEvent(processing.event.KeyEvent e) {
-		
-		if (e.getKeyCode() == 147) {
-			// Deletes a character in the text buffer
-			if (isUserInteraction && isTexfieldActive && isActive &&
-					e.getAction() == processing.event.KeyEvent.PRESS) {
-				
-				delete();
-			}	
-			
-		} else {
-			super.keyEvent(e);
-		}
-		
 		if (isUserInteraction && isTexfieldActive && isActive &&
 				e.getAction() == processing.event.KeyEvent.PRESS) {
+			
+			if (e.getKeyCode() == 147) {
+				// Deletes a character in the text buffer
+				if (selectionBegin != -1 && selectionEnd != -1) {
+					// Remove highlighted segment
+					removeSelectedSegment();
+					
+				} else {
+					delete();
+				}
+				
+			} else if (e.getKeyCode() == KeyEvent.VK_DOWN) {
+				// TODO jump to the end of the textfield
+				
+			} else if (e.getKeyCode() == KeyEvent.VK_BACKSPACE) {
+				
+				if (selectionBegin != -1 && selectionEnd != -1) {
+					// Remove highlighted segment
+					removeSelectedSegment();
+					
+				} else {
+					backspace();
+				}
+				
+			} else if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+				// Disables the enter clear functionality
+				
+			} else if (e.getKeyCode() == KeyEvent.VK_LEFT) {
+				cursorLeft();
+				
+			} else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
+				cursorRight();
+				
+			} else if (e.getKeyCode() == KeyEvent.VK_UP) {
+				_myTextBufferIndex = 0;
+				textBufferRenderStart = 0;
+				
+			} else if (e.getKeyCode() >= 32 && e.getKeyCode() <= 126) {
+				insert(e.getKey());
+			}
+		
 			// Set value every time a key is pressed
 			setValue(e.getKeyCode());
 		}
@@ -135,6 +252,10 @@ public class MyTextfield extends Textfield implements UIInputElement {
 			try {
 				// Update text buffer index
 				_myTextBufferIndex = mouseXToIdx();
+				clearSelection();
+				
+				Fields.debug("render=%d idx=%d\n", textBufferRenderStart,
+						_myTextBufferIndex);
 				
 			} catch (NullPointerException NPEx) {
 				/* An issue occurs with mapping the mouse click to a text
@@ -142,6 +263,57 @@ public class MyTextfield extends Textfield implements UIInputElement {
 				NPEx.printStackTrace();
 			}
 		}
+	}
+	
+	@Override
+	protected void mouseReleasedOutside() {
+		super.mouseReleasedOutside();
+		clearSelection();
+	}
+	
+	@Override
+	protected void onStartDrag() {
+		super.onStartDrag();
+		selectionBegin = mouseXToIdx();
+		selectionEnd = -1;
+	}
+	
+	@Override
+	protected void onEndDrag() {
+		super.onEndDrag();
+		selectionEnd = mouseXToIdx();
+	}
+	
+	@Override
+	protected void onReleaseOutside() {
+		super.onReleaseOutside();
+		
+		if (this.isDragged && selectionEnd == -1) {
+			selectionEnd = mouseXToIdx();
+		}
+	}
+	
+	/**
+	 * TODO comment this
+	 */
+	private void clearSelection() {
+		selectionBegin = -1;
+		selectionEnd = -1;
+	}
+	
+	/**
+	 * Get the mouse's xy position relative to the position of this textfield.
+	 * 
+	 * @return
+	 */
+	private int[] getMousePos() {
+		Pointer pt = getControlWindow().getPointer();
+		float[] pos = getPosition();
+		
+		return new int [] {
+				pt.getX() - (int)pos[0],
+				pt.getY() - (int)pos[1],
+		};
 	}
 	
 	/**
@@ -165,16 +337,16 @@ public class MyTextfield extends Textfield implements UIInputElement {
 		int TBIdx = 0;
 		
 		if (_myTextBuffer.length() > 0) {
-			Pointer pt = getControlWindow().getPointer();
-			float[] pos = getPosition();
-			int mouseX = pt.getX() - (int)pos[0];
+			int[] mousePos = getMousePos();
 			String txt = passCheck( getText() );
-			int idx = 0, prevWidth = 0;
+			int idx = textBufferRenderStart + 1;
+			int prevWidth = 0;
 			
 			while (idx < txt.length()) {
-				int width = getTextWidthFor( txt.substring(0, idx) );
+				int width = getTextWidthFor(txt.substring(
+						textBufferRenderStart, idx));
 				
-				if (mouseX - prevWidth < width - mouseX) {
+				if (mousePos[0] - prevWidth < width - mousePos[0]) {
 					--idx;
 					break;
 				}
@@ -184,9 +356,10 @@ public class MyTextfield extends Textfield implements UIInputElement {
 			}
 			
 			if (idx == txt.length()) {
-				int width = getTextWidthFor(txt);
+				int width = getTextWidthFor(txt.substring(
+						textBufferRenderStart, idx));
 				
-				if (mouseX - prevWidth < width - mouseX) {
+				if (mousePos[0] - prevWidth < width - mousePos[0]) {
 					--idx;
 				}
 			}
@@ -214,5 +387,19 @@ public class MyTextfield extends Textfield implements UIInputElement {
 		}
 		
 		return newlabel;
+	}
+	
+	/**
+	 * TODO comment this
+	 */
+	private void removeSelectedSegment() {
+		if (selectionBegin >= 0 && selectionEnd >= selectionBegin) {
+			_myTextBuffer.delete(selectionBegin, selectionEnd);
+			
+		} else if (selectionEnd >= 0 && selectionBegin >= selectionEnd) {
+			_myTextBuffer.delete(selectionEnd, selectionBegin);
+		}
+		
+		clearSelection();
 	}
 }

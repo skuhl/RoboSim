@@ -83,6 +83,7 @@ public class MyButton extends Button {
 	
 	@Override
 	protected void onEndDrag() {
+		super.onEndDrag();
 		// Allow drag clicks
 		onClick();
 	}
