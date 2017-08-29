@@ -114,8 +114,8 @@ public class CameraObject extends Part {
 			);
 			
 			float light = 20 + 235 * light_value;
-			img.directionalLight(light, light, light, 0, 0, 1);
-			img.ambientLight(light, light, light);
+			img.directionalLight(light, light, light, 0, 0, -1);
+			img.ambientLight(light/2, light/2, light/2);
 			img.background(light);
 			
 			img.scale((float)Math.min((WGUI.imageWidth - 5)/dimX, (WGUI.imageHeight - 5)/dimY));

@@ -665,6 +665,8 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 			} else if (sdx >= rLen + 1 && sdx <= len + rLen) {
 				editExpression(stmt.getExpr(), sdx - (rLen + 2));
 			}
+		} else {
+			robotRun.nextScreen(ScreenMode.SELECT_INSTR_INSERT);
 		}
 	}
 }

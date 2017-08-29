@@ -813,15 +813,17 @@ public class WGUI implements ControlListener {
 		addSlider("CExp", "Exposure", camera, fieldWidthMed, fieldHeight,
 				0.01f, 1f, 0.1f, Fields.ITYPE_TRANSIENT, Fields.medium);
 		
-		addButton(WGUI_Buttons.CamUpdate, "Update Camera", camera, fieldWidthMed, sButtonHeight, Fields.small);
+		addTextarea("ObjPreviewLbl", "Recorded object:", camera, imageLabelWidth, fieldHeight, Fields.medium);
 		addDropdown("CamObjects", camera, ldropItemWidth, dropItemHeight, 0,
 				Fields.small, Fields.ITYPE_PERMENANT);
-		addTextarea("ObjPreviewLbl", "Recorded object:", camera, imageLabelWidth, fieldHeight, Fields.medium);
 		addButton(WGUI_Buttons.CamObjPreview, "ObjPreview", camera, imageWidth, imageHeight, Fields.small);
-		addTextarea("SnapPreviewLbl", "Camera view:", camera, imageLabelWidth, fieldHeight, Fields.medium);
-		addButton(WGUI_Buttons.CamSnapPreview, "SnapPreview", camera, imageWidth, imageHeight, Fields.small);
 		addButton(WGUI_Buttons.CamTeachObj, "Teach Object", camera, fieldWidthMed, sButtonHeight, Fields.small);
 		addButton(WGUI_Buttons.CamDeleteObj, "Remove Object", camera, fieldWidthMed, sButtonHeight, Fields.small);
+		
+		addTextarea("SnapPreviewLbl", "Camera view:", camera, imageLabelWidth, fieldHeight, Fields.medium);
+		addButton(WGUI_Buttons.CamSnapPreview, "SnapPreview", camera, imageWidth, imageHeight, Fields.small);
+		addButton(WGUI_Buttons.CamUpdate, "Update Camera", camera, fieldWidthMed, sButtonHeight, Fields.small);
+		addButton(WGUI_Buttons.CamReset, "Reset Camera", camera, fieldWidthMed, sButtonHeight, Fields.small);
 		
 		// Initialize the miscellaneous window elements
 		addTextarea("ActiveRobotEE", "EE:", miscellaneous, lLblWidth, sButtonHeight, Fields.medium);
@@ -3420,7 +3422,11 @@ public class WGUI implements ControlListener {
 		
 		// Cam update button
 		relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		getButton(WGUI_Buttons.CamUpdate).setPosition(relPos[0], relPos[1]);
+		c = getButton(WGUI_Buttons.CamUpdate).setPosition(relPos[0], relPos[1]);
+		
+		// Cam reset button
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		getButton(WGUI_Buttons.CamReset).setPosition(relPos[0], relPos[1]);
 		
 		// Camera snapshot image
 		relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, -10, 0);
