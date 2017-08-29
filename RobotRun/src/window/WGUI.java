@@ -2907,14 +2907,14 @@ public class WGUI implements ControlListener {
 			int hgt, PFont lblFont, KeyCodeMap keys) {
 
 		MyTextfield t = new MyTextfield(manager, name, Fields.ITYPE_TRANSIENT);
-		t.setColor(Fields.F_TEXT_C)
+		t.setFont(lblFont)
+		.setColor(Fields.F_TEXT_C)
 		.setColorCursor(Fields.F_CURSOR_C)
 		.setColorActive(Fields.F_CURSOR_C)
 		.setColorBackground(Fields.F_BG_C)
 		.setColorForeground(Fields.F_FG_C)
 		.setSize(wdh, hgt)
 		.moveTo(parent)
-		.setFont(lblFont)
 		.setBehavior(new KeyDownBehavior(keys));
 		
 		t.getCaptionLabel().hide();

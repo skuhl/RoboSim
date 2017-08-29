@@ -113,6 +113,9 @@ public class MyTextfield extends Textfield implements UIInputElement {
 	public MyTextfield setSize( int theWidth , int theHeight ) {
 		super.setSize( theWidth , theHeight );
 		buffer = cp5.papplet.createGraphics( getWidth( ) , getHeight( ) );
+		// Why do I need this you ask? Because Processing is strange.
+		buffer.beginDraw();
+		buffer.endDraw();
 		return this;
 	}
 	
@@ -134,9 +137,9 @@ public class MyTextfield extends Textfield implements UIInputElement {
 				_myTextBufferIndex = mouseXToIdx();
 				
 			} catch (NullPointerException NPEx) {
-				/* Cannot use the ControlFont.getWidthFor() for this
-				 * textfield's font */
-				System.err.println(NPEx.getMessage());
+				/* An issue occurs with mapping the mouse click to a text
+				 * buffer index */
+				NPEx.printStackTrace();
 			}
 		}
 	}
@@ -145,10 +148,10 @@ public class MyTextfield extends Textfield implements UIInputElement {
 	 * Calculates the draw width of a string based on the text-field's label
 	 * and PGraphics buffer.
 	 * 
-	 * @return	The draw width of the given string
+	 * @param text
+	 * @return		The draw width of the given string
 	 */
 	private int getTextWidthFor(String text) {
-		
 		return ControlFont.getWidthFor(text, _myValueLabel, buffer);
 	}
 	
@@ -168,7 +171,7 @@ public class MyTextfield extends Textfield implements UIInputElement {
 			String txt = passCheck( getText() );
 			int idx = 0, prevWidth = 0;
 			
-			do {
+			while (idx < txt.length()) {
 				int width = getTextWidthFor( txt.substring(0, idx) );
 				
 				if (mouseX - prevWidth < width - mouseX) {
@@ -178,8 +181,15 @@ public class MyTextfield extends Textfield implements UIInputElement {
 					
 				prevWidth = width;
 				++idx;
+			}
+			
+			if (idx == txt.length()) {
+				int width = getTextWidthFor(txt);
 				
-			} while (idx < txt.length());
+				if (mouseX - prevWidth < width - mouseX) {
+					--idx;
+				}
+			}
 			
 			TBIdx = Math.max(0, idx);
 		}
