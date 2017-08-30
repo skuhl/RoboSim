@@ -2,7 +2,7 @@ package screen.num_entry;
 
 import core.RobotRun;
 import global.Fields;
-import programming.Instruction;
+import programming.BlankInstruction;
 import programming.Program;
 import robot.RoboticArm;
 import screen.ScreenMode;
@@ -24,7 +24,7 @@ public class ScreenConfirmInsert extends ST_ScreenNumEntry {
 			if (lines_to_insert > 0 && lines_to_insert <= 100) {
 				for (int i = 0; i < lines_to_insert; i += 1) {
 					r.addAt(p, robotRun.getActiveInstIdx() + i,
-							new Instruction(), i != 0);
+							new BlankInstruction(), i != 0);
 				}
 				
 				robotRun.updateInstructions();

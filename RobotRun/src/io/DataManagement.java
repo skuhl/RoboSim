@@ -52,6 +52,7 @@ import geom.Scenario;
 import geom.WorldObject;
 import global.Fields;
 import processing.core.PVector;
+import programming.BlankInstruction;
 import programming.CallInstruction;
 import programming.CamMoveToObject;
 import programming.FrameInstruction;
@@ -843,7 +844,7 @@ public abstract class DataManagement {
 			
 		}/* Add other instructions here! */
 		else if (instType == 1) {
-			inst = new Instruction();
+			inst = new BlankInstruction();
 			boolean isCommented = in.readBoolean();
 			inst.setIsCommented(isCommented);
 
@@ -1576,7 +1577,7 @@ public abstract class DataManagement {
 			}
 			
 		}/* Add other instructions here! */
-		else if (inst != null) {
+		else if (inst instanceof BlankInstruction) {
 			/// A blank instruction
 			out.writeByte(1);
 			out.writeBoolean(inst.isCommented());

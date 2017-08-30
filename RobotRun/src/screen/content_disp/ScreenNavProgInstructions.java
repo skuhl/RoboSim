@@ -9,6 +9,7 @@ import expression.Operand;
 import expression.RobotPoint;
 import geom.Point;
 import global.Fields;
+import programming.BlankInstruction;
 import programming.CallInstruction;
 import programming.CamMoveToObject;
 import programming.FrameInstruction;
@@ -671,7 +672,8 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 			} else if (sdx >= rLen + 1 && sdx <= len + rLen) {
 				editExpression(stmt.getExpr(), sdx - (rLen + 2));
 			}
-		} else {
+			
+		} else if (ins instanceof BlankInstruction) {
 			robotRun.nextScreen(ScreenMode.SELECT_INSTR_INSERT);
 		}
 	}
