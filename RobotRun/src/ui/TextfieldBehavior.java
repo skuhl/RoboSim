@@ -5,7 +5,7 @@ import controlP5.Controller;
 import processing.core.PConstants;
 
 /**
- * Handles the key down and drag highlighting update functionality of text-fields.
+ * Handles the key down functionality of text-fields.
  * 
  * @author Joshua Hooker
  *
@@ -33,7 +33,8 @@ public class TextfieldBehavior extends ControlBehavior {
 	private long nextEvent;
 	
 	/**
-	 * Contructs a key down behavior object with the given KeyCodeMap reference.
+	 * Initializes the key down behavior object with the given Textfield and
+	 * KeyCodeMap references.
 	 * 
 	 * @param controller
 	 * @param keyMap
@@ -49,8 +50,6 @@ public class TextfieldBehavior extends ControlBehavior {
 	@Override
 	public void update() {
 		if (controller.isActive()) {
-			controller.updateSelectionOnDrag();
-			
 			/* When the controller is active, check every so often if a key is
 			 * down and update the text-field as necessary */
 			if (keyMap.getTimeOfLastKey() > 800 && System.currentTimeMillis() >= nextEvent) {

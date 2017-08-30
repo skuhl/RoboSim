@@ -182,6 +182,7 @@ public class MyTextfield extends Textfield implements UIInputElement {
 	 * @param c
 	 */
 	public void insert(Character c) {
+		removeSelectedSegment();
 		_myTextBuffer.insert(_myTextBufferIndex, c.charValue());
 		cursorRight();
 	}
@@ -273,9 +274,12 @@ public class MyTextfield extends Textfield implements UIInputElement {
 	}
 	
 	@Override
-	protected void mouseReleasedOutside() {
+	protected void mouseReleasedOutside() {	
+		if (!isKeepFocus) {
+			clearSelection();
+		}
+		
 		super.mouseReleasedOutside();
-		clearSelection();
 	}
 	
 	@Override
@@ -286,32 +290,13 @@ public class MyTextfield extends Textfield implements UIInputElement {
 	}
 	
 	@Override
-	protected void onEndDrag() {
-		super.onEndDrag();
-		selectionEnd = mouseXToIdx();
-	}
-	
-	@Override
-	protected void onReleaseOutside() {
-		super.onReleaseOutside();
-		
-		if (this.isDragged && selectionEnd == -1) {
-			selectionEnd = mouseXToIdx();
-		}
-	}
-	
-	/**
-	 * TODO comment this
-	 */
-	protected void updateSelectionOnDrag() {
-		if (this.isDragged && this.selectionBegin != -1) {
+	protected void onDrag() {
+		if (this.selectionBegin != -1) {
 			int newIdx = mouseXToIdx();
 			
-			if (selectionEnd == -1 || (newIdx != selectionEnd &&
-					((newIdx < selectionEnd && newIdx > selectionBegin) ||
-					(newIdx > selectionEnd && newIdx < selectionBegin)))) {
-					
+			if (newIdx >= 0 && newIdx < _myTextBuffer.length()) {
 				selectionEnd = newIdx;
+				_myTextBufferIndex = selectionEnd;
 			}
 		}
 	}
