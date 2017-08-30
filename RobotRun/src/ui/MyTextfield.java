@@ -6,7 +6,6 @@ import controlP5.ControlFont;
 import controlP5.ControlP5;
 import controlP5.ControlWindow.Pointer;
 import controlP5.Textfield;
-import global.Fields;
 import processing.core.PGraphics;
 
 /**
@@ -317,7 +316,7 @@ public class MyTextfield extends Textfield implements UIInputElement {
 	/**
 	 * Get the mouse's xy position relative to the position of this textfield.
 	 * 
-	 * @return
+	 * @return	The mouse's position in the form of an array: [x, y]
 	 */
 	private int[] getMousePos() {
 		Pointer pt = getControlWindow().getPointer();

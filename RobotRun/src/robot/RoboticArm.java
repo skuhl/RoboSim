@@ -184,7 +184,7 @@ public class RoboticArm {
 	 * @param rid				The ID of this robot, which must be unique
 	 * 							amongst all robots
 	 * @param segmentModels		The set of segment models for the robotic arm
-	 * @param endEffectors		The set of end effector models for the robotic
+	 * @param endEffectorModels	The set of end effector models for the robotic
 	 * 							arm
 	 * @param basePos			The position of the robot's base segment
 	 * @param robotTrace		A reference to the trace in the robotRun
@@ -399,10 +399,11 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Adds a manual function macro for the given program to this robot's list
+	 * of macros, if this robot is not already at its macro capacity.
 	 * 
-	 * @param p
-	 * @return
+	 * @param p	The program for which to build a macro
+	 * @return	The newly defined macro, or null if the macro was not created
 	 */
 	public Macro addMacro(Program p) {
 		if (!atMacroCapacity()) {
@@ -459,7 +460,7 @@ public class RoboticArm {
 	 *            quanternion
 	 * @return		The point, pt, in terms of the given coordinate system
 	 */
-	public Point applyFrame(Point pt, PVector origin, RQuaternion axes) {
+	public static Point applyFrame(Point pt, PVector origin, RQuaternion axes) {
 		PVector position = RMath.vToFrame(pt.position, origin, axes);
 		RQuaternion orientation = axes.transformQuaternion(pt.orientation);
 		
@@ -468,9 +469,11 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Determines if the number of macros has reached the capacity for this
+	 * robot. The macro capacity of a robot is equal to the robot's current
+	 * number of programs.
 	 * 
-	 * @return
+	 * @return	number of macros <= number of programs
 	 */
 	public boolean atMacroCapacity() {
 		return macros.size() >= PROGRAM.size();
@@ -2131,6 +2134,7 @@ public class RoboticArm {
 	 * @return	If the program existed in this robot's list of programs
 	 */
 	public boolean rmProg(Program p) {
+		rmMacros(p);
 		return PROGRAM.remove(p);
 	}
 	
@@ -2145,13 +2149,14 @@ public class RoboticArm {
 	public Program rmProgAt(int pdx) {
 		if (pdx >= 0 && pdx < PROGRAM.size()) {
 			Program removed = PROGRAM.remove(pdx);
+			rmMacros(removed);
 			// Return the removed program
 			return removed;
 			
-		} else {
-			// Invalid index
-			return null;
 		}
+		
+		// Invalid index
+		return null;
 	}
 
 	/**
@@ -2958,6 +2963,31 @@ public class RoboticArm {
 		/* TEST CODE *
 		Fields.debug("%s\n", undoState);
 		/**/
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param p
+	 */
+	private void rmMacros(Program p) {
+		int idx = 0;
+		
+		while (idx < macros.size()) {
+			Macro m = macros.get(idx);
+			
+			if (m.getProg() == p) {
+				macros.remove(idx);
+				
+				if (!m.isManual()) {
+					// Remove key binds
+					setKeyBinding(m.getKeyNum(), null);
+				}
+				
+			} else {
+				++idx;
+			}
+		}
 	}
 	
 	/**

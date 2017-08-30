@@ -982,9 +982,10 @@ public class WGUI implements ControlListener {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Determines if the current menu allows users to move/select world
+	 * objects in the active scene with the mouse.
 	 * 
-	 * @return
+	 * @return	Can the user move/select objects with the mouse?
 	 */
 	public boolean canEditWorldObject() {
 		return menu == null || menu == WindowTab.EDIT ||
@@ -1213,10 +1214,14 @@ public class WGUI implements ControlListener {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Creates a world object from the input fields defined in the create menu
+	 * and inserts the world object into the given scenario. Although, if the
+	 * object cannot be successfully created, then null is returned and the
+	 * global message field is set according to the error, which occurred.
 	 * 
-	 * @param parent
-	 * @return
+	 * @param parent	The scenario, to which the new world object will belong
+	 * @return			A reference to the new world object or null, if it was
+	 * 					not created
 	 */
 	public WorldObject createWO(Scenario parent) {
 		String name = getTextField("WOName").getText();
@@ -2267,11 +2272,17 @@ public class WGUI implements ControlListener {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Executes the operation specified by the user in the management sub-menu
+	 * of the edit menu. In this sub menu the user can:
 	 * 
-	 * @param selectedWO
-	 * @param parent
-	 * @return
+	 * 1. move a selected object to a scenario
+	 * 2. copy a selected objects to a scenario
+	 * 3. delete a selected object
+	 * 
+	 * @param selectedWO	The object, on which the operation will be executed
+	 * @param parent		The scenario, to which the given object belongs
+	 * @return				The error message, if an error occurs, or null, if
+	 * 						the operation is successful
 	 */
 	public String updateWOMgmt(WorldObject selectedWO, Scenario parent) {
 		
@@ -4276,7 +4287,8 @@ public class WGUI implements ControlListener {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Updates the set of menus currently available to the user in the top
+	 * button bar of the UI.
 	 */
 	private void updateWindowTabs() {
 		windowTabs.clear();
@@ -4329,12 +4341,16 @@ public class WGUI implements ControlListener {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Determines if the dimension values provided in the dimension input
+	 * fields are valid, along with the given shape parameters. If they are
+	 * valid, then the respective shape is created and returned. Otherwise, an
+	 * error message is returned in the form of a String.
 	 * 
-	 * @param shapeID
-	 * @param fill
-	 * @param stroke
-	 * @return
+	 * @param shapeID	The type of shape (0=box, 1=cylinder, 2=complex)
+	 * @param fill		The fill color of the shape
+	 * @param stroke	The stroke color of the shape (which is unused for
+	 * 					complex shapes)
+	 * @return			The new shape or an error message
 	 */
 	private Object validateShapeInput(float shapeID, int fill, int stroke) {
 		
