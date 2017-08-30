@@ -256,33 +256,8 @@ public class RobotCamera {
 		return exposure;
 	}
 
-	public float getFarClipDist() {
-		return camClipFar;
-	}
-
 	public float getFOV() {
 		return camFOV;
-	}
-
-	public float getNearClipDist() {
-		return camClipNear;
-	}
-
-	public WorldObject getNearestObjectInFrame(Scenario scene) {
-		float minDist = Float.MAX_VALUE;
-		WorldObject closeObj = null;
-		for(WorldObject o : getObjectsInFrame(scene)) {
-			PVector objCenter = o.getLocalCenter();
-			PVector toObj = new PVector(objCenter.x - camPos.x, objCenter.y - camPos.y, objCenter.z - camPos.z);
-
-			float dist = toObj.mag();
-			if(minDist > dist) {
-				minDist = dist;
-				closeObj = o;
-			}
-		}
-
-		return closeObj;
 	}
 
 	public float getObjectImageQuality(WorldObject o) {
@@ -323,15 +298,18 @@ public class RobotCamera {
 
 		float reflect = camObj.reflective_IDX;
 		float lightIntensity = exposure*brightness;
-		float lightingCoefficient = RMath.clamp((float)Math.min(1 - Math.pow(Math.log10(lightIntensity), 2), 
-				1 - Math.pow(Math.log10(Math.pow(lightIntensity, reflect)), 2)), 0, 1);
+		float lightingCoefficient = getLightingCoefficient(lightIntensity, reflect);
 		float imageQuality = (inView / (float)(RES*RES*RES)) * lightingCoefficient;
 
-		System.out.println(o.getName());
-		Fields.debug("inView=%d\nreflect=%f\nlight=%f\nquality=%f\n\n", inView,
+		Fields.debug("Obj: %s\ninView=%d\nreflect=%f\nlight=%f\nquality=%f\n\n", o.getName(), inView,
 				reflect, lightingCoefficient, imageQuality);
 
 		return imageQuality;
+	}
+	
+	public float getLightingCoefficient(float lightVal, float reflect) {
+		return RMath.clamp((float)Math.min(1 - Math.pow(Math.log10(lightVal), 2), 
+				1 - Math.pow(Math.log10(Math.pow(lightVal, reflect)), 2)), 0, 1);
 	}
 
 	/**
@@ -685,7 +663,7 @@ public class RobotCamera {
 		img.resetMatrix();
 		img.perspective((camFOV/camAspectRatio)*RobotRun.DEG_TO_RAD, camAspectRatio, camClipNear, camClipFar);
 
-		float light = 10 + 245 * brightness * exposure;
+		float light = (float)(10 + 245 * (1 + Math.log10(brightness * exposure)));
 		img.directionalLight(light, light, light, 0, 0, -1);
 		img.ambientLight(light/2, light/2, light/2);
 		img.background(light);
@@ -715,9 +693,7 @@ public class RobotCamera {
 
 		img.noStroke();
 		img.fill(img.color(255, 255, 255, (int)(240f*Math.max(0, Math.log10(brightness*exposure)))));
-		img.translate(width/2, height/2);
-		img.sphere(300);
-		img.translate(-width/2, -height/2);
+		img.sphere(100);
 
 		img.endDraw();
 

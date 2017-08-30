@@ -55,6 +55,7 @@ public class CameraObject extends Part {
 		image_quality = q;
 		light_value = l;
 		selectAreas = loadCamSelectAreas();
+		updateModelPreview();
 	}
 	
 	@Override
@@ -74,85 +75,7 @@ public class CameraObject extends Part {
 		return model_ID;
 	}
 	
-	public PGraphics getModelPreview(RMatrix m) {
-		if(preview == null) {
-			PGraphics img = appRef.createGraphics(WGUI.imageWidth, WGUI.imageHeight, RobotRun.P3D);
-			float[][] rMat = m.getDataF();
-			
-			PVector dim = this.getModel().getDims();
-			
-			RMatrix mat = this.getOrientation();
-			PVector alignX = new PVector(Math.abs(mat.getEntryF(0, 0)*dim.x), 
-										 Math.abs(mat.getEntryF(1, 0)*dim.y), 
-										 Math.abs(mat.getEntryF(2, 0)*dim.z));
-			PVector alignY = new PVector(Math.abs(mat.getEntryF(0, 1)*dim.x), 
-										 Math.abs(mat.getEntryF(1, 1)*dim.y), 
-										 Math.abs(mat.getEntryF(2, 1)*dim.z));
-			PVector alignZ = new PVector(Math.abs(mat.getEntryF(0, 2)*dim.x), 
-										 Math.abs(mat.getEntryF(1, 2)*dim.y), 
-										 Math.abs(mat.getEntryF(2, 2)*dim.z));
-			
-			float dimX = alignX.x + alignX.y + alignX.z;
-			float dimY = alignY.x + alignY.y + alignY.z;
-			float dimZ = alignZ.x + alignZ.y + alignZ.z;
-			
-			//System.out.println("Object dimensions: " + dim.toString());
-			//System.out.println("Apparent dimensions: " + dimX + ", " + dimY + ", " + dimZ);
-			//System.out.println(mat.toString());
-			
-			img.beginDraw();
-			img.ortho();
-			img.background(255);
-
-			img.translate(WGUI.imageWidth/2, WGUI.imageHeight/2, -dimZ - 20);
-			
-			img.applyMatrix(
-					rMat[0][0], rMat[1][0], rMat[2][0], 0,
-					rMat[0][1], rMat[1][1], rMat[2][1], 0,
-					rMat[0][2], rMat[1][2], rMat[2][2], 0,
-					0, 0, 0, 1
-			);
-			
-			float light = 20 + 235 * light_value;
-			img.directionalLight(light, light, light, 0, 0, -1);
-			img.ambientLight(light/2, light/2, light/2);
-			img.background(light);
-			
-			img.scale((float)Math.min((WGUI.imageWidth - 5)/dimX, (WGUI.imageHeight - 5)/dimY));
-			this.getModel().draw(img);
-			img.resetMatrix();
-			
-			PVector angles = RMath.matrixToEuler(mat);
-			img.rotateZ(angles.z);
-						
-			for(CamSelectArea a: selectAreas) {
-				CamSelectView v = a.getView(m);
-				if(a.isEmphasized()) {
-					img.stroke(0, 255, 0);
-					img.fill(0, 255, 0, 126);
-				}
-				else if(a.isIgnored()) {
-					img.stroke(255, 0, 0);
-					img.fill(255, 0, 0, 126);
-				}
-				else {
-					img.stroke(0);
-					img.fill(0, 0, 0, 126);
-				}
-				
-				if(v != null) {
-					PVector c = v.getTopLeftBound();
-					float w = v.getWidth();
-					float h = v.getHeight();
-					img.rect(c.x, c.y, w, h);
-				}
-			}
-			
-			img.endDraw();
-			
-			preview = img;
-		}
-		
+	public PGraphics getModelPreview() {
 		return preview;
 	}
 	
@@ -180,10 +103,88 @@ public class CameraObject extends Part {
 		
 		return null;
 	}
+	
+	@Override
+	public void setLocalOrientation(RMatrix m) {
+		super.setLocalOrientation(m);
+		updateModelPreview();
+	}
 
-	public PGraphics updateModelPreview(RMatrix m) {
-		preview = null;
-		return getModelPreview(m);
+	public void updateModelPreview() {
+		PGraphics img = appRef.createGraphics(WGUI.imageWidth, WGUI.imageHeight, RobotRun.P3D);
+		float[][] rMat = getLocalOrientation().getDataF();
+		
+		PVector dim = this.getModel().getDims();
+		
+		RMatrix mat = this.getOrientation();
+		PVector alignX = new PVector(Math.abs(mat.getEntryF(0, 0)*dim.x), 
+									 Math.abs(mat.getEntryF(1, 0)*dim.y), 
+									 Math.abs(mat.getEntryF(2, 0)*dim.z));
+		PVector alignY = new PVector(Math.abs(mat.getEntryF(0, 1)*dim.x), 
+									 Math.abs(mat.getEntryF(1, 1)*dim.y), 
+									 Math.abs(mat.getEntryF(2, 1)*dim.z));
+		PVector alignZ = new PVector(Math.abs(mat.getEntryF(0, 2)*dim.x), 
+									 Math.abs(mat.getEntryF(1, 2)*dim.y), 
+									 Math.abs(mat.getEntryF(2, 2)*dim.z));
+		
+		float dimX = alignX.x + alignX.y + alignX.z;
+		float dimY = alignY.x + alignY.y + alignY.z;
+		float dimZ = alignZ.x + alignZ.y + alignZ.z;
+		
+		//System.out.println("Object dimensions: " + dim.toString());
+		//System.out.println("Apparent dimensions: " + dimX + ", " + dimY + ", " + dimZ);
+		//System.out.println(mat.toString());
+		
+		img.beginDraw();
+		img.ortho();
+		img.background(255);
+
+		img.translate(WGUI.imageWidth/2, WGUI.imageHeight/2, -dimZ - 20);
+		
+		img.applyMatrix(
+				rMat[0][0], rMat[1][0], rMat[2][0], 0,
+				rMat[0][1], rMat[1][1], rMat[2][1], 0,
+				rMat[0][2], rMat[1][2], rMat[2][2], 0,
+				0, 0, 0, 1
+		);
+		
+		float light = 20 + 235 * light_value;
+		img.directionalLight(light, light, light, 0, 0, -1);
+		img.ambientLight(light/2, light/2, light/2);
+		img.background(light);
+		
+		img.scale((float)Math.min((WGUI.imageWidth - 5)/dimX, (WGUI.imageHeight - 5)/dimY));
+		this.getModel().draw(img);
+		img.resetMatrix();
+		
+		PVector angles = RMath.matrixToEuler(mat);
+		img.rotateZ(angles.z);
+					
+		for(CamSelectArea a: selectAreas) {
+			CamSelectView v = a.getView(mat);
+			if(a.isEmphasized()) {
+				img.stroke(0, 255, 0);
+				img.fill(0, 255, 0, 126);
+			}
+			else if(a.isIgnored()) {
+				img.stroke(255, 0, 0);
+				img.fill(255, 0, 0, 126);
+			}
+			else {
+				img.stroke(0);
+				img.fill(0, 0, 0, 126);
+			}
+			
+			if(v != null) {
+				PVector c = v.getTopLeftBound();
+				float w = v.getWidth();
+				float h = v.getHeight();
+				img.rect(c.x, c.y, w, h);
+			}
+		}
+		
+		img.endDraw();
+		preview = img;
 	}
 
 	private ArrayList<CamSelectArea> loadCamSelectAreas() {
