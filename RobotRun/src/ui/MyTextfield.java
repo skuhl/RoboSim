@@ -48,6 +48,7 @@ public class MyTextfield extends Textfield implements UIInputElement {
 		_myTextBuffer.delete(0, _myTextBuffer.length());
 		_myTextBufferIndex = 0;
 		textBufferRenderStart = 0;
+		clearSelection();
 	}
 	
 	/**
@@ -129,7 +130,7 @@ public class MyTextfield extends Textfield implements UIInputElement {
 		if (selectionBegin != -1 && selectionEnd != -1) {
 			buffer.pushStyle();
 			// TODO tweek color
-			buffer.fill(55, 55, 255, 125);
+			buffer.fill(55, 55, 255, 90);
 			// Draw highlighting over the text
 			int rectXBegin = getTextWidthFor(text.substring(
 					textBufferRenderStart, selectionBegin));
@@ -182,7 +183,6 @@ public class MyTextfield extends Textfield implements UIInputElement {
 	 * @param c
 	 */
 	public void insert(Character c) {
-		removeSelectedSegment();
 		_myTextBuffer.insert(_myTextBufferIndex, c.charValue());
 		cursorRight();
 	}
@@ -229,6 +229,7 @@ public class MyTextfield extends Textfield implements UIInputElement {
 				textBufferRenderStart = 0;
 				
 			} else if (e.getKeyCode() >= 32 && e.getKeyCode() <= 126) {
+				removeSelectedSegment();
 				insert(e.getKey());
 			}
 		
@@ -283,18 +284,22 @@ public class MyTextfield extends Textfield implements UIInputElement {
 	}
 	
 	@Override
-	protected void onStartDrag() {
-		super.onStartDrag();
-		selectionBegin = mouseXToIdx();
-		selectionEnd = -1;
-	}
-	
-	@Override
 	protected void onDrag() {
-		if (this.selectionBegin != -1) {
+		// Update the selection bounds while the mouse is dragged
+		if (selectionBegin == -1) {
 			int newIdx = mouseXToIdx();
 			
-			if (newIdx >= 0 && newIdx < _myTextBuffer.length()) {
+			if (newIdx >= 0 && newIdx <= _myTextBuffer.length()) {
+				selectionBegin = newIdx;
+				_myTextBufferIndex = selectionEnd;
+			}
+			
+		}
+		
+		if (selectionBegin != -1) {
+			int newIdx = mouseXToIdx();
+			
+			if (newIdx >= 0 && newIdx <= _myTextBuffer.length()) {
 				selectionEnd = newIdx;
 				_myTextBufferIndex = selectionEnd;
 			}
@@ -302,7 +307,7 @@ public class MyTextfield extends Textfield implements UIInputElement {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Resets the selection bounds for the textfield highlighting.
 	 */
 	private void clearSelection() {
 		selectionBegin = -1;
@@ -398,7 +403,9 @@ public class MyTextfield extends Textfield implements UIInputElement {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Removes all the characters between the begin and end selection indices
+	 * from the text buffer and updates the cursor and render indices if
+	 * necessary.
 	 */
 	private void removeSelectedSegment() {
 		if (selectionBegin != -1 && selectionEnd != -1) {

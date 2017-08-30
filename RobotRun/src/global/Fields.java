@@ -781,10 +781,11 @@ public abstract class Fields {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Returns a reference to the model with the given file name.
 	 * 
-	 * @param name
-	 * @return
+	 * @param name	The name of the model's file
+	 * @return		The model associated with the given file name or null
+	 * 				if no such model exists.
 	 */
 	public static Model getModel(String name) {
 		return nameToModelMap.get(name);
@@ -882,10 +883,12 @@ public abstract class Fields {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Updates both the fixture and part references of the given world objects,
+	 * in such a away that the given part references the given fixture as its
+	 * parent coordinate system.
 	 * 
-	 * @param parent
-	 * @param dependent
+	 * @param parent		The fixture to associate with the given part
+	 * @param dependent		The part to associate with the given fixture
 	 */
 	public static void setWODependency(Fixture parent, Part dependent) {
 		dependent.removeParent();
@@ -964,9 +967,10 @@ public abstract class Fields {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Calls the join method of the given thread. If an exception is thrown by
+	 * the join method, then its stack trace is outputted to standard error.
 	 * 
-	 * @param t
+	 * @param t	The thread for which to wait
 	 */
 	public static void waitForThread(Thread t) {
 		try {
