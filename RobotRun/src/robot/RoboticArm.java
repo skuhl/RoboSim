@@ -895,8 +895,8 @@ public class RoboticArm {
 	 * @param distBwtLines		The spacing between between lines drawn for an
 	 * 							axis
 	 */
-	public void drawGridlines(PGraphics g, RMatrix axesVectors, PVector origin,
-			int halfNumOfLines, float distBwtLines) {
+	public static void drawGridlines(PGraphics g, RMatrix axesVectors,
+			PVector origin, int halfNumOfLines, float distBwtLines) {
 		
 		float[][] axesDat = axesVectors.getDataF();
 		int vectorPX = -1, vectorPZ = -1;
@@ -957,16 +957,16 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Returns the name of the active end effector, or null if no end effector
+	 * is active.
 	 * 
-	 * @return
+	 * @return	The name of the active end effector
 	 */
 	public String getActiveEEName() {
 		EndEffector ee = this.getActiveEE();
 		
 		if (ee != null) {
 			return ee.getName();
-			
 		}
 		
 		return null;
@@ -1081,10 +1081,10 @@ public class RoboticArm {
 		if (rdx >= 0 && rdx < DREG.length) {
 			return DREG[rdx];
 			
-		} else {
-			// Invalid index
-			return null;
 		}
+		
+		// Invalid index
+		return null;
 	}
 	
 	/**
@@ -1209,9 +1209,10 @@ public class RoboticArm {
 	 * Calculates the position and orientation of the robot's face plate based
 	 * on the native coordinate system and the given joint angles.
 	 * 
-	 * @jointAngles	The angles used to calculate the robot's face plate point
-	 * @return		A point representing the robot faceplate's position and
-	 * 				orientation
+	 * @param jointAngles	The angles used to calculate the robot's face plate
+	 * 						point
+	 * @return				A point representing the robot faceplate's position
+	 * 						and orientation
 	 */
 	public Point getFacePlatePoint(float[] jointAngles) {
 		RMatrix tipOrien = getFaceplateTMat(jointAngles);
@@ -1258,6 +1259,7 @@ public class RoboticArm {
 	 * NOTE: only use this method, if you intend to edit the instruction
 	 * 		 returned by this method!!!!
 	 * 
+	 * @param p		The program from which to get an instruction
 	 * @param idx	The index of the instruction in the active program's list
 	 * 				of instructions
 	 * @return		The instruction at the given index, in the active program's
@@ -1355,10 +1357,10 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Gets the macro associated with the given key bind number.
 	 * 
-	 * @param keyNum
-	 * @return
+	 * @param keyNum	The number of a key binding
+	 * @return			The macro associated with the given key bing number
 	 */
 	public Macro getKeyBind(int keyNum) {
 		if (keyNum >= 0 && keyNum < macroKeyBinds.length) {
@@ -1372,15 +1374,6 @@ public class RoboticArm {
 		return macros.get(idx);
 	}
 	
-	/** TODO REMOVE These methods
-	public Macro[] getMacroKeyBinds() {
-		return macroKeyBinds;
-	}
-
-	public ArrayList<Macro> getMacroList() {
-		return macros;
-	}
-	/**/
 	/**
 	 * Returns a copy of the primary position of the given position motion
 	 * instruction.
@@ -1427,11 +1420,10 @@ public class RoboticArm {
 	public PositionRegister getPReg(int rdx) {
 		if (rdx >= 0 && rdx < PREG.length) {
 			return PREG[rdx];
-			
-		} else {
-			// Invalid index
-			return null;
 		}
+		
+		// Invalid index
+		return null;
 	}
 
 	/**
@@ -1467,11 +1459,10 @@ public class RoboticArm {
 	public Program getProgram(int pdx) {
 		if (pdx >= 0 && pdx < PROGRAM.size()) {
 			return PROGRAM.get(pdx);
-			
-		} else {
-			// Invalid index
-			return null;
 		}
+		
+		// Invalid index
+		return null;
 	}
 	
 	/**
@@ -1512,11 +1503,10 @@ public class RoboticArm {
 	public ToolFrame getToolFrame(int fdx) {
 		if (fdx >= 0 && fdx < TOOL_FRAME.length) {
 			return TOOL_FRAME[fdx];
-			
-		} else {
-			// Invalid index
-			return null;
 		}
+		
+		// Invalid index
+		return null;
 	}
 
 	/**
@@ -1527,10 +1517,11 @@ public class RoboticArm {
 	 * @return		The default tool tip offset of the end effector associated
 	 * 				with the given index
 	 */
-	public PVector getToolTipDefault(int idx) {
+	public static PVector getToolTipDefault(int idx) {
 		if (idx >= 0 && idx < EE_TOOLTIP_DEFAULTS.length) {
 			return EE_TOOLTIP_DEFAULTS[idx];
 		}
+		
 		// invalid index
 		return null;
 	}
@@ -1577,11 +1568,10 @@ public class RoboticArm {
 	public UserFrame getUserFrame(int fdx) {
 		if (fdx >= 0 && fdx < USER_FRAME.length) {
 			return USER_FRAME[fdx];
-			
-		} else {
-			// Invalid index
-			return null;
 		}
+		
+		// Invalid index
+		return null;
 	}
 	
 	/**
@@ -1595,7 +1585,7 @@ public class RoboticArm {
 	 * 						position type, user frame, tool frame, and offset
 	 * 						for the resulting point
 	 * @param parent		The program, to which mInst belongs
-	 * @param useCircPos	Whether to get the primary or secondary position of
+	 * @param getCircPos	Whether to get the primary or secondary position of
 	 * 						the motion instruction
 	 * @return				The position and orientation of the point in the
 	 * 						native coordinate system as well as the associated
@@ -1773,7 +1763,10 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * @return	Is the given part being held by the robot
+	 * Determines if the given part is held by this robot.
+	 * 
+	 * @param p	The part in question
+	 * @return	Is the given part being held by this robot
 	 */
 	public boolean isHeld(Part p) {
 		return p == heldPart;
@@ -1798,9 +1791,9 @@ public class RoboticArm {
 	 *                         Coordinates
 	 * @param destOrientation  The desired orientation of the Robot as a quaternion, in
 	 *                         Native Coordinates
-	 * @returning   1 if inverse kinematics fails or the joint angles returned
-	 *              are invalid and 0 if the Robot is successfully moved to the
-	 *              given position
+	 * @return					1 if inverse kinematics fails or the joint angles returned
+	 * 							are invalid and 0 if the Robot is successfully moved to the
+	 * 							given position
 	 */
 	public int jumpTo(PVector destPosition, RQuaternion destOrientation) {
 		boolean invalidAngle = false;
@@ -1847,16 +1840,18 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Returns the total number of macros associated with this robot.
 	 * 
-	 * @return
+	 * @return	The total number of this robot's marcos
 	 */
 	public int numOfMacros() {
 		return macros.size();
 	}
 	
 	/**
-	 * Returns the number of programs associated with the Robot.
+	 * Returns the total number of program associated with this robot.
+	 * 
+	 * @return The total number of this robot's programs
 	 */
 	public int numOfPrograms() {
 		return PROGRAM.size();
@@ -2004,9 +1999,9 @@ public class RoboticArm {
 	 * @param axes
 	 *            The axes of the Coordinate System representing as a rotation
 	 *            quanternion
-	 * @returning The point, pt, interms of the given coordinate system
+	 * @return		The point, pt, interms of the given coordinate system
 	 */
-	public Point removeFrame(Point pt, PVector origin, RQuaternion axes) {
+	public static Point removeFrame(Point pt, PVector origin, RQuaternion axes) {
 		PVector position = RMath.vFromFrame(pt.position, origin, axes);
 		RQuaternion orientation = RQuaternion.mult(pt.orientation, axes);
 		
@@ -2062,10 +2057,8 @@ public class RoboticArm {
 			InstElement replaced = new InstElement(e.getID(), e.getInst());
 			p.replaceInstAt(idx, inst);
 			
-			if (replaced != null) {
-				pushUndoState(InstUndoType.REPLACED, p, idx, replaced, false);
-				return replaced.getInst();
-			}
+			pushUndoState(InstUndoType.REPLACED, p, idx, replaced, false);
+			return replaced.getInst();
 		}
 		
 		return null;
@@ -2108,10 +2101,11 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Removes the macro at the specified index in this robot's list of macros.
+	 * If no such macro exists, then nothing occurs.
 	 * 
-	 * @param idx
-	 * @return
+	 * @param idx	The index of the macro to remove from this robot
+	 * @return		If a macro was removed
 	 */
 	public boolean rmMacro(int idx) {
 		if (idx >= 0 && idx < macros.size()) {
@@ -2164,7 +2158,7 @@ public class RoboticArm {
 	 * given index must be within the range [0, EE_LIST.length). 0 implies
 	 * that no end effector is active. 
 	 * 
-	 * @param ee	The index of the end effector to set as active
+	 * @param eeIdx	The index of the end effector to set as active
 	 */
 	public void setActiveEE(int eeIdx) {
 		if (eeIdx >= 0 & eeIdx < EE_LIST.length) {
@@ -2966,9 +2960,9 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Removes all macros defined for the given program
 	 * 
-	 * @param p
+	 * @param p	The program, for which to remove all associated macros
 	 */
 	private void rmMacros(Program p) {
 		int idx = 0;
@@ -2977,12 +2971,7 @@ public class RoboticArm {
 			Macro m = macros.get(idx);
 			
 			if (m.getProg() == p) {
-				macros.remove(idx);
-				
-				if (!m.isManual()) {
-					// Remove key binds
-					setKeyBinding(m.getKeyNum(), null);
-				}
+				rmMacro(idx);
 				
 			} else {
 				++idx;
