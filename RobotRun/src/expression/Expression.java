@@ -24,12 +24,12 @@ public class Expression extends Operand<Object> {
 	public void add(ExpressionElement e) {
 		elementList.add(e);
 	}
-	
+
 	@Override
 	public Expression clone() {
 		ArrayList<ExpressionElement> newList = new ArrayList<>();
 		for(ExpressionElement e : elementList) {
-			if(e instanceof Operand<?>){
+			if(e instanceof Operand<?>) {
 				newList.add(((Operand<?>)e).clone());
 			} else {
 				newList.add(e);

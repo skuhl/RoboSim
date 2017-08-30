@@ -377,6 +377,14 @@ public class RobotRun extends PApplet {
 		UI.updateUIContentPositions();
 	}
 	
+	public void button_camReset() {
+		if(rCamera != null) {
+			rCamera.reset();
+			UI.updateCameraWindowFields();
+			UI.updateUIContentPositions();
+		}
+	}
+	
 	public void button_camSnapPreview() {
 		if (rCamera != null) {
 			UI.updateCameraCurrent();

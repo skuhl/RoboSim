@@ -10,36 +10,22 @@ public abstract class ST_ScreenLineSelect extends Screen {
 	public static final int DN = 1;
 	public static final int UP = 0;
 	
-	protected int direction;
+	protected int selStart;
 	/** Used for determining what lines are selected */
 	protected boolean[] lineSelectState;
 	
 	public ST_ScreenLineSelect(ScreenMode m, RobotRun r) {
 		super(m, r);
+		selStart = -1;
 	}
 	
 	@Override
 	public void actionArrowDn() {
 		if (!robotRun.isProgExec()) {
-			// Lock movement when a program is running
-			int selectStart = contents.getCurrentItemIdx();
 			
 			do {
 				robotRun.setActiveInstIdx(contents.moveDown(robotRun.isShift()));
 			} while(contents.getItemLineIdx() != 0);
-				
-			
-			if(robotRun.isShift()) {
-				for(int i = selectStart; i <= contents.getCurrentItemIdx(); i += 1) {
-					if(direction != DN || i > selectStart) {
-						lineSelectState[i] = !lineSelectState[i];
-					}
-				}
-				
-				direction = DN;
-			} else {
-				direction = -1;
-			}
 
 			Fields.debug("line=%d col=%d inst=%d TRS=%d\n",
 					contents.getLineIdx(), contents.getColumnIdx(),
@@ -58,25 +44,10 @@ public abstract class ST_ScreenLineSelect extends Screen {
 	public void actionArrowUp() {
 		if (!robotRun.isProgExec()) {
 			try {
-				// Lock movement when a program is running
-				int selectStart = contents.getCurrentItemIdx();
 				
 				do {
 					robotRun.setActiveInstIdx(contents.moveUp(robotRun.isShift()));
 				} while(contents.getItemLineIdx() != 0);
-				
-				
-				if(robotRun.isShift()) {
-					for(int i = selectStart; i >= contents.getCurrentItemIdx(); i -= 1) {
-						if(direction != UP || i < selectStart) {
-							lineSelectState[i] = !lineSelectState[i];
-						}
-					}
-					
-					direction = UP;
-				} else {
-					direction = -1;
-				}
 				
 			} catch (IndexOutOfBoundsException IOOBEx) {
 				// Issue with loading a program, not sure if this helps ...
@@ -95,8 +66,15 @@ public abstract class ST_ScreenLineSelect extends Screen {
 	
 	@Override
 	public void actionEntr() {
-		int idx = contents.getCurrentItemIdx();
-		lineSelectState[idx] = !lineSelectState[idx];
+		if(robotRun.isShift() && selStart != -1) {
+			for(int i = Math.min(selStart + 1, contents.getLineIdx()); i < Math.max(selStart, contents.getLineIdx() + 1); i += 1) {
+				lineSelectState[i] = !lineSelectState[i];
+			}
+		} else {
+			selStart = contents.getCurrentItemIdx();
+			lineSelectState[selStart] = !lineSelectState[selStart];
+		}
+		
 		robotRun.updatePendantScreen();
 	}
 
@@ -140,6 +118,5 @@ public abstract class ST_ScreenLineSelect extends Screen {
 	protected void loadVars(ScreenState s) {
 		setScreenIndices(s.conLnIdx, 0, s.conRenIdx, 0, 0);
 		lineSelectState = new boolean[robotRun.getActiveProg().getNumOfInst() + 1];
-		direction = -1;
 	}
 }
