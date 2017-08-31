@@ -1140,7 +1140,7 @@ public class WGUI implements ControlListener {
 					}
 				}
 				
-				o.updateModelPreview(mdlOrient);
+				o.updateModelPreview();
 				updateUIContentPositions();
 				
 			} else if (arg0.isFrom("WOFillR") || arg0.isFrom("WOFillG") ||
@@ -3564,7 +3564,7 @@ public class WGUI implements ControlListener {
 
 		CameraObject o = (CameraObject)getDropdown("CamObjects").getSelectedItem();
 		if(o != null) {
-			PGraphics preview = o.getModelPreview(o.getLocalOrientation());
+			PGraphics preview = o.getModelPreview();
 			getButton(WGUI_Buttons.CamObjPreview).setImage(preview);
 			getButton(WGUI_Buttons.CamObjPreview).show();
 		}
