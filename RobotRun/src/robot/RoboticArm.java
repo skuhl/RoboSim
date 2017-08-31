@@ -2179,7 +2179,7 @@ public class RoboticArm {
 	/**
 	 * Sets this robot's active user frame index to the given value.
 	 * 
-	 * @param activeToolIdx	The robot's new active user frame index
+	 * @param activeUserFrame	The robot's new active user frame index
 	 */
 	public void setActiveUserFrame(int activeUserFrame) {
 		this.activeUserIdx = activeUserFrame;
@@ -2249,17 +2249,21 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Associates the keybind number with the given macro, if the given keybind
+	 * number is valid. If the given keybind number is invalid, then false is
+	 * returned.
 	 * 
-	 * @param keyNum
-	 * @param macro
-	 * @return
+	 * @param keyNum	The keybind to associate with the given macro
+	 * @param macro		The macro to assign a keybind (null values are
+	 * 					acceptable)
+	 * @return			Whether the given keybind number is valid
 	 */
 	public boolean setKeyBinding(int keyNum, Macro macro) {
 		if (keyNum >= 0 && keyNum < macroKeyBinds.length) {
 			macroKeyBinds[keyNum] = macro;
 			
 			if (macro != null) {
+				macro.setManual(false);
 				macro.setKeyNum(keyNum);
 			}
 			
@@ -2270,19 +2274,20 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Sets the macro at the given index in this robot's list of macros as a
+	 * manual function macro. So, if that macro was assigned to a keybind, then
+	 * that keybind is removed.
 	 * 
-	 * @param mdx
-	 * @param isManual
+	 * @param mdx	The index of the macro to set as manual
 	 */
-	public void setMacroType(int mdx, boolean isManual) {
+	public void setMacroAsManual(int mdx) {
 		Macro m = this.getMacro(mdx);
 		
 		if (m != null) {
 			boolean wasManual = m.isManual();
-			m.setManual(isManual);
-			// Update key binding
-			if (!wasManual && m.isManual()) {
+			m.setManual(true);
+			// Remove the macro's keybind
+			if (!wasManual) {
 				setKeyBinding(m.getKeyNum(), null);
 				m.setKeyNum(-1);
 			}
@@ -2448,10 +2453,15 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Returns a label for the tool frame associated with the given index. This
+	 * label includes the name of the frame (if it is defined) as well as the
+	 * given index (offset by +1). If the given index is invalid for tool
+	 * frames, then null is returned.
 	 * 
-	 * @param idx
-	 * @return
+	 * @param idx	The index of the tool frame in this robot's list of tool
+	 * 				frames
+	 * @return		The label for the tool frame, or null (if the index is
+	 * 				invalid)
 	 */
 	public String toolLabel(int idx) {
 		ToolFrame tFrame = getToolFrame(idx);
@@ -2786,10 +2796,15 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Returns a label for the user frame associated with the given index. This
+	 * label includes the name of the frame (if it is defined) as well as the
+	 * given index (offset by +1). If the given index is invalid for user
+	 * frames, then null is returned.
 	 * 
-	 * @param idx
-	 * @return
+	 * @param idx	The index of the user frame in this robot's list of user
+	 * 				frames
+	 * @return		The label for the user frame, or null (if the index is
+	 * 				invalid)
 	 */
 	public String userLabel(int idx) {
 		UserFrame uFrame = getUserFrame(idx);
@@ -2888,7 +2903,8 @@ public class RoboticArm {
 	 * @param tFrame		The frame, which defines the tool tip offset
 	 * @param uFrame		The coordinate frame, with which the robot's tool
 	 * 						tip position and orientation are defined 
-	 * @return
+	 * @return				The position of the robot's tooltip with respect
+	 * 						to the given tool and user frames
 	 */
 	private Point getToolTipPoint(float[] jointAngles, ToolFrame tFrame,
 			UserFrame uFrame) {

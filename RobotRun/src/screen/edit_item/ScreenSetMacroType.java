@@ -18,10 +18,10 @@ public class ScreenSetMacroType extends ST_ScreenEditItem {
 		int idx = robotRun.getLastScreen().getContentIdx();
 		
 		if (options.getLineIdx() == 0) {
-			r.setMacroType(idx, false);
 			robotRun.switchScreen(ScreenMode.SET_MACRO_BINDING, false);
+			
 		} else if (options.getLineIdx() == 1) {
-			r.setMacroType(idx, true);
+			r.setMacroAsManual(idx);
 			robotRun.lastScreen();
 		}
 		

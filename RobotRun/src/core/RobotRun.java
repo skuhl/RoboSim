@@ -2056,23 +2056,41 @@ public class RobotRun extends PApplet {
 			return row;
 		}
 	}
-
+	
+	/**
+	 * Returns a reference to the keycode map used for the keydown functions of
+	 * textfield UI elements.
+	 * 
+	 * @return	A reference to the keycode map
+	 */
 	public KeyCodeMap getKeyCodeMap() {
 		return keyCodeMap;
 	}
 
+	/**
+	 * Returns a reference to the screen, which was the active screen on the
+	 * pendant, prior to the currently active screen. It is possible that this
+	 * is null.
+	 * 
+	 * @return	A reference to the previously active pendant screen
+	 */
 	public Screen getLastScreen() {
 		return screens.getPrevScreen();
 	}
 	
+	/**
+	 * Returns the mode of the active screen of the pendant.
+	 * 
+	 * @return	The mode of the pendant's active screen
+	 */
 	public ScreenMode getMode() {
 		return screens.getActiveScreen().mode;
 	}
 	
 	/**
-	 * TODO comment this
+	 * Returns the current number of scenarios that exist in the application.
 	 * 
-	 * @return
+	 * @return	The total number of scenarios
 	 */
 	public int getNumOfScenarios() {
 		return SCENARIOS.size();
@@ -2088,9 +2106,17 @@ public class RobotRun extends PApplet {
 		return RMath.getOrientationAxes(getGraphics());
 	}
 
-	/*
-	 * This method transforms the given coordinates into a vector in the
-	 * Processing's native coordinate system.
+	/**
+	 * Returns the equivalent position, with respect to Processing's native
+	 * coordinate system, of the given x, y, z values. The given position is
+	 * assumed to be with respect to the transformation applied to the
+	 * application's main graphics object.
+	 * 
+	 * @param x	The x position
+	 * @param y	The y position
+	 * @param z	The z position
+	 * @return	The equivalent position with respect to Processing's native
+	 * 			coordinate system
 	 */
 	public PVector getPosFromMatrix(float x, float y, float z) {
 		return RMath.getPosition(getGraphics(), x, y, z);
@@ -2100,14 +2126,18 @@ public class RobotRun extends PApplet {
 	 * Returns the robot with the associated ID, or null if no such robot
 	 * exists.
 	 * 
-	 * @param rid
-	 *            A valid robot ID
-	 * @return The robot with the given ID
+	 * @param rid	A valid robot ID
+	 * @return 		The robot with the given ID
 	 */
 	public RoboticArm getRobot(int rid) {
 		return ROBOTS.get(rid);
 	}
-
+	
+	/**
+	 * Returns a reference to the application's robot camera.
+	 * 
+	 * @return	A reference to the application's robot camera
+	 */
 	public RobotCamera getRobotCamera() {
 		return rCamera;
 	}
@@ -2122,10 +2152,12 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Returns a reference to the scenario at the given index, in this
+	 * application's list of scenarios. If the given index is invalid, then
+	 * null is returned.
 	 * 
-	 * @param idx
-	 * @return
+	 * @param idx	The index of the scenario
+	 * @return		A reference to a scenario in this application
 	 */
 	public Scenario getScenario(int idx) {
 		if (idx >= 0 && idx < SCENARIOS.size()) {
@@ -2136,10 +2168,11 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Returns a reference to the scenario, which has the given name, if one
+	 * exists. If no scenario has the given name, then null is returned.
 	 * 
-	 * @param tgtName
-	 * @return
+	 * @param tgtName	The name of the scenario
+	 * @return			A reference to the scenario with the given name
 	 */
 	public Scenario getScenario(String tgtName) {
 		for (Scenario s : SCENARIOS) {
@@ -2152,30 +2185,44 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Returns the group number of the most recent scenario undo state, if one
+	 * exists. If no undo states exist, then -1 is returned.
 	 * 
-	 * @return
+	 * @return	The group number of the most recent scenario undo state
 	 */
 	public int getScenarioUndoGID() {
 		if (SCENARIO_UNDO.isEmpty()) {
+			// No undo state exist
 			return -1;
 		}
 		
 		return SCENARIO_UNDO.peek().getGroupNum();
 	}
-
+	
+	/**
+	 * Returns a reference to this application's UI manager.
+	 * 
+	 * @return	A reference to the UI manager
+	 */
 	public WGUI getUI() {
 		return UI;
 	}
 
 	/**
-	 * @return Whether or not bounding boxes are displayed
+	 * Returns the application's bounding box render state. If this is true,
+	 * then the bounding boxes associated with the robotic arm and parts in the
+	 * active scenario will be rendered. Otherwise, these bounding boxes will
+	 * remain hidden.
+	 * 
+	 * @return	Whether bounding boxes are rendered or not
 	 */
 	public boolean isOBBRendered() {
 		return !UI.getButtonState(WGUI_Buttons.ObjToggleBounds);
 	}
 
 	/**
+	 * Returns if the application's active program is currently executing.
+	 * 
 	 * @return	Is the active robot executing a program?
 	 */
 	public boolean isProgExec() {
@@ -3208,6 +3255,8 @@ public class RobotRun extends PApplet {
 	public void setup() {
 		super.setup();
 		
+		activeRobot = new Pointer<>(null);
+		activeScenario = new Pointer<>(null);
 		mouseRay = null;
 		position = null;
 		mouseOverWO = null;
@@ -3234,15 +3283,6 @@ public class RobotRun extends PApplet {
 		Fields.medium = createFont("fonts/Consolas.ttf", 14);
 		Fields.small = createFont("fonts/Consolas.ttf", 12);
 		Fields.bond = createFont("fonts/ConsolasBold.ttf", 12);
-		
-		camera = new Camera(1000f, 100f, 8000f);
-		robotTrace = new RTrace();
-		activeRobot = new Pointer<>(null);
-		activeScenario = new Pointer<>(null);
-		
-		CallInstruction.setRobotRef(activeRobot);
-		OperandCamObj.setCamRef(rCamera);
-		OperandCamObj.setScenarioRef(activeScenario);
 		
 		keyCodeMap = new KeyCodeMap();
 		procExec = new ProgramExecution();
@@ -3271,7 +3311,14 @@ public class RobotRun extends PApplet {
 			ROBOTS.put(r.RID, r);
 
 			activeRobot.set( ROBOTS.get(0) );
+			
+			camera = new Camera(1000f, 100f, 8000f);
 			rCamera = new RobotCamera(this);
+			robotTrace = new RTrace();
+			
+			CallInstruction.setRobotRef(activeRobot);
+			OperandCamObj.setCamRef(rCamera);
+			OperandCamObj.setScenarioRef(activeScenario);
 			
 			DataManagement.loadState(this);
 			
