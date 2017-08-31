@@ -65,10 +65,10 @@ public class FrameInstruction extends Instruction {
 		
 		// Frame index (and possibly the name of the frame)
 		if (frameRef != null && frameRef.getName().length() > 0) {
-			fields[1] = String.format("%s (%d)", frameRef.getName(), frameIdx);
+			fields[1] = String.format("%s (%d)", frameRef.getName(), frameIdx + 1);
 			
 		} else {
-			fields[1] = Integer.toString(getFrameIdx() + 1);
+			fields[1] = Integer.toString(frameIdx + 1);
 		}
 
 		return fields;
