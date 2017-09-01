@@ -5,7 +5,8 @@ import geom.Point;
  * An extension of the register class, which houses a point along with an
  * associated comment.
  * 
- * @author Joshua Hooker and Vincent Druckte
+ * @author Vincent Druckte
+ * @author Joshua Hooker
  */
 public class PositionRegister extends Register {
 	

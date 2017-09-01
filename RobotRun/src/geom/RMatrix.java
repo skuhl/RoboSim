@@ -21,6 +21,7 @@ public class RMatrix extends Array2DRowRealMatrix {
 		super(m.getData());
 	}
 	
+	@Override
 	public RMatrix copy() {
 		return new RMatrix( getData().clone() );
 	}

@@ -81,7 +81,9 @@ import window.WGUI_Buttons;
  * events as well as the main render loop of the application amongst other
  * various nuances in the program.
  * 
- * @author Vincent Druckte, Joshua Hooker, and James Walker
+ * @author Vincent Druckte
+ * @author Joshua Hooker
+ * @author James Walker
  */
 public class RobotRun extends PApplet {
 
@@ -250,7 +252,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant DOWN button
+	 * Pendant DOWN button</br></br>
 	 * 
 	 * Moves down one element in a list displayed on the pendant screen.
 	 * Depending on what menu is active this may move the list pointer
@@ -269,7 +271,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant LEFT button
+	 * Pendant LEFT button</br></br>
 	 * 
 	 * Moves one column to the left on a list element display on the pendant's
 	 * screen. Depending on what menu is active, this may move the pointer in
@@ -288,7 +290,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Pendant RIGHT button
+	 * Pendant RIGHT button</br></br>
 	 * 
 	 * Moves one column to the right in a list element display on the
 	 * pendant's screen. Depending on what menu is active, this may move the
@@ -309,7 +311,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant UP button
+	 * Pendant UP button</br></br>
 	 * 
 	 * Moves up one element in a list displayed on the pendant screen.
 	 * Depending on what menu is active this may move the list pointer
@@ -328,7 +330,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Pendant BKSPC button
+	 * Pendant BKSPC button</br></br>
 	 * 
 	 * Functions as a backspace key for number, text, and point input menus.
 	 */
@@ -345,7 +347,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant BWD button
+	 * Pendant BWD button</br></br>
 	 * 
 	 * Executes a motion instruction two instructions prior to the active
 	 * instruction (if one exists).
@@ -426,7 +428,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Camera Bk button
+	 * Camera Bk button</br></br>
 	 * 
 	 * Sets the camera to the default back view, which looks down the positive
 	 * x-axis of the world coordinate system.
@@ -444,7 +446,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Camera Bt button
+	 * Camera Bt button</br></br>
 	 * 
 	 * Sets the camera to point down the positive z-axis of the world coordinate
 	 * frame, so as to view the bottom of the robot.
@@ -462,7 +464,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Camera D button
+	 * Camera D button</br></br>
 	 * 
 	 * Resets the position of the camera to (0, 0, 0).
 	 */
@@ -479,7 +481,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Camera F button
+	 * Camera F button</br></br>
 	 * 
 	 * Sets the camera to the default position, facing down the negative y-axis
 	 * of the world coordinate system.
@@ -497,7 +499,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Camera L button
+	 * Camera L button</br></br>
 	 * 
 	 * Sets the camera facing down the negative x-axis of the world coordinate
 	 * frame.
@@ -515,7 +517,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Camera R button
+	 * Camera R button</br></br>
 	 * 
 	 * Sets the camera to point down the positive x-axis of the world
 	 * coordinate frame.
@@ -533,7 +535,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Camera T button
+	 * Camera T button</br></br>
 	 * 
 	 * Sets the camera to point down the negative z-axis of the world
 	 * coordinate frame.
@@ -551,7 +553,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant COORD button
+	 * Pendant COORD button</br></br>
 	 * 
 	 * If shift is off, then this button will change the coordinate frame of
 	 * the active robot. If shift is on, then this button will change to the
@@ -576,7 +578,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Pendant - button
+	 * Pendant - button</br></br>
 	 * 
 	 * Appends the '-' character to input for number, text, and point entry
 	 * menus.
@@ -593,7 +595,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant DATA button
+	 * Pendant DATA button</br></br>
 	 * 
 	 * Displays a list of the register navigation menus (i.e. data or position
 	 * registers).
@@ -610,7 +612,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Pendant EDIT button
+	 * Pendant EDIT button</br></br>
 	 * 
 	 * Links to the active program's instruction navigation menu, except in the
 	 * select screen, where it will open the instruction navigation menu for
@@ -641,7 +643,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Pendant ENTER button
+	 * Pendant ENTER button</br></br>
 	 * 
 	 * Functions as a confirmation button for almost all menus.
 	 */
@@ -659,7 +661,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Miscellaneous menu button
+	 * Miscellaneous menu button</br></br>
 	 * 
 	 * Creates text files for each program stored in each robot in their
 	 * respective export directories that represent the pendant text format
@@ -675,7 +677,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant F1 button
+	 * Pendant F1 button</br></br>
 	 * 
 	 * Function varies amongst menus. A hint label will appear in the pendant
 	 * screen above a function button, which has an action in the current
@@ -694,7 +696,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant F2 button
+	 * Pendant F2 button</br></br>
 	 * 
 	 * Function varies amongst menus. A hint label will appear in the pendant
 	 * screen above a function button, which has an action in the current
@@ -713,7 +715,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant F3 button
+	 * Pendant F3 button</br></br>
 	 * 
 	 * Function varies amongst menus. A hint label will appear in the pendant
 	 * screen above a function button, which has an action in the current
@@ -732,7 +734,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Pendant F4 button
+	 * Pendant F4 button</br></br>
 	 * 
 	 * Function varies amongst menus. A hint label will appear in the pendant
 	 * screen above a function button, which has an action in the current
@@ -751,7 +753,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Pendant F5 button
+	 * Pendant F5 button</br></br>
 	 * 
 	 * Function varies amongst menus. A hint label will appear in the pendant
 	 * screen above a function button, which has an action in the current
@@ -770,7 +772,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant Fnctl button
+	 * Pendant Fnctl button</br></br>
 	 * 
 	 * Functions as a marco key bindings.
 	 */
@@ -792,7 +794,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Pendant FWD button
+	 * Pendant FWD button</br></br>
 	 * 
 	 * Executes instructions in the instruction navigation of a program. If
 	 * step is active, then only one instruction is executed at a time,
@@ -819,7 +821,7 @@ public class RobotRun extends PApplet {
 	}
   
 	/**
-	 * Pendant HOLD button
+	 * Pendant HOLD button</br></br>
 	 * 
 	 * Stops all robot motion and program execution.
 	 */
@@ -843,7 +845,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Pendant I/O button
+	 * Pendant I/O button</br></br>
 	 * 
 	 * Changes the state of the active robot's active end effector.
 	 */
@@ -861,7 +863,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant ITEM button
+	 * Pendant ITEM button</br></br>
 	 * 
 	 * Not sure what this does ...
 	 */
@@ -879,7 +881,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant -X/(J1) button
+	 * Pendant -X/(J1) button</br></br>
 	 * 
 	 * This button jogs the active robot with reference to its active coordinate
 	 * frame. In addition, this button is paired with +X/(J1) in such a way that
@@ -897,7 +899,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant -Y/(J2) button
+	 * Pendant -Y/(J2) button</br></br>
 	 * 
 	 * This button jogs the active robot with reference to its active coordinate
 	 * frame. In addition, this button is paired with +Y/(J2) in such a way that
@@ -915,7 +917,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant -Z/(J3) button
+	 * Pendant -Z/(J3) button</br></br>
 	 * 
 	 * This button jogs the active robot with reference to its active coordinate
 	 * frame. In addition, this button is paired with +Z/(J3) in such a way that
@@ -933,7 +935,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant -XR/(J4) button
+	 * Pendant -XR/(J4) button</br></br>
 	 * 
 	 * This button jogs the active robot with reference to its active coordinate
 	 * frame. In addition, this button is paired with +XR/(J4) in such a way that
@@ -951,7 +953,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant -YR/(J5) button
+	 * Pendant -YR/(J5) button</br></br>
 	 * 
 	 * This button jogs the active robot with reference to its active coordinate
 	 * frame. In addition, this button is paired with +YR/(J5) in such a way that
@@ -969,7 +971,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant -ZR/(J6) button
+	 * Pendant -ZR/(J6) button</br></br>
 	 * 
 	 * This button jogs the active robot with reference to its active coordinate
 	 * frame. In addition, this button is paired with +ZR/(J6) in such a way that
@@ -987,7 +989,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant +X/(J1) button
+	 * Pendant +X/(J1) button</br></br>
 	 * 
 	 * This button jogs the active robot with reference to its active coordinate
 	 * frame. In addition, this button is paired with -X/(J1) in such a way that
@@ -1005,7 +1007,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant +Y/(J2) button
+	 * Pendant +Y/(J2) button</br></br>
 	 * 
 	 * This button jogs the active robot with reference to its active coordinate
 	 * frame. In addition, this button is paired with -Y/(J2) in such a way that
@@ -1023,7 +1025,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant +Z/(J3) button
+	 * Pendant +Z/(J3) button</br></br>
 	 * 
 	 * This button jogs the active robot with reference to its active coordinate
 	 * frame. In addition, this button is paired with -Z/(J3) in such a way that
@@ -1041,7 +1043,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant +XR/(J4) button
+	 * Pendant +XR/(J4) button</br></br>
 	 * 
 	 * This button jogs the active robot with reference to its active coordinate
 	 * frame. In addition, this button is paired with -XR/(J4) in such a way that
@@ -1059,7 +1061,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant +YR/(J5) button
+	 * Pendant +YR/(J5) button</br></br>
 	 * 
 	 * This button jogs the active robot with reference to its active coordinate
 	 * frame. In addition, this button is paired with -YR/(J5) in such a way that
@@ -1077,7 +1079,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Pendant +YR/(J5) button
+	 * Pendant +YR/(J5) button</br></br>
 	 * 
 	 * This button jogs the active robot with reference to its active coordinate
 	 * frame. In addition, this button is paired with -YR/(J5) in such a way that
@@ -1095,7 +1097,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Pendant MENU button
+	 * Pendant MENU button</br></br>
 	 * 
 	 * A list of miscellaneous sub menus (frames, marcos, I/O registers).
 	 */
@@ -1111,7 +1113,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Pendant MVMU button
+	 * Pendant MVMU button</br></br>
 	 * 
 	 * A button used for macro binding
 	 */
@@ -1131,7 +1133,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Pendant '0' button
+	 * Pendant '0' button</br></br>
 	 * 
 	 * Appends a '0' character to input for the text, number, and point entry
 	 * menus.
@@ -1148,7 +1150,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant '1' button
+	 * Pendant '1' button</br></br>
 	 * 
 	 * Appends a '1' character to input for the text, number, and point entry
 	 * menus.
@@ -1165,7 +1167,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant '2' button
+	 * Pendant '2' button</br></br>
 	 * 
 	 * Appends a '2' character to input for the text, number, and point entry
 	 * menus.
@@ -1182,7 +1184,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Pendant '3' button
+	 * Pendant '3' button</br></br>
 	 * 
 	 * Appends a '3' character to input for the text, number, and point entry
 	 * menus.
@@ -1199,7 +1201,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Pendant '4' button
+	 * Pendant '4' button</br></br>
 	 * 
 	 * Appends a '4' character to input for the text, number, and point entry
 	 * menus.
@@ -1216,7 +1218,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Pendant '5' button
+	 * Pendant '5' button</br></br>
 	 * 
 	 * Appends a '5' character to input for the text, number, and point entry
 	 * menus.
@@ -1233,7 +1235,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Pendant '6' button
+	 * Pendant '6' button</br></br>
 	 * 
 	 * Appends a '6' character to input for the text, number, and point entry
 	 * menus.
@@ -1250,7 +1252,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant '7' button
+	 * Pendant '7' button</br></br>
 	 * 
 	 * Appends a '7' character to input for the text, number, and point entry
 	 * menus.
@@ -1267,7 +1269,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant '8' button
+	 * Pendant '8' button</br></br>
 	 * 
 	 * Appends a '8' character to input for the text, number, and point entry
 	 * menus.
@@ -1284,7 +1286,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant '9' button
+	 * Pendant '9' button</br></br>
 	 * 
 	 * Appends a '9' character to input for the text, number, and point entry
 	 * menus.
@@ -1301,7 +1303,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Clear button shared between the Create and Edit windows
+	 * Clear button shared between the Create and Edit windows</br></br>
 	 * 
 	 * Clears all input fields (textfields, dropdownlist, etc.) in the world
 	 * object creation and edit windows.
@@ -1319,7 +1321,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Confirm button in the Edit window
+	 * Confirm button in the Edit window</br></br>
 	 * 
 	 * Updates the dimensions of the selected world object based off the values
 	 * of the dimension input fields.
@@ -1352,7 +1354,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Create button in the Create window
+	 * Create button in the Create window</br></br>
 	 * 
 	 * Pulls the user's input from the input fields (name, shape type,
 	 * dimensions, colors, etc.) in the Create window and attempts to create a
@@ -1391,7 +1393,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Edit Window Manage sub-section confirmation button
+	 * Edit Window Manage sub-section confirmation button</br></br>
 	 * 
 	 * TODO comment this
 	 */
@@ -1416,7 +1418,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Move to Current button in the edit window
+	 * Move to Current button in the edit window</br></br>
 	 * 
 	 * Updates the current position and orientation of a selected object to the
 	 * inputed values in the edit window.
@@ -1454,7 +1456,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Move to Default button in the edit window
+	 * Move to Default button in the edit window</br></br>
 	 * 
 	 * Updates the current position and orientation of a selected world object
 	 * to that of its default fields.
@@ -1515,7 +1517,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Update Default button in the edit window
+	 * Update Default button in the edit window</br></br>
 	 * 
 	 * Updates the default position and orientation of a world object based on
 	 * the input fields in the edit window.
@@ -1542,7 +1544,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant '.' buttom
+	 * Pendant '.' button</br></br>
 	 * 
 	 * Appends a '.' character to input in the text, number, and point entry
 	 * menus.
@@ -1559,7 +1561,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Pendant POSN button
+	 * Pendant POSN button</br></br>
 	 * 
 	 * A button used for marcos binding.
 	 */
@@ -1579,7 +1581,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant PREV button
+	 * Pendant PREV button</br></br>
 	 * 
 	 * Transitions to the previous menu screen, if one exists.
 	 */
@@ -1595,7 +1597,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Pendant RESET button
+	 * Pendant RESET button</br></br>
 	 * 
 	 * Resets the motion fault flag for the active robot, when the motion fault
 	 * flag is set on.
@@ -1627,7 +1629,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * The scenario window confirmation button
+	 * The scenario window confirmation button</br></br>
 	 * 
 	 * Deals with the confirm functionality of the scenario window (i.e.
 	 * setting the new name of a scenario, creating a new scenario,
@@ -1662,7 +1664,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant SELECT button
+	 * Pendant SELECT button</br></br>
 	 * 
 	 * Transitions to the program navigation menu, where the user can manage
 	 * their programs.
@@ -1679,7 +1681,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Pendant SETUP button
+	 * Pendant SETUP button</br></br>
 	 * 
 	 * A button used for binding macros.
 	 */
@@ -1699,7 +1701,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant +% button
+	 * Pendant +% button</br></br>
 	 * 
 	 * Increases the robot's jog speed.
 	 */
@@ -1733,7 +1735,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Pendant -% button
+	 * Pendant -% button</br></br>
 	 * 
 	 * Decreases the robot's jog speed.
 	 */
@@ -1767,7 +1769,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant STATUS button
+	 * Pendant STATUS button</br></br>
 	 * 
 	 * A button used for macros.
 	 */
@@ -1787,7 +1789,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant STEP button
+	 * Pendant STEP button</br></br>
 	 * 
 	 * Toggles the step state on or off. When step is on, then instructions
 	 * will be executed one at a time as opposed to all at once.
@@ -1804,7 +1806,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant TOOl1 button
+	 * Pendant TOOl1 button</br></br>
 	 * 
 	 * A button used for binding marcos.
 	 */
@@ -1824,7 +1826,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant TOOl2 button
+	 * Pendant TOOl2 button</br></br>
 	 * 
 	 * A button used for binding marcos.
 	 */

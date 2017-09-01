@@ -8,6 +8,8 @@ import processing.core.PVector;
 /**
  * A class designed which contains the camera transformation values
  * and the methods to manipulate apply the Camera's transformation.
+ * 
+ * @author Joshua Hooker
  */
 public class Camera {
 	private final float DEF_ZOFFSET, MIN_ZOFFSET, MAX_ZOFFSET;
@@ -213,7 +215,7 @@ public class Camera {
 	 * 5	The camera's z-rotation value
 	 * 6	The camera's scale value
 	 * 
-	 * @returning  A 7-element String array
+	 * @return	A 7-element String array
 	 */
 	public String[] toStringArray() {
 		String[] fields = new String[7];

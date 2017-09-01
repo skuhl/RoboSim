@@ -8,7 +8,7 @@ import processing.core.PGraphics;
 import processing.core.PVector;
 
 /**
- * Any object in the World other than the Robot.
+ * Defines the basic functionality of an object in a scenario.
  * 
  * @author Joshua Hooker
  */

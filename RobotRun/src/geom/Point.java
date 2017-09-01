@@ -16,7 +16,8 @@ import processing.core.PVector;
  * and its joint angles, the angles defined by a Point do NOT necessarily
  * correspond to the position and orientation defined by the point.
  * 
- * @author Joshua Hooker and Vincent Druckte
+ * @author Vincent Druckte
+ * @author Joshua Hooker
  */
 public class Point  {
 	

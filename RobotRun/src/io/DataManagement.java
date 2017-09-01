@@ -76,7 +76,8 @@ import robot.RoboticArm;
  * All fields and methods are static, so no instance of the class is
  * necessary.
  * 
- * @author Joshua Hooker and Vincent Druckte
+ * @author Vincent Druckte
+ * @author Joshua Hooker
  */
 public abstract class DataManagement {
 	

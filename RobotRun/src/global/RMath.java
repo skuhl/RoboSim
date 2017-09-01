@@ -13,7 +13,8 @@ import robot.RoboticArm;
  * A collection of methods and fields that pertain to graphical transformations
  * of elements rendered in the interface of the RobotRun application.
  * 
- * @author Vincent Druckte and Joshua Hooker
+ * @author Vincent Druckte
+ * @author Joshua Hooker
  */
 public abstract class RMath {
 	public static final float DEG_TO_RAD = RobotRun.DEG_TO_RAD;

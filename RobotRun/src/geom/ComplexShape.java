@@ -32,7 +32,7 @@ public class ComplexShape extends RShape {
 	}
 
 	/**
-	 * Create a complex model from the soruce .stl file of the
+	 * Create a complex model from the source .stl file of the
 	 * given name, filename, stored in the '/RobotRun/data/'
 	 * with the given fill color and scale value.
 	 * 

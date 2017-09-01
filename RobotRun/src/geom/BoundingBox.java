@@ -355,13 +355,14 @@ public class BoundingBox {
 	}
 
 	/**
-	 * Sets all the dimension values of the bounding-box, where:
-	 * X -> length
-	 * Y -> height
-	 * Z -> width
+	 * Sets all the dimension values of the bounding-box:
 	 * 
-	 * @param newDims	Sets the bounding box's length, height, and width with
-	 * 					the values of the given PVector
+	 * @param newDims
+	 * 	Sets the bounding box's length, height, and width with the values of
+	 * 	the given PVector:</br>
+	 * 	X -> length</br>
+	 * 	Y -> height</br>
+	 * 	Z -> width</br>
 	 */
 	public void setDims(PVector newDims) {
 		boxFrame.setDim(newDims.x, DimType.LENGTH);

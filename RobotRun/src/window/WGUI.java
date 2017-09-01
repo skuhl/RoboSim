@@ -66,6 +66,12 @@ import undo.WOUndoDim;
 import undo.WOUndoInsert;
 import undo.WOUndoState;
 
+/**
+ * TODO general comments
+ * 
+ * @author Vincent Druckte
+ * @author Joshua Hooker
+ */
 public class WGUI implements ControlListener {
 
 	/** Standard dimension values (length, width, displacement, etc.) used to

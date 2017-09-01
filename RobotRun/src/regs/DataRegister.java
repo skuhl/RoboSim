@@ -3,7 +3,8 @@ package regs;
  * An extension of the register class, which holds a floating-point value along
  * with an associated comment.
  * 
- * @author Joshua Hooker and Vincent Druckte
+ * @author Vincent Druckte
+ * @author Joshua Hooker
  */
 public class DataRegister extends Register {
 	public Float value;

@@ -12,9 +12,10 @@ import processing.core.PVector;
 public class RBox extends RShape {
 	
 	/**
-	 * X -> length
-	 * Y -> Height
-	 * Z -> Width
+	 * The dimensions of this box:</br>
+	 * X -> length</br>
+	 * Y -> Height</br>
+	 * Z -> Width</br>
 	 */
 	private PVector dimensions;
 

@@ -5,7 +5,8 @@ import global.Fields;
 /**
  * A simple class designed to hold a state value along with a name.
  * 
- * @author Joshua Hooker and Vincent Druckte
+ * @author Vincent Druckte
+ * @author Joshua Hooker
  */
 public class IORegister extends Register {
 	

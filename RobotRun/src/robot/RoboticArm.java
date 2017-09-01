@@ -37,6 +37,12 @@ import regs.IORegister;
 import regs.PositionRegister;
 import ui.DisplayLine;
 
+/**
+ * TODO general comments
+ * 
+ * @author Vincent Druckte
+ * @author Joshua Hooker
+ */
 public class RoboticArm {
 	
 	/**

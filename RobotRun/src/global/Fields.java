@@ -23,7 +23,8 @@ import ui.MessageDisplay;
  * A collection of static methods and fields that are not directly linked to a
  * single class file in RobotRun.
  * 
- * @author Vincent Druckte and Joshua Hooker
+ * @author Vincent Druckte
+ * @author Joshua Hooker
  */
 public abstract class Fields {
 	

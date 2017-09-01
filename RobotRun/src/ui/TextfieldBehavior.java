@@ -8,7 +8,6 @@ import processing.core.PConstants;
  * Handles the key down functionality of text-fields.
  * 
  * @author Joshua Hooker
- *
  */
 public class TextfieldBehavior extends ControlBehavior {
 	

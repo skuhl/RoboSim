@@ -3,7 +3,8 @@ package regs;
 /**
  * A general class used to link all the different types of registers used by a robotic arm.
  * 
- * @author Joshua Hooker and Vincent Druckte
+ * @author Vincent Druckte
+ * @author Joshua Hooker
  */
 public abstract class Register {
 	public String comment;
