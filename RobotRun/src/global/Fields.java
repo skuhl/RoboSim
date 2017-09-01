@@ -808,13 +808,13 @@ public abstract class Fields {
 	public static int[] rgba(int color) {
 		int[] portions = new int[4];
 		
-		// alpha
-		portions[0] = 0xff & (color >> 16);
 		// red
-		portions[1] = 0xff & (color >> 8);
+		portions[0] = 0xff & (color >> 16);
 		// green
-		portions[2] = 0xff & color;
+		portions[1] = 0xff & (color >> 8);
 		// blue
+		portions[2] = 0xff & color;
+		// alpha
 		portions[3] = 0xff & (color >> 24);
 		
 		return portions;
