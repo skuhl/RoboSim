@@ -1,5 +1,6 @@
 package geom;
 
+import enums.DimType;
 import global.DebugFloatFormat;
 import global.Fields;
 import global.RMath;

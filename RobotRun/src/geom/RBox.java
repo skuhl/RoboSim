@@ -1,10 +1,13 @@
 package geom;
 
+import enums.DimType;
 import processing.core.PGraphics;
 import processing.core.PVector;
 
 /**
- * Defines the length, width, height values to draw a box.
+ * Defines a box shape with length, height, and width dimensions.
+ * 
+ * @author Joshua Hooker
  */
 public class RBox extends RShape {
 	

@@ -29,10 +29,12 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 
 	/**
 	 * Create a new scenario of the given name.
+	 * 
+	 * @param n	This scenario's name
 	 */
 	public Scenario(String n) {
 		name = n;
-		objList = new ArrayList<WorldObject>();
+		objList = new ArrayList<>();
 		gravity = false;
 	}
 
@@ -118,14 +120,15 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Finds the first occurrence of an object with the given name, in this
+	 * scenario.
 	 * 
-	 * @param name
-	 * @return
+	 * @param tgtName	The name of the target world object
+	 * @return			A world object with the given name
 	 */
-	public WorldObject findWOWithName(String name) {
+	public WorldObject findWOWithName(String tgtName) {
 		for (WorldObject wo : objList) {
-			if (wo.getName().equals(name)) {
+			if (wo.getName().equals(tgtName)) {
 				return wo;
 			}
 		}
@@ -134,16 +137,22 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 		return null;
 	}
 
-	public String getName() { return name; }
+	/**
+	 * Returns the name of this scenario.
+	 * 
+	 * @return	This scenario's name
+	 */
+	public String getName() {
+		return name;
+	}
 
 	/**
 	 * Return the world object that corresponds to the given index in
 	 * the list of world objects contained in this scenario, or null
 	 * if the index is invalid.
 	 * 
-	 * @param idx  A valid index
-	 * @returning  The world object, at the given index in the list,
-	 *             or null
+	 * @param idx	A valid index
+	 * @return		The world object, at the given index in the list, or null
 	 */
 	public WorldObject getWorldObject(int idx) {
 		if (idx >= 0 && idx < size()) {
@@ -174,14 +183,15 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 	}
 
 	/**
-	 * Delete the given world object from the correct object
-	 * list, if it exists in the list.
+	 * Delete the given world object from the correct object list, if it exists
+	 * in the list.
 	 * 
-	 * @return  0 if the object was removed successfully,
-	 *          1 if the object did not exist in the scenario,
-	 *          2 if the object was a Fixture that was removed
-	 *             from the scenario and was referenced by at
-	 *             least one Part in the scenario
+	 * @param toRemove	The object to remove from this scenario
+	 * @return			0 if the object was removed successfully,
+	 * 					1 if the object did not exist in the scenario,
+	 * 					2 if the object was a Fixture that was removed from the
+	 * 					  scenario and was referenced by at least one Part in
+	 * 					  the scenario
 	 */
 	public int removeWorldObject(WorldObject toRemove) {
 		if (toRemove == null) {
@@ -216,9 +226,9 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 	/**
 	 * Attempt to remove the given set of world objects from the scenario.
 	 * 
-	 * @param tgtObjs  The objects to remove from the scenario
-	 * @returning      The number of the given objects that were successfully
-	 *                 removed from the scenario
+	 * @param tgtObjs	The objects to remove from the scenario
+	 * @return			The number of the given objects that were successfully
+	 * 					removed from the scenario
 	 */
 	public int removeWorldObjects(WorldObject... tgtObjs) {
 		int objsRemoved = 0;
@@ -246,10 +256,24 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 			}
 		}
 	}
-
-	public void setName(String newName) { name = newName; }
 	
-	public int size() { return objList.size(); }
+	/**
+	 * Sets the name of this scenario.
+	 * 
+	 * @param newName	The new name of this scenario
+	 */
+	public void setName(String newName) {
+		name = newName;
+	}
+	
+	/**
+	 * Returns the number of world objects currently in this scenario.
+	 * 
+	 * @return	The number of world objects in this scenario
+	 */
+	public int size() {
+		return objList.size();
+	}
 
 	public boolean toggleGravity() {
 		gravity = !gravity;

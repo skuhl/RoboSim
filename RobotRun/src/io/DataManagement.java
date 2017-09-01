@@ -13,6 +13,7 @@ import java.util.ArrayList;
 
 import camera.RobotCamera;
 import core.RobotRun;
+import enums.DimType;
 import expression.BoolMath;
 import expression.BooleanBinaryExpression;
 import expression.Expression;
@@ -38,7 +39,6 @@ import frame.UserFrame;
 import geom.CameraObject;
 import geom.ComplexShape;
 import geom.CoordinateSystem;
-import geom.DimType;
 import geom.Fixture;
 import geom.Model;
 import geom.Part;

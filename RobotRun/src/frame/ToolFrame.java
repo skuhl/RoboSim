@@ -89,28 +89,28 @@ public class ToolFrame implements RFrame {
 	 * Similar to toStringArray, however, it converts the Frame's direct entry
 	 * values instead of the current origin and axes of the Frame.
 	 * 
-	 * @returning  A 6x2-element String array
+	 * @return  A 6x2-element String array
 	 */
 	public String[][] directEntryStringArray() {
 		String[][] entries = new String[6][2];
-		PVector TCPDirect = getTCPDirect();
-		RQuaternion orienDirect = getOrienDirect();
+		PVector TCPDirectW = getTCPDirect();
+		RQuaternion orienDirectW = getOrienDirect();
 		PVector xyz, wpr;
 
-		if (TCPDirect == null) {
+		if (TCPDirectW == null) {
 			xyz = new PVector(0f, 0f, 0f);
 			
 		} else {
 			// Use previous value if it exists
-			xyz = TCPDirect.copy();
+			xyz = TCPDirectW.copy();
 		}
 
-		if (orienDirect == null) {
+		if (orienDirectW == null) {
 			wpr = new PVector(0f, 0f, 0f);
 			
 		} else {
 			// Display in degrees
-			wpr = RMath.nQuatToWEuler(orienDirect);
+			wpr = RMath.nQuatToWEuler(orienDirectW);
 		}
 
 		entries[0][0] = "X: ";
@@ -130,11 +130,7 @@ public class ToolFrame implements RFrame {
 		return entries;
 	}
 	
-	/**
-	 * Getter method for this frame's name.
-	 * 
-	 * @return	This frame's name
-	 */
+	@Override
 	public String getName() {
 		return name;
 	}
@@ -234,9 +230,7 @@ public class ToolFrame implements RFrame {
 	}
 	
 
-	/**
-	 * Reinitializes ALL this frames fields to their default values.
-	 */
+	@Override
 	public void reset() {
 		name = "";
 		TCPOffset.x = 0f;
@@ -261,13 +255,9 @@ public class ToolFrame implements RFrame {
 		orienDirect.setValue(3, 0f);
 	}
 	
-	/**
-	 * Updates this frames name.
-	 * 
-	 * @param newName	The new name for this frame
-	 */
-	public void setName(String newName) {
-		name = newName;
+	@Override
+	public void setName(String name) {
+		this.name = name;
 	}
 	
 	/**
@@ -302,7 +292,7 @@ public class ToolFrame implements RFrame {
 	/**
 	 * Updates the TCP offset of this frame.
 	 * 
-	 * @param newOffset	The new TCP offset of this frame
+	 * @param newTCP	The new TCP offset of this frame
 	 */
 	public void setTCPOffset(PVector newTCP) {
 		TCPOffset = newTCP;
@@ -356,7 +346,7 @@ public class ToolFrame implements RFrame {
 	 * Updates the TCP and orientation offset of this frame based off the
 	 * teach points associated with this frame.
 	 * 
-	 * @param RP	TODO
+	 * @param RP	The robot's current tooltip point
 	 * @return		f the frame was taught successfully with the six
 	 * point method
 	 */
@@ -413,15 +403,13 @@ public class ToolFrame implements RFrame {
 	}
 	
 	/**
-	 * Converts the original toStringArray into a 2x1 String array, where the origin
-	 * values are in the first element and the W, P, R values are in the second
-	 * element (or in the case of a joint angles, J1-J3 on the first and J4-J6 on
-	 * the second), where each element has space buffers.
+	 * Converts the original toStringArray into a 2x1 String array, where the
+	 * tool tip offset values are in the first element and the W, P, R values
+	 * are in the second element, where each element has space buffers.
 	 * 
-	 * @param displayCartesian  whether to display the joint angles or the cartesian
-	 *                          values associated with the point
-	 * @returning               A 2-element String array
+	 * @return	A 2-element String array
 	 */
+	@Override
 	public String[] toLineStringArray() {
 		String[] entries = toStringArray();
 		String[] line = new String[2];
@@ -440,6 +428,7 @@ public class ToolFrame implements RFrame {
 	 *
 	 * @return  A 6-element String array
 	 */
+	@Override
 	public String[] toStringArray() {
 		String[] values = new String[6];
 

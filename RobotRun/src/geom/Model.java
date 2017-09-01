@@ -67,9 +67,9 @@ public class Model extends PShapeOpenGL {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Returns the name of the file, from which this model was derived.
 	 * 
-	 * @return
+	 * @return	This model's file name
 	 */
 	public String getFilename() {
 		return filename;

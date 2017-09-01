@@ -1,7 +1,7 @@
 package undo;
 
+import enums.DimType;
 import geom.ComplexShape;
-import geom.DimType;
 import geom.Part;
 import geom.RBox;
 import geom.RCylinder;

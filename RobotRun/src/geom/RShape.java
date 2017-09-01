@@ -1,5 +1,6 @@
 package geom;
 
+import enums.DimType;
 import global.Fields;
 import processing.core.PGraphics;
 import processing.core.PVector;

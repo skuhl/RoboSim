@@ -1,8 +1,8 @@
 package geom;
 
+import enums.DimType;
 import global.RMath;
 import processing.core.PGraphics;
-import processing.core.PShape;
 import processing.core.PVector;
 
 /**
@@ -88,7 +88,10 @@ public class ComplexShape extends RShape {
 	}
 	
 	/**
-	 * @return	The center offset associated with this model
+	 * Returns an array containing this shape's center offset values in the
+	 * form of a PVector.
+	 * 
+	 * @return	This model's center offset
 	 */
 	public float[] getCenterOffset() {
 		return new float[] {
@@ -123,9 +126,9 @@ public class ComplexShape extends RShape {
 			// Include the scale dimension
 			return MIN_SCALE;
 			
-		} else {
-			return super.getDimLBound(dim);
 		}
+		
+		return super.getDimLBound(dim);
 	}
 	
 	@Override
@@ -134,15 +137,25 @@ public class ComplexShape extends RShape {
 			// Include the scale dimension
 			return MAX_SCALE;
 			
-		} else {
-			return super.getDimLBound(dim);
 		}
+		
+		return super.getDimLBound(dim);
 	}
 	
-	public PShape getMesh() {
+	/**
+	 * Returns a reference to this shpae's model.
+	 * 
+	 * @return	A reference to this shape's model
+	 */
+	public Model getModel() {
 		return mesh;
 	}
-
+	
+	/**
+	 * Returns the name of file, from which this shape's model was formed.
+	 * 
+	 * @return	This shape's model's filename
+	 */
 	public String getSourcePath() {
 		return mesh.getFilename();
 	}

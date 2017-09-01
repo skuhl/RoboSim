@@ -19,10 +19,11 @@ public class Fixture extends WorldObject {
 	private ArrayList<Part> dependents;
 	
 	/**
-	 * TODO comment this
+	 * Initializes a fixture with the given name and shape.
 	 * 
-	 * @param name
-	 * @param form
+	 * @param name	The name of this fixture, which should be unique amongst
+	 * 				all objects in its parent scenario
+	 * @param form	This fixture's shape
 	 */
 	public Fixture(String name, RShape form) {
 		super(name, form);
@@ -32,9 +33,10 @@ public class Fixture extends WorldObject {
 	/**
 	 * Creates a fixture with the given name and shape, and coordinate system.
 	 * 
-	 * @param n
-	 * @param s
-	 * @param cs
+	 * @param n		The name of this fixture, which should be unique amongst
+	 * 				all objects in its parent scenario
+	 * @param s		This fixture's shape
+	 * @param cs	The is fixture current center and orientation
 	 */
 	public Fixture(String n, RShape s, CoordinateSystem cs) {
 		super(n, s, cs);
@@ -42,10 +44,11 @@ public class Fixture extends WorldObject {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Adds the given part as a dependent of this fixture's local coordinate
+	 * system, if it is not already associated with this fixture.
 	 * 
-	 * @param p
-	 * @return
+	 * @param p	The part to associate with this fixture
+	 * @return	If the given part was successfully associated with this fixture
 	 */
 	public boolean addDependent(Part p) {
 		if (p != null && !dependents.contains(p)) {
@@ -70,7 +73,7 @@ public class Fixture extends WorldObject {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Disassociates all parts, which all dependent on this fixture.
 	 */
 	public void clearDependents() {
 		for (int idx = dependents.size() - 1; idx >= 0; --idx) {
@@ -80,10 +83,11 @@ public class Fixture extends WorldObject {
 	}
 	
 	/**
-	 * Applies the inverse of this Fixture's Coordinate System's transformation
-	 * matrix to the matrix stack.
+	 * Returns a transformation, which defines the inverse of the
+	 * transformation defined by this fixture's local orientation.
 	 * 
-	 * @return
+	 * @return	A transformation matrix, which represents the inverse of the
+	 * 			transformation defined by this fixture's local orientation.
 	 */
 	public RMatrix getInvCoordinateSystem() {
 		RMatrix tMatrix = RMath.formTMat(localOrientation.getOrigin(),
@@ -92,20 +96,21 @@ public class Fixture extends WorldObject {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Checks if the given part is dependent on this fixture.
 	 * 
-	 * @param p
-	 * @return
+	 * @param p	The part in question
+	 * @return	If the given part is dependent on this fixture
 	 */
 	public boolean isAChild(Part p) {
 		return dependents.contains(p);
 	}
 	
 	/**
-	 * TODO comment this
+	 * Disassociates the part, at the given index in this fixture's list of
+	 * dependent parts, from this fixture.
 	 * 
-	 * @param idx
-	 * @return
+	 * @param idx	The index of the part to disassociate
+	 * @return		The part, which was disassociated from this fixture
 	 */
 	public Part removeDependent(int idx) {
 		if (idx >= 0 && idx < dependents.size()) {
@@ -118,10 +123,11 @@ public class Fixture extends WorldObject {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Disassociates the given part from this fixture, if it is associated with
+	 * the fixture. 
 	 * 
-	 * @param p
-	 * @return
+	 * @param p	The part to disassociate from this fixture
+	 * @return	If the given part is successfully disassociated
 	 */
 	public boolean removeDependent(Part p) {
 		boolean removed = dependents.remove(p);
@@ -164,7 +170,8 @@ public class Fixture extends WorldObject {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Updates all the dependent part's absolute orientation based on this
+	 * fixture's current orientation.
 	 */
 	private void updateDependents() {
 		for (Part p : dependents) {
