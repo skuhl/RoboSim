@@ -215,7 +215,8 @@ public class MyTextfield extends Textfield implements UIInputElement {
 				}
 				
 			} else if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-				// Disables the enter clear functionality
+				// Trigger a control event when enter is pressed
+				setValue(e.getKeyCode());
 				
 			} else if (e.getKeyCode() == KeyEvent.VK_LEFT) {
 				cursorLeft();
@@ -231,9 +232,6 @@ public class MyTextfield extends Textfield implements UIInputElement {
 				removeSelectedSegment();
 				insert(e.getKey());
 			}
-		
-			// Set value every time a key is pressed
-			setValue(e.getKeyCode());
 		}
 	}
 	
