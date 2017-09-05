@@ -3289,6 +3289,7 @@ public class RobotRun extends PApplet {
 		keyCodeMap = new KeyCodeMap();
 		procExec = new ProgramExecution();
 		mInstRobotAt = new HashMap<>();
+		robotTrace = new RTrace();
 		
 		UI = new WGUI(this, buttonImages);
 		record = new RecordScreen();
@@ -3316,7 +3317,6 @@ public class RobotRun extends PApplet {
 			
 			camera = new Camera(1000f, 100f, 8000f);
 			rCamera = new RobotCamera(this);
-			robotTrace = new RTrace();
 			
 			CallInstruction.setRobotRef(activeRobot);
 			OperandCamObj.setCamRef(rCamera);
