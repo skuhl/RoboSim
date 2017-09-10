@@ -87,28 +87,28 @@ public class UserFrame implements RFrame {
 	 * Similar to toStringArray, however, it converts the Frame's direct entry
 	 * values instead of the current origin and axes of the Frame.
 	 * 
-	 * @returning  A 6x2-element String array
+	 * @return  A 6x2-element String array
 	 */
 	public String[][] directEntryStringArray() {
 		String[][] entries = new String[6][2];
-		PVector originDirect = getOriginDirect();
-		RQuaternion orienDirect = getOrienDirect();
+		PVector originDirectW = getOriginDirect();
+		RQuaternion orienDirectW = getOrienDirect();
 		PVector xyz, wpr;
 
-		if (originDirect == null) {
+		if (originDirectW == null) {
 			xyz = new PVector(0f, 0f, 0f);
 			
 		} else {
 			// Use previous value if it exists
-			xyz = RMath.vToWorld(originDirect);
+			xyz = RMath.vToWorld(originDirectW);
 		}
 
-		if (orienDirect == null) {
+		if (orienDirectW == null) {
 			wpr = new PVector(0f, 0f, 0f);
 			
 		} else {
 			// Display in degrees
-			wpr = RMath.nQuatToWEuler(orienDirect);
+			wpr = RMath.nQuatToWEuler(orienDirectW);
 		}
 
 		entries[0][0] = "X: ";
@@ -128,11 +128,7 @@ public class UserFrame implements RFrame {
 		return entries;
 	}
 	
-	/**
-	 * Returns the name associated with this frame
-	 * 
-	 * @return	This frame's name
-	 */
+	@Override
 	public String getName() {
 		return name;
 	}
@@ -231,9 +227,7 @@ public class UserFrame implements RFrame {
 				teachPoints[2] != null && teachPoints[3] != null;
 	}
 
-	/**
-	 * Reinitializes ALL the frame's fields to their default values.
-	 */
+	@Override
 	public void reset() {
 		name = "";
 		originOffset.x = 0f;
@@ -256,13 +250,9 @@ public class UserFrame implements RFrame {
 		orienDirect.setValue(3, 0f);
 	}
 	
-	/**
-	 * Updates the name of this frame.
-	 * 
-	 * @param newName	The new name for the frame
-	 */
-	public void setName(String newName) {
-		name = newName;
+	@Override
+	public void setName(String name) {
+		this.name = name;
 	}
 	
 	/**
@@ -390,13 +380,11 @@ public class UserFrame implements RFrame {
 	/**
 	 * Converts the original toStringArray into a 2x1 String array, where the origin
 	 * values are in the first element and the W, P, R values are in the second
-	 * element (or in the case of a joint angles, J1-J3 on the first and J4-J6 on
-	 * the second), where each element has space buffers.
+	 * element, where each element has space buffers.
 	 * 
-	 * @param displayCartesian  whether to display the joint angles or the cartesian
-	 *                          values associated with the point
-	 * @returning               A 2-element String array
+	 * @return	A 2-element String array
 	 */
+	@Override
 	public String[] toLineStringArray() {
 		String[] entries = toStringArray();
 		String[] line = new String[2];
@@ -415,6 +403,7 @@ public class UserFrame implements RFrame {
 	 *
 	 * @return  A 6-element String array
 	 */
+	@Override
 	public String[] toStringArray() {
 		String[] values = new String[6];
 		

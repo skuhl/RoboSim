@@ -3,6 +3,7 @@ package screen.edit_item;
 import core.RobotRun;
 import global.Fields;
 import io.DataManagement;
+import programming.Macro;
 import robot.RoboticArm;
 import screen.ScreenMode;
 
@@ -16,13 +17,16 @@ public class ScreenSetMacroBinding extends ST_ScreenEditItem {
 	public void actionEntr() {
 		RoboticArm r = robotRun.getActiveRobot();
 		int idx = robotRun.getLastScreen().getContentIdx();
-		int keyIdx = options.getLineIdx();
+		int keyNum = options.getLineIdx();
 		
-		if (r.isMarcoSet(keyIdx)) {
+		if (r.isMarcoSet(keyNum)) {
 			Fields.setMessage("This key is already used by another macro");
 			
 		} else {
-			r.getMacro(idx).setNum(keyIdx);
+			// Update macro key binding
+			Macro m = r.getMacro(idx);
+			r.setKeyBinding(m.getKeyNum(), null);
+			r.setKeyBinding(keyNum, m);
 			DataManagement.saveRobotData(r, 8);
 			robotRun.lastScreen();
 		}

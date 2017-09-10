@@ -1,6 +1,7 @@
 package screen.cnfrm_cncl;
 
 import core.RobotRun;
+import io.DataManagement;
 import programming.Program;
 import robot.RoboticArm;
 import screen.ScreenMode;
@@ -17,6 +18,7 @@ public class ScreenConfirmProgramDelete extends ST_ScreenConfirmCancel {
 		Program p = robotRun.getActiveProg();
 		
 		r.rmProg(p);
+		DataManagement.removeProgramFile(r.RID, p);
 		robotRun.setActiveProg(null);
 		robotRun.lastScreen();
 	}

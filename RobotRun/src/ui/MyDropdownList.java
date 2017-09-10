@@ -92,12 +92,14 @@ public class MyDropdownList extends DropdownList implements UIInputElement {
 	
 	@Override
 	protected void onDrag() {
+		super.onDrag();
 		// Show what element is selected while dragging the mouse
 		onMove();
 	}
 	
 	@Override
 	protected void onEndDrag() {
+		super.onEndDrag();
 		// Allow drag clicks
 		
 		// I hate you, controlP5

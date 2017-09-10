@@ -1,25 +1,44 @@
 package geom;
 
+import enums.DimType;
 import global.Fields;
 import processing.core.PGraphics;
 import processing.core.PVector;
 
 /**
- * A simple class that defines the stroke and fill color for a shape
- * along with some methods necessary for a shape.
+ * Defines the functionality shared amongst all world object shapes.
+ * 
+ * @author Joshua Hooker
  */
 public abstract class RShape implements Cloneable {
+	
+	/**
+	 * The fill color of this shape (null implies no fill color).
+	 */
 	private Integer fillCVal;
+	
+	/**
+	 * The stroke color of this shape (null implies no stroke color).
+	 */
 	private Integer strokeCVal;
 
+	/**
+	 * Defines an object with black fill and white stroke colors.
+	 */
 	public RShape() {
 		fillCVal = Fields.BLACK;
 		strokeCVal = Fields.WHITE;
 	}
 
-	public RShape(Integer fill, Integer strokeVal) {
+	/**
+	 * Defines a shape with the given fill and stroke colors.
+	 * 
+	 * @param fill		The fill color of this shape
+	 * @param stroke	The stroke color of this shape
+	 */
+	public RShape(Integer fill, Integer stroke) {
 		fillCVal = fill;
-		strokeCVal = strokeVal;
+		strokeCVal = stroke;
 	}
 	
 	@Override
@@ -37,12 +56,22 @@ public abstract class RShape implements Cloneable {
 	 * this shape. If no such dimension exists, then -1 should
 	 * be returned.
 	 * 
-	 * @param dim  The dimension of which to get the value
-	 * @returning  The value of that dimension, or -1, if no
-	 *             such dimension exists
+	 * @param dim	The dimension of which to get the value
+	 * @return		The value of that dimension, or -1, if no
+	 * 				such dimension exists
 	 */
 	public abstract float getDim(DimType dim);
 	
+	/**
+	 * Returns a set of dimensions, which define the dimensions of the volume
+	 * of this shape's bounding box.
+	 * 
+	 * 
+	 * @return	This shape's bounding box dimensions:</br>
+	 * x -> length</br>
+	 * y -> height</br>
+	 * z -> width</br>
+	 */
 	public abstract PVector getDims();
 	
 	/**
@@ -89,8 +118,23 @@ public abstract class RShape implements Cloneable {
 		}
 	}
 	
-	public Integer getFillValue() { return fillCVal; }
-	public Integer getStrokeValue() { return strokeCVal; }
+	/**
+	 * Returns the fill color of this shape.
+	 * 
+	 * @return	The fill color of this shape
+	 */
+	public Integer getFillValue() {
+		return fillCVal;
+	}
+	
+	/**
+	 * Returns the stroke color of this shape.
+	 * 
+	 * @return	The stroke color of this shape
+	 */
+	public Integer getStrokeValue() {
+		return strokeCVal;
+	}
 	
 	/**
 	 * Sets the value of the given dimension associated with
@@ -100,8 +144,24 @@ public abstract class RShape implements Cloneable {
 	 * @param dim     The dimension of  which ro set the value
 	 */
 	public abstract void setDim(Float newVal, DimType dim);
-	public void setFillValue(Integer newVal) { fillCVal = newVal; }
-	public void setStrokeValue(Integer newVal) { strokeCVal = newVal; }
+	
+	/**
+	 * Sets the fill color of this shape to the given value.
+	 * 
+	 * @param newVal	The new fill color of this shape
+	 */
+	public void setFillValue(Integer newVal) {
+		fillCVal = newVal;
+	}
+	
+	/**
+	 * Sets the stroke color of this shape.
+	 * 
+	 * @param newVal	The new stroke color of this shape
+	 */
+	public void setStrokeValue(Integer newVal) {
+		strokeCVal = newVal;
+	}
 	
 	/**
 	 * Applies the shape's stroke and outline colors to the given graphics.

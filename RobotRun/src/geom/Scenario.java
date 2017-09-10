@@ -1,6 +1,7 @@
 package geom;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.regex.Pattern;
 
@@ -16,22 +17,29 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 	/**
 	 * The maximum number of objects allowed in a single scenario.
 	 */
-	public static final int MAX_SIZE = 30;
+	public static final int MAX_SIZE = 20;
 	
 	private boolean gravity;
+	
+	/**
+	 * The name of this scenario. This should be unique amongst all scenarios
+	 * in a single application.
+	 */
 	private String name;
 	
 	/**
-	 * A combine list of Parts and Fixtures
+	 * The set of all objects in this scenario.
 	 */
 	private final ArrayList<WorldObject> objList;
 
 	/**
 	 * Create a new scenario of the given name.
+	 * 
+	 * @param n	This scenario's name
 	 */
 	public Scenario(String n) {
 		name = n;
-		objList = new ArrayList<WorldObject>();
+		objList = new ArrayList<>();
 		gravity = false;
 	}
 
@@ -40,9 +48,12 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 	 * and the given reference is not null.
 	 * 
 	 * @param newObject  The object to add to this scenario
-	 * @returning        0	the object was added successfully,
-	 * 					 1	the object is a null reference,
-	 * 					 2	the scenario is full
+	 * @return
+	 * <ul>
+	 * 		<li>0, if the object was added successfully</li>
+	 * 		<li>1, if the object is a null reference</li>
+	 * 		<li>2, the scenario is full</li>
+	 * </ul>
 	 */
 	public int addWorldObject(WorldObject newObject) {
 		
@@ -76,25 +87,26 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 	@Override
 	public Object clone() {
 		Scenario copy = new Scenario(name);
-		ArrayList<Fixture> fixtures = new ArrayList<>();
+		HashMap<String, Fixture> nameToFixtureMap = new HashMap<>();
 		ArrayList<Part> parts = new ArrayList<>();
-
-
+		ArrayList<String> parentNames = new ArrayList<>();
+		
 		for (WorldObject obj : this) {
 			try {
 				// Add copies of all the objects in this scenario
-				WorldObject newObj = (WorldObject)obj.clone();
+				WorldObject newObj = obj.clone();
 				copy.addWorldObject(newObj);
 				
 				// Keep track of all fixtures and parts with non-null references
 				if (newObj instanceof Fixture) {
-					fixtures.add( (Fixture)newObj );
+					nameToFixtureMap.put(newObj.getName(), (Fixture)newObj);
 	
 				} else if (newObj instanceof Part) {
 					Part p = (Part)newObj;
 	
-					if (p.getFixtureRef() != null) {
+					if (p.getParent() != null) {
 						parts.add( (Part)newObj );
+						parentNames.add(p.getParent().getName());
 					}
 				}
 			
@@ -102,14 +114,13 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 		}
 
 		// Update fixture references of new parts
-		for (Part p : parts) {
-			String refName = p.getFixtureRef().getName();
-			p.setFixtureRef(null);
-
-			for (Fixture f : fixtures) {
-				if (f.getName().equals( refName )) {
-					p.setFixtureRef(f);
-				}
+		for (int idx = 0; idx < parts.size(); ++idx) {
+			Part p = parts.get(idx);
+			String parentName = parentNames.get(idx);
+			Fixture parent = nameToFixtureMap.get(parentName);
+			
+			if (parent != null) {
+				parent.addDependent(p);
 			}
 		}
 
@@ -117,14 +128,15 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Finds the first occurrence of an object with the given name, in this
+	 * scenario.
 	 * 
-	 * @param name
-	 * @return
+	 * @param tgtName	The name of the target world object
+	 * @return			A world object with the given name
 	 */
-	public WorldObject findWOWithName(String name) {
+	public WorldObject findWOWithName(String tgtName) {
 		for (WorldObject wo : objList) {
-			if (wo.getName().equals(name)) {
+			if (wo.getName().equals(tgtName)) {
 				return wo;
 			}
 		}
@@ -133,16 +145,22 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 		return null;
 	}
 
-	public String getName() { return name; }
+	/**
+	 * Returns the name of this scenario.
+	 * 
+	 * @return	This scenario's name
+	 */
+	public String getName() {
+		return name;
+	}
 
 	/**
 	 * Return the world object that corresponds to the given index in
 	 * the list of world objects contained in this scenario, or null
 	 * if the index is invalid.
 	 * 
-	 * @param idx  A valid index
-	 * @returning  The world object, at the given index in the list,
-	 *             or null
+	 * @param idx	A valid index
+	 * @return		The world object, at the given index in the list, or null
 	 */
 	public WorldObject getWorldObject(int idx) {
 		if (idx >= 0 && idx < size()) {
@@ -173,14 +191,17 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 	}
 
 	/**
-	 * Delete the given world object from the correct object
-	 * list, if it exists in the list.
+	 * Delete the given world object from the correct object list, if it exists
+	 * in the list.
 	 * 
-	 * @returning  0 if the object was removed succesfully,
-	 *             1 if the object did not exist in the scenario,
-	 *             2 if the object was a Fixture that was removed
-	 *                from the scenario and was referenced by at
-	 *                least one Part in the scenario
+	 * @param toRemove	The object to remove from this scenario
+	 * @return
+	 * <ul>
+	 * 	<li>0 if the object was removed successfully</li>
+	 * 	<li>1 if the object did not exist in the scenario</li>
+	 * 	<li>2 if the object was a Fixture that was removed from the scenario
+	 * and was referenced by at least one Part in the scenario</li>
+	 * </ul>
 	 */
 	public int removeWorldObject(WorldObject toRemove) {
 		if (toRemove == null) {
@@ -190,20 +211,21 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 		int ret;
 		// Remove a fixture from the list
 		boolean removed = objList.remove(toRemove);
-
 		ret = (removed) ? 0 : 1;
 
-		if (removed && toRemove instanceof Fixture) {
-			// Remove the reference from all Part objects associated with this fixture
-			for (WorldObject obj : objList) {
-
-				if (obj instanceof Part) {
-					Part part = (Part)obj;
-
-					if (part.getFixtureRef() == toRemove) {
-						part.setFixtureRef(null);
-						ret = 2;
-					}
+		if (removed) {
+			if (toRemove instanceof Fixture) {
+				/* Remove the reference from all Part objects associated with this
+				 * fixture */
+				((Fixture)toRemove).clearDependents();
+				
+			} else {
+				// Remove parent reference
+				Part p = (Part) toRemove;
+				Fixture parent = p.getParent();
+				
+				if (parent != null) {
+					parent.removeDependent(p);
 				}
 			}
 		}
@@ -214,9 +236,9 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 	/**
 	 * Attempt to remove the given set of world objects from the scenario.
 	 * 
-	 * @param tgtObjs  The objects to remove from the scenario
-	 * @returning      The number of the given objects that were successfully
-	 *                 removed from the scenario
+	 * @param tgtObjs	The objects to remove from the scenario
+	 * @return			The number of the given objects that were successfully
+	 * 					removed from the scenario
 	 */
 	public int removeWorldObjects(WorldObject... tgtObjs) {
 		int objsRemoved = 0;
@@ -244,10 +266,24 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 			}
 		}
 	}
-
-	public void setName(String newName) { name = newName; }
 	
-	public int size() { return objList.size(); }
+	/**
+	 * Sets the name of this scenario.
+	 * 
+	 * @param newName	The new name of this scenario
+	 */
+	public void setName(String newName) {
+		name = newName;
+	}
+	
+	/**
+	 * Returns the number of world objects currently in this scenario.
+	 * 
+	 * @return	The number of world objects in this scenario
+	 */
+	public int size() {
+		return objList.size();
+	}
 
 	public boolean toggleGravity() {
 		gravity = !gravity;
@@ -258,25 +294,34 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 	public String toString() { return name; }
 	
 	/**
-	 * TODO comment this
+	 * Validates that the given name is appropriate for a world object that
+	 * would be added to this scenario. The criteria include:
+	 * <ol>
+	 * <li>the name is not null and contains only letters or numbers</li>
+	 * <li>the length of the name is greater than 0 and less than 17
+	 * characters</li>
+	 * <li>no object currently in the scenario has the same name</li>
+	 * </ol>
 	 * 
-	 * @param name
-	 * @return
+	 * @param objName	The name to validate
+	 * @return			If the name is valid, then 0 is returned, otherwise the
+	 * 					number of the first criteria that was violated is
+	 * 					returned (i.e. 1, 2, or 3)
 	 */
-	public int validateWOName(String name) {
+	public int validateWOName(String objName) {
 		// Names only consist of letters and numbers
-		if (name == null || !Pattern.matches("[a-zA-Z0-9]+", name)) {
+		if (objName == null || !Pattern.matches("[a-zA-Z0-9]+", objName)) {
 			// Invalid characters
 			return 1;
 		}
 		
-		if (name.length() > 16) {
+		if (objName.length() > 16) {
 			// Name is too long
 			return 2;
 		}
 
 		for (WorldObject wo : objList) {
-			if (wo.getName().equals(name)) {
+			if (wo.getName().equals(objName)) {
 				// Duplicate name
 				return 3;
 			}
@@ -286,20 +331,21 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 	}
 	
 	/**
-	 * Adds a number suffix to the given name, so that the name is unique amonst the names of all the other world
-	 * objects in the given list. So, if the given name is 'block' and objects with names 'block', 'block1', and
-	 * 'block2' exist in wldObjList, then the new name will be 'block3'.
+	 * Adds a number suffix to the given name, so that the name is unique
+	 * amongst the names of all the other world objects in the given list. So,
+	 * if the given name is 'block' and objects with names 'block', 'block1',
+	 * and 'block2' exist in wldObjList, then the new name will be 'block3'.
 	 * 
-	 * @param originName  The origin name of the new world object
-	 * @param wldObjList  The list of world objects, of wixh to check names
-	 * @returning         A unique name amongst the names of the existing world objects in the given list, that
-	 *                    contains the original name as a prefix
+	 * @param originName	The origin name of the new world object
+	 * @return				A unique name amongst the names of the existing
+	 * 						world objects in the given list, that contains the
+	 * 						original name as a prefix
 	 */
-	private <T extends WorldObject> String addSuffixForDuplicateName(String originName, ArrayList<T> wldObjList) {
+	private String addSuffixForDuplicateName(String originName) {
 		int nameLen = originName.length();
 		ArrayList<Integer> suffixes = new ArrayList<>();
 
-		for (T wldObj : wldObjList) {
+		for (WorldObject wldObj : objList) {
 			String objName = wldObj.getName();
 			int objNameLen = objName.length();
 
@@ -348,28 +394,5 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 		
 		// Concatenate the origin name with the new suffix
 		return String.format("%s%d", originName, suffix);
-	}
-
-	/**
-	 * Attempts to find the world object, in the given list, with the given name. If no such object exists,
-	 * then null is returned, otherwise the object with the given name is returned.
-	 * 
-	 * @param tgtName     The name of the world object to find
-	 * @param wldObjList  The list of world objects to check
-	 * @returning         The object with the given name, if it exists in the given list, or null.
-	 */
-	private <T extends WorldObject> WorldObject findObjectWithName(String tgtName, ArrayList<T> wldObjList) {
-
-		if (tgtName != null && wldObjList != null) {
-
-			for (T obj : wldObjList) {
-				// Determine if the object exists
-				if (obj != null && obj.getName().equals(tgtName)) {
-					return obj;
-				}
-			}
-		}
-
-		return null;
 	}
 }

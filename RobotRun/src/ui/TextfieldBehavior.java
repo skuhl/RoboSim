@@ -8,9 +8,8 @@ import processing.core.PConstants;
  * Handles the key down functionality of text-fields.
  * 
  * @author Joshua Hooker
- *
  */
-public class KeyDownBehavior extends ControlBehavior {
+public class TextfieldBehavior extends ControlBehavior {
 	
 	/**
 	 * A convience reference for the controller associated with this behavior.
@@ -33,23 +32,23 @@ public class KeyDownBehavior extends ControlBehavior {
 	private long nextEvent;
 	
 	/**
-	 * Contructs a key down behavior object with the given KeyCodeMap reference.
+	 * Initializes the key down behavior object with the given Textfield and
+	 * KeyCodeMap references.
 	 * 
+	 * @param controller
 	 * @param keyMap
 	 */
-	public KeyDownBehavior(KeyCodeMap keyMap) {
+	public TextfieldBehavior(MyTextfield controller, KeyCodeMap keyMap) {
 		super();
 		this.keyMap = keyMap;
 		resetInterval();
 		
-		controller = (MyTextfield) this.getController();
+		this.controller = controller;
 	}
 	
 	@Override
 	public void update() {
-		/**/
-		if (controller != null && controller.isActive()) {
-			
+		if (controller.isActive()) {
 			/* When the controller is active, check every so often if a key is
 			 * down and update the text-field as necessary */
 			if (keyMap.getTimeOfLastKey() > 800 && System.currentTimeMillis() >= nextEvent) {
@@ -58,7 +57,7 @@ public class KeyDownBehavior extends ControlBehavior {
 				
 				if (lastVal != null) {
 					// Insert key events
-					controller.append(lastVal.charValue());
+					controller.insert(lastVal.charValue());
 					
 				} else {
 					// Other key events
@@ -83,7 +82,6 @@ public class KeyDownBehavior extends ControlBehavior {
 		} else {
 			resetInterval();
 		}
-		/**/
 	}
 	
 	@Override

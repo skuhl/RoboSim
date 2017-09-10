@@ -1,11 +1,16 @@
 package global;
 
+import java.util.HashMap;
+
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 import org.apache.commons.math3.linear.SingularValueDecomposition;
 
 import geom.CoordinateSystem;
+import geom.Fixture;
+import geom.Model;
+import geom.Part;
 import geom.RMatrix;
 import processing.core.PApplet;
 import processing.core.PConstants;
@@ -18,7 +23,8 @@ import ui.MessageDisplay;
  * A collection of static methods and fields that are not directly linked to a
  * single class file in RobotRun.
  * 
- * @author Vincent Druckte and Joshua Hooker
+ * @author Vincent Druckte
+ * @author Joshua Hooker
  */
 public abstract class Fields {
 	
@@ -60,7 +66,7 @@ public abstract class Fields {
 	/**
 	 * The maximum number of scenarios used by the software at one time.
 	 */
-	public static final int SCENARIO_NUM = 60;
+	public static final int SCENARIO_NUM = 30;
 	
 	/**
 	 * The tool frame type of a motion instruction
@@ -97,6 +103,11 @@ public abstract class Fields {
 	public static final int LARGE_BUTTON = 50;
 	
 	public static final MessageDisplay msgSystem;
+	
+	/**
+	 * The maximum file size (in bytes) allowed for a .STL model file. 
+	 */
+	public static final int MODEL_FILE_SIZE = 11000000;
 	
 	/**
 	 * The circular motion type of a motion instruction.
@@ -200,6 +211,8 @@ public abstract class Fields {
 	 */
 	public static final RMatrix WORLD_AXES_MAT;
 	
+	private static final HashMap<String, Model> nameToModelMap;
+	
 	/**
 	 * Initialize the static fields.
 	 */
@@ -268,6 +281,16 @@ public abstract class Fields {
 		bond = null;
 		
 		msgSystem = new MessageDisplay();
+		nameToModelMap = new HashMap<>();
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param model
+	 */
+	public static void addModel(Model model) {
+		nameToModelMap.put(model.getFilename(), model);
 	}
 	
 	/**
@@ -533,6 +556,7 @@ public abstract class Fields {
 	 * Draws the xyz coordinate axes of the given graphic object's current
 	 * coordinate system with the specified axis length and origin color.
 	 * 
+	 * @param g				
 	 * @param axesLength	The render length of the axes
 	 */
 	public static void drawAxes(PGraphics g, float axesLength) {
@@ -634,10 +658,10 @@ public abstract class Fields {
 		float[] bottomVertOffsets = new float[2 * (sides + 1)];
 		float halfHeight = height / 2f;
 		
-		g.beginShape(PApplet.TRIANGLE_STRIP);
+		g.beginShape(PConstants.TRIANGLE_STRIP);
 		// Draw the triangular sides of the pyramid
 		for (int side = 0; side <= sides; ++side) {
-			float theta = (side % sides) * PApplet.TWO_PI / sides;
+			float theta = (side % sides) * PConstants.TWO_PI / sides;
 			
 			int idx = 2 * side;
 			bottomVertOffsets[idx] = PApplet.cos(theta) * radius;
@@ -659,7 +683,7 @@ public abstract class Fields {
 					bottomVertOffsets[idx + 1]);
 		}
 		
-		g.endShape(PApplet.CLOSE);
+		g.endShape(PConstants.CLOSE);
 		
 		g.popMatrix();
 		
@@ -758,6 +782,17 @@ public abstract class Fields {
 	}
 	
 	/**
+	 * Returns a reference to the model with the given file name.
+	 * 
+	 * @param name	The name of the model's file
+	 * @return		The model associated with the given file name or null
+	 * 				if no such model exists.
+	 */
+	public static Model getModel(String name) {
+		return nameToModelMap.get(name);
+	}
+	
+	/**
 	 * Calls msgSystem.resetMessage().
 	 */
 	public static void resetMessage() {
@@ -774,13 +809,13 @@ public abstract class Fields {
 	public static int[] rgba(int color) {
 		int[] portions = new int[4];
 		
-		// alpha
-		portions[0] = 0xff & (color >> 16);
 		// red
-		portions[1] = 0xff & (color >> 8);
+		portions[0] = 0xff & (color >> 16);
 		// green
-		portions[2] = 0xff & color;
+		portions[1] = 0xff & (color >> 8);
 		// blue
+		portions[2] = 0xff & color;
+		// alpha
 		portions[3] = 0xff & (color >> 24);
 		
 		return portions;
@@ -846,6 +881,22 @@ public abstract class Fields {
 	 */
 	public static void setMessage(String format, Object... args) {
 		msgSystem.setMessage( String.format(format, args) );
+	}
+	
+	/**
+	 * Updates both the fixture and part references of the given world objects,
+	 * in such a away that the given part references the given fixture as its
+	 * parent coordinate system.
+	 * 
+	 * @param parent		The fixture to associate with the given part
+	 * @param dependent		The part to associate with the given fixture
+	 */
+	public static void setWODependency(Fixture parent, Part dependent) {
+		dependent.removeParent();
+		
+		if (parent != null) {
+			parent.addDependent(dependent);
+		}
 	}
 	
 	/**
@@ -917,9 +968,10 @@ public abstract class Fields {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Calls the join method of the given thread. If an exception is thrown by
+	 * the join method, then its stack trace is outputted to standard error.
 	 * 
-	 * @param t
+	 * @param t	The thread for which to wait
 	 */
 	public static void waitForThread(Thread t) {
 		try {

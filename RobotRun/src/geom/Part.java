@@ -1,5 +1,6 @@
 package geom;
 
+import enums.DimType;
 import global.Fields;
 import global.RMath;
 import processing.core.PGraphics;
@@ -8,6 +9,8 @@ import processing.core.PVector;
 /**
  * Defines a world object, which has a shape, a bounding box and a reference to a fixture.
  * The bounding box holds the local coordinate system of the object.
+ * 
+ * @author Joshua Hooker
  */
 public class Part extends WorldObject {
 	
@@ -23,13 +26,14 @@ public class Part extends WorldObject {
 	
 	protected CoordinateSystem defaultOrientation;
 	private BoundingBox absOBB;
-	private Fixture reference;
+	private Fixture parent;
 	
 	/**
-	 * TODO comment this
+	 * Initializes a part with the given name and shape.
 	 * 
-	 * @param name
-	 * @param form
+	 * @param name	The name of the part, which should be unique amongst all
+	 * 				objects in the parent scenario
+	 * @param form	The shape of this part
 	 */
 	public Part(String name, RShape form) {
 		super(name, form);
@@ -53,44 +57,56 @@ public class Part extends WorldObject {
 	/**
 	 * Creates a Part with the given name, shape, bounding-box dimensions,
 	 * default orientation and fixture reference.
+	 * 
+	 * @param n			The name of this part, which should be unique amongst
+	 * 					all objects in the part scenario
+	 * @param s			The shape of this part
+	 * @param OBBDims	The dimensions of this part's bounding box
+	 * @param local		This part's local coordinate system
+	 * @param def		This part's default coordinate system
 	 */
 	public Part(String n, RShape s, PVector OBBDims, CoordinateSystem local,
-			CoordinateSystem def, Fixture fixRef) {
+			CoordinateSystem def) {
 		
 		super(n, s, local);
 		absOBB = new BoundingBox(OBBDims.x, OBBDims.y, OBBDims.z);
 		defaultOrientation = def;
-		setFixtureRef(fixRef);
 		updateOBBDims();
+		updateAbsoluteOrientation();
 	}
 
 	@Override
 	public Part clone() {
-		// The new object's reference still points to the same fixture!
 		return new Part(getName(), getModel().clone(), getOBBDims().copy(),
-				localOrientation.clone(), defaultOrientation.clone(),
-				reference);
+				localOrientation.clone(), defaultOrientation.clone());
 	}
 	
 	@Override
 	public WorldObject clone(String name) {
-		// The new object's reference still points to the same fixture!
 		return new Part(name, getModel().clone(), getOBBDims().copy(),
-				localOrientation.clone(), defaultOrientation.clone(),
-				reference);
+				localOrientation.clone(), defaultOrientation.clone());
 	}
 
 	/**
-	 * Determines if the given bounding box is colliding
-	 * with this Part's bounding box.
+	 * Determines if the given bounding box is colliding with this part's
+	 * bounding box.
+	 * 
+	 * @param obb	The bounding box, which is compared to this part's
+	 * 				bounding box
+	 * @return		If the given bounding box is colliding with this part's
+	 * 				bounding box
 	 */
 	public boolean collision(BoundingBox obb) {
 		return absOBB.collision3D(obb);
 	}
 
 	/**
-	 * Determine if the given world object is colliding
-	 * with this world object.
+	 * Determines if the given world object is colliding with this world
+	 * object.
+	 * 
+	 * @param obj	The part to compare to this part
+	 * @return		If the given part's bounding box is colliding with this
+	 * 				part's bounding box
 	 */
 	public boolean collision(Part obj) {
 		return  absOBB.collision3D(obj.absOBB);
@@ -127,51 +143,84 @@ public class Part extends WorldObject {
 	}
 	
 	/**
-	 * @return	The absolute center of the part (without respect to its fixture
-	 * 			reference)
+	 * Returns a reference to this part's position with respective to
+	 * Processing's native coordinate system.
+	 * 
+	 * @return	This part's absolute center position
 	 */
 	public PVector getCenter() {
 		return absOBB.getCenter();
 	}
 
+	/**
+	 * Return's a reference to this part's default origin position.
+	 * 
+	 * @return	a reference to the default position of this part
+	 */
 	public PVector getDefaultCenter() {
 		return defaultOrientation.getOrigin();
 	}
 	
+	/**
+	 * Return's a reference to this part's default orientation.
+	 * 
+	 * @return	a reference to the default orientation of this part
+	 */
 	public RMatrix getDefaultOrientation() {
 		return defaultOrientation.getAxes();
 	}
 	
-	public Fixture getFixtureRef() { return reference; }
+	/**
+	 * Returns a reference to this part's parent fixture, which can be null.
+	 * 
+	 * @return	a reference to this part's parent fixture
+	 */
+	public Fixture getParent() {
+		return parent;
+	}
 	
 	/**
-	 * Get the dimensions of the part's bounding-box
+	 * @return	The dimensions of this part's bounding box
+	 * @see BoundingBox#getDims()
 	 */
 	public PVector getOBBDims() {
 		return absOBB.getDims();
 	}
 	
 	/**
-	 * @return	The bounding box of the part
+	 * @return	The shape of this part's bounding box
+	 * @see BoundingBox#getFrame()
 	 */
 	public RBox getOBBFrame() {
 		return absOBB.getFrame();
 	}
 
 	/**
-	 * @return	The absolute orientation of the part (without respect to its
-	 * 			fixture reference)
+	 * This part's orientation with respect to Procesing's native coordinate
+	 * system.
+	 * 
+	 * @return	The absolute orientation of the part
 	 */
 	public RMatrix getOrientation() {
 		return absOBB.getOrientationAxes();
 	}
 	
+	/**
+	 * Disassociates this part from its parent fixture.
+	 */
+	public void removeParent() {
+		if (parent != null) {
+			Fixture parentRef = parent;
+			parentRef.removeDependent(this);
+		}
+	}
+	
 	@Override
 	public void rotateAroundAxis(PVector axis, float angle) {
 		
-		if (reference != null) {
+		if (parent != null) {
 			// rotate with respect to the part's fixture reference
-			RMatrix refRMat = reference.getLocalOrientation();
+			RMatrix refRMat = parent.getLocalOrientation();
 			axis = RMath.rotateVector(axis, refRMat);
 		}
 		
@@ -183,17 +232,28 @@ public class Part extends WorldObject {
 	}
 
 	/**
-	 * Sets the stroke color of the world's bounding-box
-	 * to the given value.
+	 * Sets the color of this part's bounding box.
+	 * 
+	 * @param newColor	The new stroke of this bounding box
 	 */
 	public void setBBColor(int newColor) {
 		absOBB.setColor(newColor);
 	}
 
+	/**
+	 * Sets this part's default center position.
+	 * 
+	 * @param newCenter	This part's new default center position 
+	 */
 	public void setDefaultCenter(PVector newCenter) {
 		defaultOrientation.setOrigin(newCenter);
 	}
 
+	/**
+	 * Sets this part's default orientation.
+	 * 
+	 * @param newAxes	This part's new default orientation
+	 */
 	public void setDefaultOrientation(RMatrix newAxes) {
 		defaultOrientation.setAxes(newAxes);
 	}
@@ -201,9 +261,11 @@ public class Part extends WorldObject {
 	/**
 	 * Set the fixture reference of this part and
 	 * update its absolute orientation.
+	 * 
+	 * @param newParent	The new parent of this part
 	 */
-	public void setFixtureRef(Fixture refFixture) {
-		reference = refFixture;
+	protected void setParent(Fixture newParent) {
+		parent = newParent;
 		updateAbsoluteOrientation();
 	}
 	
@@ -211,6 +273,12 @@ public class Part extends WorldObject {
 	public void setLocalCenter(PVector newCenter) {
 		super.setLocalCenter(newCenter);
 		updateAbsoluteOrientation();
+	}
+	
+	@Override
+	public void setLocalCoordinates(PVector newCenter, RMatrix newAxes) {
+		super.setLocalCoordinates(newCenter, newAxes);
+		this.updateAbsoluteOrientation();
 	}
 
 	@Override
@@ -220,14 +288,17 @@ public class Part extends WorldObject {
 	}
 
 	/**
-	 * See BoundingBox.setDim()
+	 * @param newVal	The new value for the specified dimension
+	 * @param dim		The type of the dimension to set
+	 * @see BoundingBox#setDim(Float, DimType)
 	 */
 	public void setOBBDim(Float newVal, DimType dim) {
 		absOBB.setDim(newVal, dim);
 	}
 
 	/**
-	 * Set the dimensions of this part's bounding box.
+	 * @param newDims	The new set of dimensions for this part's bounding box
+	 * @see BoundingBox#setDims(PVector)
 	 */
 	public void setOBBDimenions(PVector newDims) {
 		absOBB.setDims(newDims);
@@ -237,9 +308,9 @@ public class Part extends WorldObject {
 	public void translate(float dx, float dy, float dz) {
 		PVector delta = new PVector(dx, dy, dz);
 		
-		if (reference != null) {
+		if (parent != null) {
 			// translate with respect to the part's fixture reference
-			RMatrix refRMat = reference.getLocalOrientation();
+			RMatrix refRMat = parent.getLocalOrientation();
 			delta = RMath.rotateVector(delta, refRMat);
 		}
 		
@@ -256,9 +327,9 @@ public class Part extends WorldObject {
 		PVector origin = localOrientation.getOrigin().copy();
 		RMatrix rMat = localOrientation.getAxes().copy();
 		
-		if (reference != null) {
-			PVector RefOrigin = reference.getLocalCenter();
-			RMatrix refRMat = reference.getLocalOrientation();
+		if (parent != null) {
+			PVector RefOrigin = parent.getLocalCenter();
+			RMatrix refRMat = parent.getLocalOrientation();
 			
 			origin = RMath.rotateVector(origin, refRMat.getInverse());
 			origin.add(RefOrigin);

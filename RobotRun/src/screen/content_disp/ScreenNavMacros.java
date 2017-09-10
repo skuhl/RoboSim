@@ -1,7 +1,7 @@
 package screen.content_disp;
 
 import core.RobotRun;
-import programming.Macro;
+import global.Fields;
 import robot.RoboticArm;
 import screen.ScreenMode;
 
@@ -16,12 +16,19 @@ public class ScreenNavMacros extends ST_ScreenListContents {
 
 	@Override
 	public void actionF1() {
-		robotRun.nextScreen(ScreenMode.CREATE_MACRO);
+		RoboticArm r = robotRun.getActiveRobot();
+		
+		if (!r.atMacroCapacity()) {
+			robotRun.nextScreen(ScreenMode.CREATE_MACRO);
+			
+		} else {
+			Fields.setMessage("No more macros can be defined at this time");
+		}
 	}
 
 	@Override
 	public void actionF4() {
-		if(robotRun.getActiveRobot().getMacroList().size() > 0) {			
+		if(robotRun.getActiveRobot().numOfMacros() > 0) {			
 			if (contents.getColumnIdx() == 1) {
 				robotRun.nextScreen(ScreenMode.SET_MACRO_PROG);
 			} else if (contents.getColumnIdx() == 2) {
@@ -38,10 +45,8 @@ public class ScreenNavMacros extends ST_ScreenListContents {
 	public void actionF5() {
 		if(robotRun.isShift()) {
 			RoboticArm r = robotRun.getActiveRobot();
-			Macro m = r.getMacroList().remove(contents.getCurrentItemIdx());
-			if(m.getKeyNum() != -1) {
-				r.getMacroKeyBinds()[m.getKeyNum()] = null;
-			}
+			r.rmMacro(contents.getCurrentItemIdx());
+			robotRun.updatePendantScreen();
 		}
 	}
 

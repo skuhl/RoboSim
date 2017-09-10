@@ -8,23 +8,21 @@ package frame;
 public interface RFrame {
 	
 	/**
+	 * Returns the name associated with this frame
 	 * 
-	 * @see ToolFrame#getName()
-	 * @see UserFrame#getName()
+	 * @return	This frame's name
 	 */
 	public abstract String getName();
 	
 	/**
+	 * Updates the name of this frame.
 	 * 
-	 * @see ToolFrame#setName(String)
-	 * @see UserFrame#setName(String)
+	 * @param name	The new name for the frame
 	 */
 	public abstract void setName(String name);
 	
 	/**
-	 * 
-	 * @see ToolFrame#reset()
-	 * @see UserFrame#reset()
+	 * Reinitializes ALL the frame's fields to their default values.
 	 */
 	public abstract void reset();
 	

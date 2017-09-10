@@ -1,5 +1,6 @@
 package geom;
 
+import enums.DimType;
 import global.Fields;
 import global.RMath;
 import processing.core.PVector;
@@ -22,7 +23,7 @@ public class BoundingBox {
 	/**
 	 * Create a bounding box with the given dimension.
 	 * 
-	 * @param	The edge length of the bounding box
+	 * @param edgeLen	The edge length of the bounding box
 	 */
 	public BoundingBox(float edgeLen) {
 		localOrientation = new CoordinateSystem();
@@ -270,7 +271,7 @@ public class BoundingBox {
 	public PVector getCenter() { return localOrientation.getOrigin(); }
 
 	/**
-	 * See Box.getDim()
+	 * @see RBox#getDim(DimType)
 	 */
 	public float getDim(DimType dim) {
 		return boxFrame.getDim(dim);
@@ -279,6 +280,8 @@ public class BoundingBox {
 	/**
 	 * Returns the bounding-box's dimension in the
 	 * form of a PVector: (length, height, width).
+	 * 
+	 * @return	The box's dimensions in the form of a PVector
 	 */
 	public PVector getDims() {
 		PVector dims = new PVector();
@@ -289,7 +292,9 @@ public class BoundingBox {
 	}
 
 	/**
-	 * Return a reference to this bounding-box's box.
+	 * Returns a reference to this bounding box's shape.
+	 * 
+	 * @return	a reference to this bounding box's shape
 	 */
 	public RBox getFrame() { return boxFrame; }
 
@@ -298,23 +303,28 @@ public class BoundingBox {
 	}
 
 	/**
-	 * Reset the object's center point
+	 * Sets the center of this bounding box to the given position.
+	 * 
+	 * @param newCenter	The new center position of this bounding box
 	 */
 	public void setCenter(PVector newCenter) {
 		localOrientation.setOrigin(newCenter);
 	}
 
 	/**
-	 * Sets the stroke color of this ounding-box
+	 * Sets the stroke color of this bounding box
 	 * to the given value.
+	 * 
+	 * @param newColor	The new stroke color of this bounding box
 	 */
 	public void setColor(int newColor) {
 		boxFrame.setStrokeValue(newColor);
 	}
 	
 	/**
-	 * Reset the bounding-box's coordinate system to the current
-	 * transformation matrix.
+	 * Set's the position and orientation of this bounding box.
+	 * 
+	 * @param newCS	The new position and orientation of this bounding box
 	 */
 	public void setCoordinateSystem(CoordinateSystem newCS) {
 		localOrientation.setOrigin(newCS.getOrigin());
@@ -338,18 +348,21 @@ public class BoundingBox {
 	}
 
 	/**
-	 * See Box.setDim()
+	 * @see RBox#setDim(Float, DimType)
 	 */
 	public void setDim(Float newVal, DimType dim) {
 		boxFrame.setDim(newVal, dim);
 	}
 
 	/**
-	 * Sets all the dimension values of the
-	 * bounding-box, where:
-	 * X -> length
-	 * Y -> height
-	 * Z -> width
+	 * Sets all the dimension values of the bounding-box:
+	 * 
+	 * @param newDims
+	 * 	Sets the bounding box's length, height, and width with the values of
+	 * 	the given PVector:</br>
+	 * 	X -> length</br>
+	 * 	Y -> height</br>
+	 * 	Z -> width</br>
 	 */
 	public void setDims(PVector newDims) {
 		boxFrame.setDim(newDims.x, DimType.LENGTH);
@@ -358,8 +371,9 @@ public class BoundingBox {
 	}
 
 	/**
-	 * Reset the object's orientation axes; the given rotation
-	 * matrix should be in row major order!
+	 * Sets the orientation of this bounding box.
+	 * 
+	 * @param newOrientation	The new orientation of this bounding box
 	 */
 	public void setOrientation(RMatrix newOrientation) {
 		localOrientation.setAxes(newOrientation);

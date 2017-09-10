@@ -21,7 +21,7 @@ public class ScreenToolFrameDetail extends ST_ScreenOptionsMenu {
 	
 	public ScreenToolFrameDetail(RobotRun r, int frameIdx) {
 		super(ScreenMode.TFRAME_DETAIL, loadHeader(r.getActiveRobot(),
-				frameIdx), r);
+				frameIdx), r, 2, 10, 20, 3, 10, 80);
 		this.frameIdx = frameIdx;
 	}
 	

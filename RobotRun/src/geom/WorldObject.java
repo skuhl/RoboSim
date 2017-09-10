@@ -1,5 +1,6 @@
 package geom;
 
+import enums.DimType;
 import global.DebugFloatFormat;
 import global.Fields;
 import global.RMath;
@@ -7,7 +8,9 @@ import processing.core.PGraphics;
 import processing.core.PVector;
 
 /**
- * Any object in the World other than the Robot.
+ * Defines the basic functionality of an object in a scenario.
+ * 
+ * @author Joshua Hooker
  */
 public abstract class WorldObject implements Cloneable {
 	protected CoordinateSystem localOrientation;
@@ -38,10 +41,10 @@ public abstract class WorldObject implements Cloneable {
 	/**
 	 * Creates an independent replica of this object with the given name.
 	 * 
-	 * @param name	The name for the copied object
-	 * @return		The copy of this object
+	 * @param nameOfCopy	The name for the copied object
+	 * @return				The copy of this object
 	 */
-	public abstract WorldObject clone(String name);
+	public abstract WorldObject clone(String nameOfCopy);
 	
 	/**
 	 * Calculates the point of collision between this world object and the
@@ -130,7 +133,7 @@ public abstract class WorldObject implements Cloneable {
 	 * the dimensions of the this world object's shape (except for Model
 	 * shapes, because their dimensions are unknown).
 	 * 
-	 * @returning  A non-null, variable length string array
+	 * @return  A non-null, variable length string array
 	 */
 	public String[] dimFieldsToStringArray() {
 		String[] fields;
@@ -212,18 +215,38 @@ public abstract class WorldObject implements Cloneable {
 	 * @param axis	The unit vector representing the axis of rotation
 	 * @param theta	the angle of rotation around the given axis
 	 */
-	public void rotateAroundAxis(PVector axis, float angle) {
-		
-		RMatrix rotation = RMath.formRMat(axis, angle);
+	public void rotateAroundAxis(PVector axis, float theta) {
+		RMatrix rotation = RMath.formRMat(axis, theta);
 		RMatrix orientation = localOrientation.getAxes();
 		
-		localOrientation.setAxes( rotation.multiply(orientation) );
+		setLocalOrientation(rotation.multiply(orientation));
 	}
-
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param newCenter
+	 */
 	public void setLocalCenter(PVector newCenter) {
 		localOrientation.setOrigin(newCenter);
 	}
 	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param newCenter
+	 * @param newAxes
+	 */
+	public void setLocalCoordinates(PVector newCenter, RMatrix newAxes) {
+		localOrientation.setOrigin(newCenter);
+		localOrientation.setAxes(newAxes);
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param newAxes
+	 */
 	public void setLocalOrientation(RMatrix newAxes) {
 		localOrientation.setAxes(newAxes);
 	}

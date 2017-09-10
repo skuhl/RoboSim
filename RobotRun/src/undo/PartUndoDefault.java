@@ -17,16 +17,16 @@ public class PartUndoDefault extends WOUndoState {
 	 */
 	private CoordinateSystem prevCoord;
 	
-	public PartUndoDefault(Part ref) {
-		super(ref);
+	public PartUndoDefault(int groupNum, Part ref) {
+		super(groupNum, ref);
 		
 		PVector defPosition = ref.getDefaultCenter().copy();
 		RMatrix defOrientation = ref.getDefaultOrientation().copy();
 		prevCoord = new CoordinateSystem(defPosition, defOrientation);
 	}
 	
-	public PartUndoDefault(Part ref, CoordinateSystem prevCoord) {
-		super(ref);
+	public PartUndoDefault(int groupNum, Part ref, CoordinateSystem prevCoord) {
+		super(groupNum, ref);
 		this.prevCoord = prevCoord;
 	}
 	

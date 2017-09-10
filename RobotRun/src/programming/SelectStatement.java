@@ -34,7 +34,7 @@ public class SelectStatement extends Instruction implements ExpressionEvaluation
 
 	public void addCase() {
 		getCases().add(new OperandGeneric());
-		getInstrs().add(new Instruction());
+		getInstrs().add(new BlankInstruction());
 	}
 
 	public void addCase(Operand<?> e, Instruction i) {

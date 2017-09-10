@@ -9,7 +9,7 @@ import enums.InstUndoType;
 import frame.ToolFrame;
 import frame.UserFrame;
 import geom.BoundingBox;
-import geom.MyPShape;
+import geom.Model;
 import geom.Part;
 import geom.Point;
 import geom.RMatrix;
@@ -37,12 +37,18 @@ import regs.IORegister;
 import regs.PositionRegister;
 import ui.DisplayLine;
 
+/**
+ * TODO general comments
+ * 
+ * @author Vincent Druckte
+ * @author Joshua Hooker
+ */
 public class RoboticArm {
 	
 	/**
 	 * The maximum number of programs allowed for a single robotic arm.
 	 */
-	public static final int PROG_NUM = 100;
+	public static final int PROG_NUM = 80;
 	
 	/**
 	 * Defines the conversion between the robot's maximum rotation speed and
@@ -183,11 +189,16 @@ public class RoboticArm {
 	 * 
 	 * @param rid				The ID of this robot, which must be unique
 	 * 							amongst all robots
+	 * @param segmentModels		The set of segment models for the robotic arm
+	 * @param endEffectorModels	The set of end effector models for the robotic
+	 * 							arm
 	 * @param basePos			The position of the robot's base segment
 	 * @param robotTrace		A reference to the trace in the robotRun
 	 * 							application
 	 */
-	public RoboticArm(int rid, PVector basePos, RTrace robotTrace) {
+	public RoboticArm(int rid, Model[] segmentModels, Model[] endEffectorModels,
+			PVector basePos, RTrace robotTrace) {
+		
 		RID = rid;
 		liveSpeed = 10;
 		BASE_POSITION = basePos;
@@ -210,7 +221,6 @@ public class RoboticArm {
 		
 		// Define the robot's segments
 		SEGMENT = new RSegWithJoint[6];
-		PShape[] segmentModels = loadJointModels();
 		
 		SEGMENT[0] = new RSegWithJoint(
 			segmentModels[0],
@@ -272,7 +282,6 @@ public class RoboticArm {
 		
 		//Define the robot's end effectors
 		EE_LIST = new EndEffector[6];
-		PShape[] endEffectorModels = loadEEModels();
 		
 		EE_LIST[0] = new EndEffector(endEffectorModels[0], new BoundingBox[0],
 				new BoundingBox[0], 0, "FACEPLATE");
@@ -394,6 +403,23 @@ public class RoboticArm {
 			addAt(p, idx, inst, group);
 		}
 	}
+	
+	/**
+	 * Adds a manual function macro for the given program to this robot's list
+	 * of macros, if this robot is not already at its macro capacity.
+	 * 
+	 * @param p	The program for which to build a macro
+	 * @return	The newly defined macro, or null if the macro was not created
+	 */
+	public Macro addMacro(Program p) {
+		if (!atMacroCapacity()) {
+			Macro m = new Macro(this, p);
+			macros.add(m);
+			return m;
+		}
+		
+		return null;
+	}
 
 	/**
 	 * Adds the given program to this Robot's list of programs.
@@ -440,12 +466,23 @@ public class RoboticArm {
 	 *            quanternion
 	 * @return		The point, pt, in terms of the given coordinate system
 	 */
-	public Point applyFrame(Point pt, PVector origin, RQuaternion axes) {
+	public static Point applyFrame(Point pt, PVector origin, RQuaternion axes) {
 		PVector position = RMath.vToFrame(pt.position, origin, axes);
 		RQuaternion orientation = axes.transformQuaternion(pt.orientation);
 		
 		// If inverse kinematics fails use the old angles
 		return new Point(position, orientation, pt.angles);
+	}
+	
+	/**
+	 * Determines if the number of macros has reached the capacity for this
+	 * robot. The macro capacity of a robot is equal to the robot's current
+	 * number of programs.
+	 * 
+	 * @return	number of macros <= number of programs
+	 */
+	public boolean atMacroCapacity() {
+		return macros.size() >= PROGRAM.size();
 	}
 	
 	/**
@@ -673,12 +710,8 @@ public class RoboticArm {
 		// Base position
 		g.translate(BASE_POSITION.x, BASE_POSITION.y, BASE_POSITION.z);
 		
-		g.rotateZ(PConstants.PI);
-		g.rotateY(PConstants.HALF_PI);
 		// Base segment
 		g.shape(SEGMENT[0].MODEL_SET[0]);
-		g.rotateY(-PConstants.HALF_PI);
-		g.rotateZ(-PConstants.PI);
 		
 		// Translate for the first joint segment
 		g.translate(-50f, -163f, -350f);
@@ -688,12 +721,8 @@ public class RoboticArm {
 		g.rotateY(jointAngles[0]);
 		g.translate(150f, 0f, -150f);
 		
-		g.rotateX(PConstants.PI);
-		g.rotateY(PConstants.PI);
 		// First joint segment
 		g.shape(SEGMENT[1].MODEL_SET[0]);
-		g.rotateY(-PConstants.PI);
-		g.rotateX(-PConstants.PI);
 		
 		// Translate for the second joint segment
 		g.translate(-125f, -75f, 180f);
@@ -703,12 +732,8 @@ public class RoboticArm {
 		g.rotateZ(-jointAngles[1]);
 		g.translate(62f, 62f, 0f);
 		
-		g.rotateZ(PConstants.PI);
-		g.rotateY(PConstants.HALF_PI);
 		// Second joint segment
 		g.shape(SEGMENT[2].MODEL_SET[0]);
-		g.rotateY(-PConstants.HALF_PI);
-		g.rotateZ(-PConstants.PI);
 		
 		// Translate for the third joint segment
 		g.translate(10f, -605f, -200f);
@@ -718,10 +743,8 @@ public class RoboticArm {
 		g.rotateZ(-jointAngles[2]);
 		g.translate(75f, -45f, 0f);
 		
-		g.rotateY(-PConstants.HALF_PI);
 		// Third joint segment
 		g.shape(SEGMENT[3].MODEL_SET[0]);
-		g.rotateY(PConstants.HALF_PI);
 		
 		// Translate for the fourth joint segment
 		g.translate(-725f, 0f, 0f);
@@ -731,12 +754,8 @@ public class RoboticArm {
 		g.rotateX(jointAngles[3]);
 		g.translate(0f, -75f, -75f);
 		
-		g.rotateZ(-PConstants.HALF_PI);
-		g.rotateY(-PConstants.HALF_PI);
 		// Fourth joint segment
 		g.shape(SEGMENT[4].MODEL_SET[0]);
-		g.rotateY(PConstants.HALF_PI);
-		g.rotateZ(PConstants.HALF_PI);
 		
 		// Translation for the fifth joint segment
 		g.translate(120f, 20f, 25f);
@@ -745,11 +764,9 @@ public class RoboticArm {
 		// Fifth joint axis
 		g.rotateZ(-jointAngles[4]);
 		g.translate(55f, -55f, -50f);
-
-		g.rotateY(-PConstants.HALF_PI);
+		
 		// Fifth joint segment
 		g.shape(SEGMENT[5].MODEL_SET[0]);
-		g.rotateY(PConstants.HALF_PI);
 		
 		// Translation for the sixth joint segment
 		g.translate(-150f, 10f, 95f);
@@ -884,8 +901,8 @@ public class RoboticArm {
 	 * @param distBwtLines		The spacing between between lines drawn for an
 	 * 							axis
 	 */
-	public void drawGridlines(PGraphics g, RMatrix axesVectors, PVector origin,
-			int halfNumOfLines, float distBwtLines) {
+	public static void drawGridlines(PGraphics g, RMatrix axesVectors,
+			PVector origin, int halfNumOfLines, float distBwtLines) {
 		
 		float[][] axesDat = axesVectors.getDataF();
 		int vectorPX = -1, vectorPZ = -1;
@@ -946,16 +963,16 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Returns the name of the active end effector, or null if no end effector
+	 * is active.
 	 * 
-	 * @return
+	 * @return	The name of the active end effector
 	 */
 	public String getActiveEEName() {
 		EndEffector ee = this.getActiveEE();
 		
 		if (ee != null) {
 			return ee.getName();
-			
 		}
 		
 		return null;
@@ -1070,10 +1087,10 @@ public class RoboticArm {
 		if (rdx >= 0 && rdx < DREG.length) {
 			return DREG[rdx];
 			
-		} else {
-			// Invalid index
-			return null;
 		}
+		
+		// Invalid index
+		return null;
 	}
 	
 	/**
@@ -1198,9 +1215,10 @@ public class RoboticArm {
 	 * Calculates the position and orientation of the robot's face plate based
 	 * on the native coordinate system and the given joint angles.
 	 * 
-	 * @jointAngles	The angles used to calculate the robot's face plate point
-	 * @return		A point representing the robot faceplate's position and
-	 * 				orientation
+	 * @param jointAngles	The angles used to calculate the robot's face plate
+	 * 						point
+	 * @return				A point representing the robot faceplate's position
+	 * 						and orientation
 	 */
 	public Point getFacePlatePoint(float[] jointAngles) {
 		RMatrix tipOrien = getFaceplateTMat(jointAngles);
@@ -1247,6 +1265,7 @@ public class RoboticArm {
 	 * NOTE: only use this method, if you intend to edit the instruction
 	 * 		 returned by this method!!!!
 	 * 
+	 * @param p		The program from which to get an instruction
 	 * @param idx	The index of the instruction in the active program's list
 	 * 				of instructions
 	 * @return		The instruction at the given index, in the active program's
@@ -1343,16 +1362,22 @@ public class RoboticArm {
 		return liveSpeed;
 	}
 	
+	/**
+	 * Gets the macro associated with the given key bind number.
+	 * 
+	 * @param keyNum	The number of a key binding
+	 * @return			The macro associated with the given key bing number
+	 */
+	public Macro getKeyBind(int keyNum) {
+		if (keyNum >= 0 && keyNum < macroKeyBinds.length) {
+			return macroKeyBinds[keyNum];
+		}
+		
+		return null;
+	}
+	
 	public Macro getMacro(int idx) {
 		return macros.get(idx);
-	}
-
-	public Macro[] getMacroKeyBinds() {
-		return macroKeyBinds;
-	}
-
-	public ArrayList<Macro> getMacroList() {
-		return macros;
 	}
 	
 	/**
@@ -1401,11 +1426,10 @@ public class RoboticArm {
 	public PositionRegister getPReg(int rdx) {
 		if (rdx >= 0 && rdx < PREG.length) {
 			return PREG[rdx];
-			
-		} else {
-			// Invalid index
-			return null;
 		}
+		
+		// Invalid index
+		return null;
 	}
 
 	/**
@@ -1441,11 +1465,10 @@ public class RoboticArm {
 	public Program getProgram(int pdx) {
 		if (pdx >= 0 && pdx < PROGRAM.size()) {
 			return PROGRAM.get(pdx);
-			
-		} else {
-			// Invalid index
-			return null;
 		}
+		
+		// Invalid index
+		return null;
 	}
 	
 	/**
@@ -1486,11 +1509,10 @@ public class RoboticArm {
 	public ToolFrame getToolFrame(int fdx) {
 		if (fdx >= 0 && fdx < TOOL_FRAME.length) {
 			return TOOL_FRAME[fdx];
-			
-		} else {
-			// Invalid index
-			return null;
 		}
+		
+		// Invalid index
+		return null;
 	}
 
 	/**
@@ -1501,10 +1523,11 @@ public class RoboticArm {
 	 * @return		The default tool tip offset of the end effector associated
 	 * 				with the given index
 	 */
-	public PVector getToolTipDefault(int idx) {
+	public static PVector getToolTipDefault(int idx) {
 		if (idx >= 0 && idx < EE_TOOLTIP_DEFAULTS.length) {
 			return EE_TOOLTIP_DEFAULTS[idx];
 		}
+		
 		// invalid index
 		return null;
 	}
@@ -1551,11 +1574,10 @@ public class RoboticArm {
 	public UserFrame getUserFrame(int fdx) {
 		if (fdx >= 0 && fdx < USER_FRAME.length) {
 			return USER_FRAME[fdx];
-			
-		} else {
-			// Invalid index
-			return null;
 		}
+		
+		// Invalid index
+		return null;
 	}
 	
 	/**
@@ -1569,7 +1591,7 @@ public class RoboticArm {
 	 * 						position type, user frame, tool frame, and offset
 	 * 						for the resulting point
 	 * @param parent		The program, to which mInst belongs
-	 * @param useCircPos	Whether to get the primary or secondary position of
+	 * @param getCircPos	Whether to get the primary or secondary position of
 	 * 						the motion instruction
 	 * @return				The position and orientation of the point in the
 	 * 						native coordinate system as well as the associated
@@ -1747,7 +1769,10 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * @return	Is the given part being held by the robot
+	 * Determines if the given part is held by this robot.
+	 * 
+	 * @param p	The part in question
+	 * @return	Is the given part being held by this robot
 	 */
 	public boolean isHeld(Part p) {
 		return p == heldPart;
@@ -1772,9 +1797,9 @@ public class RoboticArm {
 	 *                         Coordinates
 	 * @param destOrientation  The desired orientation of the Robot as a quaternion, in
 	 *                         Native Coordinates
-	 * @returning   1 if inverse kinematics fails or the joint angles returned
-	 *              are invalid and 0 if the Robot is successfully moved to the
-	 *              given position
+	 * @return					1 if inverse kinematics fails or the joint angles returned
+	 * 							are invalid and 0 if the Robot is successfully moved to the
+	 * 							given position
 	 */
 	public int jumpTo(PVector destPosition, RQuaternion destOrientation) {
 		boolean invalidAngle = false;
@@ -1821,7 +1846,18 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * Returns the number of programs associated with the Robot.
+	 * Returns the total number of macros associated with this robot.
+	 * 
+	 * @return	The total number of this robot's marcos
+	 */
+	public int numOfMacros() {
+		return macros.size();
+	}
+	
+	/**
+	 * Returns the total number of program associated with this robot.
+	 * 
+	 * @return The total number of this robot's programs
 	 */
 	public int numOfPrograms() {
 		return PROGRAM.size();
@@ -1969,9 +2005,9 @@ public class RoboticArm {
 	 * @param axes
 	 *            The axes of the Coordinate System representing as a rotation
 	 *            quanternion
-	 * @returning The point, pt, interms of the given coordinate system
+	 * @return		The point, pt, interms of the given coordinate system
 	 */
-	public Point removeFrame(Point pt, PVector origin, RQuaternion axes) {
+	public static Point removeFrame(Point pt, PVector origin, RQuaternion axes) {
 		PVector position = RMath.vFromFrame(pt.position, origin, axes);
 		RQuaternion orientation = RQuaternion.mult(pt.orientation, axes);
 		
@@ -2027,10 +2063,8 @@ public class RoboticArm {
 			InstElement replaced = new InstElement(e.getID(), e.getInst());
 			p.replaceInstAt(idx, inst);
 			
-			if (replaced != null) {
-				pushUndoState(InstUndoType.REPLACED, p, idx, replaced, false);
-				return replaced.getInst();
-			}
+			pushUndoState(InstUndoType.REPLACED, p, idx, replaced, false);
+			return replaced.getInst();
 		}
 		
 		return null;
@@ -2073,6 +2107,26 @@ public class RoboticArm {
 	}
 	
 	/**
+	 * Removes the macro at the specified index in this robot's list of macros.
+	 * If no such macro exists, then nothing occurs.
+	 * 
+	 * @param idx	The index of the macro to remove from this robot
+	 * @return		If a macro was removed
+	 */
+	public boolean rmMacro(int idx) {
+		if (idx >= 0 && idx < macros.size()) {
+			Macro m = macros.remove(idx);
+			// Remove the respective key binding if it exists
+			int keyNum = m.getKeyNum();
+			if (keyNum >= 0 && keyNum < macroKeyBinds.length) {
+				macroKeyBinds[keyNum] = null;
+			}
+		}
+		
+		return false;
+	}
+	
+	/**
 	 * Removes the given program from this robot's list of programs, if it
 	 * exists.
 	 * 
@@ -2080,6 +2134,7 @@ public class RoboticArm {
 	 * @return	If the program existed in this robot's list of programs
 	 */
 	public boolean rmProg(Program p) {
+		rmMacros(p);
 		return PROGRAM.remove(p);
 	}
 	
@@ -2094,13 +2149,14 @@ public class RoboticArm {
 	public Program rmProgAt(int pdx) {
 		if (pdx >= 0 && pdx < PROGRAM.size()) {
 			Program removed = PROGRAM.remove(pdx);
+			rmMacros(removed);
 			// Return the removed program
 			return removed;
 			
-		} else {
-			// Invalid index
-			return null;
 		}
+		
+		// Invalid index
+		return null;
 	}
 
 	/**
@@ -2108,7 +2164,7 @@ public class RoboticArm {
 	 * given index must be within the range [0, EE_LIST.length). 0 implies
 	 * that no end effector is active. 
 	 * 
-	 * @param ee	The index of the end effector to set as active
+	 * @param eeIdx	The index of the end effector to set as active
 	 */
 	public void setActiveEE(int eeIdx) {
 		if (eeIdx >= 0 & eeIdx < EE_LIST.length) {
@@ -2129,7 +2185,7 @@ public class RoboticArm {
 	/**
 	 * Sets this robot's active user frame index to the given value.
 	 * 
-	 * @param activeToolIdx	The robot's new active user frame index
+	 * @param activeUserFrame	The robot's new active user frame index
 	 */
 	public void setActiveUserFrame(int activeUserFrame) {
 		this.activeUserIdx = activeUserFrame;
@@ -2199,12 +2255,49 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * Updates this robot's macro key-binding set.
+	 * Associates the keybind number with the given macro, if the given keybind
+	 * number is valid. If the given keybind number is invalid, then false is
+	 * returned.
 	 * 
-	 * @param usrKeyBinds	The new set of macro key-binding for this robot
+	 * @param keyNum	The keybind to associate with the given macro
+	 * @param macro		The macro to assign a keybind (null values are
+	 * 					acceptable)
+	 * @return			Whether the given keybind number is valid
 	 */
-	public void setMacroBindings(Macro[] usrKeyBinds) {
-		macroKeyBinds = usrKeyBinds;
+	public boolean setKeyBinding(int keyNum, Macro macro) {
+		if (keyNum >= 0 && keyNum < macroKeyBinds.length) {
+			macroKeyBinds[keyNum] = macro;
+			
+			if (macro != null) {
+				macro.setManual(false);
+				macro.setKeyNum(keyNum);
+			}
+			
+			return true;
+		}
+		
+		return false;
+	}
+	
+	/**
+	 * Sets the macro at the given index in this robot's list of macros as a
+	 * manual function macro. So, if that macro was assigned to a keybind, then
+	 * that keybind is removed.
+	 * 
+	 * @param mdx	The index of the macro to set as manual
+	 */
+	public void setMacroAsManual(int mdx) {
+		Macro m = this.getMacro(mdx);
+		
+		if (m != null) {
+			boolean wasManual = m.isManual();
+			m.setManual(true);
+			// Remove the macro's keybind
+			if (!wasManual) {
+				setKeyBinding(m.getKeyNum(), null);
+				m.setKeyNum(-1);
+			}
+		}
 	}
 	
 	/**
@@ -2366,10 +2459,15 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Returns a label for the tool frame associated with the given index. This
+	 * label includes the name of the frame (if it is defined) as well as the
+	 * given index (offset by +1). If the given index is invalid for tool
+	 * frames, then null is returned.
 	 * 
-	 * @param idx
-	 * @return
+	 * @param idx	The index of the tool frame in this robot's list of tool
+	 * 				frames
+	 * @return		The label for the tool frame, or null (if the index is
+	 * 				invalid)
 	 */
 	public String toolLabel(int idx) {
 		ToolFrame tFrame = getToolFrame(idx);
@@ -2397,12 +2495,12 @@ public class RoboticArm {
 			undoState.undo();
 			
 			// Chain undo states with the same group
-			int gid = undoState.getGID();
+			int groupNum = undoState.groupNum();
 			
 			while (!PROG_UNDO.isEmpty()) {
 				undoState = PROG_UNDO.peek();
 				
-				if (undoState.getGID() != gid) {
+				if (undoState.groupNum() != groupNum) {
 					break;
 				}
 				
@@ -2704,10 +2802,15 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Returns a label for the user frame associated with the given index. This
+	 * label includes the name of the frame (if it is defined) as well as the
+	 * given index (offset by +1). If the given index is invalid for user
+	 * frames, then null is returned.
 	 * 
-	 * @param idx
-	 * @return
+	 * @param idx	The index of the user frame in this robot's list of user
+	 * 				frames
+	 * @return		The label for the user frame, or null (if the index is
+	 * 				invalid)
 	 */
 	public String userLabel(int idx) {
 		UserFrame uFrame = getUserFrame(idx);
@@ -2806,7 +2909,8 @@ public class RoboticArm {
 	 * @param tFrame		The frame, which defines the tool tip offset
 	 * @param uFrame		The coordinate frame, with which the robot's tool
 	 * 						tip position and orientation are defined 
-	 * @return
+	 * @return				The position of the robot's tooltip with respect
+	 * 						to the given tool and user frames
 	 */
 	private Point getToolTipPoint(float[] jointAngles, ToolFrame tFrame,
 			UserFrame uFrame) {
@@ -2832,39 +2936,6 @@ public class RoboticArm {
 		return toolTip;
 	}
 	
-	private PShape[] loadEEModels() {
-		PShape[] eeModels = new PShape[7];
-		
-		// Load end effector models
-		eeModels[0] = MyPShape.loadSTLModel("robot/EE/FACEPLATE.STL", Fields.ROBOT_GREY);
-		eeModels[1] = MyPShape.loadSTLModel("robot/EE/SUCTION.stl", Fields.EE_DEFAULT);
-		eeModels[2] = MyPShape.loadSTLModel("robot/EE/GRIPPER.stl", Fields.EE_DEFAULT);
-		eeModels[3] = MyPShape.loadSTLModel("robot/EE/PINCER.stl", Fields.ROBOT_YELLOW);
-		eeModels[4] = MyPShape.loadSTLModel("robot/EE/POINTER.stl", Fields.EE_DEFAULT);
-		eeModels[5] = MyPShape.loadSTLModel("robot/EE/GLUE_GUN.stl", Fields.EE_DEFAULT);
-		eeModels[6] = MyPShape.loadSTLModel("robot/EE/WIELDER.stl", Fields.EE_DEFAULT);
-		
-		return eeModels;
-	}
-	
-	/**
-	 * Loads 3D meshes for the individual robot joints from model files.
-	 * 
-	 * @return An array containing the joint model meshes
-	 */
-	private PShape[] loadJointModels() {
-		PShape[] segModels = new PShape[6];
-		
-		segModels[0] = MyPShape.loadSTLModel("robot/ROBOT_BASE.STL", Fields.ROBOT_YELLOW);
-		segModels[1] = MyPShape.loadSTLModel("robot/ROBOT_SEGMENT_1.STL", Fields.ROBOT_GREY);
-		segModels[2] = MyPShape.loadSTLModel("robot/ROBOT_SEGMENT_2.STL", Fields.ROBOT_YELLOW);
-		segModels[3] = MyPShape.loadSTLModel("robot/ROBOT_SEGMENT_3.STL", Fields.ROBOT_GREY);
-		segModels[4] = MyPShape.loadSTLModel("robot/ROBOT_SEGMENT_4.STL", Fields.ROBOT_GREY);
-		segModels[5] = MyPShape.loadSTLModel("robot/ROBOT_SEGMENT_5.STL", Fields.ROBOT_YELLOW);
-		
-		return segModels;
-	}
-	
 	/**
 	 * Adds the undo state defined the given parameters to the program undo
 	 * stack.
@@ -2883,28 +2954,51 @@ public class RoboticArm {
 			PROG_UNDO.remove(0);
 		}
 		
-		// Determine the group ID of the undo state
-		int gid;
+		// Determine the group number of the undo state
+		int groupNum;
 		
 		if (PROG_UNDO.isEmpty()) {
-			gid = 0;
+			groupNum = 0;
 			
 		} else {
 			InstUndoState top = PROG_UNDO.peek();
 			
-			if ((top.getGID() == 1 && group) || (top.getGID() == 0 && !group)) {
-				gid = 1;
+			if ((top.groupNum() == 1 && group) || (top.groupNum() == 0 &&
+					!group)) {
+				
+				groupNum = 1;
 				
 			} else {
-				gid = 0;
+				groupNum = 0;
 			}
 		}
 		
-		InstUndoState undoState = new InstUndoState(type, gid, prog, idx, inst);
+		InstUndoState undoState = new InstUndoState(type, groupNum, prog, idx,
+				inst);
 		PROG_UNDO.push(undoState);
 		/* TEST CODE *
 		Fields.debug("%s\n", undoState);
 		/**/
+	}
+	
+	/**
+	 * Removes all macros defined for the given program
+	 * 
+	 * @param p	The program, for which to remove all associated macros
+	 */
+	private void rmMacros(Program p) {
+		int idx = 0;
+		
+		while (idx < macros.size()) {
+			Macro m = macros.get(idx);
+			
+			if (m.getProg() == p) {
+				rmMacro(idx);
+				
+			} else {
+				++idx;
+			}
+		}
 	}
 	
 	/**

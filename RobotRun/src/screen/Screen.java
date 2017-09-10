@@ -9,6 +9,7 @@ import frame.UserFrame;
 import global.Fields;
 import processing.core.PVector;
 import programming.Instruction;
+import programming.Macro;
 import programming.MotionInstruction;
 import programming.Program;
 import programming.SelectStatement;
@@ -379,8 +380,8 @@ public abstract class Screen {
 		ArrayList<DisplayLine> disp = new ArrayList<DisplayLine>();
 		RoboticArm r = robotRun.getActiveRobot();
 		
-		for (int i = 0; i < r.getMacroList().size(); i += 1) {
-			String[] strArray = r.getMacroList().get(i).toStringArray();
+		for (int i = 0; i < r.numOfMacros(); i += 1) {
+			String[] strArray = r.getMacro(i).toStringArray();
 			disp.add(new DisplayLine(i, Integer.toString(i + 1), strArray[0], strArray[1], strArray[2]));
 		}
 		
@@ -391,9 +392,10 @@ public abstract class Screen {
 		ArrayList<DisplayLine> disp = new ArrayList<DisplayLine>();
 		RoboticArm r = robotRun.getActiveRobot();
 
-		for (int i = 0; i < r.getMacroList().size(); i += 1) {
-			if (r.getMacroList().get(i).isManual()) {
-				String manFunct = r.getMacroList().get(i).toString();
+		for (int i = 0; i < r.numOfMacros(); i += 1) {
+			Macro m = r.getMacro(i);
+			if (m.isManual()) {
+				String manFunct = m.toString();
 				disp.add(new DisplayLine(i, (i + 1) + " " + manFunct));
 			}
 		}
@@ -487,7 +489,49 @@ public abstract class Screen {
 		printScreenInfo();
 	}
 	
+	@Override
+	public String toString() {
+		if (this.mode == null) {
+			return "UNKNOWN";
+		}
+		
+		return mode.toString();
+	}
 	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param robot
+	 */
+	protected void callProgNextScreen(RoboticArm robot) {	
+		if (robot.numOfPrograms() <= 0) {
+			// The target robot has no programs
+			Fields.setMessage("No programs are available for this robot");
+			
+		} else {
+			robotRun.editIdx = robot.RID;
+			robotRun.nextScreen(ScreenMode.SET_CALL_PROG);
+		}
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param robot
+	 * @param ignoreActiveScreen
+	 */
+	protected void callProgSwitchScreen(RoboticArm robot,
+			boolean ignoreActiveScreen) {
+		
+		if (robot.numOfPrograms() <= 0) {
+			// The target robot has no programs
+			Fields.setMessage("No programs are available for this robot");
+			
+		} else {
+			robotRun.editIdx = robot.RID;
+			robotRun.switchScreen(ScreenMode.SET_CALL_PROG, ignoreActiveScreen);
+		}
+	}
 
 	protected abstract void loadContents();
 

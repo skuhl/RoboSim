@@ -69,11 +69,11 @@ public class RRay {
 	 * @param drawnLen		How much of the ray is drawn
 	 * @param color			The color with which the ray will be drawn
 	 */
-	public RRay(PVector origin, PVector direct, int color, float len) {
+	public RRay(PVector origin, PVector direct, int color, float drawnLen) {
 		this.origin = origin;
 		direction = direct;
 		this.strokeCVal = color;
-		drawLength = len;
+		drawLength = drawnLen;
 	}
 	
 	@Override

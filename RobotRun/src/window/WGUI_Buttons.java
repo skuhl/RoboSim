@@ -1,5 +1,11 @@
 package window;
 
+/**
+ * TODO general comments
+ * 
+ * @author Vincent Druckte
+ * @author Joshua Hooker
+ */
 public interface WGUI_Buttons {
 	public static final String ArrowDn = "button_arrowDn";
 	public static final String ArrowLt = "button_arrowLt";

@@ -48,13 +48,29 @@ public class CoordinateSystem implements Cloneable {
 	}
 
 	/**
-	 * Return this coordinate system's axes.
+	 * Returns a reference to this coordinate system's orientation matrix.
+	 * 
+	 * @return	A refernce to this coordinate system's orientation matrix
 	 */
-	public RMatrix getAxes() { return axesVectors; }
-	public PVector getOrigin() { return origin; }
-
-	public void setAxes(RMatrix newAxes) {
-		
+	public RMatrix getAxes() {
+		return axesVectors;
+	}
+	
+	/**
+	 * Returns a reference to this coordinate system's origin position.
+	 * 
+	 * @return	A reference to this coordinate system's origin position
+	 */
+	public PVector getOrigin() {
+		return origin;
+	}
+	
+	/**
+	 * Sets the values of this coordinate system's orientation matrix.
+	 * 
+	 * @param newAxes	The coordinate system's new orientation values
+	 */
+	public void setAxes(RMatrix newAxes) {		
 		for (int row = 0; row < 3; ++row) {
 			for (int col = 0; col < 3; ++col) {
 				axesVectors.setEntry(row, col, newAxes.getEntry(row, col));
@@ -62,7 +78,12 @@ public class CoordinateSystem implements Cloneable {
 		}
 		
 	}
-
+	
+	/**
+	 * Sets this coordinate system's origin position.
+	 * 
+	 * @param newOrigin	The coordinate system's new origin position
+	 */
 	public void setOrigin(PVector newOrigin) {
 		origin.x = newOrigin.x;
 		origin.y = newOrigin.y;

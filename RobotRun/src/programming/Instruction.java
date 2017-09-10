@@ -1,24 +1,36 @@
 package programming;
 
-public class Instruction {
+/**
+ * Defines the basic functionality of an instruction in a program.
+ * 
+ * @author Joshua Hooker and Vincent Druckte
+ */
+public abstract class Instruction {
 	
+	/**
+	 * Whether or not this instruction should be ignored during program
+	 * execution.
+	 */
 	protected boolean isCommented;
 
+	/**
+	 * Initializes an instruction, which is not commented.
+	 */
 	public Instruction() {
 		isCommented = false;
 	}
 	
+	/**
+	 * Initializes an instruction with the given comment state.
+	 * 
+	 * @param isComm	The comment state of this instruction
+	 */
 	public Instruction(boolean isComm) {
 		isCommented = isComm;
 	}
 	
-	/**
-	 * Create an independent replica of this instruction.
-	 */
 	@Override
-	public Instruction clone() {
-		return new Instruction(isCommented);
-	}
+	public abstract Instruction clone();
 	
 	public boolean isCommented(){ return isCommented; }
 
@@ -43,8 +55,13 @@ public class Instruction {
 
 		return str;
 	}
-
-	public String[] toStringArray() {
-		return new String[] {"..."};
-	}
+	
+	/**
+	 * Defines a set of strings, which visually define this instruction, when
+	 * it is output on the pendant's screen.
+	 * 
+	 * @return	A set of strings which define the relevant fields of this
+	 * 			instruction
+	 */
+	public abstract String[] toStringArray();
 }

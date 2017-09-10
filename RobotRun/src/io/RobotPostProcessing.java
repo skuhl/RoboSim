@@ -53,7 +53,7 @@ public class RobotPostProcessing implements Runnable {
 				
 				cInst.setTgtDevice(tgtDevice);
 				if (tgtDevice != null && tgtName != null) {
-					Program tgt = tgtDevice.getProgram(cInst.getLoadedName());
+					Program tgt = tgtDevice.getProgram(tgtName);
 					cInst.setProg(tgt);
 				}
 				
@@ -66,9 +66,12 @@ public class RobotPostProcessing implements Runnable {
 					
 					if (caseInst instanceof CallInstruction) {
 						CallInstruction cInst = (CallInstruction)caseInst;
+						RoboticArm tgtDevice = appRef.getRobot(cInst.getLoadedID());
+						String tgtName = cInst.getLoadedName();
 						
-						if (cInst.getTgtDevice() != null && cInst.getLoadedName() != null) {
-							Program tgt = cInst.getTgtDevice().getProgram(cInst.getLoadedName());
+						cInst.setTgtDevice(tgtDevice);
+						if (tgtDevice != null && tgtName != null) {
+							Program tgt = tgtDevice.getProgram(tgtName);
 							cInst.setProg(tgt);
 						}
 					}
@@ -81,9 +84,12 @@ public class RobotPostProcessing implements Runnable {
 				
 				if (subInst instanceof CallInstruction) {
 					CallInstruction cInst = (CallInstruction)subInst;
+					RoboticArm tgtDevice = appRef.getRobot(cInst.getLoadedID());
+					String tgtName = cInst.getLoadedName();
 					
-					if (cInst.getTgtDevice() != null && cInst.getLoadedName() != null) {
-						Program tgt = cInst.getTgtDevice().getProgram(cInst.getLoadedName());
+					cInst.setTgtDevice(tgtDevice);
+					if (tgtDevice != null && tgtName != null) {
+						Program tgt = tgtDevice.getProgram(tgtName);
 						cInst.setProg(tgt);
 					}
 				}

@@ -45,9 +45,9 @@ public class LoadProgramFile implements Runnable {
 			try {
 				FileInputStream in = new FileInputStream(src);
 				DataInputStream dataIn = new DataInputStream(in);
-				// Load the program from the file
+				/* Load the program from the file and insert it in the program
+				 * list at the specified index */
 				Program p = DataManagement.loadProgram(robotRef, dataIn);
-				// Insert the program in the program list at the specified index
 				listRef[idx] = p;
 				
 				in.close();

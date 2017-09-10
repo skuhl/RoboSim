@@ -1,6 +1,7 @@
 package core;
 
 import java.awt.event.KeyEvent;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
@@ -19,21 +20,25 @@ import expression.Operator;
 import frame.UserFrame;
 import geom.ComplexShape;
 import geom.Fixture;
-import geom.MyPShape;
+import geom.Model;
 import geom.Part;
 import geom.Point;
 import geom.RMatrix;
 import geom.RRay;
 import geom.RShape;
 import geom.Scenario;
+import geom.Triangle;
 import geom.WorldObject;
 import global.Fields;
 import global.RMath;
 import io.DataManagement;
 import processing.core.PApplet;
+import processing.core.PConstants;
 import processing.core.PImage;
+import processing.core.PShape;
 import processing.core.PVector;
 import processing.event.MouseEvent;
+import processing.opengl.PGraphicsOpenGL;
 import programming.CallInstruction;
 import programming.FrameInstruction;
 import programming.IOInstruction;
@@ -76,7 +81,9 @@ import window.WGUI_Buttons;
  * events as well as the main render loop of the application amongst other
  * various nuances in the program.
  * 
- * @author Vincent Druckte, Joshua Hooker, and James Walker
+ * @author Vincent Druckte
+ * @author Joshua Hooker
+ * @author James Walker
  */
 public class RobotRun extends PApplet {
 
@@ -245,7 +252,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant DOWN button
+	 * Pendant DOWN button</br></br>
 	 * 
 	 * Moves down one element in a list displayed on the pendant screen.
 	 * Depending on what menu is active this may move the list pointer
@@ -264,7 +271,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant LEFT button
+	 * Pendant LEFT button</br></br>
 	 * 
 	 * Moves one column to the left on a list element display on the pendant's
 	 * screen. Depending on what menu is active, this may move the pointer in
@@ -281,9 +288,9 @@ public class RobotRun extends PApplet {
 			throw Ex;
 		}
 	}
-	
+
 	/**
-	 * Pendant RIGHT button
+	 * Pendant RIGHT button</br></br>
 	 * 
 	 * Moves one column to the right in a list element display on the
 	 * pendant's screen. Depending on what menu is active, this may move the
@@ -304,7 +311,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant UP button
+	 * Pendant UP button</br></br>
 	 * 
 	 * Moves up one element in a list displayed on the pendant screen.
 	 * Depending on what menu is active this may move the list pointer
@@ -323,7 +330,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Pendant BKSPC button
+	 * Pendant BKSPC button</br></br>
 	 * 
 	 * Functions as a backspace key for number, text, and point input menus.
 	 */
@@ -340,7 +347,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant BWD button
+	 * Pendant BWD button</br></br>
 	 * 
 	 * Executes a motion instruction two instructions prior to the active
 	 * instruction (if one exists).
@@ -419,7 +426,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Camera Bk button
+	 * Camera Bk button</br></br>
 	 * 
 	 * Sets the camera to the default back view, which looks down the positive
 	 * x-axis of the world coordinate system.
@@ -437,7 +444,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Camera Bt button
+	 * Camera Bt button</br></br>
 	 * 
 	 * Sets the camera to point down the positive z-axis of the world coordinate
 	 * frame, so as to view the bottom of the robot.
@@ -455,7 +462,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Camera D button
+	 * Camera D button</br></br>
 	 * 
 	 * Resets the position of the camera to (0, 0, 0).
 	 */
@@ -472,7 +479,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Camera F button
+	 * Camera F button</br></br>
 	 * 
 	 * Sets the camera to the default position, facing down the negative y-axis
 	 * of the world coordinate system.
@@ -490,7 +497,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Camera L button
+	 * Camera L button</br></br>
 	 * 
 	 * Sets the camera facing down the negative x-axis of the world coordinate
 	 * frame.
@@ -508,7 +515,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Camera R button
+	 * Camera R button</br></br>
 	 * 
 	 * Sets the camera to point down the positive x-axis of the world
 	 * coordinate frame.
@@ -526,7 +533,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Camera T button
+	 * Camera T button</br></br>
 	 * 
 	 * Sets the camera to point down the negative z-axis of the world
 	 * coordinate frame.
@@ -544,7 +551,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant COORD button
+	 * Pendant COORD button</br></br>
 	 * 
 	 * If shift is off, then this button will change the coordinate frame of
 	 * the active robot. If shift is on, then this button will change to the
@@ -569,7 +576,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Pendant - button
+	 * Pendant - button</br></br>
 	 * 
 	 * Appends the '-' character to input for number, text, and point entry
 	 * menus.
@@ -586,7 +593,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant DATA button
+	 * Pendant DATA button</br></br>
 	 * 
 	 * Displays a list of the register navigation menus (i.e. data or position
 	 * registers).
@@ -603,7 +610,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Pendant EDIT button
+	 * Pendant EDIT button</br></br>
 	 * 
 	 * Links to the active program's instruction navigation menu, except in the
 	 * select screen, where it will open the instruction navigation menu for
@@ -634,7 +641,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Pendant ENTER button
+	 * Pendant ENTER button</br></br>
 	 * 
 	 * Functions as a confirmation button for almost all menus.
 	 */
@@ -652,7 +659,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Miscellaneous menu button
+	 * Miscellaneous menu button</br></br>
 	 * 
 	 * Creates text files for each program stored in each robot in their
 	 * respective export directories that represent the pendant text format
@@ -663,15 +670,12 @@ public class RobotRun extends PApplet {
 		
 		for (Integer rid : rids) {
 			// Export each robot's programs to their respective directories
-			String destDir = String.format("%s/robot%d/out",
-					DataManagement.getTmpDirPath(), rid);
-			DataManagement.exportProgsToTxt(getRobot(rid), destDir);
-		}
-		
+			DataManagement.exportProgsToTxt(getRobot(rid));
+		}	
 	}
 	
 	/**
-	 * Pendant F1 button
+	 * Pendant F1 button</br></br>
 	 * 
 	 * Function varies amongst menus. A hint label will appear in the pendant
 	 * screen above a function button, which has an action in the current
@@ -690,7 +694,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant F2 button
+	 * Pendant F2 button</br></br>
 	 * 
 	 * Function varies amongst menus. A hint label will appear in the pendant
 	 * screen above a function button, which has an action in the current
@@ -709,7 +713,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant F3 button
+	 * Pendant F3 button</br></br>
 	 * 
 	 * Function varies amongst menus. A hint label will appear in the pendant
 	 * screen above a function button, which has an action in the current
@@ -728,7 +732,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Pendant F4 button
+	 * Pendant F4 button</br></br>
 	 * 
 	 * Function varies amongst menus. A hint label will appear in the pendant
 	 * screen above a function button, which has an action in the current
@@ -747,7 +751,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Pendant F5 button
+	 * Pendant F5 button</br></br>
 	 * 
 	 * Function varies amongst menus. A hint label will appear in the pendant
 	 * screen above a function button, which has an action in the current
@@ -766,15 +770,17 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant Fnctl button
+	 * Pendant Fnctl button</br></br>
 	 * 
 	 * Functions as a marco key bindings.
 	 */
 	public void button_funct() {
 		try {
 			if (isShift()) {
-				if (getActiveRobot().getMacroKeyBinds()[6] != null) {
-					execute(getActiveRobot().getMacroKeyBinds()[6]);
+				Macro keyBind = getActiveRobot().getKeyBind(6);
+				
+				if (keyBind != null) {
+					execute(keyBind);
 				}
 			}
 			
@@ -786,7 +792,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Pendant FWD button
+	 * Pendant FWD button</br></br>
 	 * 
 	 * Executes instructions in the instruction navigation of a program. If
 	 * step is active, then only one instruction is executed at a time,
@@ -813,7 +819,7 @@ public class RobotRun extends PApplet {
 	}
   
 	/**
-	 * Pendant HOLD button
+	 * Pendant HOLD button</br></br>
 	 * 
 	 * Stops all robot motion and program execution.
 	 */
@@ -837,7 +843,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Pendant I/O button
+	 * Pendant I/O button</br></br>
 	 * 
 	 * Changes the state of the active robot's active end effector.
 	 */
@@ -855,7 +861,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant ITEM button
+	 * Pendant ITEM button</br></br>
 	 * 
 	 * Not sure what this does ...
 	 */
@@ -873,7 +879,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant -X/(J1) button
+	 * Pendant -X/(J1) button</br></br>
 	 * 
 	 * This button jogs the active robot with reference to its active coordinate
 	 * frame. In addition, this button is paired with +X/(J1) in such a way that
@@ -891,7 +897,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant -Y/(J2) button
+	 * Pendant -Y/(J2) button</br></br>
 	 * 
 	 * This button jogs the active robot with reference to its active coordinate
 	 * frame. In addition, this button is paired with +Y/(J2) in such a way that
@@ -909,7 +915,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant -Z/(J3) button
+	 * Pendant -Z/(J3) button</br></br>
 	 * 
 	 * This button jogs the active robot with reference to its active coordinate
 	 * frame. In addition, this button is paired with +Z/(J3) in such a way that
@@ -927,7 +933,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant -XR/(J4) button
+	 * Pendant -XR/(J4) button</br></br>
 	 * 
 	 * This button jogs the active robot with reference to its active coordinate
 	 * frame. In addition, this button is paired with +XR/(J4) in such a way that
@@ -945,7 +951,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant -YR/(J5) button
+	 * Pendant -YR/(J5) button</br></br>
 	 * 
 	 * This button jogs the active robot with reference to its active coordinate
 	 * frame. In addition, this button is paired with +YR/(J5) in such a way that
@@ -963,7 +969,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant -ZR/(J6) button
+	 * Pendant -ZR/(J6) button</br></br>
 	 * 
 	 * This button jogs the active robot with reference to its active coordinate
 	 * frame. In addition, this button is paired with +ZR/(J6) in such a way that
@@ -981,7 +987,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant +X/(J1) button
+	 * Pendant +X/(J1) button</br></br>
 	 * 
 	 * This button jogs the active robot with reference to its active coordinate
 	 * frame. In addition, this button is paired with -X/(J1) in such a way that
@@ -999,7 +1005,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant +Y/(J2) button
+	 * Pendant +Y/(J2) button</br></br>
 	 * 
 	 * This button jogs the active robot with reference to its active coordinate
 	 * frame. In addition, this button is paired with -Y/(J2) in such a way that
@@ -1017,7 +1023,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant +Z/(J3) button
+	 * Pendant +Z/(J3) button</br></br>
 	 * 
 	 * This button jogs the active robot with reference to its active coordinate
 	 * frame. In addition, this button is paired with -Z/(J3) in such a way that
@@ -1035,7 +1041,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant +XR/(J4) button
+	 * Pendant +XR/(J4) button</br></br>
 	 * 
 	 * This button jogs the active robot with reference to its active coordinate
 	 * frame. In addition, this button is paired with -XR/(J4) in such a way that
@@ -1053,7 +1059,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant +YR/(J5) button
+	 * Pendant +YR/(J5) button</br></br>
 	 * 
 	 * This button jogs the active robot with reference to its active coordinate
 	 * frame. In addition, this button is paired with -YR/(J5) in such a way that
@@ -1071,7 +1077,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Pendant +YR/(J5) button
+	 * Pendant +YR/(J5) button</br></br>
 	 * 
 	 * This button jogs the active robot with reference to its active coordinate
 	 * frame. In addition, this button is paired with -YR/(J5) in such a way that
@@ -1089,7 +1095,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Pendant MENU button
+	 * Pendant MENU button</br></br>
 	 * 
 	 * A list of miscellaneous sub menus (frames, marcos, I/O registers).
 	 */
@@ -1105,14 +1111,16 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Pendant MVMU button
+	 * Pendant MVMU button</br></br>
 	 * 
 	 * A button used for macro binding
 	 */
 	public void button_mvmu() {
 		try {
-			if (getActiveRobot().getMacroKeyBinds()[2] != null && isShift()) {
-				execute(getActiveRobot().getMacroKeyBinds()[2]);
+			Macro keyBind = getActiveRobot().getKeyBind(2);
+			
+			if (keyBind != null) {
+				execute(keyBind);
 			}
 			
 		} catch (Exception Ex) {
@@ -1123,7 +1131,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Pendant '0' button
+	 * Pendant '0' button</br></br>
 	 * 
 	 * Appends a '0' character to input for the text, number, and point entry
 	 * menus.
@@ -1140,7 +1148,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant '1' button
+	 * Pendant '1' button</br></br>
 	 * 
 	 * Appends a '1' character to input for the text, number, and point entry
 	 * menus.
@@ -1157,7 +1165,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant '2' button
+	 * Pendant '2' button</br></br>
 	 * 
 	 * Appends a '2' character to input for the text, number, and point entry
 	 * menus.
@@ -1174,7 +1182,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Pendant '3' button
+	 * Pendant '3' button</br></br>
 	 * 
 	 * Appends a '3' character to input for the text, number, and point entry
 	 * menus.
@@ -1191,7 +1199,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Pendant '4' button
+	 * Pendant '4' button</br></br>
 	 * 
 	 * Appends a '4' character to input for the text, number, and point entry
 	 * menus.
@@ -1208,7 +1216,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Pendant '5' button
+	 * Pendant '5' button</br></br>
 	 * 
 	 * Appends a '5' character to input for the text, number, and point entry
 	 * menus.
@@ -1225,7 +1233,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Pendant '6' button
+	 * Pendant '6' button</br></br>
 	 * 
 	 * Appends a '6' character to input for the text, number, and point entry
 	 * menus.
@@ -1242,7 +1250,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant '7' button
+	 * Pendant '7' button</br></br>
 	 * 
 	 * Appends a '7' character to input for the text, number, and point entry
 	 * menus.
@@ -1259,7 +1267,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant '8' button
+	 * Pendant '8' button</br></br>
 	 * 
 	 * Appends a '8' character to input for the text, number, and point entry
 	 * menus.
@@ -1276,7 +1284,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant '9' button
+	 * Pendant '9' button</br></br>
 	 * 
 	 * Appends a '9' character to input for the text, number, and point entry
 	 * menus.
@@ -1293,7 +1301,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Clear button shared between the Create and Edit windows
+	 * Clear button shared between the Create and Edit windows</br></br>
 	 * 
 	 * Clears all input fields (textfields, dropdownlist, etc.) in the world
 	 * object creation and edit windows.
@@ -1311,7 +1319,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Confirm button in the Edit window
+	 * Confirm button in the Edit window</br></br>
 	 * 
 	 * Updates the dimensions of the selected world object based off the values
 	 * of the dimension input fields.
@@ -1328,7 +1336,7 @@ public class RobotRun extends PApplet {
 					
 					if (undoState != null) {
 						// Save original world object onto the undo stack
-						updateScenarioUndo(undoState);
+						pushWOUndoState(undoState);
 					}
 				}
 				
@@ -1344,7 +1352,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Create button in the Create window
+	 * Create button in the Create window</br></br>
 	 * 
 	 * Pulls the user's input from the input fields (name, shape type,
 	 * dimensions, colors, etc.) in the Create window and attempts to create a
@@ -1383,16 +1391,15 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Edit Window Manage sub-section confirmation button
+	 * Edit Window Manage sub-section confirmation button</br></br>
 	 * 
 	 * TODO comment this
 	 */
 	public void button_objConfirmMgmt() {
 		try {
-			Scenario activeScenario = getActiveScenario();
+			Scenario s = getActiveScenario();
 			WorldObject selectedWO = UI.getSelectedWO();
-			String msg = UI.updateWOMgmt(selectedWO, activeScenario,
-					SCENARIOS);
+			String msg = UI.updateWOMgmt(selectedWO, s);
 			
 			if (msg != null) {
 				Fields.setMessage(msg);
@@ -1409,7 +1416,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Move to Current button in the edit window
+	 * Move to Current button in the edit window</br></br>
 	 * 
 	 * Updates the current position and orientation of a selected object to the
 	 * inputed values in the edit window.
@@ -1432,7 +1439,7 @@ public class RobotRun extends PApplet {
 						 * If the object was modified, then save the previous state
 						 * of the object
 						 */
-						updateScenarioUndo(undoState);
+						pushWOUndoState(undoState);
 					}
 					
 					DataManagement.saveScenarios(this);
@@ -1447,7 +1454,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Move to Default button in the edit window
+	 * Move to Default button in the edit window</br></br>
 	 * 
 	 * Updates the current position and orientation of a selected world object
 	 * to that of its default fields.
@@ -1466,7 +1473,7 @@ public class RobotRun extends PApplet {
 	
 					if (undoState != null) {
 						// If the part was modified, then save its previous state
-						updateScenarioUndo(undoState);
+						pushWOUndoState(undoState);
 					}
 					
 					DataManagement.saveScenarios(this);
@@ -1491,7 +1498,8 @@ public class RobotRun extends PApplet {
 			for (WorldObject wo : getActiveScenario()) {
 				// Only applies to parts
 				if (wo instanceof Part) {
-					updateScenarioUndo(new WOUndoCurrent(wo));
+					int groupNum = (getScenarioUndoGID() + 1) % 2;
+					pushWOUndoState(new WOUndoCurrent(groupNum, wo));
 					
 					Part p = (Part) wo;
 					p.setLocalCenter(p.getDefaultCenter());
@@ -1507,7 +1515,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Update Default button in the edit window
+	 * Update Default button in the edit window</br></br>
 	 * 
 	 * Updates the default position and orientation of a world object based on
 	 * the input fields in the edit window.
@@ -1522,7 +1530,7 @@ public class RobotRun extends PApplet {
 				
 				if (undoState != null) {
 					// If the part was modified, then save its previous state
-					updateScenarioUndo(undoState);
+					pushWOUndoState(undoState);
 				}
 			}
 			
@@ -1534,7 +1542,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant '.' buttom
+	 * Pendant '.' button</br></br>
 	 * 
 	 * Appends a '.' character to input in the text, number, and point entry
 	 * menus.
@@ -1551,14 +1559,16 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Pendant POSN button
+	 * Pendant POSN button</br></br>
 	 * 
 	 * A button used for marcos binding.
 	 */
 	public void button_posn() {
 		try {
-			if (getActiveRobot().getMacroKeyBinds()[5] != null && isShift()) {
-				execute(getActiveRobot().getMacroKeyBinds()[5]);
+			Macro keyBind = getActiveRobot().getKeyBind(5);
+			
+			if (keyBind != null) {
+				execute(keyBind);
 			}
 			
 		} catch (Exception Ex) {
@@ -1569,7 +1579,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant PREV button
+	 * Pendant PREV button</br></br>
 	 * 
 	 * Transitions to the previous menu screen, if one exists.
 	 */
@@ -1585,7 +1595,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Pendant RESET button
+	 * Pendant RESET button</br></br>
 	 * 
 	 * Resets the motion fault flag for the active robot, when the motion fault
 	 * flag is set on.
@@ -1617,7 +1627,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * The scenario window confirmation button
+	 * The scenario window confirmation button</br></br>
 	 * 
 	 * Deals with the confirm functionality of the scenario window (i.e.
 	 * setting the new name of a scenario, creating a new scenario,
@@ -1629,7 +1639,7 @@ public class RobotRun extends PApplet {
 			int ret = UI.updateScenarios();
 	
 			if (ret > 0) {
-				activeScenario.set( UI.getSelectedScenario() );
+				setActiveScenario( UI.getSelectedScenario() );
 	
 			} else if (ret == 0) {
 				DataManagement.saveScenarios(this);
@@ -1652,7 +1662,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant SELECT button
+	 * Pendant SELECT button</br></br>
 	 * 
 	 * Transitions to the program navigation menu, where the user can manage
 	 * their programs.
@@ -1669,14 +1679,16 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Pendant SETUP button
+	 * Pendant SETUP button</br></br>
 	 * 
 	 * A button used for binding macros.
 	 */
 	public void button_setup() {
 		try {
-			if (getActiveRobot().getMacroKeyBinds()[3] != null && isShift()) {
-				execute(getActiveRobot().getMacroKeyBinds()[3]);
+			Macro keyBind = getActiveRobot().getKeyBind(3);
+			
+			if (keyBind != null) {
+				execute(keyBind);
 			}
 			
 		} catch (Exception Ex) {
@@ -1687,7 +1699,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant +% button
+	 * Pendant +% button</br></br>
 	 * 
 	 * Increases the robot's jog speed.
 	 */
@@ -1721,7 +1733,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Pendant -% button
+	 * Pendant -% button</br></br>
 	 * 
 	 * Decreases the robot's jog speed.
 	 */
@@ -1755,14 +1767,16 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant STATUS button
+	 * Pendant STATUS button</br></br>
 	 * 
 	 * A button used for macros.
 	 */
 	public void button_status() {
 		try {
-			if (getActiveRobot().getMacroKeyBinds()[4] != null && isShift()) {
-				execute(getActiveRobot().getMacroKeyBinds()[4]);
+			Macro keyBind = getActiveRobot().getKeyBind(4);
+			
+			if (keyBind != null) {
+				execute(keyBind);
 			}
 			
 		} catch (Exception Ex) {
@@ -1773,7 +1787,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant STEP button
+	 * Pendant STEP button</br></br>
 	 * 
 	 * Toggles the step state on or off. When step is on, then instructions
 	 * will be executed one at a time as opposed to all at once.
@@ -1790,14 +1804,16 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant TOOl1 button
+	 * Pendant TOOl1 button</br></br>
 	 * 
 	 * A button used for binding marcos.
 	 */
 	public void button_tool1() {
 		try {
-			if (getActiveRobot().getMacroKeyBinds()[0] != null && isShift()) {
-				execute(getActiveRobot().getMacroKeyBinds()[0]);
+			Macro keyBind = getActiveRobot().getKeyBind(0);
+			
+			if (keyBind != null) {
+				execute(keyBind);
 			}
 			
 		} catch (Exception Ex) {
@@ -1808,14 +1824,16 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Pendant TOOl2 button
+	 * Pendant TOOl2 button</br></br>
 	 * 
 	 * A button used for binding marcos.
 	 */
 	public void button_tool2() {
 		try {
-			if (getActiveRobot().getMacroKeyBinds()[1] != null && isShift()) {
-				execute(getActiveRobot().getMacroKeyBinds()[1]);
+			Macro keyBind = getActiveRobot().getKeyBind(1);
+			
+			if (keyBind != null) {
+				execute(keyBind);
 			}
 			
 		} catch (Exception Ex) {
@@ -1941,7 +1959,7 @@ public class RobotRun extends PApplet {
 		screens.getActiveScreen().getContents().setColumnIdx(0);
 		
 		procExec.setProcRID(m.getRobot().RID);
-		procExec.setProg(m.getProg());
+		setActiveProg(m.getProg());
 		procExec.progExec(false);
 	}
 	
@@ -2038,23 +2056,41 @@ public class RobotRun extends PApplet {
 			return row;
 		}
 	}
-
+	
+	/**
+	 * Returns a reference to the keycode map used for the keydown functions of
+	 * textfield UI elements.
+	 * 
+	 * @return	A reference to the keycode map
+	 */
 	public KeyCodeMap getKeyCodeMap() {
 		return keyCodeMap;
 	}
 
+	/**
+	 * Returns a reference to the screen, which was the active screen on the
+	 * pendant, prior to the currently active screen. It is possible that this
+	 * is null.
+	 * 
+	 * @return	A reference to the previously active pendant screen
+	 */
 	public Screen getLastScreen() {
 		return screens.getPrevScreen();
 	}
 	
+	/**
+	 * Returns the mode of the active screen of the pendant.
+	 * 
+	 * @return	The mode of the pendant's active screen
+	 */
 	public ScreenMode getMode() {
 		return screens.getActiveScreen().mode;
 	}
 	
 	/**
-	 * TODO comment this
+	 * Returns the current number of scenarios that exist in the application.
 	 * 
-	 * @return
+	 * @return	The total number of scenarios
 	 */
 	public int getNumOfScenarios() {
 		return SCENARIOS.size();
@@ -2070,9 +2106,17 @@ public class RobotRun extends PApplet {
 		return RMath.getOrientationAxes(getGraphics());
 	}
 
-	/*
-	 * This method transforms the given coordinates into a vector in the
-	 * Processing's native coordinate system.
+	/**
+	 * Returns the equivalent position, with respect to Processing's native
+	 * coordinate system, of the given x, y, z values. The given position is
+	 * assumed to be with respect to the transformation applied to the
+	 * application's main graphics object.
+	 * 
+	 * @param x	The x position
+	 * @param y	The y position
+	 * @param z	The z position
+	 * @return	The equivalent position with respect to Processing's native
+	 * 			coordinate system
 	 */
 	public PVector getPosFromMatrix(float x, float y, float z) {
 		return RMath.getPosition(getGraphics(), x, y, z);
@@ -2082,14 +2126,18 @@ public class RobotRun extends PApplet {
 	 * Returns the robot with the associated ID, or null if no such robot
 	 * exists.
 	 * 
-	 * @param rid
-	 *            A valid robot ID
-	 * @return The robot with the given ID
+	 * @param rid	A valid robot ID
+	 * @return 		The robot with the given ID
 	 */
 	public RoboticArm getRobot(int rid) {
 		return ROBOTS.get(rid);
 	}
-
+	
+	/**
+	 * Returns a reference to the application's robot camera.
+	 * 
+	 * @return	A reference to the application's robot camera
+	 */
 	public RobotCamera getRobotCamera() {
 		return rCamera;
 	}
@@ -2104,10 +2152,12 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Returns a reference to the scenario at the given index, in this
+	 * application's list of scenarios. If the given index is invalid, then
+	 * null is returned.
 	 * 
-	 * @param idx
-	 * @return
+	 * @param idx	The index of the scenario
+	 * @return		A reference to a scenario in this application
 	 */
 	public Scenario getScenario(int idx) {
 		if (idx >= 0 && idx < SCENARIOS.size()) {
@@ -2118,10 +2168,11 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Returns a reference to the scenario, which has the given name, if one
+	 * exists. If no scenario has the given name, then null is returned.
 	 * 
-	 * @param tgtName
-	 * @return
+	 * @param tgtName	The name of the scenario
+	 * @return			A reference to the scenario with the given name
 	 */
 	public Scenario getScenario(String tgtName) {
 		for (Scenario s : SCENARIOS) {
@@ -2132,19 +2183,46 @@ public class RobotRun extends PApplet {
 		
 		return null;
 	}
-
+	
+	/**
+	 * Returns the group number of the most recent scenario undo state, if one
+	 * exists. If no undo states exist, then -1 is returned.
+	 * 
+	 * @return	The group number of the most recent scenario undo state
+	 */
+	public int getScenarioUndoGID() {
+		if (SCENARIO_UNDO.isEmpty()) {
+			// No undo state exist
+			return -1;
+		}
+		
+		return SCENARIO_UNDO.peek().getGroupNum();
+	}
+	
+	/**
+	 * Returns a reference to this application's UI manager.
+	 * 
+	 * @return	A reference to the UI manager
+	 */
 	public WGUI getUI() {
 		return UI;
 	}
 
 	/**
-	 * @return Whether or not bounding boxes are displayed
+	 * Returns the application's bounding box render state. If this is true,
+	 * then the bounding boxes associated with the robotic arm and parts in the
+	 * active scenario will be rendered. Otherwise, these bounding boxes will
+	 * remain hidden.
+	 * 
+	 * @return	Whether bounding boxes are rendered or not
 	 */
 	public boolean isOBBRendered() {
 		return !UI.getButtonState(WGUI_Buttons.ObjToggleBounds);
 	}
 
 	/**
+	 * Returns if the application's active program is currently executing.
+	 * 
 	 * @return	Is the active robot executing a program?
 	 */
 	public boolean isProgExec() {
@@ -2191,7 +2269,33 @@ public class RobotRun extends PApplet {
 		if (UI != null) {
 			
 			if (ctrlDown) {
-				if (keyCode == KeyEvent.VK_D) {
+				// Pendant function key shortcuts
+				if (keyCode == KeyEvent.VK_1) {
+					if (UI.isPendantActive()) {
+						button_F1();
+					}
+				
+				} else if (keyCode == KeyEvent.VK_2) {
+					if (UI.isPendantActive()) {
+						button_F2();
+					}
+
+				} else if (keyCode == KeyEvent.VK_3) {
+					if (UI.isPendantActive()) {
+						button_F3();
+					}
+					
+				} else if (keyCode == KeyEvent.VK_4) {
+					if (UI.isPendantActive()) {
+						button_F4();
+					}
+					
+				} else if (keyCode == KeyEvent.VK_5) {
+					if (UI.isPendantActive()) {
+						button_F5();
+					}
+					
+				} else if (keyCode == KeyEvent.VK_D) {
 					// Debug output
 					Program p = getActiveProg();
 					// Output all of the active program's instruction elements
@@ -2276,23 +2380,7 @@ public class RobotRun extends PApplet {
 				
 				if (UI.isPendantActive()) {
 					// Pendant shortcuts
-					// Pendant function key shortcuts
-					if (keyCode == KeyEvent.VK_1) {
-						button_F1();
-					
-					} else if (keyCode == KeyEvent.VK_2) {
-						button_F2();
-
-					} else if (keyCode == KeyEvent.VK_3) {
-						button_F3();
-						
-					} else if (keyCode == KeyEvent.VK_4) {
-						button_F4();
-						
-					} else if (keyCode == KeyEvent.VK_5) {
-						button_F5();
-						
-					} else if (keyCode == KeyEvent.VK_ENTER) {
+					if (keyCode == KeyEvent.VK_ENTER) {
 						button_enter();
 						
 					} else if (keyCode == KeyEvent.VK_BACK_SPACE) {
@@ -2355,6 +2443,76 @@ public class RobotRun extends PApplet {
 		}		
 	}
 	
+	/**
+	 * Build a PShape object from the contents of the given .stl source file
+	 * stored in /RobotRun/data/.
+	 * 
+	 * @param filename	
+	 * @param fill		
+	 * @return			
+	 * @throws NullPointerException
+	 *             if the given filename does not pertain to a valid .stl file
+	 *             located in RobotRun/data/
+	 * @throws ClassCastException
+	 * 				if the application does not use processing's opengl
+	 * 				graphics library
+	 */
+	public Model loadSTLModel(String filename, int fill)
+			throws NullPointerException, ClassCastException {
+		
+		ArrayList<Triangle> triangles = new ArrayList<>();
+		byte[] data = loadBytes(filename);
+	
+		int n = 84; // skip header and number of triangles
+	
+		while (n < data.length) {
+			Triangle t = new Triangle();
+			for (int m = 0; m < 4; m++) {
+				byte[] bytesX = new byte[4];
+				bytesX[0] = data[n + 3];
+				bytesX[1] = data[n + 2];
+				bytesX[2] = data[n + 1];
+				bytesX[3] = data[n];
+				n += 4;
+				byte[] bytesY = new byte[4];
+				bytesY[0] = data[n + 3];
+				bytesY[1] = data[n + 2];
+				bytesY[2] = data[n + 1];
+				bytesY[3] = data[n];
+				n += 4;
+				byte[] bytesZ = new byte[4];
+				bytesZ[0] = data[n + 3];
+				bytesZ[1] = data[n + 2];
+				bytesZ[2] = data[n + 1];
+				bytesZ[3] = data[n];
+				n += 4;
+				t.components[m] = new PVector(
+						ByteBuffer.wrap(bytesX).getFloat(),
+						ByteBuffer.wrap(bytesY).getFloat(),
+						ByteBuffer.wrap(bytesZ).getFloat());
+			}
+			triangles.add(t);
+			n += 2; // skip meaningless "attribute byte count"
+		}
+		
+		Model mesh = new Model((PGraphicsOpenGL)getGraphics(),
+				PShape.GEOMETRY, filename);
+		mesh.beginShape(PConstants.TRIANGLES);
+		mesh.noStroke();
+		mesh.fill(fill);
+		
+		for (Triangle t : triangles) {
+			mesh.normal(t.components[0].x, t.components[0].y, t.components[0].z);
+			mesh.vertex(t.components[1].x, t.components[1].y, t.components[1].z);
+			mesh.vertex(t.components[2].x, t.components[2].y, t.components[2].z);
+			mesh.vertex(t.components[3].x, t.components[3].y, t.components[3].z);
+		}
+		
+		mesh.endShape();
+	
+		return mesh;
+	}
+	
 	@Override
 	public void mouseDragged(MouseEvent e) {
 		
@@ -2364,10 +2522,11 @@ public class RobotRun extends PApplet {
 			mDragY += (mouseY - pmouseY);
 		
 		} else {
+			boolean isCtrlDown = keyCodeMap.isKeyDown(KeyEvent.VK_CONTROL);
 			WorldObject selectedWO = UI.getSelectedWO();
 			
 			// Manipulate the selected world object
-			if (UI.canEditWorldObject() && selectedWO != null &&
+			if (isCtrlDown && selectedWO != null &&
 					selectedWO == mouseOverWO) {
 				
 				PVector camOrien = camera.getOrientation();
@@ -2384,7 +2543,8 @@ public class RobotRun extends PApplet {
 				
 				if (!mouseDragWO && (mouseButton == CENTER || mouseButton == RIGHT)) {
 					// Save the selected world object's current state
-					updateScenarioUndo(new WOUndoCurrent(selectedWO));
+					int groupNum = (getScenarioUndoGID() + 1) % 2;
+					pushWOUndoState(new WOUndoCurrent(groupNum, selectedWO));
 				}
 				
 				mouseDragWO = true;
@@ -2429,7 +2589,7 @@ public class RobotRun extends PApplet {
 						if (wldObj instanceof Part) {
 							Part p = (Part)wldObj;
 	
-							if (p.getFixtureRef() == selectedWO) {
+							if (p.getParent() == selectedWO) {
 								p.updateAbsoluteOrientation();
 							}
 						}
@@ -2955,11 +3115,21 @@ public class RobotRun extends PApplet {
 	
 	/**
 	 * Sets the given program as the active program and clears the process call
-	 * stack.
+	 * stack. The previous active program is saved to its respective save file
+	 * before the new program is set as active.
+	 * 
+	 * NOTE: use this method whenever setting the active program, DO NOT simply
+	 * use progExec.setProg()!
 	 * 
 	 * @param p	The program to set as active
 	 */
 	public void setActiveProg(Program p) {
+		Program activeProg = getActiveProg();
+		
+		if (activeProg != null) {
+			DataManagement.saveProgram(getActiveRobot().RID, activeProg);
+		}
+		
 		procExec.setProg(p);
 	}
 
@@ -2975,11 +3145,14 @@ public class RobotRun extends PApplet {
 		
 		if (p != null || progIdx == -1) {
 			// Set the active program
-			procExec.setProg(p);
+			setActiveProg(p);
+			return true;
 		}
 		
-		return p != null;
+		return false;
 	}
+	
+	
 	
 	/**
 	 * Sets the scenario with the given name as the active scenario in the
@@ -2993,12 +3166,7 @@ public class RobotRun extends PApplet {
 
 		for (Scenario s : SCENARIOS) {
 			if (s.getName().equals(name)) {
-				activeScenario.set(s);
-				
-				if (UI != null) {
-					UI.setSelectedWO(null);
-				}
-				
+				setActiveScenario(s);
 				return true;
 			}
 		}
@@ -3087,6 +3255,8 @@ public class RobotRun extends PApplet {
 	public void setup() {
 		super.setup();
 		
+		activeRobot = new Pointer<>(null);
+		activeScenario = new Pointer<>(null);
 		mouseRay = null;
 		position = null;
 		mouseOverWO = null;
@@ -3114,37 +3284,41 @@ public class RobotRun extends PApplet {
 		Fields.small = createFont("fonts/Consolas.ttf", 12);
 		Fields.bond = createFont("fonts/ConsolasBold.ttf", 12);
 		
-		camera = new Camera(1000f, 100f, 8000f);
-		robotTrace = new RTrace();
-		activeRobot = new Pointer<>(null);
-		activeScenario = new Pointer<>(null);
-		
-		CallInstruction.setRobotRef(activeRobot);
-		OperandCamObj.setCamRef(rCamera);
-		OperandCamObj.setScenarioRef(activeScenario);
-		MyPShape.setAppRef(this);
-		
 		keyCodeMap = new KeyCodeMap();
 		procExec = new ProgramExecution();
 		mInstRobotAt = new HashMap<>();
+		robotTrace = new RTrace();
 		
 		UI = new WGUI(this, buttonImages);
 		record = new RecordScreen();
 		
 		background(255);
 		
+		// Load all .STL files into memory
+		ArrayList<String> modelFilenames = DataManagement.getModelFilenames();
+		
+		for (String filename : modelFilenames) {
+			Model model = this.loadSTLModel(filename, 0);
+			Fields.addModel(model);
+		}
+		
 		// load model and save data
 		try {
-			RoboticArm r = new RoboticArm(0, new PVector(200, Fields.FLOOR_Y,
-					200), robotTrace);
+			RoboticArm r = instantiateRobot(0, new PVector(200, Fields.FLOOR_Y,
+					200));
 			ROBOTS.put(r.RID, r);
 			
-			r = new RoboticArm(1, new PVector(200, Fields.FLOOR_Y, -750),
-					robotTrace);
+			r = instantiateRobot(1, new PVector(200, Fields.FLOOR_Y, -750));
 			ROBOTS.put(r.RID, r);
 
 			activeRobot.set( ROBOTS.get(0) );
+			
+			camera = new Camera(1000f, 100f, 8000f);
 			rCamera = new RobotCamera(this);
+			
+			CallInstruction.setRobotRef(activeRobot);
+			OperandCamObj.setCamRef(rCamera);
+			OperandCamObj.setScenarioRef(activeScenario);
 			
 			DataManagement.loadState(this);
 			
@@ -3157,41 +3331,118 @@ public class RobotRun extends PApplet {
 			throw NPEx;
 		}
 		
-		/**
-		RMatrix rx = RMath.formRMat(new PVector(1f, 0f, 0f), 135f * DEG_TO_RAD);
-		RMatrix ry = RMath.formRMat(new PVector(0f, 1f, 0f), 135f * DEG_TO_RAD);
-		RMatrix rz = RMath.formRMat(new PVector(0f, 0f, 1f), 135f * DEG_TO_RAD);
-		
-		Fields.debug("%s\n%s\n%s\n", rx, ry, rz);
+		RoboticArm r0 = ROBOTS.get(0);
+		RoboticArm r1 = ROBOTS.get(1);
 		
 		/**
-		pushMatrix();
-		resetMatrix();
+		Fields.debug("REGISTERS");
 		
-		translate(-15f, 5f, 13f);
-		rotateX(0.125f);
+		for (int idx = 0; idx < Fields.DPREG_NUM; ++idx) {
+			DataRegister dReg = r0.getDReg(idx);
+			dReg.comment = String.format("R0DREG%010d", idx);
+			dReg.value = new Float(idx);
+			
+			PositionRegister pReg = r0.getPReg(idx);
+			pReg.comment = String.format("R0PREG%010d", idx);
+			pReg.isCartesian = (idx % 2) == 0;
+			pReg.point = r0.getDefaultPoint();
+			
+			dReg = r1.getDReg(idx);
+			dReg.comment = String.format("R1DREG%010d", idx);
+			dReg.value = new Float(idx);
+			
+			pReg = r1.getPReg(idx);
+			pReg.comment = String.format("R1PREG%010d", idx);
+			pReg.isCartesian = (idx % 2) == 0;
+			pReg.point = r1.getDefaultPoint();
+		}
 		
-		PVector pos = new PVector(
-			screenX(1f, 1f, 1f),
-			screenY(1f, 1f, 1f),
-			screenZ(1f, 1f, 1f)
-		);
+		/**
+		Fields.debug("FRAMES");
 		
-		System.out.printf("%s\n", pos);
+		for (int idx = 0; idx < Fields.FRAME_NUM; ++idx) {
+			ToolFrame tFrame = r0.getToolFrame(idx);
+			tFrame.setName(String.format("R0TOOL%010d", idx));
+			tFrame.setTeachPt(r0.getDefaultPoint(), 0);
+			tFrame.setTeachPt(r0.getDefaultPoint(), 1);
+			tFrame.setTeachPt(r0.getDefaultPoint(), 2);
+			tFrame.setTeachPt(r0.getDefaultPoint(), 3);
+			tFrame.setTeachPt(r0.getDefaultPoint(), 4);
+			tFrame.setTeachPt(r0.getDefaultPoint(), 5);
+			tFrame.setTCPDirect(new PVector(0f, 0f, 0f));
+			tFrame.setOrienDirect(new RQuaternion());
+			
+			UserFrame uFrame = r0.getUserFrame(idx);
+			uFrame.setName(String.format("R0USER%010d", idx));
+			uFrame.setTeachPt(r0.getDefaultPoint(), 0);
+			uFrame.setTeachPt(r0.getDefaultPoint(), 1);
+			uFrame.setTeachPt(r0.getDefaultPoint(), 2);
+			uFrame.setTeachPt(r0.getDefaultPoint(), 3);
+			uFrame.setOriginDirect(new PVector(0f, 0f, 0f));
+			uFrame.setOrienDirect(new RQuaternion());
+			
+			tFrame = r1.getToolFrame(idx);
+			tFrame.setName(String.format("R1TOOL%010d", idx));
+			tFrame.setTeachPt(r1.getDefaultPoint(), 0);
+			tFrame.setTeachPt(r1.getDefaultPoint(), 1);
+			tFrame.setTeachPt(r1.getDefaultPoint(), 2);
+			tFrame.setTeachPt(r1.getDefaultPoint(), 3);
+			tFrame.setTeachPt(r1.getDefaultPoint(), 4);
+			tFrame.setTeachPt(r1.getDefaultPoint(), 5);
+			tFrame.setTCPDirect(new PVector(0f, 0f, 0f));
+			tFrame.setOrienDirect(new RQuaternion());
+			
+			uFrame = r1.getUserFrame(idx);
+			uFrame.setName(String.format("R1USER%010d", idx));
+			uFrame.setTeachPt(r1.getDefaultPoint(), 0);
+			uFrame.setTeachPt(r1.getDefaultPoint(), 1);
+			uFrame.setTeachPt(r1.getDefaultPoint(), 2);
+			uFrame.setTeachPt(r1.getDefaultPoint(), 3);
+			uFrame.setOriginDirect(new PVector(0f, 0f, 0f));
+			uFrame.setOrienDirect(new RQuaternion());
+		}
 		
-		ortho();
+		/**
+		Fields.debug("PROGRAMS");
 		
-		pos = new PVector(
-			screenX(1f, 1f, 1f),
-			screenY(1f, 1f, 1f),
-			screenZ(1f, 1f, 1f)
-		);
+		for (int idx = 1; idx < RoboticArm.PROG_NUM; ++idx) {
+			Program origin = r0.getProgram(0);
+			Program copy = origin.clone();
+			copy.setName(origin.getName() + Integer.toString(idx));
+			r0.addProgram(copy);
+			
+			origin = r1.getProgram(0);
+			copy = origin.clone();
+			copy.setName(origin.getName() + Integer.toString(idx));
+			r1.addProgram(copy);
+		}
 		
-		System.out.printf("%s\n", pos);
+		/**
+		Fields.debug("MACROS");
 		
-		popMatrix();
+		
+		/**
+		Fields.debug("SCENARIOS");
+		Scenario origin = SCENARIOS.get(0);
+		WorldObject wo = origin.getWorldObject(0);
+		String prefix = wo.getName().substring(0,
+				wo.getName().length() - 1);
+		
+		for (int idx = 1; idx < Scenario.MAX_SIZE; ++idx) {
+			WorldObject copy = wo.clone();
+			copy.setName(prefix + Integer.toString(idx));
+			origin.addWorldObject(copy);
+		}
+		
+		for (int idx = 1; idx < Fields.SCENARIO_NUM; ++idx) {
+			Scenario copy = (Scenario) origin.clone();
+			copy.setName(origin.getName() + Integer.toString(idx));
+			addScenario(copy);
+			DataManagement.saveScenario(copy);
+		}
 		
 		/**/
+		Fields.debug("END");
 	}
 	
 	/**
@@ -3259,35 +3510,37 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Revert the most recent change to the active scenario.
+	 * Revert the most recent changes to the active scenario.
 	 */
 	public void undoScenarioEdit() {
-		Scenario activeScenario = getActiveScenario();
+		Scenario s = getActiveScenario();
 		
-		if (activeScenario != null && !SCENARIO_UNDO.empty()) {
-			SCENARIO_UNDO.pop().undo();
-			UI.updateListContents();
+		if (s != null && !SCENARIO_UNDO.empty()) {
+			// Trigger all adjacent undo states with the same group number
+			WOUndoState undoState = SCENARIO_UNDO.pop();
+			int groupNum = undoState.getGroupNum();
+			undoState.undo();
 			
+			while (!SCENARIO_UNDO.isEmpty()) {
+				undoState = SCENARIO_UNDO.peek();
+				
+				if (undoState.getGroupNum() != groupNum) {
+					break;
+				}
+				
+				undoState.undo();
+				SCENARIO_UNDO.pop();
+			}
+			
+			// Update the world object dropdown list
+			UI.updateListContents();
 			WorldObject wo = UI.getSelectedWO();
 			
 			if (wo != null) {
-				UI.updateEditWindowFields(wo, activeScenario);
-				
-				if (wo instanceof Fixture) {
-					for (WorldObject wldObj : getActiveScenario()) {
-						if (wldObj instanceof Part) {
-							Part p = (Part)wldObj;
-
-							if (p.getFixtureRef() == wo) {
-								p.updateAbsoluteOrientation();
-							}
-						}
-					}
-				}
+				// Update the input fields for the selected world object
+				UI.updateEditWindowFields(wo, s);
 			}
 			
-			/* Since objects are copied onto the undo stack, the robot may be
-			 * reference the wrong copy of an undone object. */
 			getActiveRobot().releaseHeldObject();
 		}
 	}
@@ -3379,7 +3632,7 @@ public class RobotRun extends PApplet {
 	 * 
 	 * @param undoState	The world object to save
 	 */
-	public void updateScenarioUndo(WOUndoState undoState) {
+	public void pushWOUndoState(WOUndoState undoState) {
 		if (undoState != null) {
 			// Only the latest 40 world object save states can be undone
 			if (SCENARIO_UNDO.size() >= 40) {
@@ -3482,6 +3735,68 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
+	 * TODO comment this
+	 * 
+	 * @param RID
+	 * @param basePos
+	 * @return
+	 */
+	private RoboticArm instantiateRobot(int RID, PVector basePos) {
+		Model[] segments = loadSegmentModels();
+		Model[] endEffectors = loadEEModels();
+		
+		return new RoboticArm(RID, segments, endEffectors, basePos, robotTrace);
+	}
+	
+	/**
+	 * Loads 3D meshes for the individual robot end effectors from model files.
+	 * 
+	 * @return An array containing the 7 end effector model meshes
+	 */
+	private Model[] loadEEModels() {
+		Model[] eeModels = new Model[7];
+		
+		// Load end effector models
+		eeModels[0] = loadSTLModel("robot/EE/FACEPLATE.STL", Fields.ROBOT_GREY);
+		eeModels[1] = loadSTLModel("robot/EE/SUCTION.stl", Fields.EE_DEFAULT);
+		eeModels[2] = loadSTLModel("robot/EE/GRIPPER.stl", Fields.EE_DEFAULT);
+		eeModels[3] = loadSTLModel("robot/EE/PINCER.stl", Fields.ROBOT_YELLOW);
+		eeModels[4] = loadSTLModel("robot/EE/POINTER.stl", Fields.EE_DEFAULT);
+		eeModels[5] = loadSTLModel("robot/EE/GLUE_GUN.stl", Fields.EE_DEFAULT);
+		eeModels[6] = loadSTLModel("robot/EE/WIELDER.stl", Fields.EE_DEFAULT);
+		
+		return eeModels;
+	}
+	
+	/**
+	 * Loads 3D meshes for the individual robot segments from model files.
+	 * 
+	 * @return An array containing the 6 robotic segment model meshes
+	 */
+	private Model[] loadSegmentModels() {
+		Model[] segModels = new Model[6];
+		
+		segModels[0] = loadSTLModel("robot/ROBOT_BASE.STL", Fields.ROBOT_YELLOW);
+		segModels[0].rotateY(PConstants.HALF_PI);
+		segModels[0].rotateZ(PConstants.PI);
+		segModels[1] = loadSTLModel("robot/ROBOT_SEGMENT_1.STL", Fields.ROBOT_GREY);
+		segModels[1].rotateY(PConstants.PI);
+		segModels[1].rotateX(PConstants.PI);
+		segModels[2] = loadSTLModel("robot/ROBOT_SEGMENT_2.STL", Fields.ROBOT_YELLOW);
+		segModels[2].rotateY(PConstants.HALF_PI);
+		segModels[2].rotateZ(PConstants.PI);
+		segModels[3] = loadSTLModel("robot/ROBOT_SEGMENT_3.STL", Fields.ROBOT_GREY);
+		segModels[3].rotateY(-PConstants.HALF_PI);
+		segModels[4] = loadSTLModel("robot/ROBOT_SEGMENT_4.STL", Fields.ROBOT_GREY);
+		segModels[4].rotateY(-PConstants.HALF_PI);
+		segModels[4].rotateZ(-PConstants.HALF_PI);
+		segModels[5] = loadSTLModel("robot/ROBOT_SEGMENT_5.STL", Fields.ROBOT_YELLOW);
+		segModels[5].rotateY(-PConstants.HALF_PI);
+		
+		return segModels;
+	}
+	
+	/**
 	 * Begins backward program execution for the active program beginning from
 	 * the active instruction index.
 	 */
@@ -3555,7 +3870,7 @@ public class RobotRun extends PApplet {
 						
 						RMatrix curTip = getActiveRobot().getFaceplateTMat(getActiveRobot().getJointAngles());
 						RMatrix invMat = getActiveRobot().getLastTipTMatrix().getInverse();
-						Fixture refFixture = p.getFixtureRef();
+						Fixture refFixture = p.getParent();
 						
 						pushMatrix();
 						resetMatrix();
@@ -3577,7 +3892,7 @@ public class RobotRun extends PApplet {
 					
 					
 					if (getActiveScenario().isGravity() && getActiveRobot().isHeld(p) &&
-							p != selected && p.getFixtureRef() == null &&
+							p != selected && p.getParent() == null &&
 							p.getLocalCenter().y < Fields.FLOOR_Y) {
 						
 						// Apply gravity
@@ -3885,8 +4200,8 @@ public class RobotRun extends PApplet {
 			if (selectedWO instanceof Part) {
 				Part p = (Part) selectedWO;
 				// Convert the values into the World Coordinate System
-				position = RMath.vToWorld( p.getDefaultCenter() );
-				wpr = RMath.nRMatToWEuler( p.getDefaultOrientation() );
+				position = RMath.vToWorld( p.getCenter() );
+				wpr = RMath.nRMatToWEuler( p.getOrientation() );
 				
 				// Create a set of uniform Strings
 				lines = Fields.toLineStringArray(position, wpr);
@@ -3976,6 +4291,29 @@ public class RobotRun extends PApplet {
 		
 		popStyle();
 		popMatrix();
+	}
+	
+	/**
+	 * Sets the active scenario of the application, while saving the currently
+	 * active scenario to its respective file.
+	 * 
+	 * NOTE: use this method whenever setting the active scenario, DO NOT
+	 * simply use activeScenario.set()!
+	 * 
+	 * @param s	The new active scenario
+	 */
+	private void setActiveScenario(Scenario s) {
+		if (UI != null) {
+			UI.setSelectedWO(null);
+		}
+		// Save the active scenario before setting the new active scenario
+		Scenario active = getActiveScenario();
+		if (active != null) {
+			DataManagement.saveScenario(active);
+		}
+		
+		activeScenario.set(s);
+		SCENARIO_UNDO.clear();
 	}
 
 	/**

@@ -89,7 +89,10 @@ public class LoadRobotData implements Runnable {
 		 * has completed */
 		for (int idx = 0; idx < loadThreads.length; ++idx) {
 			Fields.waitForThread(loadThreads[idx]);
-			robotRef.addProgram(programs[idx]);
+			
+			if (programs[idx] != null) {
+				robotRef.addProgram(programs[idx]);
+			}
 		}
 		
 		// Load the robot's macros after its programs have been initialized
@@ -208,19 +211,17 @@ public class LoadRobotData implements Runnable {
 			
 			int numMacros = dataIn.readInt();
 			
-			for(int i = 0; i < numMacros; i += 1) {
+			for (int i = 0; i < numMacros && !robotRef.atMacroCapacity();
+					i += 1) {
+				
 				boolean isManual = dataIn.readBoolean();
 				String progName = dataIn.readUTF();
 				int keyNum = dataIn.readInt();
 				
 				Program p = robotRef.getProgram(progName);
-				Macro m = new Macro(isManual, robotRef, p, keyNum);
-				
-				robotRef.getMacroList().add(m);
-				
-				if(!isManual && keyNum != -1) {
-					robotRef.getMacroKeyBinds()[keyNum] = m;
-				}
+				Macro m = robotRef.addMacro(p);
+				m.setManual(isManual);
+				robotRef.setKeyBinding(keyNum, m);
 			}
 			
 			dataIn.close();

@@ -1,13 +1,15 @@
 package geom;
 
-import core.RobotRun;
+import enums.DimType;
 import processing.core.PApplet;
 import processing.core.PConstants;
 import processing.core.PGraphics;
 import processing.core.PVector;
 
 /**
- * Defines the radius and height to draw a uniform cylinder
+ * Defines a cylinder shape with radius and height dimensions.
+ * 
+ * @author Joshua Hooker
  */
 public class RCylinder extends RShape {
 	
@@ -21,12 +23,6 @@ public class RCylinder extends RShape {
 
 	public RCylinder(int fill, int strokeVal, float rad, float hgt) {
 		super(fill, strokeVal);
-		radius = rad;
-		height = hgt;
-	}
-
-	public RCylinder(RobotRun robotRun, int strokeVal, float rad, float hgt) {
-		super(strokeVal, strokeVal);
 		radius = rad;
 		height = hgt;
 	}

@@ -259,6 +259,7 @@ public class RQuaternion implements Cloneable {
 	
 	@Override
 	public boolean equals(Object obj) {
+		this.hashCode();
 		if (obj instanceof RQuaternion) {
 			RQuaternion q = (RQuaternion)obj;
 			// Compare w, x, y, z values
@@ -294,6 +295,19 @@ public class RQuaternion implements Cloneable {
 		}
 
 		return null;
+	}
+	
+	@Override
+	public int hashCode() {
+		// TODO test this
+		int partW = (int)(w * 500f) / 500;
+		int partX = (int)(x * 500f) / 500;
+		int partY = (int)(y * 500f) / 500;
+		int partZ = (int)(z * 500f) / 500;
+		return (0xff & (partW << 24)) |
+			   (0x00ff & (partX << 16)) |
+			   (0x0000ff & (partY << 8)) |
+			   (0x000000ff & partZ);
 	}
 	
 	/**

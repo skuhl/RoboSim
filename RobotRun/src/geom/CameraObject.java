@@ -29,8 +29,9 @@ public class CameraObject extends Part {
 	
 	public CameraObject(RobotRun appRef, Part p, float q, float l) {
 		super(p.getName(), p.getModel().clone(), p.getOBBDims().copy(),
-				p.localOrientation.clone(), p.defaultOrientation.clone(), p.getFixtureRef());
+				p.localOrientation.clone(), p.defaultOrientation.clone());
 		
+		this.setParent(p.getParent());
 		this.appRef = appRef;
 		RShape mdl = p.getModel();
 		if(mdl instanceof ComplexShape) {
