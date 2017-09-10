@@ -3,6 +3,5 @@
 *.log
 RobotRun/bin/
 RobotRun/img/Thumbs.db
-RobotRun/tmp/robot0
-RobotRun/tmp/robot1
+RobotRun/tmp/
 /bin/
