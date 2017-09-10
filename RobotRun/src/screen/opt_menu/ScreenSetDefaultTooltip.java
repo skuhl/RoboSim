@@ -21,7 +21,7 @@ public class ScreenSetDefaultTooltip extends ST_ScreenOptionsMenu {
 	public void actionEntr() {
 		RoboticArm r = robotRun.getActiveRobot();
 		ToolFrame selectedFrame = r.getToolFrame(frameIdx);
-		PVector defToolTip = r.getToolTipDefault(options.getLineIdx());
+		PVector defToolTip = RoboticArm.getToolTipDefault(options.getLineIdx());
 		
 		// Set the offset of the frame to the specified default tool tip
 		selectedFrame.setTCPOffset(defToolTip.copy());

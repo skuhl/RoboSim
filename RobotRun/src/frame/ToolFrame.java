@@ -3,8 +3,8 @@ package frame;
 import geom.Point;
 import geom.RMatrix;
 import geom.RQuaternion;
-import global.Fields;
 import global.DebugFloatFormat;
+import global.Fields;
 import global.RMath;
 import processing.core.PVector;
 

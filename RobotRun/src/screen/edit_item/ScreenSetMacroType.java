@@ -1,7 +1,6 @@
 package screen.edit_item;
 
 import core.RobotRun;
-import global.Fields;
 import io.DataManagement;
 import robot.RoboticArm;
 import screen.ScreenMode;

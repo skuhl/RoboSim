@@ -155,7 +155,7 @@ public abstract class Screen {
 		
 		for (int idx = 0; idx < robot.numOfEndEffectors(); ++idx) {
 			IORegister ioReg = robot.getIOReg(idx + 1);
-			PVector defToolTip = robot.getToolTipDefault(idx);
+			PVector defToolTip = RoboticArm.getToolTipDefault(idx);
 			String lineStr = String.format("%s = (%4.3f, %4.3f, %4.3f)",
 					ioReg.comment, defToolTip.x, defToolTip.y, defToolTip.z); 
 			
