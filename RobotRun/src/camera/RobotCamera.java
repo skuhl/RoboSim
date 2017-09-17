@@ -297,8 +297,7 @@ public class RobotCamera {
 		}
 
 		float reflect = camObj.reflective_IDX;
-		float lightIntensity = exposure*brightness;
-		float lightingCoefficient = getLightingCoefficient(lightIntensity, reflect);
+		float lightingCoefficient = getLightingCoefficient(brightness, exposure, reflect);
 		float imageQuality = (inView / (float)(RES*RES*RES)) * lightingCoefficient;
 
 		Fields.debug("Obj: %s\ninView=%d\nreflect=%f\nlight=%f\nquality=%f\n\n", o.getName(), inView,
@@ -307,9 +306,9 @@ public class RobotCamera {
 		return imageQuality;
 	}
 	
-	public float getLightingCoefficient(float lightVal, float reflect) {
-		return RMath.clamp((float)Math.min(1 - Math.pow(Math.log10(lightVal), 2), 
-				1 - Math.pow(Math.log10(Math.pow(lightVal, reflect)), 2)), 0, 1);
+	public float getLightingCoefficient(float br, float exp, float reflect) {
+		return RMath.clamp((float)Math.min(1 - Math.pow(Math.log10(br*exp), 2), 
+				1 - Math.pow(Math.log10(Math.pow(br, reflect) * exp), 2)), 0, 1);
 	}
 
 	/**
