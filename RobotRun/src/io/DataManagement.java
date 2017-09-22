@@ -326,7 +326,7 @@ public abstract class DataManagement {
 		File destDir = new File(dirPath);
 		// Create the robot's programs directory if it does not exist
 		if (!destDir.exists()) {
-			destDir.mkdir();
+			destDir.mkdirs();
 		}
 		
 		File progFile = new File(String.format("%s/%s.bin", dirPath,
