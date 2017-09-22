@@ -24,8 +24,8 @@ public class MyButtonBar extends ButtonBar {
 	 * @return	The label of the active button
 	 */
 	public String getActButLbl() {
-		List<HashMap<?, ?>> items = getItems();
-		
+		@SuppressWarnings("unchecked")
+		List<HashMap<String, Boolean>> items = getItems();
 		// Determine which button is active
 		for (HashMap<?, ?> item : items) {
 			assert item.get("selected") instanceof Boolean;
@@ -48,6 +48,7 @@ public class MyButtonBar extends ButtonBar {
 	 * @param label	The label of the button to set as active
 	 */
 	public void setActiveButton(String label) {
+		@SuppressWarnings("unchecked")
 		List<HashMap<Object, Object>> items = getItems();
 		
 		for (HashMap<Object, Object> item : items) {

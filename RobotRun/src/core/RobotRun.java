@@ -390,7 +390,6 @@ public class RobotRun extends PApplet {
 	public void button_camSnapPreview() {
 		if (rCamera != null) {
 			UI.updateCameraCurrent();
-			//UI.updateCameraListContents();
 			UI.updateUIContentPositions();
 		}
 	}
@@ -415,7 +414,6 @@ public class RobotRun extends PApplet {
 		try {
 			if (rCamera != null) {
 				UI.updateCameraCurrent();
-				//UI.updateCameraListContents();
 				UI.updateUIContentPositions();
 				Fields.resetMessage();
 			}
@@ -3333,8 +3331,8 @@ public class RobotRun extends PApplet {
 			throw NPEx;
 		}
 		
-		RoboticArm r0 = ROBOTS.get(0);
-		RoboticArm r1 = ROBOTS.get(1);
+		//RoboticArm r0 = ROBOTS.get(0);
+		//RoboticArm r1 = ROBOTS.get(1);
 		
 		/**
 		Fields.debug("REGISTERS");
@@ -3968,7 +3966,7 @@ public class RobotRun extends PApplet {
 				// Draw the gridlines at the base of the robot
 				PVector basePos = getActiveRobot().getBasePosition();
 				g.translate(0f, basePos.y, 0f);
-				getActiveRobot().drawGridlines(getGraphics(), Fields.WORLD_AXES_MAT,
+				RoboticArm.drawGridlines(getGraphics(), Fields.WORLD_AXES_MAT,
 						origin, 35, 100f);
 				g.popMatrix();
 			}

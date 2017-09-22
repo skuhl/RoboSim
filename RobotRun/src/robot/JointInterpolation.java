@@ -1,6 +1,5 @@
 package robot;
 
-import global.Fields;
 import global.RMath;
 import processing.core.PApplet;
 import processing.core.PConstants;

@@ -89,14 +89,28 @@ public class CameraObject extends Part {
 	}
 	
 	public CamSelectArea getSelectAreaClicked(int x, int y, RMatrix m) {
+		PVector angles = RMath.matrixToEuler(m);
+		System.out.println("Z rotation: " + angles.z*RobotRun.RAD_TO_DEG);
+		
+		float xP = x - (WGUI.imageWidth / 2);
+		float yP = y - (WGUI.imageHeight / 2);
+		float r = (float)Math.sqrt(xP*xP + yP*yP);
+		float theta = (float)Math.atan2(yP, xP);
+		float x2 = (float)(r*Math.cos(theta - angles.z) + WGUI.imageWidth/2);
+		float y2 = (float)(r*Math.sin(theta - angles.z) + WGUI.imageHeight/2);
+		
+		System.out.println("Original coords: " + xP + ", " + yP);
+		System.out.println("Transform coords: " + x2 + ", " + y2);
+		
 		for(CamSelectArea a: selectAreas) {
 			CamSelectView v = a.getView(m);
 			
 			if(v != null) {
 				PVector tl = v.getTopLeftBound();
 				PVector br = v.getBottomRightBound();
-				
-				if(x >= tl.x && x <= br.x && y >= tl.y && y <= br.y) {
+				System.out.println("Area coords: " + tl.x + ", " + tl.y + ", " + br.x + ", " + br.y);
+								
+				if(x2 >= tl.x && x2 <= br.x && y2 >= tl.y && y2 <= br.y) {
 					return a;
 				}
 			}
@@ -117,7 +131,7 @@ public class CameraObject extends Part {
 		
 		PVector dim = this.getModel().getDims();
 		
-		RMatrix mat = this.getOrientation();
+		RMatrix mat = this.getLocalOrientation();
 		PVector alignX = new PVector(Math.abs(mat.getEntryF(0, 0)*dim.x), 
 									 Math.abs(mat.getEntryF(1, 0)*dim.y), 
 									 Math.abs(mat.getEntryF(2, 0)*dim.z));
@@ -160,7 +174,9 @@ public class CameraObject extends Part {
 		
 		PVector angles = RMath.matrixToEuler(mat);
 		img.rotateZ(angles.z);
-					
+		System.out.println("Rotation: " + angles.z*RobotRun.DEG_TO_RAD);
+		img.translate(-WGUI.imageWidth/2, -WGUI.imageHeight/2);
+									
 		for(CamSelectArea a: selectAreas) {
 			CamSelectView v = a.getView(mat);
 			if(a.isEmphasized()) {
