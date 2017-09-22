@@ -2,6 +2,6 @@
 *.out
 *.log
 *.db
-RobotRun/bin/
-RobotRun/tmp/
+.settings/
 bin/
+tmp/
