@@ -3334,7 +3334,7 @@ public class RobotRun extends PApplet {
 		//RoboticArm r0 = ROBOTS.get(0);
 		//RoboticArm r1 = ROBOTS.get(1);
 		
-		/**
+		/* Test code *
 		Fields.debug("REGISTERS");
 		
 		for (int idx = 0; idx < Fields.DPREG_NUM; ++idx) {

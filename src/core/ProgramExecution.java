@@ -188,6 +188,8 @@ public class ProgramExecution {
 	
 	/**
 	 * TODO comment this
+	 * 
+	 * @throws EmptyStackException
 	 */
 	public void procReturn() {
 		activeProc = procCallStack.pop();

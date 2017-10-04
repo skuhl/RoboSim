@@ -1237,7 +1237,7 @@ public class RoboticArm {
 	
 	/**
 	 * Computes the transformation matrix, which represents the position and
-	 * orientation of the robot's face plate for the given set of joint angles.
+	 * orientation of the robot's faceplate for the given set of joint angles.
 	 * 
 	 * @param jointAngles	The joint angles used to calculate the robot face
 	 * 						plate's position and orientation
