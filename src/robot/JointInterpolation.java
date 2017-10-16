@@ -29,10 +29,11 @@ public class JointInterpolation extends JointMotion {
 	private final float[] TGT_ANGLES;
 	
 	/**
-	 * TODO comment this
+	 * Defines a new joint interpolation motion associated with given robot and
+	 * with the given destination joint angles.
 	 * 
-	 * @param robot
-	 * @param tgtAngles
+	 * @param robot		The robot, with which this motion is associated
+	 * @param tgtAngles	The target joint angles for this interpolation
 	 */
 	public JointInterpolation(RoboticArm robot, float[] tgtAngles) {
 		TGT_ANGLES = new float[6];
@@ -97,25 +98,31 @@ public class JointInterpolation extends JointMotion {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Indicates whether this motion's speed will change based on the robotic
+	 * arm's current live speed or if it will remain constant.
 	 * 
-	 * @return
+	 * @return	Is the speed of this motion based on the robotic arm's current
+	 * 			live speed?
 	 */
 	public boolean isSpdLinkedToRobot() {
 		return linkToRobotSpd;
 	}
 	
 	/**
-	 * TODO comment this
+	 * Links/separates this motion's speed with/from the live speed of the
+	 * robotic arm, with which this speed is associated.
 	 * 
-	 * @param linkSpd
+	 * @param linkSpd	Whether or not this motion's speed is linked to the
+	 * 					robotic arm's live speed
 	 */
 	public void linkToRobotSpd(boolean linkSpd) {
 		linkToRobotSpd = linkSpd;
 	}
 	
 	/**
-	 * TODO comment this
+	 * Resets the speed and destination angles for this joint interpolation.
+	 * This motion's speed will not be linked to the robotic arm's live speed.
+	 * 
 	 * @param robot
 	 * @param tgtAngles
 	 * @param speed
@@ -129,7 +136,8 @@ public class JointInterpolation extends JointMotion {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Resets the speed and destination angles for this joint interpolation.
+	 * This motion's speed will be linked to the robotic arm's live speed.
 	 * 
 	 * @param robot
 	 * @param tgtAngles
