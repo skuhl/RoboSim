@@ -210,10 +210,10 @@ public abstract class DataManagement {
 	 * @param appRef
 	 */
 	public static void initialize(RobotRun appRef) {
-		dataDirPath = appRef.sketchPath("data\\");
-		errDirPath = appRef.sketchPath("err\\");
-		tmpDirPath = appRef.sketchPath("tmp\\");
-		scenarioDirPath = appRef.sketchPath(tmpDirPath + "scenarios\\");
+		dataDirPath = appRef.sketchPath("data/");
+		errDirPath = appRef.sketchPath("err/");
+		tmpDirPath = appRef.sketchPath("tmp/");
+		scenarioDirPath = appRef.sketchPath(tmpDirPath + "scenarios/");
 	}
 	
 	/**
