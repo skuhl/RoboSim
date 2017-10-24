@@ -124,7 +124,8 @@ public class ScreenNavPosRegs extends ST_ScreenListContents {
 		if (robotRun.isShift() && pReg != null) {
 			// Save the Robot's current position and joint angles
 			pReg.point = robotRun.getActiveRobot().getToolTipNative();
-			pReg.isCartesian = (r.getCurCoordFrame() == CoordFrame.JOINT);
+			System.out.println(r.getCurCoordFrame());
+			pReg.isCartesian = !(r.getCurCoordFrame() == CoordFrame.JOINT);
 			DataManagement.saveRobotData(r, 4);
 		}
 	}

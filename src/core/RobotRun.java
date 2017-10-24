@@ -2325,6 +2325,7 @@ public class RobotRun extends PApplet {
 					// Restore default Robot joint angles
 					button_hold();
 					float[] rot = { 0, 0, 0, 0, 0, 0 };
+					updateInstList();
 					getActiveRobot().releaseHeldObject();
 					getActiveRobot().setJointAngles(rot);
 					
@@ -3644,6 +3645,54 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
+	 * Updates program instruction list display based on the active robot's
+	 * current position and orientation. If the position defined by a motion
+	 * instruction in the active program display is equal to the robot's
+	 * position and orientation, then an '@' is displayed next to the motion
+	 * instruction.
+	 */
+	public void updateInstList() {
+		if (screens.getActiveScreen() instanceof ScreenNavProgInstructions) {
+			Program prog = getActiveProg();
+			Point robotPos = getActiveRobot().getToolTipNative();
+			boolean updatedLines = false;
+			
+			// Check each instruction in the active program
+			for (int idx = 0; idx < prog.getNumOfInst(); ++idx) {
+				Instruction inst = prog.getInstAt(idx);
+				Integer keyInt = new Integer(idx);
+				
+				if (inst instanceof PosMotionInst) { 
+					PosMotionInst mInst = (PosMotionInst)prog.getInstAt(idx);
+					Point instPt = getActiveRobot().getVector(mInst, prog, false);
+					
+					if (instPt != null) {
+						boolean closeEnough = (mInst.getMotionType() == Fields.MTYPE_JOINT
+								&& instPt.compareJoint(robotPos) ||
+								mInst.getMotionType() != Fields.MTYPE_JOINT
+								&& instPt.compareCartesian(robotPos));
+						
+						Boolean prevState = mInstRobotAt.put(keyInt, closeEnough);
+						
+						if (prevState == null || prevState.booleanValue() != closeEnough) {
+							updatedLines = true;
+						}
+					}
+						
+				} else if (mInstRobotAt.get(keyInt) != null) {
+					// Remove previous motion instructions
+					mInstRobotAt.remove(keyInt);
+				}
+			}
+			
+			if (updatedLines) {
+				updatePendantScreen();
+			}
+		}
+		
+	}
+	
+	/**
 	 * Checks for collisions between the given ray and objects in the scene
 	 * (parts and fixtures in the active scenario as well as visible robots).
 	 * The world object, closest to the ray, with which the ray collides is
@@ -4418,54 +4467,6 @@ public class RobotRun extends PApplet {
 		}
 		
 		updatePendantScreen();
-	}
-
-	/**
-	 * Updates program instruction list display based on the active robot's
-	 * current position and orientation. If the position defined by a motion
-	 * instruction in the active program display is equal to the robot's
-	 * position and orientation, then an '@' is displayed next to the motion
-	 * instruction.
-	 */
-	private void updateInstList() {
-		if (screens.getActiveScreen() instanceof ScreenNavProgInstructions) {
-			Program prog = getActiveProg();
-			Point robotPos = getActiveRobot().getToolTipNative();
-			boolean updatedLines = false;
-			
-			// Check each instruction in the active program
-			for (int idx = 0; idx < prog.getNumOfInst(); ++idx) {
-				Instruction inst = prog.getInstAt(idx);
-				Integer keyInt = new Integer(idx);
-				
-				if (inst instanceof PosMotionInst) { 
-					PosMotionInst mInst = (PosMotionInst)prog.getInstAt(idx);
-					Point instPt = getActiveRobot().getVector(mInst, prog, false);
-					
-					if (instPt != null) {
-						boolean closeEnough = (mInst.getMotionType() == Fields.MTYPE_JOINT
-								&& instPt.compareJoint(robotPos) ||
-								mInst.getMotionType() != Fields.MTYPE_JOINT
-								&& instPt.compareCartesian(robotPos));
-						
-						Boolean prevState = mInstRobotAt.put(keyInt, closeEnough);
-						
-						if (prevState == null || prevState.booleanValue() != closeEnough) {
-							updatedLines = true;
-						}
-					}
-						
-				} else if (mInstRobotAt.get(keyInt) != null) {
-					// Remove previous motion instructions
-					mInstRobotAt.remove(keyInt);
-				}
-			}
-			
-			if (updatedLines) {
-				updatePendantScreen();
-			}
-		}
-		
 	}
 	
 	/**

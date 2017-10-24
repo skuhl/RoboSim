@@ -136,6 +136,7 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 	public void actionF1() {
 		if (robotRun.isShift()) {
 			robotRun.newPosMotionInst();
+			robotRun.updateInstList();
 			contents.setColumnIdx(0);
 
 			if (contents.getItemLineIdx() == 0) {
@@ -145,6 +146,8 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 					robotRun.setActiveInstIdx(robotRun.getActiveInstIdx() + 1);
 				}
 			}
+			
+			
 		}
 	}
 	
@@ -198,6 +201,8 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 			mInst.setSpdMod(0.5f);
 			mInst.setTFrameIdx(r.getActiveToolIdx());
 			mInst.setUFrameIdx(r.getActiveUserIdx());
+			robotRun.updateInstList();
+			robotRun.updatePendantScreen();
 
 		} else if (inst instanceof IfStatement) {
 			IfStatement stmt = (IfStatement) inst;
