@@ -3332,6 +3332,32 @@ public class RobotRun extends PApplet {
 			throw NPEx;
 		}
 		
+		/* Flip the third joint sign for all motion instructions *
+		for (int rid = 0; rid < 2; ++rid) {
+			RoboticArm r = this.ROBOTS.get(rid);
+			for(int pid = 0; pid < r.numOfPrograms(); ++pid) {
+				boolean[] changed = new boolean[1000];
+				Program p = r.getProgram(pid);
+				
+				for (InstElement e : p) {
+					Instruction inst = e.getInst();
+					
+					if (inst instanceof MotionInstruction) {
+						int posIdx = ((MotionInstruction) inst).getPosIdx();
+						Point pt = p.getPosition(posIdx);
+						
+						if (!changed[posIdx]) {
+							System.out.printf("%s: %f", p.getName(), pt.angles[2]);
+							pt.angles[2] = RobotRun.TWO_PI - pt.angles[2];
+							System.out.printf(" -> %f\n", pt.angles[2]);
+							changed[posIdx] = true;
+						}
+					}
+				}
+			}
+		}
+		/**/
+		
 		//RoboticArm r0 = ROBOTS.get(0);
 		//RoboticArm r1 = ROBOTS.get(1);
 		
