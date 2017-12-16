@@ -3,6 +3,7 @@ package robot;
 import java.util.ArrayList;
 import java.util.Stack;
 
+import core.RobotRun;
 import enums.AxesDisplay;
 import enums.CoordFrame;
 import enums.InstUndoType;
@@ -245,8 +246,8 @@ public class RoboticArm {
 					new BoundingBox(130, 316, 64),
 					new BoundingBox(110, 163, 48)
 			},
-			1.955f, 1.134f, new PVector(-3f, -498f, -200f),
-			new PVector(0f, 0f, -1f)
+			5.149f, 4.276f, new PVector(-3f, -498f, -200f),
+			new PVector(0f, 0f, 1f)
 		);
 		
 		SEGMENT[3] = new RSegWithJoint(
@@ -740,7 +741,7 @@ public class RoboticArm {
 		
 		g.translate(-75f, 45f, 0f);
 		// Third joint axis
-		g.rotateZ(-jointAngles[2]);
+		g.rotateZ(jointAngles[2]);
 		g.translate(75f, -45f, 0f);
 		
 		// Third joint segment
