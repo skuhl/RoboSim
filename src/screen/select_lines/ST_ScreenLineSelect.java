@@ -23,9 +23,12 @@ public abstract class ST_ScreenLineSelect extends Screen {
 	public void actionArrowDn() {
 		if (!robotRun.isProgExec()) {
 			
-			do {
-				robotRun.setActiveInstIdx(contents.moveDown(robotRun.isShift()));
-			} while(contents.getItemLineIdx() != 0);
+			if(contents.getCurrentItemIdx() < robotRun.getActiveProg().getNumOfInst()-1) {
+				System.out.println(contents.getItemLineIdx() + ", " + robotRun.getActiveProg().getNumOfInst());
+				do {
+					robotRun.setActiveInstIdx(contents.moveDown(robotRun.isShift()));
+				} while(contents.getItemLineIdx() != 0);
+			}
 
 			Fields.debug("line=%d col=%d inst=%d TRS=%d\n",
 					contents.getLineIdx(), contents.getColumnIdx(),
@@ -66,16 +69,18 @@ public abstract class ST_ScreenLineSelect extends Screen {
 	
 	@Override
 	public void actionEntr() {
-		if(robotRun.isShift() && selStart != -1) {
-			for(int i = Math.min(selStart + 1, contents.getLineIdx()); i < Math.max(selStart, contents.getLineIdx() + 1); i += 1) {
-				lineSelectState[i] = !lineSelectState[i];
+		if(contents.getCurrentItemIdx() < lineSelectState.length) {
+			if(robotRun.isShift() && selStart != -1) {
+				for(int i = Math.min(selStart + 1, contents.getLineIdx()); i < Math.max(selStart, contents.getLineIdx() + 1); i += 1) {
+					lineSelectState[i] = !lineSelectState[i];
+				}
+			} else {
+				selStart = contents.getCurrentItemIdx();
+				lineSelectState[selStart] = !lineSelectState[selStart];
 			}
-		} else {
-			selStart = contents.getCurrentItemIdx();
-			lineSelectState[selStart] = !lineSelectState[selStart];
+			
+			robotRun.updatePendantScreen();
 		}
-		
-		robotRun.updatePendantScreen();
 	}
 
 	@Override
@@ -90,8 +95,15 @@ public abstract class ST_ScreenLineSelect extends Screen {
 	@Override
 	public void actionF4() {}
 	
+	/**
+	 * Cancel cut/ copy 
+	 */
 	@Override
-	public void actionF5() {}
+	public void actionF5() {
+		robotRun.lastScreen();
+		robotRun.getLastScreen().setContentIdx(contents.getLineIdx());
+		robotRun.lastScreen();
+	}
 	
 	@Override
 	public void actionKeyPress(char key) {}
@@ -106,7 +118,7 @@ public abstract class ST_ScreenLineSelect extends Screen {
 
 	@Override
 	protected void loadContents() {
-		contents.setLines(loadInstructions(robotRun.getActiveProg(), true));
+		contents.setLines(loadInstructions(robotRun.getActiveProg(), false));
 	}
 
 	@Override

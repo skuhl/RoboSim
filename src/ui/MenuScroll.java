@@ -216,12 +216,12 @@ public class MenuScroll {
 	public int moveUp(boolean page) {
 		if (page) {
 			// Move display frame up an entire screen's display length
-			lineIdx = (Math.max(0, lineIdx - (maxDisp - 1)));
-			renderStart = (Math.max(0, renderStart - (maxDisp - 1)));
+			lineIdx = Math.max(0, lineIdx - (maxDisp - 1));
+			renderStart = Math.max(0, renderStart - (maxDisp - 1));
 		} 
 		else {
 			// Move up a single row
-			lineIdx = (Math.max(0, lineIdx - 1));
+			lineIdx = Math.max(0, lineIdx - 1);
 		}
 
 		return getCurrentItemIdx();

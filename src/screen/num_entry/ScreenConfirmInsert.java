@@ -27,7 +27,7 @@ public class ScreenConfirmInsert extends ST_ScreenNumEntry {
 							new BlankInstruction(), i != 0);
 				}
 				
-				robotRun.updateInstructions();
+				robotRun.lastScreen();
 				robotRun.lastScreen();
 				
 			} else {

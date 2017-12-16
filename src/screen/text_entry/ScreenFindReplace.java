@@ -44,14 +44,14 @@ public class ScreenFindReplace extends ST_ScreenTextEntry {
 		}
 
 		robotRun.lastScreen();
+		robotRun.lastScreen();
 		robotRun.setActiveInstIdx(lineIdx);
-		robotRun.updateInstructions();
 	}
 	
 	@Override
 	public void actionF5() {
 		robotRun.lastScreen();
-		robotRun.updateInstructions();
+		robotRun.lastScreen();
 	}
 
 	@Override

@@ -18,19 +18,12 @@ public class ScreenSelectComment extends ST_ScreenLineSelect {
 	}
 	
 	@Override
-	public void actionF4() {
-		robotRun.lastScreen();
-		robotRun.getLastScreen().setContentIdx(contents.getLineIdx());
-		robotRun.lastScreen();
-	}
-	
-	@Override
 	protected void loadLabels() {
 		labels[0] = "";
 		labels[1] = "";
 		labels[2] = "";
-		labels[3] = "[Done]";
-		labels[4] = "";
+		labels[3] = "";
+		labels[4] = "[Done]";
 	}
 	
 	@Override

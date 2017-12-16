@@ -58,12 +58,6 @@ public class ScreenSelectCutCopy extends ST_ScreenLineSelect {
 	}
 	
 	@Override
-	public void actionF5() {
-		robotRun.lastScreen();
-		robotRun.updateInstructions();
-	}
-	
-	@Override
 	protected void loadLabels() {
 		labels[0] = "";
 		labels[1] = clipBoard.isEmpty() ? "" : "[Paste]";

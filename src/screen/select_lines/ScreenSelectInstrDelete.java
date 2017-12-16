@@ -39,11 +39,6 @@ public class ScreenSelectInstrDelete extends ST_ScreenLineSelect {
 	}
 
 	@Override
-	public void actionF5() {
-		robotRun.lastScreen();
-	}
-
-	@Override
 	protected void loadLabels() {
 		// F4, F5
 		labels[0] = "";
