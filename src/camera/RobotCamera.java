@@ -473,25 +473,32 @@ public class RobotCamera {
 	}
 
 	public ArrayList<WorldObject> matchTaughtObject(CameraObject objProto, Scenario scene) {
-		RMatrix objProtoOrient = objProto.getLocalOrientation();
+		RMatrix objProtoOrient = objProto.getOrientation();
 		float protoQuality = objProto.image_quality;
 
 		ArrayList<CameraObject> inFrame = getObjectsInFrame(scene);
 		ArrayList<WorldObject> objMatches = new ArrayList<WorldObject>();
-
+		
+		System.out.println("Got " + inFrame.size() + " Camera objects in frame.");
+		
 		for(CameraObject o: inFrame) {
 			if(protoQuality < 0.95 && Math.random() >= protoQuality) {
 				continue;
 			}
 
 			if(o.getModelGroupID() == objProto.getModelGroupID()) {
-				RMatrix objOrient = o.getLocalOrientation();
-				RMatrix viewOrient = objOrient.transpose().multiply(camOrient.toMatrix());
-				RMatrix oDiff = objProtoOrient.transpose().multiply(viewOrient);
+				
+				System.out.println("Proper model group.");
+				
+				RMatrix objOrient = o.getOrientation();
+				RMatrix viewOrient = objOrient.multiply(camOrient.toMatrix());
+				RMatrix oDiff = objProtoOrient.multiply(viewOrient);
 				float[][] axes = oDiff.getDataF();
 				PVector zDiff = new PVector(axes[0][2], axes[1][2], axes[2][2]);
-
+				
+				
 				if(Math.pow(zDiff.dot(new PVector(0, 0, 1)), 2) > 0.9) {
+					System.out.println("Proper zDiff (in the correct direction / in view frustum)");
 					if(o.getModelGroupID() < 0) {
 						objMatches.add(o);
 					}
